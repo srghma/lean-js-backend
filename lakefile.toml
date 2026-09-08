@@ -1,87 +1,23 @@
-name = "glob"
+name = "LakeJs"
 version = "0.1.0"
-keywords = ["glob", "pattern", "matching"]
-# testDriver = "GlobTest" # disabled, use run_tests.sh
-# defaultTargets = ["Glob"]
-
-[[require]]
-name = "Regex"
-git = "https://github.com/pandaman64/lean-regex.git"
-# git = "https://github.com/srghma/lean-regex.git"
-rev = "main"
-subDir = "regex"
+defaultTargets = ["LakeJs"]
+testDriver = "LakeJsTest"
 
 [[require]]
 name = "NonEmpty"
-# path = "/home/srghma/projects/lean-nonempty/"
 git = "https://github.com/srghma/lean-nonempty.git"
 rev = "main"
-# rev = "43dc93d470e73ce64d1bbdd074f0454c7c9bbfc7"
 
-# [[require]]
-# name = "batteries"
-# scope = "leanprover-community"
-# rev = "v4.31.0"
-
-# [[require]]
-# name = "aesop"
-# scope = "leanprover-community"
-# rev = "v4.31.0"
-
-# [[require]]
-# name = "LSpec"
-# git = "https://github.com/srghma/LSpec"
-# # git = "https://github.com/argumentcomputer/LSpec"
-# rev = "main"
+[[require]]
+name = "spec"
+git = "https://github.com/srghma/lean-spec.git"
+rev = "main"
 
 [[lean_lib]]
-name = "Tree"
-roots = ["Tree"]
-
-[[lean_lib]]
-name = "Cutter"
-roots = ["Cutter"]
-
-# [[lean_lib]]
-# name = "LSpecExt"
-# roots = ["LSpecExt"]
-
-[[lean_lib]]
-name = "Spec"
-roots = ["Spec"]
-
-[[lean_lib]]
-name = "Glob"
-roots = ["Glob"]
-
-[[lean_lib]]
-name = "TypedPath"
-roots = ["TypedPath"]
-
-[[lean_lib]]
-name = "TypedPathTests"
-roots = ["TypedPathTests"]
-
-[[lean_lib]]
-name = "GlobTest"
-roots = ["GlobTest"]
-
-[[lean_lib]]
-name = "Pathy"
-roots = ["Pathy"]
+name = "LakeJs"
+roots = ["LakeJs.LeanEnumSchema"]
 
 [[lean_exe]]
-name = "glob_test"
-root = "GlobTest.Main"
+name = "LakeJsTest"
+root = "LakeJsTest.Main"
 
-[[lean_lib]]
-name = "TypedGlob"
-roots = ["TypedGlob"]
-
-[[lean_lib]]
-name = "TypedGlobTest"
-roots = ["TypedGlobTest"]
-
-[[lean_exe]]
-name = "typed_glob_test"
-root = "TypedGlobTest.Main"

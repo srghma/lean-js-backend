@@ -1,3 +1,4 @@
 /.lake
 /.spec-tmp-*/
 /.spec-failures
+/.lean-spec-timings-and-last-failures

@@ -10,70 +10,13 @@ public meta import Init.Data.ToString.Name
 
 public section
 
-
-/-! ### 1. Schema Definitions -/
-
-structure LeanEnumCtorSchema where
-  name      : String
-  numFields : Nat
-  deriving Repr, BEq, DecidableEq, Inhabited
-
-structure LeanEnumSchema where
-  typeName : String
-  ctors    : List LeanEnumCtorSchema
-  deriving Repr, BEq, DecidableEq, Inhabited
-
-namespace LeanEnumSchema
-
-/-- Returns the number of fields for a constructor in the schema, defaulting to 0 if not found. -/
-def ctorNumFields (schema : LeanEnumSchema) (ctorName : String) : Option Nat :=
-  schema.ctors.find? (·.name == ctorName) >>= (some ·.numFields)
-
-/-- Validates that a constructor name belongs to the schema. -/
-def hasCtor (schema : LeanEnumSchema) (ctorName : String) : Prop :=
-  schema.ctors.any (·.name == ctorName)
-
-end LeanEnumSchema
-
 /- Smart constructor -/
-def LeanEnumSchema.mkEnum (schema : LeanEnumSchema) (ctorName : String) {n : Nat}
-    (fields : Vector (Expr n) (schema.ctorNumFields ctorName))
-    (hValid : schema.hasCtor ctorName = true := by decide) :
-    LeanEnum schema ctorName n :=
-  ⟨fields, hValid⟩
 
-/-! ### 4. Metaprogramming / Elaborator -/
-
-
-/-- Inspects an inductive type in Lean's environment and generates a `LeanEnumSchema`. -/
-open Lean Meta Elab Term in
-def extractEnumSchema (typeName : Name) : MetaM LeanEnumSchema := do
-  let env ← getEnv
-  let some (.inductInfo indVal) := env.find? typeName
-    | throwError "'{typeName}' is not an inductive type"
-  let mut ctors : List CtorSchema := []
-  for ctorName in indVal.ctors do
-    let some (.ctorInfo ctorVal) := env.find? ctorName
-      | throwError "Constructor '{ctorName}' not found"
-    let shortName := match ctorName with
-      | .str _ s => s
-      | _ => ctorName.toString
-    -- `numFields` accounts for the constructor fields after stripping type params
-    ctors := ctors ++ [{ name := shortName, numFields := ctorVal.numFields }]
-  return { typeName := typeName.toString, ctors := ctors }
-
-/--
-`lean_schema% <type>` resolves an inductive type in the environment and expands
-into a literal `LeanEnumSchema` at compile time.
--/
-elab "lean_schema% " id:ident : term => do
-  let typeName ← resolveGlobalConstNoOverload id
-  let schema ← extractEnumSchema typeName
-  let ctorSyntax ← schema.ctors.mapM fun c =>
-    `(CtorSchema.mk $(quote c.name) $(quote c.numFields))
-  let ctorsList ← `([ $[$ctorSyntax],* ])
-  let term ← `(LeanEnumSchema.mk $(quote schema.typeName) $ctorsList)
-  elabTerm term none
+-- def LeanEnumSchema.mkEnum (schema : LeanEnumSchema) (ctorName : String)
+--     (fields : Vector (Expr n) (schema.ctorNumFields ctorName))
+--     (hValid : schema.hasCtor ctorName = true := by decide) :
+--     LeanEnum schema ctorName n :=
+--   ⟨fields, hValid⟩
 
 /- Operators that always evaluate to a boolean value.
    Note: While JS allows `&&` and `||` on arbitrary types (evaluating to the operand value),
