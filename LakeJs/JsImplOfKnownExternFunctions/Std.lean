@@ -1,0 +1,3342 @@
+import LakeJs.Js
+
+-- ============
+-- Std.Sync.Mutex
+-- ============
+
+-- ```lean
+-- opaque BaseMutex.new : BaseIO BaseMutex
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_basemutex_new() {
+--     return lean_alloc_external(g_basemutex_external_class, new mutex);
+-- }
+-- ```
+def lean_io_basemutex_new := [JS_EXPR|throw new Error("lean_io_basemutex_new is not implemented")]
+
+-- ```lean
+-- opaque BaseMutex.lock (mutex : @& BaseMutex) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_basemutex_lock(b_obj_arg mtx) {
+--     basemutex_get(mtx)->lock();
+--     return box(0);
+-- }
+-- ```
+def lean_io_basemutex_lock := [JS_EXPR|throw new Error("lean_io_basemutex_lock is not implemented")]
+
+-- ```lean
+-- opaque BaseMutex.tryLock (mutex : @& BaseMutex) : BaseIO Bool
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT uint8_t lean_io_basemutex_try_lock(b_obj_arg mtx) {
+--     bool success = basemutex_get(mtx)->try_lock();
+--     return success;
+-- }
+-- ```
+def lean_io_basemutex_try_lock := [JS_EXPR|throw new Error("lean_io_basemutex_try_lock is not implemented")]
+
+-- ```lean
+-- opaque BaseMutex.unlock (mutex : @& BaseMutex) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_basemutex_unlock(b_obj_arg mtx) {
+--     basemutex_get(mtx)->unlock();
+--     return box(0);
+-- }
+-- ```
+def lean_io_basemutex_unlock := [JS_EXPR|throw new Error("lean_io_basemutex_unlock is not implemented")]
+
+-- ```lean
+-- opaque Condvar.new : BaseIO Condvar
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_condvar_new() {
+--     return lean_alloc_external(g_condvar_external_class, new condition_variable);
+-- }
+-- ```
+def lean_io_condvar_new := [JS_EXPR|throw new Error("lean_io_condvar_new is not implemented")]
+
+-- ```lean
+-- opaque Condvar.wait (condvar : @& Condvar) (mutex : @& BaseMutex) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_condvar_wait(b_obj_arg condvar, b_obj_arg mtx) {
+--     unique_lock<mutex> lock(*basemutex_get(mtx), std::adopt_lock_t());
+--     condvar_get(condvar)->wait(lock);
+--     lock.release();
+--     return box(0);
+-- }
+-- ```
+def lean_io_condvar_wait := [JS_EXPR|throw new Error("lean_io_condvar_wait is not implemented")]
+
+-- ```lean
+-- opaque Condvar.notifyOne (condvar : @& Condvar) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_condvar_notify_one(b_obj_arg condvar) {
+--     condvar_get(condvar)->notify_one();
+--     return box(0);
+-- }
+-- ```
+def lean_io_condvar_notify_one := [JS_EXPR|throw new Error("lean_io_condvar_notify_one is not implemented")]
+
+-- ```lean
+-- opaque Condvar.notifyAll (condvar : @& Condvar) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_condvar_notify_all(b_obj_arg condvar) {
+--     condvar_get(condvar)->notify_all();
+--     return box(0);
+-- }
+-- ```
+def lean_io_condvar_notify_all := [JS_EXPR|throw new Error("lean_io_condvar_notify_all is not implemented")]
+
+-- ============
+-- Std.Data.ByteSlice
+-- ============
+
+-- ```lean
+-- protected def beq (a b : @& ByteSlice) : Bool :=
+--   a.toByteArray == b.toByteArray
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT uint8_t lean_byteslice_beq(b_obj_arg a, b_obj_arg b) {
+--     if (a == b) { return true; }
+-- 
+--     lean_object* bytearray_a = lean_ctor_get(a, 0);
+--     size_t start_a = lean_unbox(lean_ctor_get(a, 1));
+--     size_t end_a = lean_unbox(lean_ctor_get(a, 2));
+-- 
+--     lean_object* bytearray_b = lean_ctor_get(b, 0);
+--     size_t start_b = lean_unbox(lean_ctor_get(b, 1));
+--     size_t end_b = lean_unbox(lean_ctor_get(b, 2));
+-- 
+--     size_t size_a = end_a - start_a;
+--     size_t size_b = end_b - start_b;
+-- 
+--     if (size_a != size_b) { return false; }
+-- 
+--     if (size_a == 0) { return true; }
+-- 
+--     const uint8_t* ptr_a = lean_sarray_cptr(bytearray_a) + start_a;
+--     const uint8_t* ptr_b = lean_sarray_cptr(bytearray_b) + start_b;
+-- 
+--     return memcmp(ptr_a, ptr_b, size_a) == 0;
+-- }
+-- ```
+def lean_byteslice_beq := [JS_EXPR|throw new Error("lean_byteslice_beq is not implemented")]
+
+-- ============
+-- Std.Internal.UV.Timer
+-- ============
+
+-- ```lean
+-- opaque mk (timeout : UInt64) (repeating : Bool) : IO Timer
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_timer_mk(uint64_t timeout, uint8_t repeating) {
+--     lean_uv_timer_object * timer = (lean_uv_timer_object*)malloc(sizeof(lean_uv_timer_object));
+--     if (timer == nullptr) {
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+--     timer->m_timeout = timeout;
+--     timer->m_repeating = repeating;
+--     timer->m_state = TIMER_STATE_INITIAL;
+--     timer->m_promise = NULL;
+-- 
+--     uv_timer_t * uv_timer = (uv_timer_t*)malloc(sizeof(uv_timer_t));
+--     if (uv_timer == nullptr) {
+--         free(timer);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_timer_init(global_ev.loop, uv_timer);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result != 0) {
+--         free(uv_timer);
+--         free(timer);
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, NULL));
+--     }
+-- 
+--     timer->m_uv_timer = uv_timer;
+-- 
+--     lean_object * obj = lean_uv_timer_new(timer);
+--     lean_mark_mt(obj);
+--     timer->m_uv_timer->data = obj;
+-- 
+--     return lean_io_result_mk_ok(obj);
+-- }
+-- ```
+def lean_uv_timer_mk := [JS_EXPR|throw new Error("lean_uv_timer_mk is not implemented")]
+
+-- ```lean
+-- opaque next (timer : @& Timer) : IO (IO.Promise Unit)
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_timer_next(b_obj_arg obj) {
+--     lean_uv_timer_object * timer = lean_to_uv_timer(obj);
+-- 
+--     auto create_promise = []() {
+--         return lean_io_promise_new();
+--     };
+-- 
+--     auto setup_timer = [create_promise, obj, timer]() {
+--         lean_assert(timer->m_promise == NULL);
+-- 
+--         lean_object* promise = create_promise();
+--         timer->m_promise = promise;
+--         timer->m_state = TIMER_STATE_RUNNING;
+-- 
+--         // The event loop must keep the timer alive for the duration of the run time.
+--         lean_inc(obj);
+--         lean_inc(promise);
+-- 
+--         int result = uv_timer_start(
+--             timer->m_uv_timer,
+--             handle_timer_event,
+--             timer->m_repeating ? 0 : timer->m_timeout,
+--             timer->m_repeating ? timer->m_timeout : 0
+--         );
+-- 
+--         if (result != 0) {
+--             lean_dec(obj);
+--             event_loop_unlock(&global_ev);
+--             return lean_io_result_mk_error(lean_decode_uv_error(result, NULL));
+--         }
+-- 
+--         event_loop_unlock(&global_ev);
+-- 
+--         return lean_io_result_mk_ok(promise);
+--     };
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     if (timer->m_repeating) {
+--         switch (timer->m_state) {
+--             case TIMER_STATE_INITIAL:
+--                 {
+--                     return setup_timer();
+--                 }
+--             case TIMER_STATE_RUNNING:
+--                 {
+--                     if (timer->m_promise == NULL || timer_promise_is_finished(timer)) {
+--                         if (timer->m_promise != NULL) {
+--                             lean_dec(timer->m_promise);
+--                         }
+-- 
+--                         timer->m_promise = create_promise();
+--                     }
+-- 
+--                     lean_inc(timer->m_promise);
+-- 
+--                     event_loop_unlock(&global_ev);
+-- 
+--                     return lean_io_result_mk_ok(timer->m_promise);
+--                 }
+--             case TIMER_STATE_FINISHED:
+--                 {
+--                     if (timer->m_promise != NULL) {
+--                         lean_inc(timer->m_promise);
+--                         event_loop_unlock(&global_ev);
+--                         return lean_io_result_mk_ok(timer->m_promise);
+--                     } else {
+--                         // Creates a resolved promise
+--                         lean_object* finished_promise = create_promise();
+--                         event_loop_unlock(&global_ev);
+--                         return lean_io_result_mk_ok(finished_promise);
+--                     }
+--                 }
+--         }
+--     } else {
+--         if (timer->m_state == TIMER_STATE_INITIAL) {
+--             return setup_timer();
+--         } else if (timer->m_promise != NULL) {
+--             lean_inc(timer->m_promise);
+--             lean_object* promise = timer->m_promise;
+--             event_loop_unlock(&global_ev);
+--             return lean_io_result_mk_ok(promise);
+--         } else {
+--             event_loop_unlock(&global_ev);
+--             // Creates a resolved promise
+--             lean_object* finished_promise = create_promise();
+--             return lean_io_result_mk_ok(finished_promise);
+--         }
+--     }
+-- }
+-- ```
+def lean_uv_timer_next := [JS_EXPR|throw new Error("lean_uv_timer_next is not implemented")]
+
+-- ```lean
+-- opaque reset (timer : @& Timer) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_timer_reset(b_obj_arg obj) {
+--     lean_uv_timer_object * timer = lean_to_uv_timer(obj);
+-- 
+--     // Locking to access the state in order to avoid data-race
+--     event_loop_lock(&global_ev);
+-- 
+--     if (timer->m_state == TIMER_STATE_RUNNING) {
+-- 
+--         uv_timer_stop(timer->m_uv_timer);
+-- 
+--         int result = uv_timer_start(
+--             timer->m_uv_timer,
+--             handle_timer_event,
+--             timer->m_timeout,
+--             timer->m_repeating ? timer->m_timeout : 0
+--         );
+-- 
+--         event_loop_unlock(&global_ev);
+-- 
+--         if (result != 0) {
+--             return lean_io_result_mk_error(lean_decode_uv_error(result, NULL));
+--         } else {
+--             return lean_io_result_mk_ok(lean_box(0));
+--         }
+--     } else {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_ok(lean_box(0));
+--     }
+-- }
+-- ```
+def lean_uv_timer_reset := [JS_EXPR|throw new Error("lean_uv_timer_reset is not implemented")]
+
+-- ```lean
+-- opaque stop (timer : @& Timer) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_timer_stop(b_obj_arg obj) {
+--     lean_uv_timer_object * timer = lean_to_uv_timer(obj);
+-- 
+--     // Locking to access the state in order to avoid data-race
+--     event_loop_lock(&global_ev);
+-- 
+--     if (timer->m_promise != NULL) {
+--         lean_dec(timer->m_promise);
+--         timer->m_promise = NULL;
+--     }
+-- 
+--     if (timer->m_state == TIMER_STATE_RUNNING) {
+--         uv_timer_stop(timer->m_uv_timer);
+--         event_loop_unlock(&global_ev);
+-- 
+--         timer->m_state = TIMER_STATE_FINISHED;
+-- 
+--         // The loop does not need to keep the timer alive anymore.
+--         lean_dec(obj);
+-- 
+--         return lean_io_result_mk_ok(lean_box(0));
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_timer_stop := [JS_EXPR|throw new Error("lean_uv_timer_stop is not implemented")]
+
+-- ```lean
+-- opaque cancel (timer : @& Timer) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_timer_cancel(b_obj_arg obj) {
+--     lean_uv_timer_object * timer = lean_to_uv_timer(obj);
+-- 
+--     // It's locking here to avoid changing the state during other operations.
+--     event_loop_lock(&global_ev);
+-- 
+--     if (timer->m_state == TIMER_STATE_RUNNING && timer->m_promise != NULL) {
+--         if (timer->m_repeating) {
+--             lean_dec(timer->m_promise);
+--             timer->m_promise = NULL;
+--         } else {
+--             uv_timer_stop(timer->m_uv_timer);
+-- 
+--             lean_dec(timer->m_promise);
+--             timer->m_promise = NULL;
+--             timer->m_state = TIMER_STATE_INITIAL;
+-- 
+--             // The loop does not need to keep the timer alive anymore.
+--             lean_dec(obj);
+--         }
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_timer_cancel := [JS_EXPR|throw new Error("lean_uv_timer_cancel is not implemented")]
+
+-- ============
+-- Std.Internal.UV.Loop
+-- ============
+
+-- ```lean
+-- opaque configure (options : Options) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_event_loop_configure(b_obj_arg options) {
+--     bool accum = lean_ctor_get_uint8(options, 0);
+--     bool block = lean_ctor_get_uint8(options, 1);
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     if (accum) {
+--         int result = uv_loop_configure(global_ev.loop, UV_METRICS_IDLE_TIME);
+--         if (result != 0) return lean_io_result_mk_error(lean_decode_uv_error(result, NULL));
+--     }
+-- 
+--     #if!defined(WIN32) && !defined(_WIN32)
+--     if (block) {
+--         int result = uv_loop_configure(global_ev.loop, UV_LOOP_BLOCK_SIGNAL, SIGPROF);
+--         if (result != 0) return lean_io_result_mk_error(lean_decode_uv_error(result, NULL));
+--     }
+--     #endif
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     return lean_box(0);
+-- }
+-- ```
+def lean_uv_event_loop_configure := [JS_EXPR|throw new Error("lean_uv_event_loop_configure is not implemented")]
+
+-- ```lean
+-- opaque alive : BaseIO Bool
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT uint8_t lean_uv_event_loop_alive() {
+--     event_loop_lock(&global_ev);
+--     int is_alive = uv_loop_alive(global_ev.loop);
+--     event_loop_unlock(&global_ev);
+-- 
+--     return is_alive;
+-- }
+-- ```
+def lean_uv_event_loop_alive := [JS_EXPR|throw new Error("lean_uv_event_loop_alive is not implemented")]
+
+-- ============
+-- Std.Net.Addr
+-- ============
+
+-- ```lean
+-- opaque ofString (s : @&String) : Option IPv6Addr
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_pton_v6(b_obj_arg str_obj) {
+--     const char* str = string_cstr(str_obj);
+--     if (strlen(str) != lean_string_size(str_obj) - 1) {
+--        return mk_option_none();
+--     }
+--     in6_addr internal;
+--     if (uv_inet_pton(AF_INET6, str, &internal) == 0) {
+--         return mk_option_some(lean_in6_addr_to_ipv6_addr(&internal));
+--     } else {
+--         return mk_option_none();
+--     }
+-- }
+-- ```
+def lean_uv_pton_v6 := [JS_EXPR|throw new Error("lean_uv_pton_v6 is not implemented")]
+
+-- ```lean
+-- opaque toString (addr : @&IPv6Addr) : String
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_ntop_v6(b_obj_arg ipv6_addr) {
+--     in6_addr internal;
+--     lean_ipv6_addr_to_in6_addr(ipv6_addr, &internal);
+--     char dst[INET6_ADDRSTRLEN];
+--     int ret = uv_inet_ntop(AF_INET6, &internal, dst, sizeof(dst));
+--     lean_always_assert(ret == 0);
+--     return lean_mk_string(dst);
+-- }
+-- ```
+def lean_uv_ntop_v6 := [JS_EXPR|throw new Error("lean_uv_ntop_v6 is not implemented")]
+
+-- ```lean
+-- opaque interfaceAddresses : IO (Array InterfaceAddress)
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_interface_addresses() {
+--     uv_interface_address_t* info;
+--     int count;
+-- 
+--     if (uv_interface_addresses(&info, &count) != 0) {
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to get interface addresses")));
+--     }
+-- 
+--     lean_object *arr = lean_alloc_array(0, count);
+-- 
+--     for (int i = 0; i < count; i++) {
+--         uv_interface_address_t interface = info[i];
+-- 
+--         int sin_family = interface.address.address4.sin_family;
+--         in_addr_storage* socket_address;
+--         in_addr_storage* netmask_address;
+-- 
+--         if (sin_family == AF_INET) {
+--             socket_address = (in_addr_storage*)&interface.address.address4.sin_addr;
+--             netmask_address =(in_addr_storage*) &interface.netmask.netmask4.sin_addr;
+--         } else if (sin_family == AF_INET6) {
+--             socket_address = (in_addr_storage*)&interface.address.address6.sin6_addr;
+--             netmask_address = (in_addr_storage*)&interface.netmask.netmask6.sin6_addr;
+--         } else {
+--             continue;
+--         }
+-- 
+--         lean_object *iface = lean_alloc_ctor(0, 4, 1);
+--         lean_ctor_set(iface, 0, lean_mk_string(interface.name));
+--         lean_ctor_set(iface, 1, lean_phys_addr_to_mac_addr(interface.phys_addr));
+--         lean_ctor_set_uint8(iface, sizeof(void*)*4, interface.is_internal);
+-- 
+--         lean_ctor_set(iface, 2, lean_in_addr_storage_to_ip_addr(sin_family, socket_address));
+--         lean_ctor_set(iface, 3, lean_in_addr_storage_to_ip_addr(sin_family, netmask_address));
+-- 
+--         arr = lean_array_push(arr, iface);
+--     }
+-- 
+--     uv_free_interface_addresses(info, count);
+-- 
+--     return lean_io_result_mk_ok(arr);
+-- }
+-- ```
+def lean_uv_interface_addresses := [JS_EXPR|throw new Error("lean_uv_interface_addresses is not implemented")]
+
+-- ============
+-- Std.Internal.UV.System
+-- ============
+
+-- ```lean
+-- opaque getProcessTitle : IO String
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_get_process_title() {
+--     char title[512];
+--     int result = uv_get_process_title(title, sizeof(title));
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* lean_title = lean_mk_string(title);
+--     return lean_io_result_mk_ok(lean_title);
+-- }
+-- ```
+def lean_uv_get_process_title := [JS_EXPR|throw new Error("lean_uv_get_process_title is not implemented")]
+
+-- ```lean
+-- opaque setProcessTitle : @& String → IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_set_process_title(b_obj_arg title) {
+--     const char* title_str = lean_string_cstr(title);
+--     if (strlen(title_str) != lean_string_size(title) - 1) {
+--         return mk_embedded_nul_error(title);
+--     }
+--     int result = uv_set_process_title(title_str);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_set_process_title := [JS_EXPR|throw new Error("lean_uv_set_process_title is not implemented")]
+
+-- ```lean
+-- opaque uptime : IO UInt64
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_uptime() {
+--     double uptime;
+-- 
+--     int result = uv_uptime(&uptime);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* lean_uptime = lean_box_uint64((uint64_t)uptime);
+-- 
+--     return lean_io_result_mk_ok(lean_uptime);
+-- }
+-- ```
+def lean_uv_uptime := [JS_EXPR|throw new Error("lean_uv_uptime is not implemented")]
+
+-- ```lean
+-- opaque osGetPid : IO UInt64
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_getpid() {
+--     lean_always_assert(
+--         false && ("Please build a version of Lean4 with libuv to invoke this.")
+--     );
+-- }
+-- ```
+def lean_uv_os_getpid := [JS_EXPR|throw new Error("lean_uv_os_getpid is not implemented")]
+
+-- ```lean
+-- opaque osGetPpid : IO UInt64
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_getppid() {
+--     lean_always_assert(
+--         false && ("Please build a version of Lean4 with libuv to invoke this.")
+--     );
+-- }
+-- ```
+def lean_uv_os_getppid := [JS_EXPR|throw new Error("lean_uv_os_getppid is not implemented")]
+
+-- ```lean
+-- opaque cpuInfo : IO (Array CPUInfo)
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_cpu_info() {
+--     uv_cpu_info_t* cpu_infos;
+--     int count;
+-- 
+--     int result = uv_cpu_info(&cpu_infos, &count);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* lean_cpu_infos = lean_alloc_array(count, count);
+-- 
+--     for (int i = 0; i < count; i++) {
+--         lean_object* times = lean_alloc_ctor(0, 0, 40);
+--         lean_ctor_set_uint64(times, 0, cpu_infos[i].cpu_times.user);
+--         lean_ctor_set_uint64(times, 8, cpu_infos[i].cpu_times.nice);
+--         lean_ctor_set_uint64(times, 16, cpu_infos[i].cpu_times.sys);
+--         lean_ctor_set_uint64(times, 24, cpu_infos[i].cpu_times.idle);
+--         lean_ctor_set_uint64(times, 32, cpu_infos[i].cpu_times.irq);
+-- 
+--         lean_object* model = lean_mk_string(cpu_infos[i].model);
+-- 
+--         lean_object* cpu_info = lean_alloc_ctor(0, 2, 8);
+--         lean_ctor_set(cpu_info, 0, model);
+--         lean_ctor_set(cpu_info, 1, times);
+--         lean_ctor_set_uint64(cpu_info, sizeof(void*)*2, (uint64_t)cpu_infos[i].speed);
+-- 
+--         lean_array_set_core(lean_cpu_infos, i, cpu_info);
+--     }
+-- 
+--     uv_free_cpu_info(cpu_infos, count);
+-- 
+--     return lean_io_result_mk_ok(lean_cpu_infos);
+-- }
+-- ```
+def lean_uv_cpu_info := [JS_EXPR|throw new Error("lean_uv_cpu_info is not implemented")]
+
+-- ```lean
+-- opaque cwd : IO String
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_cwd() {
+--     char buffer[PATH_MAX];
+--     size_t size = sizeof(buffer);
+-- 
+--     int result = uv_cwd(buffer, &size);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* lean_cwd = lean_mk_string(buffer);
+--     return lean_io_result_mk_ok(lean_cwd);
+-- }
+-- ```
+def lean_uv_cwd := [JS_EXPR|throw new Error("lean_uv_cwd is not implemented")]
+
+-- ```lean
+-- opaque chdir : @& String → IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_chdir(b_obj_arg path) {
+--     const char* path_str = lean_string_cstr(path);
+--     if (strlen(path_str) != lean_string_size(path) - 1) {
+--         return mk_embedded_nul_error(path);
+--     }
+-- 
+--     int result = uv_chdir(path_str);
+-- 
+--     if (result < 0) {
+--         lean_inc(path);
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, path));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_chdir := [JS_EXPR|throw new Error("lean_uv_chdir is not implemented")]
+
+-- ```lean
+-- opaque osHomedir : IO String
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_homedir() {
+--     char buffer[PATH_MAX];
+--     size_t size = sizeof(buffer);
+-- 
+--     int result = uv_os_homedir(buffer, &size);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* lean_homedir = lean_mk_string(buffer);
+--     return lean_io_result_mk_ok(lean_homedir);
+-- }
+-- ```
+def lean_uv_os_homedir := [JS_EXPR|throw new Error("lean_uv_os_homedir is not implemented")]
+
+-- ```lean
+-- opaque osTmpdir : IO String
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_tmpdir() {
+--     char buffer[PATH_MAX];
+--     size_t size = sizeof(buffer);
+-- 
+--     int result = uv_os_tmpdir(buffer, &size);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* lean_tmpdir = lean_mk_string(buffer);
+--     return lean_io_result_mk_ok(lean_tmpdir);
+-- }
+-- ```
+def lean_uv_os_tmpdir := [JS_EXPR|throw new Error("lean_uv_os_tmpdir is not implemented")]
+
+-- ```lean
+-- opaque osGetPasswd : IO PasswdInfo
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_get_passwd() {
+--     uv_passwd_t passwd;
+-- 
+--     int result = uv_os_get_passwd(&passwd);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* username = lean_mk_string(passwd.username);
+--     lean_object* uid = passwd.uid != (unsigned long)(-1) ? mk_option_some(lean_box_uint64(passwd.uid)) : mk_option_none();
+--     lean_object* gid = passwd.uid != (unsigned long)(-1) ? mk_option_some(lean_box_uint64(passwd.gid)) : mk_option_none();
+--     lean_object* shell = passwd.shell ? mk_option_some(lean_mk_string(passwd.shell)) : mk_option_none();
+--     lean_object* homedir = passwd.homedir ? mk_option_some(lean_mk_string(passwd.homedir)) : mk_option_none();
+-- 
+--     lean_object* passwd_info = lean_alloc_ctor(0, 5, 0);
+--     lean_ctor_set(passwd_info, 0, username);
+--     lean_ctor_set(passwd_info, 1, uid);
+--     lean_ctor_set(passwd_info, 2, gid);
+--     lean_ctor_set(passwd_info, 3, shell);
+--     lean_ctor_set(passwd_info, 4, homedir);
+-- 
+--     uv_os_free_passwd(&passwd);
+-- 
+--     return lean_io_result_mk_ok(passwd_info);
+-- }
+-- ```
+def lean_uv_os_get_passwd := [JS_EXPR|throw new Error("lean_uv_os_get_passwd is not implemented")]
+
+-- ```lean
+-- opaque osGetGroup : UInt64 → IO (Option GroupInfo)
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_get_group(uint64_t gid) {
+-- #if UV_VERSION_HEX >= 0x012D00
+--     uv_group_t group;
+--     int result = uv_os_get_group(&group, gid);
+-- 
+--     if (result == UV_ENOENT) {
+--         return lean_io_result_mk_ok(mk_option_none());
+--     }
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, lean_mk_string("group")));
+--     }
+-- 
+--     lean_object* groupname = lean_mk_string(group.groupname);
+-- 
+--     int count = 0;
+--     char** mem_ptr = group.members;
+--     while (mem_ptr && *mem_ptr != nullptr) {
+--         count++;
+--         mem_ptr++;
+--     }
+-- 
+--     lean_object* members = lean_mk_empty_array();
+--     for (int i = 0; i < count; i++) {
+--         lean_object* member_name = lean_mk_string(group.members[i]);
+--         members = lean_array_push(members, member_name);
+--     }
+-- 
+--     lean_object* group_info = lean_alloc_ctor(0, 2, 8);
+--     lean_ctor_set(group_info, 0, groupname);
+--     lean_ctor_set(group_info, 1, members);
+--     lean_ctor_set_uint64(group_info, sizeof(void*)*2, group.gid);
+-- 
+--     uv_os_free_group(&group);
+-- 
+--     return lean_io_result_mk_ok(mk_option_some(group_info));
+-- #else
+--     lean_always_assert(
+--         false && ("Please build a version of Lean4 with libuv version at least 1.45.0 to invoke this.")
+--     );
+-- #endif
+-- }
+-- ```
+def lean_uv_os_get_group := [JS_EXPR|throw new Error("lean_uv_os_get_group is not implemented")]
+
+-- ```lean
+-- opaque osEnviron : IO (Array (String × String))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_environ() {
+--     uv_env_item_t* env;
+--     int count;
+--     int result = uv_os_environ(&env, &count);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_mk_string(uv_strerror(result)));
+--     }
+-- 
+--     lean_object* env_array = lean_mk_empty_array();
+-- 
+--     for (int i = 0; i < count; i++) {
+--         lean_object* name = lean_mk_string(env[i].name);
+--         lean_object* value = lean_mk_string(env[i].value);
+-- 
+--         lean_object* pair = lean_alloc_ctor(0, 2, 0);
+--         lean_ctor_set(pair, 0, name);
+--         lean_ctor_set(pair, 1, value);
+-- 
+--         env_array = lean_array_push(env_array, pair);
+--     }
+-- 
+--     uv_os_free_environ(env, count);
+-- 
+--     return lean_io_result_mk_ok(env_array);
+-- }
+-- ```
+def lean_uv_os_environ := [JS_EXPR|throw new Error("lean_uv_os_environ is not implemented")]
+
+-- ```lean
+-- opaque osGetenv : @& String → IO (Option String)
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_getenv(b_obj_arg name) {
+--     const char* name_str = lean_string_cstr(name);
+--     if (strlen(name_str) != lean_string_size(name) - 1) {
+--         return lean_io_result_mk_ok(lean_box(0));
+--     }
+--     char stack_buffer[1024];
+--     size_t size = sizeof(stack_buffer);
+-- 
+--     int result = uv_os_getenv(name_str, stack_buffer, &size);
+-- 
+--     if (result == UV_ENOENT) {
+--         return lean_io_result_mk_ok(lean_box(0));
+--     } else if (result == UV_ENOBUFS) {
+--         char* heap_buffer = static_cast<char*>(malloc(size));
+--         if (heap_buffer == nullptr) {
+--             return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--         }
+-- 
+--         result = uv_os_getenv(name_str, heap_buffer, &size);
+-- 
+--         if (result == UV_ENOENT) {
+--             free(heap_buffer);
+--             return lean_io_result_mk_ok(lean_box(0));
+--         } else if (result < 0) {
+--             free(heap_buffer);
+--             return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--         }
+-- 
+--         lean_object* value = lean_mk_string(heap_buffer);
+--         lean_object* some_value = lean_alloc_ctor(1, 1, 0);
+--         lean_ctor_set(some_value, 0, value);
+--         free(heap_buffer);
+--         return lean_io_result_mk_ok(some_value);
+--     } else if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* value = lean_mk_string(stack_buffer);
+--     lean_object* some_value = lean_alloc_ctor(1, 1, 0);
+--     lean_ctor_set(some_value, 0, value);
+--     return lean_io_result_mk_ok(some_value);
+-- }
+-- ```
+def lean_uv_os_getenv := [JS_EXPR|throw new Error("lean_uv_os_getenv is not implemented")]
+
+-- ```lean
+-- opaque osSetenv : @& String → @& String → IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_setenv(b_obj_arg name, b_obj_arg value) {
+--     const char* name_str = lean_string_cstr(name);
+--     const char* value_str = lean_string_cstr(value);
+--     if (strlen(name_str) != lean_string_size(name) - 1) {
+--         return mk_embedded_nul_error(name);
+--     }
+--     if (strlen(value_str) != lean_string_size(value) - 1) {
+--         return mk_embedded_nul_error(value);
+--     }
+-- 
+--     int result = uv_os_setenv(name_str, value_str);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_os_setenv := [JS_EXPR|throw new Error("lean_uv_os_setenv is not implemented")]
+
+-- ```lean
+-- opaque osUnsetenv : @& String → IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_unsetenv(b_obj_arg name) {
+--     const char* name_str = lean_string_cstr(name);
+--     if (strlen(name_str) != lean_string_size(name) - 1) {
+--         return mk_embedded_nul_error(name);
+--     }
+-- 
+--     int result = uv_os_unsetenv(name_str);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_os_unsetenv := [JS_EXPR|throw new Error("lean_uv_os_unsetenv is not implemented")]
+
+-- ```lean
+-- opaque osGetHostname : IO String
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_gethostname() {
+--     char hostname[256];
+--     size_t size = sizeof(hostname);
+-- 
+--     int result = uv_os_gethostname(hostname, &size);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* lean_hostname = lean_mk_string(hostname);
+--     return lean_io_result_mk_ok(lean_hostname);
+-- }
+-- ```
+def lean_uv_os_gethostname := [JS_EXPR|throw new Error("lean_uv_os_gethostname is not implemented")]
+
+-- ```lean
+-- opaque osGetPriority : UInt64 → IO Int64
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_getpriority(uint64_t pid) {
+--     int priority;
+-- 
+--     int result = uv_os_getpriority(pid, &priority);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box_uint64(priority));
+-- }
+-- ```
+def lean_uv_os_getpriority := [JS_EXPR|throw new Error("lean_uv_os_getpriority is not implemented")]
+
+-- ```lean
+-- opaque osSetPriority : UInt64 → Int64 → IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_setpriority(uint64_t pid, int64_t priority) {
+--     int result = uv_os_setpriority(pid, priority);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_os_setpriority := [JS_EXPR|throw new Error("lean_uv_os_setpriority is not implemented")]
+
+-- ```lean
+-- opaque osUname : IO UnameInfo
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_uname() {
+--     uv_utsname_t uname_info;
+-- 
+--     int result = uv_os_uname(&uname_info);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* sysname = lean_mk_string(uname_info.sysname);
+--     lean_object* release = lean_mk_string(uname_info.release);
+--     lean_object* version = lean_mk_string(uname_info.version);
+--     lean_object* machine = lean_mk_string(uname_info.machine);
+-- 
+--     lean_object* uname = lean_alloc_ctor(0, 4, 0);
+--     lean_ctor_set(uname, 0, sysname);
+--     lean_ctor_set(uname, 1, release);
+--     lean_ctor_set(uname, 2, version);
+--     lean_ctor_set(uname, 3, machine);
+-- 
+--     return lean_io_result_mk_ok(uname);
+-- }
+-- ```
+def lean_uv_os_uname := [JS_EXPR|throw new Error("lean_uv_os_uname is not implemented")]
+
+-- ```lean
+-- opaque hrtime : IO UInt64
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_hrtime() {
+--     lean_always_assert(
+--         false && ("Please build a version of Lean4 with libuv to invoke this.")
+--     );
+-- }
+-- ```
+def lean_uv_hrtime := [JS_EXPR|throw new Error("lean_uv_hrtime is not implemented")]
+
+-- ```lean
+-- opaque random : UInt64 → IO (IO.Promise (Except IO.Error ByteArray))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_random(uint64_t size) {
+--     random_req_t* req = (random_req_t*)malloc(sizeof(random_req_t));
+--     if (req == nullptr) {
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+--     req->promise = promise;
+-- 
+--     lean_object* byte_array = lean_alloc_sarray(1, 0, size);
+--     req->byte_array = byte_array;
+-- 
+--     req->req.data = req;
+-- 
+--     lean_inc(promise);
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     int result = uv_random(
+--         global_ev.loop,
+--         &req->req,
+--         lean_sarray_cptr(byte_array),
+--         size,
+--         0,
+--         [](uv_random_t* uv_req, int status, void* buf, size_t buflen) {
+--             random_req_t* req = (random_req_t*)uv_req;
+-- 
+--             if (status < 0) {
+--                 lean_dec(req->byte_array);
+--                 lean_promise_resolve(mk_except_err(lean_decode_uv_error(status, nullptr)), req->promise);
+--             } else {
+--                 lean_sarray_set_size(req->byte_array, buflen);
+--                 lean_promise_resolve(mk_except_ok(req->byte_array), req->promise);
+--             }
+-- 
+--             lean_dec(req->promise);
+--             free(req);
+--         }
+--     );
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         lean_dec(byte_array);
+--         lean_dec(promise);
+--         lean_dec(promise);
+--         free(req);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_random := [JS_EXPR|throw new Error("lean_uv_random is not implemented")]
+
+-- ```lean
+-- opaque getrusage : IO RUsage
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_getrusage() {
+--     uv_rusage_t usage;
+--     int result = uv_getrusage(&usage);
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* r = lean_alloc_ctor(0, 0, 16 * sizeof(uint64_t));
+--     lean_ctor_set_uint64(r, 0 * sizeof(uint64_t), timeval_to_millis(usage.ru_utime));
+--     lean_ctor_set_uint64(r, 1 * sizeof(uint64_t), timeval_to_millis(usage.ru_stime));
+--     lean_ctor_set_uint64(r, 2 * sizeof(uint64_t), usage.ru_maxrss);
+--     lean_ctor_set_uint64(r, 3 * sizeof(uint64_t), usage.ru_ixrss);
+--     lean_ctor_set_uint64(r, 4 * sizeof(uint64_t), usage.ru_idrss);
+--     lean_ctor_set_uint64(r, 5 * sizeof(uint64_t), usage.ru_isrss);
+--     lean_ctor_set_uint64(r, 6 * sizeof(uint64_t), usage.ru_minflt);
+--     lean_ctor_set_uint64(r, 7 * sizeof(uint64_t), usage.ru_majflt);
+--     lean_ctor_set_uint64(r, 8 * sizeof(uint64_t), usage.ru_nswap);
+--     lean_ctor_set_uint64(r, 9 * sizeof(uint64_t), usage.ru_inblock);
+--     lean_ctor_set_uint64(r, 10 * sizeof(uint64_t), usage.ru_oublock);
+--     lean_ctor_set_uint64(r, 11 * sizeof(uint64_t), usage.ru_msgsnd);
+--     lean_ctor_set_uint64(r, 12 * sizeof(uint64_t), usage.ru_msgrcv);
+--     lean_ctor_set_uint64(r, 13 * sizeof(uint64_t), usage.ru_nsignals);
+--     lean_ctor_set_uint64(r, 14 * sizeof(uint64_t), usage.ru_nvcsw);
+--     lean_ctor_set_uint64(r, 15 * sizeof(uint64_t), usage.ru_nivcsw);
+-- 
+--     return lean_io_result_mk_ok(r);
+-- }
+-- ```
+def lean_uv_getrusage := [JS_EXPR|throw new Error("lean_uv_getrusage is not implemented")]
+
+-- ```lean
+-- opaque exePath : IO String
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_exepath() {
+--     char buffer[PATH_MAX];
+--     size_t size = sizeof(buffer);
+-- 
+--     int result = uv_exepath(buffer, &size);
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* path = lean_mk_string(buffer);
+--     return lean_io_result_mk_ok(path);
+-- }
+-- ```
+def lean_uv_exepath := [JS_EXPR|throw new Error("lean_uv_exepath is not implemented")]
+
+-- ```lean
+-- opaque freeMemory : IO UInt64
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_get_free_memory() {
+--     lean_always_assert(
+--         false && ("Please build a version of Lean4 with libuv to invoke this.")
+--     );
+-- }
+-- ```
+def lean_uv_get_free_memory := [JS_EXPR|throw new Error("lean_uv_get_free_memory is not implemented")]
+
+-- ```lean
+-- opaque totalMemory : IO UInt64
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_get_total_memory() {
+--     lean_always_assert(
+--         false && ("Please build a version of Lean4 with libuv to invoke this.")
+--     );
+-- }
+-- ```
+def lean_uv_get_total_memory := [JS_EXPR|throw new Error("lean_uv_get_total_memory is not implemented")]
+
+-- ```lean
+-- opaque constrainedMemory : IO UInt64
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_get_constrained_memory() {
+--     lean_always_assert(
+--         false && ("Please build a version of Lean4 with libuv to invoke this.")
+--     );
+-- }
+-- ```
+def lean_uv_get_constrained_memory := [JS_EXPR|throw new Error("lean_uv_get_constrained_memory is not implemented")]
+
+-- ```lean
+-- opaque availableMemory : IO UInt64
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_get_available_memory() {
+-- #if UV_VERSION_HEX >= 0x012D00
+--     uint64_t mem = uv_get_available_memory();
+--     return lean_io_result_mk_ok(lean_box_uint64(mem));
+-- #else
+--     lean_always_assert(
+--         false && ("Please build a version of Lean4 with libuv version at least 1.45.0 to invoke this.")
+--     );
+-- #endif
+-- }
+-- ```
+def lean_uv_get_available_memory := [JS_EXPR|throw new Error("lean_uv_get_available_memory is not implemented")]
+
+-- ============
+-- Std.Internal.UV.Signal
+-- ============
+
+-- ```lean
+-- opaque mk (signum : Int32) (repeating : Bool) : IO Signal
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_signal_mk(uint32_t signum_obj, uint8_t repeating) {
+--     int signum = (int)(int32_t)signum_obj;
+-- 
+--     // See toInt32 in Std.Internal.IO.Async.Signal
+--     switch (signum) {
+--         case 1: signum = SIGHUP; break;
+--         case 2: signum = SIGINT; break;
+--         case 3: signum = SIGQUIT; break;
+--         case 6: signum = SIGABRT; break;
+--         case 15: signum = SIGTERM; break;
+--         case 28: signum = SIGWINCH; break;
+-- #ifndef LEAN_WINDOWS
+--         case 5: signum = SIGTRAP; break;
+--         case 10: signum = SIGUSR1; break;
+--         case 12: signum = SIGUSR2; break;
+--         case 14: signum = SIGALRM; break;
+--         case 17: signum = SIGCHLD; break;
+--         case 18: signum = SIGCONT; break;
+--         case 20: signum = SIGTSTP; break;
+--         case 21: signum = SIGTTIN; break;
+--         case 22: signum = SIGTTOU; break;
+--         case 23: signum = SIGURG; break;
+--         case 24: signum = SIGXCPU; break;
+--         case 25: signum = SIGXFSZ; break;
+--         case 26: signum = SIGVTALRM; break;
+--         case 27: signum = SIGPROF; break;
+--         case 29: signum = SIGIO; break;
+--         case 31: signum = SIGSYS; break;
+-- #endif
+--         default: signum = 0; break;
+--     }
+-- 
+--     lean_uv_signal_object * signal = (lean_uv_signal_object*)malloc(sizeof(lean_uv_signal_object));
+--     if (signal == nullptr) {
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+--     signal->m_signum = signum;
+--     signal->m_repeating = repeating;
+--     signal->m_state = SIGNAL_STATE_INITIAL;
+--     signal->m_promise = NULL;
+-- 
+--     uv_signal_t * uv_signal = (uv_signal_t*)malloc(sizeof(uv_signal_t));
+--     if (uv_signal == nullptr) {
+--         free(signal);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_signal_init(global_ev.loop, uv_signal);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result != 0) {
+--         free(uv_signal);
+--         free(signal);
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, NULL));
+--     }
+-- 
+--     signal->m_uv_signal = uv_signal;
+-- 
+--     lean_object * obj = lean_uv_signal_new(signal);
+--     lean_mark_mt(obj);
+--     signal->m_uv_signal->data = obj;
+-- 
+--     return lean_io_result_mk_ok(obj);
+-- }
+-- ```
+def lean_uv_signal_mk := [JS_EXPR|throw new Error("lean_uv_signal_mk is not implemented")]
+
+-- ```lean
+-- opaque next (signal : @& Signal) : IO (IO.Promise Int)
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_signal_next(b_obj_arg obj) {
+--     lean_uv_signal_object * signal = lean_to_uv_signal(obj);
+-- 
+--     auto setup_signal = [obj, signal]() {
+--         lean_assert(signal->m_promise == NULL);
+-- 
+--         lean_object* promise = lean_io_promise_new();
+--         signal->m_promise = promise;
+--         signal->m_state = SIGNAL_STATE_RUNNING;
+-- 
+--         // The event loop must keep the signal alive for the duration of the run time.
+--         lean_inc(obj);
+--         lean_inc(promise);
+-- 
+--         int result;
+--         if (signal->m_repeating) {
+--             result = uv_signal_start(
+--                 signal->m_uv_signal,
+--                 handle_signal_event,
+--                 signal->m_signum
+--             );
+--         } else {
+--             result = uv_signal_start_oneshot(
+--                 signal->m_uv_signal,
+--                 handle_signal_event,
+--                 signal->m_signum
+--             );
+--         }
+-- 
+--         if (result != 0) {
+--             lean_dec(obj);
+--             lean_dec(promise);
+--             event_loop_unlock(&global_ev);
+--             return lean_io_result_mk_error(lean_decode_uv_error(result, NULL));
+--         }
+-- 
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_ok(promise);
+--     };
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     if (signal->m_repeating) {
+--         switch (signal->m_state) {
+--             case SIGNAL_STATE_INITIAL:
+--                 {
+--                     return setup_signal();
+--                 }
+--             case SIGNAL_STATE_RUNNING:
+--                 {
+--                     if (signal_promise_is_finished(signal)) {
+--                          if (signal->m_promise != NULL) {
+--                             lean_dec(signal->m_promise);
+--                         }
+-- 
+--                         signal->m_promise = lean_io_promise_new();
+--                     }
+-- 
+--                     lean_inc(signal->m_promise);
+--                     event_loop_unlock(&global_ev);
+--                     return lean_io_result_mk_ok(signal->m_promise);
+--                 }
+--             case SIGNAL_STATE_FINISHED:
+--                 {
+--                     if (signal->m_promise == NULL) {
+--                         lean_object* finished_promise = lean_io_promise_new();
+--                         event_loop_unlock(&global_ev);
+--                         return lean_io_result_mk_ok(finished_promise);
+--                     }
+-- 
+--                     lean_inc(signal->m_promise);
+--                     event_loop_unlock(&global_ev);
+--                     return lean_io_result_mk_ok(signal->m_promise);
+--                 }
+--         }
+--     } else {
+--         if (signal->m_state == SIGNAL_STATE_INITIAL) {
+--             return setup_signal();
+--         } else if (signal->m_promise != NULL) {
+--             lean_inc(signal->m_promise);
+--             event_loop_unlock(&global_ev);
+--             return lean_io_result_mk_ok(signal->m_promise);
+--         } else {
+--             lean_object* finished_promise = lean_io_promise_new();
+--             event_loop_unlock(&global_ev);
+--             return lean_io_result_mk_ok(finished_promise);
+--         }
+--     }
+-- }
+-- ```
+def lean_uv_signal_next := [JS_EXPR|throw new Error("lean_uv_signal_next is not implemented")]
+
+-- ```lean
+-- opaque stop (signal : @& Signal) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_signal_stop(b_obj_arg obj) {
+--     lean_uv_signal_object * signal = lean_to_uv_signal(obj);
+-- 
+--     if (signal->m_state == SIGNAL_STATE_RUNNING) {
+--         event_loop_lock(&global_ev);
+--         int result = uv_signal_stop(signal->m_uv_signal);
+--         event_loop_unlock(&global_ev);
+-- 
+--         if  (signal->m_promise != NULL) {
+--             lean_dec(signal->m_promise);
+--             signal->m_promise = NULL;
+--         }
+-- 
+--         signal->m_state = SIGNAL_STATE_FINISHED;
+-- 
+--         // The loop does not need to keep the signal alive anymore.
+--         lean_dec(obj);
+-- 
+--         if (result != 0) {
+--             return lean_io_result_mk_error(lean_decode_uv_error(result, NULL));
+--         } else {
+--             return lean_io_result_mk_ok(lean_box(0));
+--         }
+--     } else {
+--         return lean_io_result_mk_ok(lean_box(0));
+--     }
+-- }
+-- ```
+def lean_uv_signal_stop := [JS_EXPR|throw new Error("lean_uv_signal_stop is not implemented")]
+
+-- ```lean
+-- opaque cancel (signal : @& Signal) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_signal_cancel(b_obj_arg obj) {
+--     lean_uv_signal_object * signal = lean_to_uv_signal(obj);
+-- 
+--     // It's locking here to avoid changing the state during other operations.
+--     event_loop_lock(&global_ev);
+-- 
+--     if (signal->m_state == SIGNAL_STATE_RUNNING && signal->m_promise != NULL) {
+--         if (signal->m_repeating) {
+--             lean_dec(signal->m_promise);
+--             signal->m_promise = NULL;
+--         } else {
+--             uv_signal_stop(signal->m_uv_signal);
+--             lean_dec(signal->m_promise);
+--             signal->m_promise = NULL;
+--             signal->m_state = SIGNAL_STATE_INITIAL;
+--             lean_dec(obj);
+--         }
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_signal_cancel := [JS_EXPR|throw new Error("lean_uv_signal_cancel is not implemented")]
+
+-- ============
+-- Std.Internal.UV.TCP
+-- ============
+
+-- ```lean
+-- opaque new : IO Socket
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_new() {
+--     lean_uv_tcp_socket_object* tcp_socket = (lean_uv_tcp_socket_object*)malloc(sizeof(lean_uv_tcp_socket_object));
+--     if (tcp_socket == nullptr) {
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     tcp_socket->m_promise_accept = nullptr;
+--     tcp_socket->m_promise_shutdown = nullptr;
+--     tcp_socket->m_promise_read = nullptr;
+--     tcp_socket->m_byte_array = nullptr;
+--     tcp_socket->m_client = nullptr;
+-- 
+--     uv_tcp_t* uv_tcp = (uv_tcp_t*)malloc(sizeof(uv_tcp_t));
+--     if (uv_tcp == nullptr) {
+--         free(tcp_socket);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_tcp_init(global_ev.loop, uv_tcp);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result != 0) {
+--         free(uv_tcp);
+--         free(tcp_socket);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     tcp_socket->m_uv_tcp = uv_tcp;
+-- 
+--     lean_object* obj = lean_uv_tcp_socket_new(tcp_socket);
+--     lean_mark_mt(obj);
+-- 
+--     tcp_socket->m_uv_tcp->data = obj;
+-- 
+--     return lean_io_result_mk_ok(obj);
+-- }
+-- ```
+def lean_uv_tcp_new := [JS_EXPR|throw new Error("lean_uv_tcp_new is not implemented")]
+
+-- ```lean
+-- opaque connect (socket : @& Socket) (addr : @& SocketAddress) : IO (IO.Promise (Except IO.Error Unit))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_connect(b_obj_arg socket, b_obj_arg addr) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     sockaddr_storage addr_struct;
+--     lean_socket_address_to_sockaddr_storage(addr, &addr_struct);
+-- 
+--     uv_connect_t* uv_connect = (uv_connect_t*)malloc(sizeof(uv_connect_t));
+--     if (uv_connect == nullptr) {
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+--     tcp_connect_data* connect_data = (tcp_connect_data*)malloc(sizeof(tcp_connect_data));
+--     if (connect_data == nullptr) {
+--         free(uv_connect);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+-- 
+--     connect_data->promise = promise;
+--     connect_data->socket = socket;
+-- 
+--     uv_connect->data = connect_data;
+-- 
+--     // The event loop owns the socket.
+--     lean_inc(socket);
+--     lean_inc(promise);
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     int result = uv_tcp_connect(uv_connect, tcp_socket->m_uv_tcp, (sockaddr*)&addr_struct, [](uv_connect_t* req, int status) {
+--         tcp_connect_data* tup = (tcp_connect_data*) req->data;
+--         lean_promise_resolve_with_code(status, tup->promise);
+-- 
+--         // The event loop does not own the object anymore.
+--         lean_dec(tup->socket);
+--         lean_dec(tup->promise);
+-- 
+--         free(req->data);
+--         free(req);
+--     });
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         lean_dec(promise); // The structure does not own it.
+--         lean_dec(promise); // We are not going to return it.
+--         lean_dec(socket);
+-- 
+--         free(uv_connect->data);
+--         free(uv_connect);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_tcp_connect := [JS_EXPR|throw new Error("lean_uv_tcp_connect is not implemented")]
+
+-- ```lean
+-- opaque send (socket : @& Socket) (data : Array ByteArray) : IO (IO.Promise (Except IO.Error Unit))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_send(b_obj_arg socket, obj_arg data_array) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     size_t array_len = lean_array_size(data_array);
+-- 
+--     if (array_len == 0) {
+--         lean_dec(data_array);
+-- 
+--         lean_object* promise = lean_promise_new();
+--         mark_mt(promise);
+--         lean_promise_resolve_with_code(0, promise);
+-- 
+--         return lean_io_result_mk_ok(promise);
+--     }
+-- 
+--     // Allocate buffer array for uv_write
+--     if (lean_usize_mul_would_overflow(array_len, sizeof(uv_buf_t))) {
+--         lean_dec(data_array);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+--     uv_buf_t* bufs = (uv_buf_t*)malloc(array_len * sizeof(uv_buf_t));
+--     if (bufs == nullptr) {
+--         lean_dec(data_array);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     for (size_t i = 0; i < array_len; i++) {
+--         lean_object* byte_array = lean_array_get_core(data_array, i);
+--         size_t data_len = lean_sarray_size(byte_array);
+--         char* data_str = (char*)lean_sarray_cptr(byte_array);
+--         bufs[i] = uv_buf_init(data_str, data_len);
+--     }
+-- 
+--     uv_write_t* write_uv = (uv_write_t*)malloc(sizeof(uv_write_t));
+--     if (write_uv == nullptr) {
+--         lean_dec(data_array);
+--         free(bufs);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+--     write_uv->data = (tcp_send_data*)malloc(sizeof(tcp_send_data));
+--     if (write_uv->data == nullptr) {
+--         lean_dec(data_array);
+--         free(bufs);
+--         free(write_uv);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+-- 
+--     tcp_send_data* send_data = (tcp_send_data*)write_uv->data;
+--     send_data->promise = promise;
+--     send_data->data = data_array;
+--     send_data->socket = socket;
+--     send_data->bufs = bufs;
+-- 
+--     // These objects are going to enter the loop and be owned by it
+--     lean_inc(promise);
+--     lean_inc(socket);
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     int result = uv_write(write_uv, (uv_stream_t*)tcp_socket->m_uv_tcp, bufs, array_len, [](uv_write_t* req, int status) {
+--         tcp_send_data* tup = (tcp_send_data*) req->data;
+-- 
+--         lean_promise_resolve_with_code(status, tup->promise);
+-- 
+--         lean_dec(tup->promise);
+--         lean_dec(tup->data);
+--         lean_dec(tup->socket);
+-- 
+--         free(tup->bufs);
+--         free(req->data);
+--         free(req);
+--     });
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         lean_dec(promise); // The structure does not own it.
+--         lean_dec(promise); // We are not going to return it.
+--         lean_dec(socket);
+--         lean_dec(data_array);
+--         free(bufs);
+-- 
+--         free(write_uv->data);
+--         free(write_uv);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_tcp_send := [JS_EXPR|throw new Error("lean_uv_tcp_send is not implemented")]
+
+-- ```lean
+-- opaque recv? (socket : @& Socket) (size : UInt64) : IO (IO.Promise (Except IO.Error (Option ByteArray)))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_recv(b_obj_arg socket, uint64_t buffer_size) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     // Locking early prevents potential parallelism issues setting the byte_array.
+--     event_loop_lock(&global_ev);
+-- 
+--     if (tcp_socket->m_promise_read != nullptr) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_error(lean_decode_uv_error(UV_EALREADY, nullptr));
+--     }
+-- 
+--     lean_object* byte_array = lean_alloc_sarray(1, 0, buffer_size);
+--     tcp_socket->m_byte_array = byte_array;
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+-- 
+--     tcp_socket->m_promise_read = promise;
+-- 
+--     // The event loop owns the socket.
+--     lean_inc(socket);
+--     lean_inc(promise);
+-- 
+--     int result = uv_read_start((uv_stream_t*)tcp_socket->m_uv_tcp, [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+--         lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket((lean_object*)handle->data);
+-- 
+--         buf->base = (char*)lean_sarray_cptr(tcp_socket->m_byte_array);
+--         buf->len = lean_sarray_capacity(tcp_socket->m_byte_array);
+--     }, [](uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+--         uv_read_stop(stream);
+-- 
+--         lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket((lean_object*)stream->data);
+--         lean_object* promise = tcp_socket->m_promise_read;
+--         lean_object* byte_array = tcp_socket->m_byte_array;
+-- 
+--         tcp_socket->m_promise_read = nullptr;
+--         tcp_socket->m_byte_array = nullptr;
+-- 
+--         if (nread >= 0) {
+--             lean_sarray_set_size(byte_array, nread);
+--             lean_promise_resolve(mk_except_ok(lean::mk_option_some(byte_array)), promise);
+--         } else if (nread == UV_EOF) {
+--             lean_dec(byte_array);
+--             lean_promise_resolve(mk_except_ok(lean::mk_option_none()), promise);
+--         } else if (nread < 0) {
+--             lean_dec(byte_array);
+--             lean_promise_resolve(mk_except_err(lean_decode_uv_error(nread, nullptr)), promise);
+--         }
+-- 
+--         lean_dec(promise);
+-- 
+--         // The event loop does not own the object anymore.
+--         lean_dec((lean_object*)stream->data);
+--     });
+-- 
+--     if (result < 0) {
+--         tcp_socket->m_byte_array = nullptr;
+--         tcp_socket->m_promise_read = nullptr;
+-- 
+--         event_loop_unlock(&global_ev);
+-- 
+--         lean_dec(byte_array);
+--         lean_dec(promise); // The structure does not own it.
+--         lean_dec(promise); // We are not going to return it.
+--         lean_dec(socket);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_tcp_recv := [JS_EXPR|throw new Error("lean_uv_tcp_recv is not implemented")]
+
+-- ```lean
+-- opaque waitReadable (socket : @& Socket) : IO (IO.Promise (Except IO.Error Bool))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_wait_readable(b_obj_arg socket) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     if (tcp_socket->m_promise_read != nullptr) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_error(lean_decode_uv_error(UV_EALREADY, nullptr));
+--     }
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+-- 
+--     tcp_socket->m_promise_read = promise;
+-- 
+--     // The event loop owns the socket.
+--     lean_inc(socket);
+--     lean_inc(promise);
+-- 
+--     int result = uv_read_start((uv_stream_t*)tcp_socket->m_uv_tcp, [](uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+--         // According to libuv documentation if we do this we do not lose data and a UV_ENOBUFS will
+--         // be triggered in the read cb.
+--         buf->base = NULL;
+--         buf->len = 0;
+--     }, [](uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+--         uv_read_stop(stream);
+-- 
+--         lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket((lean_object*)stream->data);
+--         lean_object* promise = tcp_socket->m_promise_read;
+-- 
+--         tcp_socket->m_promise_read = nullptr;
+-- 
+--         if (nread == UV_ENOBUFS) {
+--             lean_promise_resolve(mk_except_ok(lean_box(1)), promise);
+--         } else if (nread == UV_EOF) {
+--             lean_promise_resolve(mk_except_ok(lean_box(0)), promise);
+--         } else if (nread < 0) {
+--             lean_promise_resolve(mk_except_err(lean_decode_uv_error(nread, nullptr)), promise);
+--         } else {
+--             // This branch should be dead, we cannot receive a value >= 0 according to docs.
+--             lean_always_assert(false);
+--         }
+-- 
+--         lean_dec(promise);
+-- 
+--         // The event loop does not own the object anymore.
+--         lean_dec((lean_object*)stream->data);
+--     });
+-- 
+--     if (result < 0) {
+--         tcp_socket->m_promise_read = nullptr;
+-- 
+--         event_loop_unlock(&global_ev);
+-- 
+--         lean_dec(promise); // The structure does not own it.
+--         lean_dec(promise); // We are not going to return it.
+--         lean_dec(socket);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_tcp_wait_readable := [JS_EXPR|throw new Error("lean_uv_tcp_wait_readable is not implemented")]
+
+-- ```lean
+-- opaque cancelRecv (socket : @& Socket) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_cancel_recv(b_obj_arg socket) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     if (tcp_socket->m_promise_read == nullptr) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_ok(lean_box(0));
+--     }
+-- 
+--     uv_read_stop((uv_stream_t*)tcp_socket->m_uv_tcp);
+-- 
+--     lean_object* promise = tcp_socket->m_promise_read;
+--     lean_dec(promise);
+--     tcp_socket->m_promise_read = nullptr;
+-- 
+--     lean_object* byte_array = tcp_socket->m_byte_array;
+--     if (byte_array != nullptr) {
+--         lean_dec(byte_array);
+--         tcp_socket->m_byte_array = nullptr;
+--     }
+-- 
+--     lean_dec(socket);
+-- 
+--     event_loop_unlock(&global_ev);
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_tcp_cancel_recv := [JS_EXPR|throw new Error("lean_uv_tcp_cancel_recv is not implemented")]
+
+-- ```lean
+-- opaque bind (socket : @& Socket) (addr : @& SocketAddress) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_bind(b_obj_arg socket, b_obj_arg addr) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     sockaddr_storage addr_ptr;
+--     lean_socket_address_to_sockaddr_storage(addr, &addr_ptr);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_tcp_bind(tcp_socket->m_uv_tcp, (sockaddr*)&addr_ptr, 0);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_tcp_bind := [JS_EXPR|throw new Error("lean_uv_tcp_bind is not implemented")]
+
+-- ```lean
+-- opaque listen (socket : @& Socket) (backlog : UInt32) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_listen(b_obj_arg socket, int32_t backlog) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     int result = uv_listen((uv_stream_t*)tcp_socket->m_uv_tcp, backlog, [](uv_stream_t* stream, int status) {
+--         lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket((lean_object*)stream->data);
+-- 
+--         if (tcp_socket->m_promise_accept == nullptr) {
+--             return;
+--         }
+-- 
+--         lean_object* promise = tcp_socket->m_promise_accept;
+-- 
+--         if (status < 0) {
+--             lean_promise_resolve_with_code(status, promise);
+--             lean_dec(promise);
+--             tcp_socket->m_promise_accept = nullptr;
+--             return;
+--         }
+-- 
+--         lean_object* client = tcp_socket->m_client;
+--         lean_uv_tcp_socket_object* client_socket = lean_to_uv_tcp_socket(client);
+-- 
+--         int result = uv_accept((uv_stream_t*)tcp_socket->m_uv_tcp, (uv_stream_t*)client_socket->m_uv_tcp);
+-- 
+--         tcp_socket->m_promise_accept = nullptr;
+--         tcp_socket->m_client = nullptr;
+-- 
+--         if (result < 0) {
+--             lean_dec(client);
+--             lean_promise_resolve_with_code(result, promise);
+--             lean_dec(promise);
+--             return;
+--         }
+-- 
+--         lean_promise_resolve(mk_except_ok(client), promise);
+--         lean_dec(promise);
+-- 
+--         // The accept increases the count and then the listen decreases
+--         lean_dec((lean_object*)stream->data);
+--     });
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_tcp_listen := [JS_EXPR|throw new Error("lean_uv_tcp_listen is not implemented")]
+
+-- ```lean
+-- opaque accept (socket : @& Socket) : IO (IO.Promise (Except IO.Error Socket))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_accept(b_obj_arg socket) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     // Locking early prevents potential parallelism issues setting m_promise_accept.
+--     event_loop_lock(&global_ev);
+-- 
+--     if (tcp_socket->m_promise_accept != nullptr) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(UV_EALREADY, mk_string("parallel accept is not allowed! consider binding multiple sockets to the same address and accepting on them instead")));
+--     }
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+-- 
+--     lean_object* client = lean_io_result_take_value(lean_uv_tcp_new());
+-- 
+--     lean_uv_tcp_socket_object* client_socket = lean_to_uv_tcp_socket(client);
+-- 
+--     int result = uv_accept((uv_stream_t*)tcp_socket->m_uv_tcp, (uv_stream_t*)client_socket->m_uv_tcp);
+-- 
+--     if (result < 0 && result != UV_EAGAIN) {
+--         event_loop_unlock(&global_ev);
+--         lean_dec(client);
+--         lean_promise_resolve_with_code(result, promise);
+--     } else if (result >= 0) {
+--         event_loop_unlock(&global_ev);
+--         lean_promise_resolve(mk_except_ok(client), promise);
+--     } else {
+--         // The event loop owns the object. It will be released in the listen
+--         lean_inc(socket);
+--         lean_inc(promise);
+-- 
+--         tcp_socket->m_promise_accept = promise;
+--         tcp_socket->m_client = client;
+-- 
+--         event_loop_unlock(&global_ev);
+--     }
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_tcp_accept := [JS_EXPR|throw new Error("lean_uv_tcp_accept is not implemented")]
+
+-- ```lean
+-- opaque tryAccept (socket : @& Socket) : IO (Except IO.Error (Option Socket))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_try_accept(b_obj_arg socket) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     // Locking early prevents potential parallelism issues setting m_promise_accept.
+--     event_loop_lock(&global_ev);
+-- 
+--     if (tcp_socket->m_promise_accept != nullptr) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_error(lean_decode_uv_error(UV_EALREADY, mk_string("parallel accept is not allowed! consider binding multiple sockets to the same address and accepting on them instead")));
+--     }
+-- 
+--     lean_object* client = lean_io_result_take_value(lean_uv_tcp_new());
+--     lean_uv_tcp_socket_object* client_socket = lean_to_uv_tcp_socket(client);
+-- 
+--     int result = uv_accept((uv_stream_t*)tcp_socket->m_uv_tcp, (uv_stream_t*)client_socket->m_uv_tcp);
+-- 
+--     if (result < 0 && result != UV_EAGAIN) {
+--         event_loop_unlock(&global_ev);
+--         lean_dec(client);
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, NULL));
+--     } else if (result >= 0) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_ok(mk_except_ok(lean::mk_option_some(client)));
+--     } else {
+--         event_loop_unlock(&global_ev);
+--         lean_dec(client);
+--         return lean_io_result_mk_ok(mk_except_ok(lean::mk_option_none()));
+--     }
+-- }
+-- ```
+def lean_uv_tcp_try_accept := [JS_EXPR|throw new Error("lean_uv_tcp_try_accept is not implemented")]
+
+-- ```lean
+-- opaque cancelAccept (socket : @& Socket) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_cancel_accept(b_obj_arg socket) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     if (tcp_socket->m_promise_accept == nullptr) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_ok(lean_box(0));
+--     }
+-- 
+--     lean_object* promise = tcp_socket->m_promise_accept;
+--     lean_dec(promise);
+--     tcp_socket->m_promise_accept = nullptr;
+-- 
+--     lean_object* client = tcp_socket->m_client;
+-- 
+--     if (client != nullptr) {
+--         lean_dec(client);
+--         tcp_socket->m_client = nullptr;
+--     }
+-- 
+--     lean_dec(socket);
+-- 
+--     event_loop_unlock(&global_ev);
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_tcp_cancel_accept := [JS_EXPR|throw new Error("lean_uv_tcp_cancel_accept is not implemented")]
+
+-- ```lean
+-- opaque shutdown (socket : @& Socket) : IO (IO.Promise (Except IO.Error Unit))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_shutdown(b_obj_arg socket) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     // Locking early prevents potential parallelism issues setting the m_promise_shutdown.
+--     event_loop_lock(&global_ev);
+-- 
+--     if (tcp_socket->m_promise_shutdown != nullptr) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_error(lean_decode_uv_error(UV_EALREADY, mk_string("shutdown already in progress")));
+--     }
+-- 
+--     uv_shutdown_t* shutdown_req = (uv_shutdown_t*)malloc(sizeof(uv_shutdown_t));
+--     if (shutdown_req == nullptr) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+--     shutdown_req->data = (void*)socket;
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+--     tcp_socket->m_promise_shutdown = promise;
+--     lean_inc(promise);
+-- 
+--     lean_inc(socket);
+-- 
+--     int result = uv_shutdown(shutdown_req, (uv_stream_t*)tcp_socket->m_uv_tcp, [](uv_shutdown_t* req, int status) {
+--         lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket((lean_object*)req->data);
+-- 
+--         if (status < 0) {
+--             lean_promise_resolve_with_code(status, tcp_socket->m_promise_shutdown);
+--         } else {
+--             lean_promise_resolve(mk_except_ok(lean_box(0)), tcp_socket->m_promise_shutdown);
+--         }
+-- 
+--         lean_dec(tcp_socket->m_promise_shutdown);
+-- 
+--         tcp_socket->m_promise_shutdown = nullptr;
+-- 
+--         lean_dec((lean_object*)req->data);
+--         free(req);
+--     });
+-- 
+-- 
+--     if (result < 0) {
+--         free(shutdown_req);
+--         lean_dec(tcp_socket->m_promise_shutdown);
+--         tcp_socket->m_promise_shutdown = nullptr;
+--         event_loop_unlock(&global_ev);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_tcp_shutdown := [JS_EXPR|throw new Error("lean_uv_tcp_shutdown is not implemented")]
+
+-- ```lean
+-- opaque getPeerName (socket : @& Socket) : IO SocketAddress
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_getpeername(b_obj_arg socket) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     sockaddr_storage addr_storage;
+--     int addr_len = sizeof(addr_storage);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_tcp_getpeername(tcp_socket->m_uv_tcp, (struct sockaddr*)&addr_storage, &addr_len);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* lean_addr = lean_sockaddr_to_socketaddress((struct sockaddr*)&addr_storage);
+-- 
+--     return lean_io_result_mk_ok(lean_addr);
+-- }
+-- ```
+def lean_uv_tcp_getpeername := [JS_EXPR|throw new Error("lean_uv_tcp_getpeername is not implemented")]
+
+-- ```lean
+-- opaque getSockName (socket : @& Socket) : IO SocketAddress
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_getsockname(b_obj_arg socket) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     struct sockaddr_storage addr_storage;
+--     int addr_len = sizeof(addr_storage);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_tcp_getsockname(tcp_socket->m_uv_tcp, (struct sockaddr*)&addr_storage, &addr_len);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* lean_addr = lean_sockaddr_to_socketaddress((struct sockaddr*)&addr_storage);
+--     return lean_io_result_mk_ok(lean_addr);
+-- }
+-- ```
+def lean_uv_tcp_getsockname := [JS_EXPR|throw new Error("lean_uv_tcp_getsockname is not implemented")]
+
+-- ```lean
+-- opaque noDelay (socket : @& Socket) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_nodelay(b_obj_arg socket) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_tcp_nodelay(tcp_socket->m_uv_tcp, 1);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_tcp_nodelay := [JS_EXPR|throw new Error("lean_uv_tcp_nodelay is not implemented")]
+
+-- ```lean
+-- opaque keepAlive (socket : @& Socket) (enable : Int8) (delay : UInt32) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_tcp_keepalive(b_obj_arg socket, int32_t enable, uint32_t delay) {
+--     lean_uv_tcp_socket_object* tcp_socket = lean_to_uv_tcp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_tcp_keepalive(tcp_socket->m_uv_tcp, enable, delay);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_tcp_keepalive := [JS_EXPR|throw new Error("lean_uv_tcp_keepalive is not implemented")]
+
+-- ============
+-- Std.Internal.UV.UDP
+-- ============
+
+-- ```lean
+-- opaque new : IO Socket
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_new() {
+--     lean_uv_udp_socket_object* udp_socket = (lean_uv_udp_socket_object*)malloc(sizeof(lean_uv_udp_socket_object));
+--     if (udp_socket == nullptr) {
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     udp_socket->m_promise_read = nullptr;
+--     udp_socket->m_byte_array = nullptr;
+-- 
+--     uv_udp_t* uv_udp = (uv_udp_t*)malloc(sizeof(uv_udp_t));
+--     if (uv_udp == nullptr) {
+--         free(udp_socket);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_init(global_ev.loop, uv_udp);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result != 0) {
+--         free(uv_udp);
+--         free(udp_socket);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object* obj = lean_uv_udp_socket_new(udp_socket);
+--     lean_mark_mt(obj);
+-- 
+--     udp_socket->m_uv_udp = uv_udp;
+--     udp_socket->m_uv_udp->data = obj;
+-- 
+--     return lean_io_result_mk_ok(obj);
+-- }
+-- ```
+def lean_uv_udp_new := [JS_EXPR|throw new Error("lean_uv_udp_new is not implemented")]
+
+-- ```lean
+-- opaque bind (socket : @& Socket) (addr : @& SocketAddress) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_bind(b_obj_arg socket, b_obj_arg addr) {
+--     lean_uv_udp_socket_object* udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     sockaddr_storage addr_ptr;
+--     lean_socket_address_to_sockaddr_storage(addr, &addr_ptr);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_bind(udp_socket->m_uv_udp, (sockaddr*)&addr_ptr, UV_UDP_REUSEADDR);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_udp_bind := [JS_EXPR|throw new Error("lean_uv_udp_bind is not implemented")]
+
+-- ```lean
+-- opaque connect (socket : @& Socket) (addr : @& SocketAddress) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_connect(b_obj_arg socket, b_obj_arg addr) {
+--     lean_uv_udp_socket_object* udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     sockaddr_storage addr_ptr;
+--     lean_socket_address_to_sockaddr_storage(addr, &addr_ptr);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_connect(udp_socket->m_uv_udp, (sockaddr*)&addr_ptr);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_udp_connect := [JS_EXPR|throw new Error("lean_uv_udp_connect is not implemented")]
+
+-- ```lean
+-- opaque send (socket : @& Socket) (data : Array ByteArray) (addr : @& Option SocketAddress) : IO (IO.Promise (Except IO.Error Unit))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_send(b_obj_arg socket, obj_arg data_array, b_obj_arg opt_addr) {
+--     lean_uv_udp_socket_object* udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     size_t array_len = lean_array_size(data_array);
+-- 
+--     if (array_len == 0) {
+--         lean_dec(data_array);
+-- 
+--         lean_object* promise = lean_promise_new();
+--         mark_mt(promise);
+--         lean_promise_resolve_with_code(0, promise);
+-- 
+--         return lean_io_result_mk_ok(promise);
+--     }
+-- 
+--     if (lean_usize_mul_would_overflow(array_len, sizeof(uv_buf_t))) {
+--         lean_dec(data_array);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+--     uv_buf_t* bufs = (uv_buf_t*)malloc(array_len * sizeof(uv_buf_t));
+--     if (bufs == nullptr) {
+--         lean_dec(data_array);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     for (size_t i = 0; i < array_len; i++) {
+--         lean_object* byte_array = lean_array_get_core(data_array, i);
+--         size_t data_len = lean_sarray_size(byte_array);
+--         char* data_str = (char*)lean_sarray_cptr(byte_array);
+--         bufs[i] = uv_buf_init(data_str, data_len);
+--     }
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+-- 
+--     uv_udp_send_t* send_uv = (uv_udp_send_t*)malloc(sizeof(uv_udp_send_t));
+--     if (send_uv == nullptr) {
+--         lean_dec(data_array);
+--         lean_dec(promise);
+--         free(bufs);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+--     send_uv->data = (udp_send_data*)malloc(sizeof(udp_send_data));
+--     if (send_uv->data == nullptr) {
+--         lean_dec(data_array);
+--         lean_dec(promise);
+--         free(bufs);
+--         free(send_uv);
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     udp_send_data* send_data = (udp_send_data*)send_uv->data;
+--     send_data->promise = promise;
+--     send_data->data = data_array;
+--     send_data->socket = socket;
+--     send_data->bufs = bufs;
+-- 
+--     // These objects are going to enter the loop and be owned by it
+--     lean_inc(promise);
+--     lean_inc(socket);
+-- 
+--     sockaddr_storage* addr_ptr = nullptr;
+-- 
+--     if (lean_obj_tag(opt_addr) == 1) {
+--         lean_object* addr = lean_ctor_get(opt_addr, 0);
+--         addr_ptr = (sockaddr_storage*)malloc(sizeof(sockaddr_storage));
+--         if (addr_ptr == nullptr) {
+--             lean_dec(promise);
+--             lean_dec(promise);
+--             lean_dec(socket);
+--             lean_dec(data_array);
+--             free(bufs);
+--             free(send_uv->data);
+--             free(send_uv);
+--             return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--         }
+--         lean_socket_address_to_sockaddr_storage(addr, addr_ptr);
+--     }
+-- 
+--     event_loop_lock(&global_ev);
+-- 
+--     int result = uv_udp_send(send_uv, udp_socket->m_uv_udp, bufs, array_len, (sockaddr*)addr_ptr, [](uv_udp_send_t* req, int status) {
+--         udp_send_data* tup = (udp_send_data*) req->data;
+--         lean_promise_resolve_with_code(status, tup->promise);
+-- 
+--         lean_dec(tup->promise);
+--         lean_dec(tup->socket);
+--         lean_dec(tup->data);
+-- 
+--         free(tup->bufs);
+--         free(req->data);
+--         free(req);
+--     });
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (addr_ptr != nullptr) {
+--         free(addr_ptr);
+--     }
+-- 
+--     if (result < 0) {
+--         lean_dec(promise); // The structure does not own it.
+--         lean_dec(promise); // We are not going to return it.
+--         lean_dec(socket); // The loop does not own the object.
+--         lean_dec(data_array); // The data is owned.
+--         free(bufs);
+-- 
+--         free(send_uv->data);
+--         free(send_uv);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_udp_send := [JS_EXPR|throw new Error("lean_uv_udp_send is not implemented")]
+
+-- ```lean
+-- opaque recv (socket : @& Socket) (size : UInt64) : IO (IO.Promise (Except IO.Error (ByteArray × Option SocketAddress)))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_recv(b_obj_arg socket, uint64_t buffer_size) {
+--     lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     // Locking earlier to avoid parallelism issues with m_promise_read.
+--     event_loop_lock(&global_ev);
+-- 
+--     if (udp_socket->m_promise_read != nullptr) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_error(lean_decode_uv_error(UV_EALREADY, nullptr));
+--     }
+-- 
+--     lean_object* byte_array = lean_alloc_sarray(1, 0, buffer_size);
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+-- 
+--     udp_socket->m_byte_array = byte_array;
+--     udp_socket->m_promise_read = promise;
+-- 
+--     // The event loop owns the socket.
+--     lean_inc(promise);
+--     lean_inc(socket);
+-- 
+--     int result = uv_udp_recv_start(udp_socket->m_uv_udp, [](uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+--         lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket((lean_object*)handle->data);
+-- 
+--         buf->base = (char*)lean_sarray_cptr(udp_socket->m_byte_array);
+--         buf->len = lean_sarray_capacity(udp_socket->m_byte_array);
+--     }, [](uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const struct sockaddr *addr, unsigned flags) {
+--         uv_udp_recv_stop(handle);
+-- 
+--         lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket((lean_object*)handle->data);
+--         lean_object* promise = udp_socket->m_promise_read;
+--         lean_object* byte_array = udp_socket->m_byte_array;
+-- 
+--         udp_socket->m_promise_read = nullptr;
+--         udp_socket->m_byte_array = nullptr;
+-- 
+--         if (nread >= 0) {
+--             lean_sarray_set_size(byte_array, nread);
+-- 
+--             lean_object* addr_obj;
+-- 
+--             if (addr != NULL) {
+--                 addr_obj = lean::mk_option_some(lean_sockaddr_to_socketaddress(addr));
+--             } else {
+--                 addr_obj = lean::mk_option_none();
+--             }
+-- 
+--             lean_object* prod = lean_alloc_ctor(1, 2, 0);
+--             lean_ctor_set(prod, 0, byte_array);
+--             lean_ctor_set(prod, 1, addr_obj);
+-- 
+--             lean_promise_resolve(mk_except_ok(prod), promise);
+--         } else if (nread < 0) {
+--             lean_dec(byte_array);
+--             lean_promise_resolve(mk_except_err(lean_decode_uv_error(nread, nullptr)), promise);
+--         }
+-- 
+--         lean_dec(promise);
+-- 
+--         // The event loop does not own the object anymore.
+--         lean_dec((lean_object*)handle->data);
+--     });
+-- 
+--     if (result < 0) {
+--         udp_socket->m_byte_array = nullptr;
+--         udp_socket->m_promise_read = nullptr;
+-- 
+--         event_loop_unlock(&global_ev);
+-- 
+--         lean_dec(byte_array);
+--         lean_dec(promise); // The structure does not own it.
+--         lean_dec(promise); // We are not going to return it.
+--         lean_dec(socket);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_udp_recv := [JS_EXPR|throw new Error("lean_uv_udp_recv is not implemented")]
+
+-- ```lean
+-- opaque waitReadable (socket : @& Socket) : IO (IO.Promise (Except IO.Error Unit))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_wait_readable(b_obj_arg socket) {
+--     lean_uv_udp_socket_object* udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     // Locking earlier to avoid parallelism issues with m_promise_read.
+--     event_loop_lock(&global_ev);
+-- 
+--     if (udp_socket->m_promise_read != nullptr) {
+--         event_loop_unlock(&global_ev);
+--         return lean_io_result_mk_error(lean_decode_uv_error(UV_EALREADY, nullptr));
+--     }
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+-- 
+--     udp_socket->m_promise_read = promise;
+-- 
+--     // The event loop owns the socket.
+--     lean_inc(promise);
+--     lean_inc(socket);
+-- 
+--     int result = uv_udp_recv_start(udp_socket->m_uv_udp, [](uv_handle_t* handle, size_t suggested_size, uv_buf_t *buf) {
+--         // According to libuv documentation if we do this we do not lose data and a UV_ENOBUFS will
+--         // be triggered in the read cb.
+--         buf->base = NULL;
+--         buf->len = 0;
+--     }, [](uv_udp_t* handle, ssize_t nread, const uv_buf_t *buf, const struct sockaddr *addr, unsigned flags) {
+--         uv_udp_recv_stop(handle);
+-- 
+--         lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket((lean_object*)handle->data);
+--         lean_object* promise = udp_socket->m_promise_read;
+-- 
+--         udp_socket->m_promise_read = nullptr;
+-- 
+--         if (nread == UV_ENOBUFS) {
+--             lean_promise_resolve(mk_except_ok(lean_box(0)), promise);
+--         } else if (nread < 0) {
+--             lean_promise_resolve(mk_except_err(lean_decode_uv_error(nread, nullptr)), promise);
+--         } else {
+--             // This branch should be dead, we cannot receive a value >= 0 according to docs.
+--             lean_always_assert(false);
+--         }
+-- 
+--         lean_dec(promise);
+-- 
+--         // The event loop does not own the object anymore.
+--         lean_dec((lean_object*)handle->data);
+--     });
+-- 
+--     if (result < 0) {
+--         udp_socket->m_promise_read = nullptr;
+-- 
+--         event_loop_unlock(&global_ev);
+-- 
+--         lean_dec(promise); // The structure does not own it.
+--         lean_dec(promise); // We are not going to return it.
+--         lean_dec(socket);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+-- 
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_udp_wait_readable := [JS_EXPR|throw new Error("lean_uv_udp_wait_readable is not implemented")]
+
+-- ```lean
+-- opaque cancelRecv (socket : @& Socket) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_cancel_recv(b_obj_arg socket) {
+--     lean_uv_udp_socket_object* udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     lean_inc(socket);
+--     event_loop_lock(&global_ev);
+-- 
+--     if (udp_socket->m_promise_read == nullptr) {
+--         event_loop_unlock(&global_ev);
+--         lean_dec(socket);
+--         return lean_io_result_mk_ok(lean_box(0));
+--     }
+-- 
+--     uv_udp_recv_stop(udp_socket->m_uv_udp);
+-- 
+--     lean_object* promise = udp_socket->m_promise_read;
+--     lean_dec(promise);
+--     udp_socket->m_promise_read = nullptr;
+-- 
+--     lean_object* byte_array = udp_socket->m_byte_array;
+-- 
+--     if (byte_array != nullptr) {
+--         lean_dec(byte_array);
+--         udp_socket->m_byte_array = nullptr;
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+--     lean_dec(socket);
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_udp_cancel_recv := [JS_EXPR|throw new Error("lean_uv_udp_cancel_recv is not implemented")]
+
+-- ```lean
+-- opaque getPeerName (socket : @& Socket) : IO SocketAddress
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_getpeername(b_obj_arg socket) {
+--     lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     struct sockaddr_storage addr_storage;
+--     int addr_len = sizeof(addr_storage);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_getpeername(udp_socket->m_uv_udp, (struct sockaddr*)&addr_storage, &addr_len);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object *lean_addr = lean_sockaddr_to_socketaddress((struct sockaddr*)&addr_storage);
+-- 
+--     return lean_io_result_mk_ok(lean_addr);
+-- }
+-- ```
+def lean_uv_udp_getpeername := [JS_EXPR|throw new Error("lean_uv_udp_getpeername is not implemented")]
+
+-- ```lean
+-- opaque getSockName (socket : @& Socket) : IO SocketAddress
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_getsockname(b_obj_arg socket) {
+--     lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     struct sockaddr_storage addr_storage;
+--     int addr_len = sizeof(addr_storage);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_getsockname(udp_socket->m_uv_udp, (struct sockaddr*)&addr_storage, &addr_len);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     lean_object *lean_addr = lean_sockaddr_to_socketaddress((struct sockaddr*)&addr_storage);
+--     return lean_io_result_mk_ok(lean_addr);
+-- }
+-- ```
+def lean_uv_udp_getsockname := [JS_EXPR|throw new Error("lean_uv_udp_getsockname is not implemented")]
+
+-- ```lean
+-- opaque setBroadcast (socket : @& Socket) (on : Bool) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_set_broadcast(b_obj_arg socket, uint8_t enable) {
+--     lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_set_broadcast(udp_socket->m_uv_udp, enable);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_udp_set_broadcast := [JS_EXPR|throw new Error("lean_uv_udp_set_broadcast is not implemented")]
+
+-- ```lean
+-- opaque setMulticastLoop (socket : @& Socket) (on : Bool) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_set_multicast_loop(b_obj_arg socket, uint8_t enable) {
+--     lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_set_multicast_loop(udp_socket->m_uv_udp, enable);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_udp_set_multicast_loop := [JS_EXPR|throw new Error("lean_uv_udp_set_multicast_loop is not implemented")]
+
+-- ```lean
+-- opaque setMulticastTTL (socket : @& Socket) (ttl : UInt32) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_set_multicast_ttl(b_obj_arg socket, uint32_t ttl) {
+--     lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_set_multicast_ttl(udp_socket->m_uv_udp, ttl);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_udp_set_multicast_ttl := [JS_EXPR|throw new Error("lean_uv_udp_set_multicast_ttl is not implemented")]
+
+-- ```lean
+-- opaque setMembership (socket : @& Socket) (multicastAddr : @& IPAddr) (interfaceAddr : @& Option IPAddr) (membership : UInt8) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_set_membership(b_obj_arg socket, b_obj_arg multicast_addr, b_obj_arg interface_addr, uint8_t membership) {
+--     lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     char multicast_addr_str[INET_ADDRSTRLEN];
+--     lean_ip_addr_ntop(multicast_addr, multicast_addr_str, sizeof(multicast_addr_str));
+-- 
+--     bool is_interface_null = is_scalar(interface_addr);
+--     char interface_addr_str[INET_ADDRSTRLEN];
+-- 
+--     if (!is_interface_null) {
+--         lean_object* interface_addr_obj = lean_ctor_get(interface_addr, 0);
+--         lean_ip_addr_ntop(interface_addr_obj, interface_addr_str, sizeof(interface_addr_str));
+--     }
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_set_membership(udp_socket->m_uv_udp, multicast_addr_str, is_interface_null ? nullptr : interface_addr_str, (uv_membership)membership);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_udp_set_membership := [JS_EXPR|throw new Error("lean_uv_udp_set_membership is not implemented")]
+
+-- ```lean
+-- opaque setMulticastInterface (socket : @& Socket) (interfaceAddr : @& IPAddr) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_set_multicast_interface(b_obj_arg socket, b_obj_arg interface_addr) {
+--     lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     char interface_addr_str[INET_ADDRSTRLEN];
+--     lean_ip_addr_ntop(interface_addr, interface_addr_str, sizeof(interface_addr_str));
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_set_multicast_interface(udp_socket->m_uv_udp, interface_addr_str);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_udp_set_multicast_interface := [JS_EXPR|throw new Error("lean_uv_udp_set_multicast_interface is not implemented")]
+
+-- ```lean
+-- opaque setTTL (socket : @& Socket) (ttl : UInt32) : IO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_udp_set_ttl(b_obj_arg socket, uint32_t ttl) {
+--     lean_uv_udp_socket_object *udp_socket = lean_to_uv_udp_socket(socket);
+-- 
+--     event_loop_lock(&global_ev);
+--     int result = uv_udp_set_ttl(udp_socket->m_uv_udp, ttl);
+--     event_loop_unlock(&global_ev);
+-- 
+--     if (result < 0) {
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_box(0));
+-- }
+-- ```
+def lean_uv_udp_set_ttl := [JS_EXPR|throw new Error("lean_uv_udp_set_ttl is not implemented")]
+
+-- ============
+-- Std.Internal.UV.DNS
+-- ============
+
+-- ```lean
+-- opaque getAddrInfo (host : @& String) (service : @& String) (family : UInt8) :
+--     IO (IO.Promise (Except IO.Error (Array IPAddr)))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_dns_get_info(b_obj_arg name, b_obj_arg service, uint8_t family) {
+--     char const * name_cstr = lean_string_cstr(name);
+--     char const * service_cstr = lean_string_cstr(service);
+-- 
+--     if (!is_safe_ascii_str(name_cstr, lean_string_size(name) - 1)) {
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("name is not ASCII")));
+--     }
+-- 
+--     if (!is_safe_ascii_str(service_cstr, lean_string_size(service) - 1)) {
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("service is not ASCII")));
+--     }
+-- 
+--     uv_getaddrinfo_t* resolver = (uv_getaddrinfo_t*)malloc(sizeof(uv_getaddrinfo_t));
+--     if (resolver == nullptr) {
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+--     resolver->data = promise;
+-- 
+-- 
+--     struct addrinfo hints;
+--     memset(&hints, 0, sizeof(hints));
+-- 
+--     // Just to avoid changes in enum values changes between platforms.
+-- 
+--     switch (family) {
+--         case 0: hints.ai_family = PF_UNSPEC; break;
+--         case 1: hints.ai_family = PF_INET; break;
+--         case 2: hints.ai_family = PF_INET6; break;
+--         default: hints.ai_family = PF_UNSPEC; break;
+--     }
+-- 
+--     event_loop_lock(&global_ev);
+--     lean_inc(promise);
+-- 
+--     int result = uv_getaddrinfo(global_ev.loop, resolver, [](uv_getaddrinfo_t* req, int status, struct addrinfo* res) {
+--         lean_object* promise = (lean_object*) req->data;
+-- 
+--         if (status != 0) {
+--             lean_promise_resolve_with_code(status, promise);
+--             lean_dec(promise);
+--             free(req);
+--             return;
+--         }
+-- 
+--         lean_object * arr = lean_alloc_array(0, 1);
+-- 
+--         for (struct addrinfo* ai = res; ai != NULL; ai = ai->ai_next) {
+--             const struct sockaddr* sin_addr = (const struct sockaddr*)ai->ai_addr;
+-- 
+--             in_addr_storage* storage_addr;
+-- 
+--             if (sin_addr->sa_family == AF_INET) {
+--                 struct sockaddr_in* ipv4 = (struct sockaddr_in*)sin_addr;
+--                 storage_addr = (in_addr_storage*)&(ipv4->sin_addr);
+--             } else if (sin_addr->sa_family == AF_INET6) {
+--                 struct sockaddr_in6* ipv6 = (struct sockaddr_in6*)sin_addr;
+--                 storage_addr = (in_addr_storage*)&(ipv6->sin6_addr);
+--             } else {
+--                 continue;
+--             }
+-- 
+--             lean_object* addr = lean_in_addr_storage_to_ip_addr((short)sin_addr->sa_family, storage_addr);
+--             arr = lean_array_push(arr, addr);
+--         }
+-- 
+--         lean_promise_resolve(mk_except_ok(arr), promise);
+-- 
+--         uv_freeaddrinfo(res);
+--         lean_dec(promise);
+-- 
+--         free(req);
+--     }, name_cstr, service_cstr, &hints);
+-- 
+--     if (result != 0) {
+--         lean_dec(promise); // The structure does not own it.
+--         lean_dec(promise); // We are not going to return it.
+-- 
+--         free(resolver);
+-- 
+--         event_loop_unlock(&global_ev);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_dns_get_info := [JS_EXPR|throw new Error("lean_uv_dns_get_info is not implemented")]
+
+-- ```lean
+-- opaque getNameInfo (host : @& SocketAddress) : IO (IO.Promise (Except IO.Error (String × String)))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT lean_obj_res lean_uv_dns_get_name(b_obj_arg addr) {
+--     uv_getnameinfo_t* req = (uv_getnameinfo_t*)malloc(sizeof(uv_getnameinfo_t));
+--     if (req == nullptr) {
+--         return lean_io_result_mk_error(decode_io_error(ENOMEM, nullptr));
+--     }
+-- 
+--     lean_object* promise = lean_promise_new();
+--     mark_mt(promise);
+--     req->data = promise;
+-- 
+--     sockaddr_storage addr_ptr;
+--     lean_socket_address_to_sockaddr_storage(addr, &addr_ptr);
+-- 
+--     event_loop_lock(&global_ev);
+--     lean_inc(promise);
+-- 
+--     int result = uv_getnameinfo(global_ev.loop, req, [](uv_getnameinfo_t* req, int status, const char* hostname, const char* service) {
+--         lean_object* promise = (lean_object*) req->data;
+-- 
+--         if (status != 0) {
+--             lean_promise_resolve_with_code(status, promise);
+--             lean_dec(promise);
+--             free(req);
+--             return;
+--         }
+-- 
+--         lean_object * r = lean_alloc_ctor(0, 2, 0);
+--         lean_ctor_set(r, 0, lean_mk_string(hostname));
+--         lean_ctor_set(r, 1, lean_mk_string(service));
+-- 
+--         lean_promise_resolve(mk_except_ok(r), promise);
+--         lean_dec(promise);
+-- 
+--         free(req);
+--     }, (const struct sockaddr*)&addr_ptr, 0);
+-- 
+--     if (result != 0) {
+--         lean_dec(promise); // The structure does not own it.
+--         lean_dec(promise); // We are not going to return it.
+-- 
+--         free(req);
+-- 
+--         event_loop_unlock(&global_ev);
+-- 
+--         return lean_io_result_mk_error(lean_decode_uv_error(result, nullptr));
+--     }
+-- 
+--     event_loop_unlock(&global_ev);
+--     return lean_io_result_mk_ok(promise);
+-- }
+-- ```
+def lean_uv_dns_get_name := [JS_EXPR|throw new Error("lean_uv_dns_get_name is not implemented")]
+
+-- ============
+-- Std.Sync.RecursiveMutex
+-- ============
+
+-- ```lean
+-- opaque BaseRecursiveMutex.new : BaseIO BaseRecursiveMutex
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_baserecmutex_new() {
+--     return lean_alloc_external(g_baserecmutex_external_class, new recursive_mutex);
+-- }
+-- ```
+def lean_io_baserecmutex_new := [JS_EXPR|throw new Error("lean_io_baserecmutex_new is not implemented")]
+
+-- ```lean
+-- opaque BaseRecursiveMutex.lock (mutex : @& BaseRecursiveMutex) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_baserecmutex_lock(b_obj_arg mtx) {
+--     baserecmutex_get(mtx)->lock();
+--     return box(0);
+-- }
+-- ```
+def lean_io_baserecmutex_lock := [JS_EXPR|throw new Error("lean_io_baserecmutex_lock is not implemented")]
+
+-- ```lean
+-- opaque BaseRecursiveMutex.tryLock (mutex : @& BaseRecursiveMutex) : BaseIO Bool
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT uint8_t lean_io_baserecmutex_try_lock(b_obj_arg mtx) {
+--     bool success = baserecmutex_get(mtx)->try_lock();
+--     return success;
+-- }
+-- ```
+def lean_io_baserecmutex_try_lock := [JS_EXPR|throw new Error("lean_io_baserecmutex_try_lock is not implemented")]
+
+-- ```lean
+-- opaque BaseRecursiveMutex.unlock (mutex : @& BaseRecursiveMutex) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_baserecmutex_unlock(b_obj_arg mtx) {
+--     baserecmutex_get(mtx)->unlock();
+--     return box(0);
+-- }
+-- ```
+def lean_io_baserecmutex_unlock := [JS_EXPR|throw new Error("lean_io_baserecmutex_unlock is not implemented")]
+
+-- ============
+-- Std.Sync.SharedMutex
+-- ============
+
+-- ```lean
+-- opaque BaseSharedMutex.new : BaseIO BaseSharedMutex
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_basesharedmutex_new() {
+--     return lean_alloc_external(g_basesharedmutex_external_class, new shared_mutex);
+-- }
+-- ```
+def lean_io_basesharedmutex_new := [JS_EXPR|throw new Error("lean_io_basesharedmutex_new is not implemented")]
+
+-- ```lean
+-- opaque BaseSharedMutex.write (mutex : @& BaseSharedMutex) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_basesharedmutex_write(b_obj_arg mtx) {
+--     basesharedmutex_get(mtx)->lock();
+--     return box(0);
+-- }
+-- ```
+def lean_io_basesharedmutex_write := [JS_EXPR|throw new Error("lean_io_basesharedmutex_write is not implemented")]
+
+-- ```lean
+-- opaque BaseSharedMutex.tryWrite (mutex : @& BaseSharedMutex) : BaseIO Bool
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT uint8_t lean_io_basesharedmutex_try_write(b_obj_arg mtx) {
+--     bool success = basesharedmutex_get(mtx)->try_lock();
+--     return success;
+-- }
+-- ```
+def lean_io_basesharedmutex_try_write := [JS_EXPR|throw new Error("lean_io_basesharedmutex_try_write is not implemented")]
+
+-- ```lean
+-- opaque BaseSharedMutex.unlockWrite (mutex : @& BaseSharedMutex) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_basesharedmutex_unlock_write(b_obj_arg mtx) {
+--     basesharedmutex_get(mtx)->unlock();
+--     return box(0);
+-- }
+-- ```
+def lean_io_basesharedmutex_unlock_write := [JS_EXPR|throw new Error("lean_io_basesharedmutex_unlock_write is not implemented")]
+
+-- ```lean
+-- opaque BaseSharedMutex.read (mutex : @& BaseSharedMutex) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_basesharedmutex_read(b_obj_arg mtx) {
+--     basesharedmutex_get(mtx)->lock_shared();
+--     return box(0);
+-- }
+-- ```
+def lean_io_basesharedmutex_read := [JS_EXPR|throw new Error("lean_io_basesharedmutex_read is not implemented")]
+
+-- ```lean
+-- opaque BaseSharedMutex.tryRead (mutex : @& BaseSharedMutex) : BaseIO Bool
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT uint8_t lean_io_basesharedmutex_try_read(b_obj_arg mtx) {
+--     bool success = basesharedmutex_get(mtx)->try_lock_shared();
+--     return success;
+-- }
+-- ```
+def lean_io_basesharedmutex_try_read := [JS_EXPR|throw new Error("lean_io_basesharedmutex_try_read is not implemented")]
+
+-- ```lean
+-- opaque BaseSharedMutex.unlockRead (mutex : @& BaseSharedMutex) : BaseIO Unit
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_io_basesharedmutex_unlock_read(b_obj_arg mtx) {
+--     basesharedmutex_get(mtx)->unlock_shared();
+--     return box(0);
+-- }
+-- ```
+def lean_io_basesharedmutex_unlock_read := [JS_EXPR|throw new Error("lean_io_basesharedmutex_unlock_read is not implemented")]
+
+-- ============
+-- Std.Time.DateTime.Timestamp
+-- ============
+
+-- ```lean
+-- opaque now : IO Timestamp
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_get_current_time() {
+--     using namespace std::chrono;
+-- 
+--     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+--     long long timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+-- 
+--     long long secs = timestamp / 1000000000;
+--     long long nano = timestamp % 1000000000;
+-- 
+--     lean_object *lean_ts = lean_alloc_ctor(0, 2, 0);
+--     lean_ctor_set(lean_ts, 0, lean_int64_to_int(secs));
+--     lean_ctor_set(lean_ts, 1, lean_int64_to_int(nano));
+-- 
+--     return lean_io_result_mk_ok(lean_ts);
+-- }
+-- ```
+def lean_get_current_time := [JS_EXPR|throw new Error("lean_get_current_time is not implemented")]
+
+-- ============
+-- Std.Time.Zoned.Database.Windows
+-- ============
+
+-- ```lean
+-- opaque getNextTransition : @&String → Int64 → Bool → IO (Option (Int64 × TimeZone))
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_windows_get_next_transition(b_obj_arg timezone_str, uint64_t tm_obj, uint8 default_time) {
+-- #if defined(LEAN_WINDOWS)
+--     UErrorCode status = U_ZERO_ERROR;
+--     const char* dst_name_id = lean_string_cstr(timezone_str);
+-- 
+--     UChar tzID[256];
+--     u_strFromUTF8(tzID, sizeof(tzID) / sizeof(tzID[0]), NULL, dst_name_id, lean_string_size(timezone_str) - 1, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to read identifier")));
+--     }
+-- 
+--     UCalendar *cal = ucal_open(tzID, -1, NULL, UCAL_GREGORIAN, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         ucal_close(cal);
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to open calendar")));
+--     }
+-- 
+--     int64_t tm = 0;
+-- 
+--     if (!default_time) {
+--         int64_t timestamp_secs = (int64_t)tm_obj;
+-- 
+--         ucal_setMillis(cal, timestamp_secs * 1000, &status);
+--         if (U_FAILURE(status)) {
+--             ucal_close(cal);
+--             return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to set calendar time")));
+--         }
+-- 
+--         UDate nextTransition;
+--         if (!ucal_getTimeZoneTransitionDate(cal, UCAL_TZ_TRANSITION_NEXT, &nextTransition, &status)) {
+--             ucal_close(cal);
+--             return io_result_mk_ok(mk_option_none());
+--         }
+-- 
+--         if (U_FAILURE(status)) {
+--             ucal_close(cal);
+--             return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to get next transition")));
+--         }
+-- 
+--         // Round up to whole seconds: Windows models midnight transitions as 23:59:59.999 on the
+--         // preceding day, and truncation would move such transitions a full second early.
+--         tm = (int64_t)std::ceil(nextTransition / 1000.0);
+--     }
+-- 
+--     int32_t dst_offset = ucal_get(cal, UCAL_DST_OFFSET, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         ucal_close(cal);
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to get dst_offset")));
+--     }
+-- 
+--     int is_dst = dst_offset != 0;
+-- 
+--     int32_t tzIDLength = ucal_getTimeZoneDisplayName(cal, is_dst ? UCAL_DST : UCAL_STANDARD, "en_US", tzID, 32, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         ucal_close(cal);
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to timezone identifier")));
+--     }
+-- 
+--     char dst_name[256];
+--     int32_t dst_name_len;
+--     u_strToUTF8(dst_name, sizeof(dst_name), &dst_name_len, tzID, tzIDLength, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         ucal_close(cal);
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to convert DST name to UTF-8")));
+--     }
+-- 
+--     UChar display_name[32];
+--     int32_t display_name_len = ucal_getTimeZoneDisplayName(cal, is_dst ? UCAL_SHORT_DST : UCAL_SHORT_STANDARD, "en_US", display_name, 32, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         ucal_close(cal);
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to read abbreaviation")));
+--     }
+-- 
+--     char display_name_str[256];
+--     int32_t display_name_str_len;
+--     u_strToUTF8(display_name_str, sizeof(display_name_str), &display_name_str_len, display_name, display_name_len, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         ucal_close(cal);
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to get abbreviation to cstr")));
+--     }
+-- 
+--     int32_t zone_offset = ucal_get(cal, UCAL_ZONE_OFFSET, &status);
+--     zone_offset += dst_offset;
+-- 
+--     if (U_FAILURE(status)) {
+--         ucal_close(cal);
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to get zone_offset")));
+--     }
+-- 
+--     ucal_close(cal);
+-- 
+--     int offset_seconds = zone_offset / 1000;
+-- 
+--     lean_object *lean_tz = lean_alloc_ctor(0, 3, 1);
+--     lean_ctor_set(lean_tz, 0, lean_int_to_int(offset_seconds));
+--     lean_ctor_set(lean_tz, 1, lean_mk_string_from_bytes_unchecked(dst_name, dst_name_len));
+--     lean_ctor_set(lean_tz, 2, lean_mk_string_from_bytes_unchecked(display_name_str, display_name_str_len));
+--     lean_ctor_set_uint8(lean_tz, sizeof(void*)*3, is_dst);
+-- 
+--     lean_object *lean_pair = lean_alloc_ctor(0, 2, 0);
+--     lean_ctor_set(lean_pair, 0, lean_box_uint64((uint64_t)tm));
+--     lean_ctor_set(lean_pair, 1, lean_tz);
+-- 
+--     return lean_io_result_mk_ok(mk_option_some(lean_pair));
+-- #else
+--     return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to get timezone, its windows only.")));
+-- #endif
+-- }
+-- ```
+def lean_windows_get_next_transition := [JS_EXPR|throw new Error("lean_windows_get_next_transition is not implemented")]
+
+-- ```lean
+-- opaque getLocalTimeZoneIdentifierAt : Int64 → IO String
+-- ```
+--
+-- ```cpp
+-- extern "C" LEAN_EXPORT obj_res lean_get_windows_local_timezone_id_at(uint64_t tm_obj) {
+-- #if defined(LEAN_WINDOWS)
+--     UErrorCode status = U_ZERO_ERROR;
+--     UCalendar* cal = ucal_open(NULL, -1, NULL, UCAL_GREGORIAN, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to open calendar")));
+--     }
+-- 
+--     int64_t timestamp_secs = (int64_t)tm_obj;
+--     ucal_setMillis(cal, timestamp_secs * 1000, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         ucal_close(cal);
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to set calendar time")));
+--     }
+-- 
+--     UChar tzId[256];
+--     int32_t tzIdLength = ucal_getTimeZoneID(cal, tzId, sizeof(tzId) / sizeof(tzId[0]), &status);
+--     ucal_close(cal);
+-- 
+--     if (U_FAILURE(status)) {
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to get timezone ID")));
+--     }
+-- 
+--     char tzIdStr[256];
+--     u_strToUTF8(tzIdStr, sizeof(tzIdStr), NULL, tzId, tzIdLength, &status);
+-- 
+--     if (U_FAILURE(status)) {
+--         return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("failed to convert timezone ID to UTF-8")));
+--     }
+-- 
+--     return lean_io_result_mk_ok(lean_mk_ascii_string_unchecked(tzIdStr));
+-- #else
+--     return lean_io_result_mk_error(lean_mk_io_error_invalid_argument(EINVAL, mk_string("timezone retrieval is Windows-only")));
+-- #endif
+-- }
+-- ```
+def lean_get_windows_local_timezone_id_at := [JS_EXPR|throw new Error("lean_get_windows_local_timezone_id_at is not implemented")]

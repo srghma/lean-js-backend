@@ -1,0 +1,67 @@
+prelude
+import Init.System.IO
+import Init.Data.Option.Basic
+import Init.Data.Sum.Basic
+import Init.Data.Int.Basic
+import Init.Data.String.Basic
+
+def known1 : String :=
+  (some "c").map (fun _ => "b") |>.getD "a"
+
+def test1 (a : Sum Int Int) : Int :=
+  match some a with
+  | some (Sum.inl b) => b
+  | some (Sum.inr c) => c
+  | none => 42
+
+def test2 (x : Int) : String :=
+  let a := if x > 42 then some "Hello" else none
+  match a with
+  | some str => str ++ ", World!"
+  | none => ""
+
+def test3 (x : Int) : Array String :=
+  let a := if x > 42 then some "Hello" else some "Default"
+  match a with
+  | some s => #[ s ++ ", World", s ++ ", Universe" ]
+  | none => #[]
+
+def test4 (f : String → String → String) (x : Int) : String :=
+  let a := if x > 42 then some "Hello" else some "Default"
+  match a with
+  | some s => f (s ++ ", World") (s ++ ", Universe")
+  | none => ""
+
+def test5 (x : Int) : Bool :=
+  let a := if x > 42 then some true else some false
+  match a with
+  | some b => b && !b
+  | none => false
+
+inductive TestEnum where | Foo | Bar | Baz | Qux
+
+def fromString (s : String) : Option TestEnum :=
+  match s with
+  | "foo" => some .Foo
+  | "bar" => some .Bar
+  | "baz" => some .Baz
+  | "qux" => some .Qux
+  | _ => none
+
+def test6 (a : String) : Int :=
+  match fromString a with
+  | some .Foo => 1
+  | some .Bar => 2
+  | some .Baz => 3
+  | some .Qux => 4
+  | none => 0
+
+
+def main : IO Unit := do
+  IO.println known1
+  IO.println (test1 (.inl 1))
+  IO.println (test2 2)
+  IO.println (test3 3)
+  IO.println (test4 (fun x y => x ++ y) 4)
+  IO.println (test5 5)
+  IO.println (test6 "6")

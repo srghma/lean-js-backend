@@ -1,0 +1,30 @@
+prelude
+import Init.System.IO
+import Init.Data.Int.Basic
+
+structure T1 where
+  bar : Int
+  foo : Int
+deriving Inhabited
+
+structure T2 where
+  baz : Int
+deriving Inhabited
+
+mutual
+  partial def test1 (_ : Unit) : T1 :=
+    { foo := (fun _ => (test2 ()).baz) ()
+      bar := (fun _ => test3 42) ()
+    }
+
+  partial def test2 (_ : Unit) : T2 :=
+    { baz := (fun _ => (test1 ()).bar) () }
+
+  partial def test3 (n : Int) : Int :=
+    if n < 100 then n
+    else (test1 ()).bar
+end
+
+def main : IO Unit := do
+  IO.println (test3 42)
+  IO.println (test3 99)

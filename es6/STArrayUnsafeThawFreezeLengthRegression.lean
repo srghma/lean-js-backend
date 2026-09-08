@@ -1,0 +1,13 @@
+prelude
+import Init.System.IO
+import Init.Data.Array.Basic
+
+def test (x : Int) : Array Int := Id.run do
+  let mut arr := #[x]
+  arr := arr.push 12
+  let len := (arr.size : Int)
+  arr := arr.push len
+  pure arr
+
+def main : IO Unit := do
+  IO.println (repr (test 42))

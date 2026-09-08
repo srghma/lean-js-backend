@@ -1,0 +1,70 @@
+/-
+Copyright (c) 2026 Microsoft Corporation. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+-/
+module
+
+prelude
+import Lean.Expr
+import Lean.Meta
+
+public section
+
+namespace Lean.Compiler.EmitEs6
+
+/-- 
+A simple optimization pass that performs constant folding on Lean Expressions.
+-/
+def optimizeExpr (e : Expr) : Expr :=
+  match e with
+  | Expr.app (Expr.app (Expr.const `Nat.add) (Expr.nat a)) (Expr.nat b) => 
+      Expr.nat (a + b)
+  | Expr.app (Expr.app (Expr.const `Nat.mul) (Expr.nat a)) (Expr.nat b) => 
+      Expr.nat (a * b)
+  | Expr.lam binder body => 
+      Expr.lam binder (optimizeExpr body)
+  | Expr.app f args => 
+      Expr.app (optimizeExpr f) (args.map optimizeExpr)
+  | other => other
+
+/--
+Recursively emits JavaScript code from a Lean Expression.
+-/
+partial def emitExpr (e : Expr) : String :=
+  match e with
+  | Expr.nat n => 
+      toString n
+  | Expr.str s => 
+      s!""{s}""
+  | Expr.const name => 
+      -- Map Lean constants to JS runtime function calls
+      s!"lean_{name.toString().toLowerCase()}()"
+  | Expr.app f args => 
+      let fStr := emitExpr f
+      let argsStr := String.intercalate ", " (args.map emitExpr)
+      s!"{fStr}({argsStr})"
+  | Expr.lam binder body => 
+      s!"({binder.name}) => {emitExpr body}"
+  | Expr.let name val body => 
+      s!"(() => { const {name} = {emitExpr val}; {emitExpr body} })()"
+  | Expr.fvar id => 
+      s!"v_{id}"
+  | _ => 
+      "/* unsupported expr */"
+
+/--
+Emits a full Lean Declaration as a JavaScript function.
+-/
+def emitDecl (decl : Decl) : String :=
+  let name := decl.name.toString()
+  let args := decl.params.map (fun p => p.name.toString())
+  let argsStr := String.intercalate ", " args
+  let body := optimizeExpr decl.value
+  let bodyStr := emitExpr body
+  s!"export function {name}({argsStr}) {{
+  return {bodyStr};
+}}"
+
+end Lean.Compiler.EmitEs6
+end Lean.Compiler
+end Lean

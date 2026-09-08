@@ -1,0 +1,315 @@
+/-
+Copyright (c) 2024 Your Name. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Your Name
+-/
+prelude
+import Lean.Compiler.LCNF.Basic
+import Lean.Compiler.LCNF.CompilerM
+import Lean.Compiler.LCNF.PhaseExt
+import Lean.CoreM
+import Lean.Environment
+
+namespace Lean.Compiler.ToJS
+
+/-!
+# LCNF to JavaScript AST Transformation
+
+This module defines a JavaScript-like AST and provides functions
+to translate LCNF declarations into this AST.
+-/
+
+-- TODO: Robust name mangling
+def mangleName (n : Name) : String :=
+  n.toString.replace "." "_" |>.replace "[" "$o" |>.replace "]" "$c"
+
+/-!
+## JavaScript AST Definitions
+-/
+
+inductive JsLit where
+  | num (n : Nat)
+  | str (s : String)
+  | bool (b : Bool)
+  | null
+  | undefined
+  deriving Inhabited, Repr, BEq
+
+inductive JsBinOp where
+  | add | sub | mul | div | mod
+  | eq | neq | lt | le | gt | ge
+  | and | or
+  deriving Inhabited, Repr, BEq
+
+-- Simplified JS Expression AST
+inductive JsExpr where
+  | lit (l : JsLit)
+  | ident (name : String)
+  | call (fn : JsExpr) (args : Array JsExpr)
+  | propAccess (obj : JsExpr) (prop : String) -- obj.prop
+  | elemAccess (obj : JsExpr) (index : JsExpr) -- obj[index]
+  | anonFn (params : Array String) (body : Array JsExpr ) --/* JsStmt */  Simplified: body is array of expressions
+  | binOp (op : JsBinOp) (lhs : JsExpr) (rhs : JsExpr)
+  | new (ctor : JsExpr) (args : Array JsExpr)
+  | array (elems : Array JsExpr)
+  | object (props : Array (String × JsExpr))
+  deriving Inhabited, Repr, BEq
+
+inductive JsStmt where
+  | expr (e : JsExpr) -- For expressions used as statements (e.g., function calls)
+  | varDecl (name : String) (init? : Option JsExpr) -- `let name = init?` or `let name`
+  | assign (lhs : JsExpr) (rhs : JsExpr)
+  | return (e? : Option JsExpr)
+  | if (cond : JsExpr) (thenBranch : Array JsStmt) (elseBranch? : Option (Array JsStmt))
+  | while (cond : JsExpr) (body : Array JsStmt)
+  | block (stmts : Array JsStmt)
+  -- Add more: for loops, try-catch, switch, etc.
+  deriving Inhabited, Repr, BEq
+
+-- Top-level JavaScript Declarations
+inductive JsDecl where
+  | funDecl (name : String) (params : Array String) (body : Array JsStmt)
+  | constDecl (name : String) (value : JsExpr)
+  | classDecl (name : String) (constructor? : Option JsDecl) (methods : Array JsDecl) -- Simplified
+  | importDecl (names : Array String) (module : String) -- Simplified
+  | raw (js : String) -- For injecting raw JS
+  deriving Inhabited, Repr, BEq
+
+
+/-!
+## LCNF to JS AST Transformation
+-/
+
+open Lean.Compiler.LCNF (Alt Arg Code Decl DeclValue LCtx LetDecl LetValue LitValue Param getMonoDecl?)
+
+structure ToJsState where
+  -- Potentially a map from LCNF FVarId to JS variable names if complex scoping/shadowing needs handling
+  fvarMapping : Std.HashMap FVarId String := {}
+  -- For generating unique temporary variable names
+  nextTmpVarIdx : Nat := 0
+  -- For collecting top-level JS declarations (e.g., helper functions)
+  topLevelDecls : Array JsDecl := #[]
+
+abbrev M := StateT ToJsState CoreM
+
+def M.run (x : M α) : CoreM (α × ToJsState) :=
+  StateT.run x {}
+
+def freshJsName (base : String := "tmp") : M String := do
+  let idx ← modifyGet fun s => (s.nextTmpVarIdx, {s with nextTmpVarIdx := s.nextTmpVarIdx + 1})
+  return s!"{base}_{idx}"
+
+def getJsFVar (fvarId : FVarId) : M String := do
+  let s ← get
+  if let some jsName := s.fvarMapping.getKey? fvarId then
+    return jsName
+  else
+    let jsName ← freshJsName ("v_" ++ fvarId.name.eraseMacroScopes.toString)
+    modify fun s => {s with fvarMapping := s.fvarMapping.insert fvarId jsName}
+    return jsName
+
+def bindFVar (fvarId : FVarId) (jsName : String) : M Unit := do
+  modify fun s => {s with fvarMapping := s.fvarMapping.insert fvarId jsName}
+
+
+-- TODO: This needs to be much more sophisticated, handling Lean's type system,
+-- especially for algebraic data types, enums, and how they map to JS (objects, tagged unions, etc.)
+def lowerTypeToJsComment (_e : Lean.Expr) : M String := do
+  -- For now, we just make a comment. A real implementation would map Lean types to JS runtime types/checks
+  -- or integrate with something like TypeScript.
+  -- return s!"/* TODO: type {_e} */"
+  return "" -- Or omit for cleaner JS for now
+
+def lowerLCNFLitValue (v : LCNF.LitValue) : JsLit :=
+  match v with
+  | .nat n => .num n
+  | .str s => .str s
+  | _ => .undefined -- Simplified
+
+def lowerLCNFArg {pu : LCNF.Purity} (arg : LCNF.Arg pu) : M (Option JsExpr) := do
+  match arg with
+  | .fvar fvarId => do
+    let jsName ← getJsFVar fvarId
+    return some (.ident jsName)
+  | .erased => return none -- Erased arguments don't translate to JS values directly
+  | .type _e _ => return none -- Type arguments are compile-time, not runtime JS values
+
+def lowerLCNFParams {pu : LCNF.Purity} (params : Array (LCNF.Param pu)) : M (Array String) := do
+  params.mapM fun p => do
+    let jsName ← freshJsName p.binderName.toString
+    bindFVar p.fvarId jsName
+    return jsName
+
+mutual
+  partial def lowerLCNFCode {pu : LCNF.Purity} (code : LCNF.Code pu) : M (Array JsStmt) := do
+    match code with
+    | .let decl k =>
+      let jsValName ← freshJsName decl.binderName
+      bindFVar decl.fvarId jsValName
+      let jsInit? ← lowerLCNFLetValue pu decl.value
+      let valStmt : JsStmt := .varDecl jsValName jsInit?
+      let kStmts ← lowerLCNFCode pu k
+      return #[valStmt] ++ kStmts
+
+    | .fun decl k _ =>
+      -- Local functions in LCNF. These would become nested functions or IIFEs in JS.
+      let fnName := mangleName decl.binderName
+      let jsParams ← lowerLCNFParams pu decl.params
+      let bodyStmts ← lowerLCNFCode pu decl.value
+      let funDecl : JsDecl := .funDecl fnName jsParams bodyStmts
+      modify fun s => {s with topLevelDecls := s.topLevelDecls.push funDecl}
+      let kStmts ← lowerLCNFCode pu k
+      return kStmts
+
+    | .jp decl k =>
+      let jpName := mangleName decl.binderName
+      let jsParams ← lowerLCNFParams pu decl.params
+      let bodyStmts ← lowerLCNFCode pu decl.value
+      let jpFunDecl : JsDecl := .funDecl jpName jsParams bodyStmts
+      modify fun s => {s with topLevelDecls := s.topLevelDecls.push jpFunDecl}
+      let kStmts ← lowerLCNFCode pu k
+      return kStmts
+
+    | .jmp fvarId args =>
+      let jpName ← getJsFVar fvarId
+      let jsArgs ← args.filterMapM (fun a => lowerLCNFArg pu a)
+      return #[.expr (.call (.ident jpName) jsArgs)]
+
+    | .cases cases =>
+      let discrVarName ← getJsFVar cases.discr
+      let mut jsCases : Array (JsExpr × Array JsStmt) := #[]
+      let mut defaultBranch? : Option (Array JsStmt) := none
+
+      let tagAccess := JsExpr.propAccess (.ident discrVarName) "tag"
+
+      for alt in cases.alts do
+        match alt with
+        | .alt ctorName params code _ =>
+          let ctorJsName := mangleName ctorName
+          let mut paramBindings : Array JsStmt := #[]
+          for i in [:params.size] do
+            let p := params[i]!
+            let pJsName ← freshJsName p.binderName.toString
+            bindFVar p.fvarId pJsName
+            let fieldAccess := JsExpr.elemAccess (JsExpr.propAccess (.ident discrVarName) "_fields") (.lit (.num i))
+            paramBindings := paramBindings.push (.varDecl pJsName (some fieldAccess))
+
+          let altBody ← lowerLCNFCode pu code
+          jsCases := jsCases.push (.lit (.str ctorJsName), paramBindings ++ altBody)
+
+        | .ctorAlt info code _ =>
+          let ctorJsName := mangleName info.name
+          let mut paramBindings : Array JsStmt := #[]
+          for i in [:info.size] do
+            let pJsName ← freshJsName s!"arg_{i}"
+            let fieldAccess := JsExpr.elemAccess (JsExpr.propAccess (.ident discrVarName) "_fields") (.lit (.num i))
+            paramBindings := paramBindings.push (.varDecl pJsName (some fieldAccess))
+
+          let altBody ← lowerLCNFCode pu code
+          jsCases := jsCases.push (.lit (.str ctorJsName), paramBindings ++ altBody)
+
+        | .default code =>
+          defaultBranch? := some (← lowerLCNFCode pu code)
+
+      if jsCases.isEmpty then
+        if let some defaultStmts := defaultBranch? then
+          return defaultStmts
+        else
+          return #[.expr (.call (.ident "lean_panic") #[.lit (.str "Empty cases with no default")])]
+      else
+        let rec buildIfChain (idx : Nat) : Array JsStmt :=
+          if idx >= jsCases.size then
+            defaultBranch?.getD #[]
+          else
+            let (caseVal, thenBody) := jsCases[idx]!
+            let cond := JsExpr.binOp .eq tagAccess caseVal
+            #[.if cond thenBody (some <| buildIfChain (idx+1))]
+        return buildIfChain 0
+
+    | .return fvarId => do
+      let res ← lowerLCNFArg pu (LCNF.Arg.fvar fvarId)
+      return match res with
+      | some expr => #[.return (some expr)]
+      | none => #[.return none]
+
+    | .unreach _type =>
+      return #[.expr (.call (.ident "lean_unreachable") #[])]
+
+    | .oset fvarId i y k _ =>
+      let jsY ← lowerLCNFArg pu y
+      let assignStmt := match jsY with
+        | some e => JsStmt.assign (JsExpr.elemAccess (JsExpr.propAccess (.ident (← getJsFVar fvarId)) "fields") (.lit (.num i))) e
+        | none => JsStmt.expr (.call (.ident "lean_noop") #[])
+      let kStmts ← lowerLCNFCode pu k
+      return #[assignStmt] ++ kStmts
+
+    | .uset fvarId i y k _ =>
+      let jsY := JsExpr.ident (← getJsFVar y)
+      let assignStmt := JsStmt.assign (JsExpr.elemAccess (JsExpr.propAccess (.ident (← getJsFVar fvarId)) "fields") (.lit (.num i))) jsY
+      let kStmts ← lowerLCNFCode pu k
+      return #[assignStmt] ++ kStmts
+
+    | .sset fvarId i offset y ty k _ =>
+      let jsY := JsExpr.ident (← getJsFVar y)
+      let assignStmt := JsStmt.assign (JsExpr.elemAccess (JsExpr.propAccess (.ident (← getJsFVar fvarId)) "fields") (.lit (.num (i * 8 + offset)))) jsY
+      let kStmts ← lowerLCNFCode pu k
+      return #[assignStmt] ++ kStmts
+
+    | .setTag fvarId cidx k _ =>
+      let assignStmt := JsStmt.assign (JsExpr.propAccess (.ident (← getJsFVar fvarId)) "tag") (.lit (.num cidx))
+      let kStmts ← lowerLCNFCode pu k
+      return #[assignStmt] ++ kStmts
+
+    | .inc fvarId n check persistent k _ =>
+      let jsInc := JsExpr.call (.ident "lean_inc") #[.ident (← getJsFVar fvarId), .lit (.num n)]
+      let kStmts ← lowerLCNFCode pu k
+      return #[.expr jsInc] ++ kStmts
+
+    | .dec fvarId n check persistent k _ =>
+      let jsDec := JsExpr.call (.ident "lean_dec") #[.ident (← getJsFVar fvarId), .lit (.num n)]
+      let kStmts ← lowerLCNFCode pu k
+      return #[.expr jsDec] ++ kStmts
+
+    | .del fvarId k _ =>
+      let jsDel := JsExpr.call (.ident "lean_del") #[.ident (← getJsFVar fvarId)]
+      let kStmts ← lowerLCNFCode pu k
+      return #[.expr jsDel] ++ kStmts
+
+  partial def lowerLCNFLetValue {pu : LCNF.Purity} (value : LCNF.LetValue pu) : M (Option JsExpr) := do
+    match value with
+    | .lit v =>
+        match v with
+        | .nat n => pure (some (JsExpr.lit (.num n)))
+        | .str s => pure (some (JsExpr.lit (.str s)))
+        | _ => pure (some (JsExpr.lit .undefined))
+    | .erased => pure none
+    | .proj typeName ctorIdx structFVarId _ =>
+        let structJsName ← getJsFVar structFVarId
+        return some (.elemAccess (JsExpr.propAccess (.ident structJsName) "_fields") (.lit (.num ctorIdx)))
+
+    | .const declName us args _ =>
+        let jsDeclName := mangleName declName
+        let jsArgs ← args.filterMapM (fun a => lowerLCNFArg pu a)
+        if declName == ``Nat.add then
+            if jsArgs.size == 2 then return some (JsExpr.binOp .add jsArgs[0]! jsArgs[1]!) else return none
+        else if declName == ``Nat.sub then
+            if jsArgs.size == 2 then return some (JsExpr.binOp .sub jsArgs[0]! jsArgs[1]!) else return none
+        else if declName == ``decide then
+             if jsArgs.size == 1 then return some jsArgs[0]! else return none
+        else
+          let env ← getEnv
+          if Lean.Environment.isConstructor env declName then
+            return some (JsExpr.object #[
+              ("tag", .lit (.str (mangleName declName))),
+              ("_fields", .array jsArgs)
+            ])
+          else
+            return some (JsExpr.call (.ident jsDeclName) jsArgs)
+
+    | .fvar fvarId args =>
+        let fnJsName ← getJsFVar fvarId
+        let jsArgs ← args.filterMapM (fun a => lowerLCNFArg pu a)
+        return some (JsExpr.call (.ident fnJsName) jsArgs)
+    | _ => pure none
+
+end

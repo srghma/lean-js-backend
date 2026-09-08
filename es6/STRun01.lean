@@ -1,0 +1,15 @@
+prelude
+import Init.System.IO
+import Init.Data.Int.Basic
+
+def test1 : Int := Id.run (pure 1)
+def test2 : Int := Id.run (pure (1 + 2))
+def test3 : Int := Id.run do
+  let n := 1
+  let m := 2
+  pure (n + m)
+
+def main : IO Unit := do
+  IO.println test1
+  IO.println test2
+  IO.println test3

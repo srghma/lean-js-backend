@@ -1,0 +1,302 @@
+/-
+Copyright (c) 2024 Lean FRO, LLC. All rights reserved.
+Released under Apache 2.0 license with some modifications.
+-/
+module Lean.JS
+
+open Lean
+
+/-!
+# JavaScript Printer
+
+This module provides functionality to render the JavaScript AST into a `Format`.
+-/
+
+def renderJS (ast : JSAst) : Format :=
+  match ast with
+  | .program stmts => renderStmts stmts
+  | .module items => renderModuleItems items
+  | .statement s => renderStmt s
+  | .expression e => renderExpr e
+  | .literal e => renderExpr e
+
+def renderModuleItems (items : Array JSModuleItem) : Format :=
+  items.foldl (fun acc item => acc.append (renderModuleItem item).append " ") (fmt.empty)
+
+def renderModuleItem (item : JSModuleItem) : Format :=
+  match item with
+  | .importDeclaration decl => fmt.lit "import " ++ renderImportDecl decl
+  | .exportDeclaration decl => fmt.lit "export " ++ renderExportDecl decl
+  | .statement s => renderStmt s
+
+def renderImportDecl (decl : JSImportDeclaration) : Format :=
+  match decl with
+  | .declaration clause from semi => renderImportClause clause ++ fmt.lit " from " ++ renderFromClause from ++ renderSemi semi
+  | .bare moduleName semi => fmt.lit (""" ++ moduleName ++ """) ++ renderSemi semi
+
+def renderImportClause (clause : JSImportClause) : Format :=
+  match clause with
+  | .default ident => renderIdent ident
+  | .nameSpace ns => renderImportNS ns
+  | .named named => renderImportsNamed named
+  | .defaultNameSpace default ns => renderIdent default ++ fmt.lit ", " ++ renderImportNS ns
+  | .defaultNamed default named => renderIdent default ++ fmt.lit ", " ++ renderImportsNamed named
+
+def renderImportNS (ns : JSImportNameSpace) : Format :=
+  match ns with
+  | .nameSpace ident => fmt.lit "* as " ++ renderIdent ident
+
+def renderImportsNamed (named : JSImportsNamed) : Format :=
+  match named with
+  | .named specifiers => fmt.lit "{" ++ renderCommaList renderImportSpecifier specifiers ++ fmt.lit "}"
+
+def renderImportSpecifier (spec : JSImportSpecifier) : Format :=
+  match spec with
+  | .specifier ident => renderIdent ident
+  | .specifierAs ident as => renderIdent ident ++ fmt.lit " as " ++ renderIdent as
+
+def renderFromClause (from : JSFromClause) : Format :=
+  match from with
+  | .from moduleName => fmt.lit (""" ++ moduleName ++ """)
+
+def renderExportDecl (decl : JSExportDeclaration) : Format :=
+  match decl with
+  | .from clause from semi => renderExportClause clause ++ fmt.lit " from " ++ renderFromClause from ++ renderSemi semi
+  | .locals clause semi => renderExportClause clause ++ renderSemi semi
+  | .export stmt semi => renderStmt stmt ++ renderSemi semi
+
+def renderExportClause (clause : JSExportClause) : Format :=
+  match clause with
+  | .clause specifiers => fmt.lit "{" ++ renderCommaList renderExportSpecifier specifiers ++ fmt.lit "}"
+
+def renderExportSpecifier (spec : JSExportSpecifier) : Format :=
+  match spec with
+  | .specifier ident => renderIdent ident
+  | .specifierAs ident1 ident2 => renderIdent ident1 ++ fmt.lit " as " ++ renderIdent ident2
+
+def renderStmt (stmt : JSStatement) : Format :=
+  match stmt with
+  | .block stmts semi => fmt.lit "{" ++ renderStmts stmts ++ fmt.lit "}" ++ renderSemi semi
+  | .break ident semi => fmt.lit "break " ++ renderIdent ident ++ renderSemi semi
+  | .let decl semi => fmt.lit "let " ++ renderCommaList renderExpr decl ++ renderSemi semi
+  | .class name heritage body semi => fmt.lit "class " ++ renderIdent name ++ renderHeritage heritage ++ fmt.lit " {" ++ renderClassElements body ++ fmt.lit "}" ++ renderSemi semi
+  | .constant decl semi => fmt.lit "const " ++ renderCommaList renderExpr decl ++ renderSemi semi
+  | .continue ident semi => fmt.lit "continue " ++ renderIdent ident ++ renderSemi semi
+  | .doWhile stmt expr semi => fmt.lit "do " ++ renderStmt stmt ++ fmt.lit " while (" ++ renderExpr expr ++ fmt.lit ")" ++ renderSemi semi
+  | .for e1 e2 e3 stmt => fmt.lit "for (" ++ renderCommaList renderExpr e1 ++ fmt.lit "; " ++ renderCommaList renderExpr e2 ++ fmt.lit "; " ++ renderCommaList renderExpr e3 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forIn e1 op e2 stmt => fmt.lit "for (" ++ renderCommaList renderExpr e1 ++ " " ++ renderBinOp op ++ " " ++ renderExpr e2 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forVar v e2 e3 stmt => fmt.lit "for (" ++ fmt.lit "var " ++ renderCommaList renderExpr v ++ fmt.lit "; " ++ renderCommaList renderExpr e2 ++ fmt.lit "; " ++ renderCommaList renderExpr e3 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forVarIn v e1 op e2 stmt => fmt.lit "for (" ++ fmt.lit "var " ++ renderCommaList renderExpr v ++ " " ++ renderBinOp op ++ " " ++ renderExpr e2 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forLet v e2 e3 stmt => fmt.lit "for (" ++ fmt.lit "let " ++ renderCommaList renderExpr v ++ fmt.lit "; " ++ renderCommaList renderExpr e2 ++ fmt.lit "; " ++ renderCommaList renderExpr e3 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forLetIn v e1 op e2 stmt => fmt.lit "for (" ++ fmt.lit "let " ++ renderCommaList renderExpr v ++ " " ++ renderBinOp op ++ " " ++ renderExpr e2 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forLetOf v e1 op e2 stmt => fmt.lit "for (" ++ fmt.lit "let " ++ renderCommaList renderExpr v ++ " " ++ renderBinOp op ++ " " ++ renderExpr e2 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forConst v e2 e3 stmt => fmt.lit "for (" ++ fmt.lit "const " ++ renderCommaList renderExpr v ++ fmt.lit "; " ++ renderCommaList renderExpr e2 ++ fmt.lit "; " ++ renderCommaList renderExpr e3 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forConstIn v e1 op e2 stmt => fmt.lit "for (" ++ fmt.lit "const " ++ renderCommaList renderExpr v ++ " " ++ renderBinOp op ++ " " ++ renderExpr e2 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forConstOf v e1 op e2 stmt => fmt.lit "for (" ++ fmt.lit "const " ++ renderCommaList renderExpr v ++ " " ++ renderBinOp op ++ " " ++ renderExpr e2 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forOf e1 op e2 stmt => fmt.lit "for (" ++ renderCommaList renderExpr e1 ++ " " ++ renderBinOp op ++ " " ++ renderExpr e2 ++ fmt.lit ")" ++ renderStmt stmt
+  | .forVarOf v e1 op e2 stmt => fmt.lit "for (" ++ fmt.lit "var " ++ renderCommaList renderExpr v ++ " " ++ renderBinOp op ++ " " ++ renderExpr e2 ++ fmt.lit ")" ++ renderStmt stmt
+  | .asyncFunction name params block semi => fmt.lit "async function " ++ renderIdent name ++ fmt.lit " (" ++ renderCommaList renderExpr params ++ fmt.lit ")" ++ renderBlock block ++ renderSemi semi
+  | .function name params block semi => fmt.lit "function " ++ renderIdent name ++ fmt.lit " (" ++ renderCommaList renderExpr params ++ fmt.lit ")" ++ renderBlock block ++ renderSemi semi
+  | .generator name params block semi => fmt.lit "function " ++ renderIdent name ++ fmt.lit " (" ++ renderCommaList renderExpr params ++ fmt.lit ")" ++ renderBlock block ++ renderSemi semi -- simplified
+  | .if expr stmt => fmt.lit "if (" ++ renderExpr expr ++ fmt.lit ") " ++ renderStmt stmt
+  | .ifElse expr stmt1 stmt2 => fmt.lit "if (" ++ renderExpr expr ++ fmt.lit ") " ++ renderStmt stmt1 ++ fmt.lit " else " ++ renderStmt stmt2
+  | .labelled ident stmt => renderIdent ident ++ fmt.lit ":" ++ renderStmt stmt
+  | .emptyStatement => fmt.lit ";"
+  | .expressionStatement expr semi => renderExpr expr ++ renderSemi semi
+  | .assignStatement lhs op rhs semi => renderExpr lhs ++ " " ++ renderAssignOp op ++ " " ++ renderExpr rhs ++ renderSemi semi
+  | .methodCall expr args semi => renderExpr expr ++ fmt.lit "(" ++ renderCommaList renderExpr args ++ fmt.lit ")" ++ renderSemi semi
+  | .return expr? semi => fmt.lit "return " ++ renderMaybeExpr expr? ++ renderSemi semi
+  | .switch expr parts semi => fmt.lit "switch (" ++ renderExpr expr ++ fmt.lit ") {" ++ renderSwitchParts parts ++ fmt.lit "}" ++ renderSemi semi
+  | .throw expr semi => fmt.lit "throw " ++ renderExpr expr ++ renderSemi semi
+  | .try block catches finally => fmt.lit "try " ++ renderBlock block ++ renderCatches catches ++ renderFinally finally
+  | .variable decl semi => fmt.lit "var " ++ renderCommaList renderExpr decl ++ renderSemi semi
+  | .while expr stmt => fmt.lit "while (" ++ renderExpr expr ++ fmt.lit ") " ++ renderStmt stmt
+  | .with expr stmt semi => fmt.lit "with (" ++ renderExpr expr ++ fmt.lit ")" ++ renderStmt stmt ++ renderSemi semi
+
+def renderStmts (stmts : Array JSStatement) : Format :=
+  stmts.foldl (fun acc stmt => acc.append (renderStmt stmt).append " ") (fmt.empty)
+
+def renderBlock (block : JSBlock) : Format :=
+  match block with
+  | .block stmts => fmt.lit "{" ++ renderStmts stmts ++ fmt.lit "}"
+
+def renderExpr (expr : JSExpression) : Format :=
+  match expr with
+  | .identifier name => fmt.lit name
+  | .decimal value => fmt.lit value
+  | .literal value => fmt.lit (""" ++ value ++ """)
+  | .hexInteger value => fmt.lit ("0x" ++ value)
+  | .octal value => fmt.lit ("0" ++ value)
+  | .stringLiteral value => fmt.lit (""" ++ value ++ """)
+  | .regEx value => fmt.lit value
+  | .arrayLiteral elems => fmt.lit "[" ++ renderArrayElements elems ++ fmt.lit, "]"
+  | .assignExpression lhs op rhs => renderExpr lhs ++ " " ++ renderAssignOp op ++ " " ++ renderExpr rhs
+  | .awaitExpression expr => fmt.lit "await " ++ renderExpr expr
+  | .callExpression expr args => renderExpr expr ++ fmt.lit "(" ++ renderCommaList renderExpr args ++ fmt.lit ")"
+  | .callExpressionDot expr expr2 => renderExpr expr ++ fmt.lit "." ++ renderExpr expr2
+  | .callExpressionSquare expr index => renderExpr expr ++ fmt.lit "[" ++ renderExpr index ++ fmt.lit "]"
+  | .classExpression name heritage body => fmt.lit "class " ++ renderIdent name ++ renderHeritage heritage ++ fmt.lit " {" ++ renderClassElements body ++ fmt.lit "}"
+  | .commaExpression lhs rhs => renderExpr lhs ++ fmt.lit ", " ++ renderExpr rhs
+  | .expressionBinary lhs op rhs => renderExpr lhs ++ " " ++ renderBinOp op ++ " " ++ renderExpr rhs
+  | .expressionParen expr => fmt.lit "(" ++ renderExpr expr ++ fmt.lit ")"
+  | .expressionPostfix expr op => renderExpr expr ++ renderUnaryOp op
+  | .expressionTernary cond trueVal falseVal => renderExpr cond ++ fmt.lit " ? " ++ renderExpr trueVal ++ fmt.lit " : " ++ renderExpr falseVal
+  | .arrowExpression params body => renderArrowParams params ++ fmt.lit " => " ++ renderStmt body
+  | .functionExpression name params block => fmt.lit "function " ++ renderIdent name ++ fmt.lit " (" ++ renderCommaList renderExpr params ++ fmt.lit ")" ++ renderBlock block
+  | .generatorExpression name params block => fmt.lit "function* " ++ renderIdent name ++ fmt.lit " (" ++ renderCommaList renderExpr params ++ fmt.lit ")" ++ renderBlock block
+  | .memberDot obj prop => renderExpr obj ++ fmt.lit "." ++ renderExpr prop
+  | .memberExpression expr args => renderExpr expr ++ fmt.lit "(" ++ renderCommaList renderExpr args ++ fmt.lit ")"
+  | .memberNew expr args => fmt.lit "new " ++ renderExpr expr ++ fmt.lit "(" ++ renderCommaList renderExpr args ++ fmt.lit ")"
+  | .memberSquare obj index => renderExpr obj ++ fmt.lit "[" ++ renderExpr index ++ fmt.lit "]"
+  | .newExpression expr => fmt.lit "new " ++ renderExpr expr
+  | .objectLiteral props => fmt.lit "{" ++ renderObjectProps props ++ fmt.lit "}"
+  | .spreadExpression expr => fmt.lit "..." ++ renderExpr expr
+  | .templateLiteral tag? head parts => renderMaybeExpr tag? ++ fmt.lit "`" ++ fmt.lit head ++ renderTemplateParts parts ++ fmt.lit "`"
+  | .unaryExpression op expr => renderUnaryOp op ++ renderExpr expr
+  | .varInitExpression ident init => renderExpr ident ++ renderVarInit init
+  | .yieldExpression expr? => fmt.lit "yield " ++ renderMaybeExpr expr?
+  | .yieldFromExpression expr => fmt.lit "yield* " ++ renderExpr expr
+  deriving Repr, BEq
+
+def renderIdent (ident : JSIdent) : Format :=
+  match ident with
+  | .name n => fmt.lit n
+  | .none => fmt.lit ""
+
+def renderHeritage (heritage : JSClassHeritage) : Format :=
+  match heritage with
+  | .extends expr => fmt.lit " extends " ++ renderExpr expr
+  | .none => fmt.lit ""
+
+def renderClassElements (elems : Array JSClassElement) : Format :=
+  elems.foldl (fun acc e => acc.append (renderClassElement e).append " ") (fmt.empty)
+
+def renderClassElement (e : JSClassElement) : Format :=
+  match e with
+  | .instanceMethod method => renderMethodDef method
+  | .staticMethod method => fmt.lit "static " ++ renderMethodDef method
+  | .semi => fmt.lit ";"
+
+def renderMethodDef (m : JSMethodDefinition) : Format :=
+  match m with
+  | .method name params block => renderPropertyName name ++ fmt.lit "(" ++ renderCommaList renderExpr params ++ fmt.lit ")" ++ renderBlock block
+  | .generatorMethod name params block => fmt.lit "*" ++ renderPropertyName name ++ fmt.lit "(" ++ renderCommaList renderExpr params ++ fmt.lit ")" ++ renderBlock block
+  | .accessorMethod acc name params block => renderAccessor acc ++ renderPropertyName name ++ fmt.lit "(" ++ renderCommaList renderExpr params ++ fmt.lit ")" ++ renderBlock block
+
+def renderPropertyName (name : JSPropertyName) : Format :=
+  match name with
+  | .ident n => fmt.lit n
+  | .string s => fmt.lit (""" ++ s ++ """)
+  | .number n => fmt.lit n
+  | .computed expr => fmt.lit "[" ++ renderExpr expr ++ fmt.lit "]"
+
+def renderAccessor (acc : JSAccessor) : Format :=
+  match acc with
+  | .get => fmt.lit "get "
+  | .set => fmt.lit "set "
+
+def renderArrayElements (elems : Array JSArrayElement) : Format :=
+  elems.foldl (fun acc e => acc.append (renderArrayElement e).append " ") (fmt.lit " ")
+  -- this is a bit wrong but just for a prototype
+
+def renderArrayElement (e : JSArrayElement) : Format :=
+  match e : JSArrayElement with
+  | .element expr => renderExpr expr
+  | .comma => fmt.lit ","
+
+def renderCommaList (renderFunc : (α → Format)) (list : Array α) : Format :=
+  list.foldl (fun acc x => acc.append (fmt.lit ", ").append (renderFunc x)) (fmt.lit "")
+  -- this is also simplified
+
+def renderSemi (semi : JSSemi) : Format :=
+  match semi with
+  | .semi => fmt.lit ";"
+  | .auto => fmt.lit ""
+
+def renderBinOp (op : JSBinOp) : Format :=
+  match op with
+  | .and => fmt.lit "&&"
+  | .bitAnd => fmt.lit "&"
+  | .bitOr => fmt.lit "|"
+  | .bitXor => fmt.lit "^"
+  | .divide => fmt.lit "/"
+  | .eq => fmt.lit "=="
+  | .ge => fmt.lit ">="
+  | .gt => fmt.lit ">"
+  | .in => fmt.lit "in"
+  | .instanceOf => fmt.lit "instanceof"
+  | .le => fmt.lit "<="
+  | .lsh => fmt.lit "<<"
+  | .lt => fmt.lit "<"
+  | .minus => fmt.lit "-"
+  | .mod => fmt.lit "%"
+  | .neq => fmt.lit "!="
+  | .of => fmt.lit "of"
+  | .or => fmt.lit "||"
+  | .plus => fmt.lit "+"
+  | .rsh => fmt.lit ">>"
+  | .strictEq => fmt.lit "==="
+  | .strictNeq => fmt.lit "!=="
+  | .times => fmt.lit "*"
+  | .ursh => fmt.lit ">>>"
+
+def renderUnaryOp (op : JSUnaryOp) : Format :=
+  match op with
+  | .decr => fmt.lit "--"
+  | .delete => fmt.lit "delete"
+  | .incr => fmt.lit "++"
+  | .minus => fmt.lit "-"
+  | .not => fmt.lit "!"
+  | .plus => fmt.lit "+"
+  | .tilde => fmt.lit "~"
+  | .typeof => fmt.lit "typeof"
+  | .void => fmt.lit "void"
+
+def renderAssignOp (op : JSAssignOp) : Format :=
+  match op with
+  | .assign => fmt.lit "="
+  | .timesAssign => fmt.lit "*="
+  | .divideAssign => fmt.lit "/="
+  | .modAssign => fmt.lit "%="
+  | .plusAssign => fmt.lit "+="
+  | .minusAssign => fmt.lit "-="
+  | .lshAssign => fmt.lit "<<="
+  | .rshAssign => fmt.lit ">>="
+  | .urshAssign => fmt.lit ">>>="
+  | .bwAndAssign => fmt.lit "&="
+  | .bwXorAssign => fmt.lit "^="
+  | .bwOrAssign => fmt.lit "|="
+
+def renderMaybeExpr (expr? : Option JSExpression) : Format :=
+  match expr? with
+  | some e => renderExpr e
+  | none => fmt.lit ""
+
+def renderCatches (catches : Array JSTryCatch) : Format :=
+  catches.foldl (fun acc c => acc.append (renderCatch c)) (fmt.empty)
+
+def renderCatch (c : JSTryCatch) : Format :=
+  match c with
+  | .catch ident block => fmt.lit " catch (" ++ renderExpr ident ++ fmt.lit ") " ++ renderBlock block
+  | .catchIf ident expr block => fmt.lit " catch (" ++ renderExpr ident ++ fmt.lit ") if (" ++ renderExpr expr ++ fmt.lit ") " ++ renderBlock block
+
+def renderFinally (finally : JSTryFinally) : Format :=
+  match finally with
+  | .finally block => fmt.lit " finally " ++ renderBlock block
+  | .noFinally => fmt.lit ""
+
+def renderObjectProps (props : Array JSObjectProperty) : Format :=
+  props.foldl (fun acc p => acc.append (renderObjectProp p).append (fmt.lit ", ")) (fmt.empty)
+
+def renderObjectProp (p : JSObjectProperty) : Format :=
+  match p with
+  | .propValue name value => renderPropertyName name ++ fmt.lit " : " ++ renderExpr (value[0])
+  | .propIdentRef name => fmt.lit name
+  | .propMethod method => renderMethodDef method
+
+def renderTemplateParts (parts : Array JSTemplatePart) : Format :=
+  parts.foldl (fun acc p => acc.append (renderTemplatePart p)) (fmt.empty)
+
+def renderTemplatePart (p : JSTemplatePart) : Format :=
+  match p with
+  | .part expr suffix => fmt.lit "${" ++ renderExpr expr ++ fmt.lit "}" ++ fmt.lit suffix
