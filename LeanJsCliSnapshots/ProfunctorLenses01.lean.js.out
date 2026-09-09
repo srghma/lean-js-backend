@@ -1,8 +1,0 @@
-1
-1
-{ foo := 1, bar := 11 }
-{ foo := 1, bar := 11 }
-{ foo := 1, bar := { baz := 11 } }
-{ foo := 1, bar := { baz := 11 } }
-{ foo := 2, bar := 52 }
-{ foo := 2, bar := 52 }

@@ -1,6 +1,0 @@
-MyList.Cons 0 (MyList.Cons 1 (MyList.Nil))
-MyList.Cons 0 (MyList.Cons 1 (MyList.Nil))
-MyList.Cons 0 (MyList.Cons 1 (MyList.Nil))
-MyList.Cons 0 (MyList.Cons 1 (MyList.Nil))
-MyList.Cons 0 (MyList.Cons 1 (MyList.Nil))
-MyList.Cons 0 (MyList.Cons 1 (MyList.Nil))

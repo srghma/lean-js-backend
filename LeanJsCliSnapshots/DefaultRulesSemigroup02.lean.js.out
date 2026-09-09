@@ -1,4 +1,0 @@
-{ foo := "ac", bar := ["b", "d"] }
-{ foo := "ac", bar := ["b", "d"] }
-{ foo := "helloa", bar := ["hello", "b"] }
-{ foo := "hello, World!", bar := ["hello", "World!"] }

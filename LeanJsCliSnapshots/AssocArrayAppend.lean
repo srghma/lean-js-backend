@@ -1,7 +1,3 @@
-prelude
-import Init.Data.Array.Basic
-import Init.Data.Int.Basic
-
 def test1 (arr : Array String) : Array String :=
   let x := #["a"]
   let y := #["b"]

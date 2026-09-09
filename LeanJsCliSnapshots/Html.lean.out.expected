@@ -1,1 +1,0 @@
-Html.elem "section" [Html.elem "h1" [Html.text "Posts for Alice"], Html.elem "article" [Html.elem "h2" [Html.text "The first post"], Html.elem "p" [Html.text "This is the first post.", Html.text "Not much else to say."]]]
