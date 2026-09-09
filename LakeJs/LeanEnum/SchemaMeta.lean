@@ -1,7 +1,7 @@
 module
 
-public import LakeJs.LeanEnum.Basic
-public meta import LakeJs.LeanEnum.Basic
+public import LakeJs.LeanEnum.Schema
+public meta import LakeJs.LeanEnum.Schema
 public import Lean.Elab.Term
 public meta import Lean.Elab.Term.TermElabM
 public import Lean.Attributes
@@ -12,8 +12,8 @@ public meta import Lean.Meta.Eval
 public meta import Lean.Parser.Extra
 public meta import Init.Data.ToString.Name
 
-public section
-@[expose] section
+@[expose] public section
+
 
 /-! # Metaprogramming / Elaborators for `LeanEnum` -/
 

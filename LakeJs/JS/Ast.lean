@@ -13,7 +13,7 @@ translated from the `language-javascript` Haskell library.
 
 inductive JSAst where
   | program (stmts : Array JSStatement)
-  | module (items : Array JSModuleItem)
+  | module_ (items : Array JSModuleItem)
   | statement (s : JSStatement)
   | expression (e : JSExpression)
   | literal (e : JSExpression)

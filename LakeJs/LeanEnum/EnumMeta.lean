@@ -2,6 +2,9 @@ module
 
 public import LakeJs.LeanEnum.Schema
 public meta import LakeJs.LeanEnum.Schema
+public meta import LakeJs.LeanEnum.SchemaMeta
+public import LakeJs.LeanEnum.Enum
+public meta import LakeJs.LeanEnum.Enum
 public import Lean.Elab.Term
 public meta import Lean.Elab.Term.TermElabM
 public import Lean.Attributes
@@ -12,8 +15,8 @@ public meta import Lean.Meta.Eval
 public meta import Lean.Parser.Extra
 public meta import Init.Data.ToString.Name
 
-public section
-@[expose] section
+@[expose] public section
+
 
 /--
 `mkEnum! schema "ctorName" fields` elaborator: evaluated at compile time.

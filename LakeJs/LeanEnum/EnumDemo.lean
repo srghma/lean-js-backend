@@ -10,8 +10,8 @@ public meta import LakeJs.LeanEnum.Enum
 public import LakeJs.LeanEnum.EnumMeta
 public meta import LakeJs.LeanEnum.EnumMeta
 
-public section
-@[expose] section
+@[expose] public section
+
 
 /-! # Verification & Testing -/
 

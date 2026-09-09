@@ -6,11 +6,11 @@ public import LakeJs.LeanEnum.Schema
 public meta import LakeJs.LeanEnum.Schema
 public import LakeJs.LeanEnum.SchemaMeta
 public meta import LakeJs.LeanEnum.SchemaMeta
-public import LakeJs.LeanEnum.Enum
-public meta import LakeJs.LeanEnum.Enum
-public import LakeJs.LeanEnum.EnumMeta
-public meta import LakeJs.LeanEnum.EnumMeta
-public import LakeJs.LeanEnum.EnumDemo
+-- public import LakeJs.LeanEnum.Enum
+-- public meta import LakeJs.LeanEnum.Enum
+-- public import LakeJs.LeanEnum.EnumMeta
+-- public meta import LakeJs.LeanEnum.EnumMeta
+-- public import LakeJs.LeanEnum.EnumDemo
 
 /-!
 # `LeanEnum`: schema-driven runtime representation of Lean inductive types

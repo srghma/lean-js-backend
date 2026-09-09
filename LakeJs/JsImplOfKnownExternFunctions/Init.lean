@@ -598,7 +598,7 @@ def lean_usize_dec_eq := [JS_EXPR|#0 == #1]
 --     return lean_array_to_list_impl(lean_box(0), a);
 -- }
 -- ```
-def lean_array_to_list := [JS_EXPR|(#0).reduceRight((out, item) => mkObject(`List.cons, item, out), mkObject(`List.nil))]
+def lean_array_to_list : Expr 2 := [JS_EXPR|(#0).reduceRight((out, item) => mkObject(`List.cons, item, out), mkObject(`List.nil))]
 
 -- ```lean
 -- attribute [extern "lean_array_mk"] Array.mk
@@ -618,6 +618,25 @@ def lean_array_mk := [JS_FUNC|inputs(curr)|returns=out|
     curr = tail;
   }
 ]
+
+def lean_array_mk : Expr 1 := [JS_EXPR|
+  ((f) => f(f, #0))(
+    (self, curr) =>
+      caseOf(curr, {
+        nil:  () => [],
+        cons: (head, tail) => [head].concat(self(self, tail))
+      })
+  )
+|]
+
+def lean_array_mk : Expr 1 := [JS_EXPR|
+  ((f) => f(f, #0, []))(
+    (self, curr, acc) =>
+      isTag(curr, "cons")
+        ? self(self, getField(curr, 1), [getField(curr, 0)].concat(acc))
+        : acc
+  )
+|]
 
 -- ```lean
 -- def Array.mkEmpty {α : Type u} (c : @& Nat) : Array α where
@@ -3897,13 +3916,13 @@ def lean_byte_array_copy_slice := [JS_FUNC|inputs(dst, dstOff, src, srcOff, len)
 -- ```cpp
 -- static inline uint8_t lean_int8_of_int(b_lean_obj_arg a) {
 --     int8_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = (int8_t)lean_scalar_to_int64(a);
 --     } else {
 --         res = lean_int8_of_big_int(a);
 --     }
--- 
+--
 --     return (uint8_t)res;
 -- }
 -- ```
@@ -3916,13 +3935,13 @@ def lean_int8_of_int := [JS_EXPR|fromSigned(#0, 0xFF)]
 -- ```cpp
 -- static inline uint8_t lean_int8_of_nat(b_lean_obj_arg a) {
 --     int8_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = (int8_t)lean_unbox(a);
 --     } else {
 --         res = lean_int8_of_big_int(a);
 --     }
--- 
+--
 --     return (uint8_t)res;
 -- }
 -- ```
@@ -4026,7 +4045,7 @@ def lean_int8_mod := [JS_EXPR|fromSigned(toSigned(#0, 0xFF, 8) % toSigned(#1, 0x
 -- static inline uint8_t lean_int8_land(uint8_t a1, uint8_t a2) {
 --     int8_t lhs = (int8_t)a1;
 --     int8_t rhs = (int8_t)a2;
--- 
+--
 --     return (uint8_t)(lhs & rhs);
 -- }
 -- ```
@@ -4040,7 +4059,7 @@ def lean_int8_land := [JS_EXPR|#0 & #1]
 -- static inline uint8_t lean_int8_lor(uint8_t a1, uint8_t a2) {
 --     int8_t lhs = (int8_t)a1;
 --     int8_t rhs = (int8_t)a2;
--- 
+--
 --     return (uint8_t)(lhs | rhs);
 -- }
 -- ```
@@ -4054,7 +4073,7 @@ def lean_int8_lor := [JS_EXPR|#0 | #1]
 -- static inline uint8_t lean_int8_xor(uint8_t a1, uint8_t a2) {
 --     int8_t lhs = (int8_t)a1;
 --     int8_t rhs = (int8_t)a2;
--- 
+--
 --     return (uint8_t)(lhs ^ rhs);
 -- }
 -- ```
@@ -4067,7 +4086,7 @@ def lean_int8_xor := [JS_EXPR|#0 ^ #1]
 -- ```cpp
 -- static inline uint8_t lean_int8_shift_left(uint8_t a1, uint8_t a2) {
 --     int8_t rhs = (((int8_t)a2 % 8) + 8) % 8; // this is smod 8
--- 
+--
 --     // do not cast to `int8_t`, as there negative `a1` is undefined behavior
 --     return a1 << (uint8_t)rhs;
 -- }
@@ -4082,7 +4101,7 @@ def lean_int8_shift_left := [JS_EXPR|(#0 << #1) & 0xFF]
 -- static inline uint8_t lean_int8_shift_right(uint8_t a1, uint8_t a2) {
 --     int8_t lhs = (int8_t)a1;
 --     int8_t rhs = (((int8_t)a2 % 8) + 8) % 8; // this is smod 8
--- 
+--
 --     return (uint8_t)(lhs >> rhs);
 -- }
 -- ```
@@ -4095,7 +4114,7 @@ def lean_int8_shift_right := [JS_EXPR|(toSigned(#0, 0xFF, 8) >> #1) & 0xFF]
 -- ```cpp
 -- static inline uint8_t lean_int8_complement(uint8_t a) {
 --     int8_t arg = (int8_t)a;
--- 
+--
 --     return (uint8_t)(~arg);
 -- }
 -- ```
@@ -4127,7 +4146,7 @@ def lean_int8_abs := [JS_EXPR|throw new Error("lean_int8_abs not implemented")]
 -- static inline uint8_t lean_int8_dec_eq(uint8_t a1, uint8_t a2) {
 --     int8_t lhs = (int8_t)a1;
 --     int8_t rhs = (int8_t)a2;
--- 
+--
 --     return lhs == rhs;
 -- }
 -- ```
@@ -4151,7 +4170,7 @@ def lean_bool_to_int8 := [JS_EXPR|#0 ? 1 : 0]
 -- static inline uint8_t lean_int8_dec_lt(uint8_t a1, uint8_t a2) {
 --     int8_t lhs = (int8_t)a1;
 --     int8_t rhs = (int8_t)a2;
--- 
+--
 --     return lhs < rhs;
 -- }
 -- ```
@@ -4166,7 +4185,7 @@ def lean_int8_dec_lt := [JS_EXPR|toSigned(#0, 0xFF, 8) < toSigned(#1, 0xFF, 8)]
 -- static inline uint8_t lean_int8_dec_le(uint8_t a1, uint8_t a2) {
 --     int8_t lhs = (int8_t)a1;
 --     int8_t rhs = (int8_t)a2;
--- 
+--
 --     return lhs <= rhs;
 -- }
 -- ```
@@ -4179,13 +4198,13 @@ def lean_int8_dec_le := [JS_EXPR|toSigned(#0, 0xFF, 8) <= toSigned(#1, 0xFF, 8)]
 -- ```cpp
 -- static inline uint16_t lean_int16_of_int(b_lean_obj_arg a) {
 --     int16_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = (int16_t)lean_scalar_to_int64(a);
 --     } else {
 --         res = lean_int16_of_big_int(a);
 --     }
--- 
+--
 --     return (uint16_t)res;
 -- }
 -- ```
@@ -4198,13 +4217,13 @@ def lean_int16_of_int := [JS_EXPR|fromSigned(#0, 0xFFFF)]
 -- ```cpp
 -- static inline uint16_t lean_int16_of_nat(b_lean_obj_arg a) {
 --     int16_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = (int16_t)lean_unbox(a);
 --     } else {
 --         res = lean_int16_of_big_int(a);
 --     }
--- 
+--
 --     return (uint16_t)res;
 -- }
 -- ```
@@ -4326,7 +4345,7 @@ def lean_int16_mod := [JS_EXPR|fromSigned(toSigned(#0, 0xFFFF, 16) % toSigned(#1
 -- static inline uint16_t lean_int16_land(uint16_t a1, uint16_t a2) {
 --     int16_t lhs = (int16_t)a1;
 --     int16_t rhs = (int16_t)a2;
--- 
+--
 --     return (uint16_t)(lhs & rhs);
 -- }
 -- ```
@@ -4340,7 +4359,7 @@ def lean_int16_land := [JS_EXPR|#0 & #1]
 -- static inline uint16_t lean_int16_lor(uint16_t a1, uint16_t a2) {
 --     int16_t lhs = (int16_t)a1;
 --     int16_t rhs = (int16_t)a2;
--- 
+--
 --     return (uint16_t)(lhs | rhs);
 -- }
 -- ```
@@ -4354,7 +4373,7 @@ def lean_int16_lor := [JS_EXPR|#0 | #1]
 -- static inline uint16_t lean_int16_xor(uint16_t a1, uint16_t a2) {
 --     int16_t lhs = (int16_t)a1;
 --     int16_t rhs = (int16_t)a2;
--- 
+--
 --     return (uint16_t)(lhs ^ rhs);
 -- }
 -- ```
@@ -4367,7 +4386,7 @@ def lean_int16_xor := [JS_EXPR|#0 ^ #1]
 -- ```cpp
 -- static inline uint16_t lean_int16_shift_left(uint16_t a1, uint16_t a2) {
 --     int16_t rhs = (((int16_t)a2 % 16) + 16) % 16; // this is smod 16
--- 
+--
 --     // do not cast to `int16_t`, as there negative `a1` is undefined behavior
 --     return a1 << (uint16_t)rhs;
 -- }
@@ -4382,7 +4401,7 @@ def lean_int16_shift_left := [JS_EXPR|(#0 << #1) & 0xFFFF]
 -- static inline uint16_t lean_int16_shift_right(uint16_t a1, uint16_t a2) {
 --     int16_t lhs = (int16_t)a1;
 --     int16_t rhs = (((int16_t)a2 % 16) + 16) % 16; // this is smod 16
--- 
+--
 --     return (uint16_t)(lhs >> rhs);
 -- }
 -- ```
@@ -4395,7 +4414,7 @@ def lean_int16_shift_right := [JS_EXPR|(toSigned(#0, 0xFFFF, 16) >> #1) & 0xFFFF
 -- ```cpp
 -- static inline uint16_t lean_int16_complement(uint16_t a) {
 --     int16_t arg = (int16_t)a;
--- 
+--
 --     return (uint16_t)(~arg);
 -- }
 -- ```
@@ -4427,7 +4446,7 @@ def lean_int16_abs := [JS_EXPR|throw new Error("lean_int16_abs not implemented")
 -- static inline uint8_t lean_int16_dec_eq(uint16_t a1, uint16_t a2) {
 --     int16_t lhs = (int16_t)a1;
 --     int16_t rhs = (int16_t)a2;
--- 
+--
 --     return lhs == rhs;
 -- }
 -- ```
@@ -4451,7 +4470,7 @@ def lean_bool_to_int16 := [JS_EXPR|#0 ? 1 : 0]
 -- static inline uint8_t lean_int16_dec_lt(uint16_t a1, uint16_t a2) {
 --     int16_t lhs = (int16_t)a1;
 --     int16_t rhs = (int16_t)a2;
--- 
+--
 --     return lhs < rhs;
 -- }
 -- ```
@@ -4466,7 +4485,7 @@ def lean_int16_dec_lt := [JS_EXPR|toSigned(#0, 0xFFFF, 16) < toSigned(#1, 0xFFFF
 -- static inline uint8_t lean_int16_dec_le(uint16_t a1, uint16_t a2) {
 --     int16_t lhs = (int16_t)a1;
 --     int16_t rhs = (int16_t)a2;
--- 
+--
 --     return lhs <= rhs;
 -- }
 -- ```
@@ -4479,13 +4498,13 @@ def lean_int16_dec_le := [JS_EXPR|toSigned(#0, 0xFFFF, 16) <= toSigned(#1, 0xFFF
 -- ```cpp
 -- static inline uint32_t lean_int32_of_int(b_lean_obj_arg a) {
 --     int32_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = (int32_t)lean_scalar_to_int64(a);
 --     } else {
 --         res = lean_int32_of_big_int(a);
 --     }
--- 
+--
 --     return (uint32_t)res;
 -- }
 -- ```
@@ -4498,13 +4517,13 @@ def lean_int32_of_int := [JS_EXPR|fromSigned(#0, 0xFFFFFFFF)]
 -- ```cpp
 -- static inline uint32_t lean_int32_of_nat(b_lean_obj_arg a) {
 --     int32_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = (int32_t)lean_unbox(a);
 --     } else {
 --         res = lean_int32_of_big_int(a);
 --     }
--- 
+--
 --     return (uint32_t)res;
 -- }
 -- ```
@@ -4644,7 +4663,7 @@ def lean_int32_mod := [JS_EXPR|fromSigned(toSigned(#0, 0xFFFFFFFF, 32) % toSigne
 -- static inline uint32_t lean_int32_land(uint32_t a1, uint32_t a2) {
 --     int32_t lhs = (int32_t)a1;
 --     int32_t rhs = (int32_t)a2;
--- 
+--
 --     return (uint32_t)(lhs & rhs);
 -- }
 -- ```
@@ -4658,7 +4677,7 @@ def lean_int32_land := [JS_EXPR|#0 & #1]
 -- static inline uint32_t lean_int32_lor(uint32_t a1, uint32_t a2) {
 --     int32_t lhs = (int32_t)a1;
 --     int32_t rhs = (int32_t)a2;
--- 
+--
 --     return (uint32_t)(lhs | rhs);
 -- }
 -- ```
@@ -4672,7 +4691,7 @@ def lean_int32_lor := [JS_EXPR|#0 | #1]
 -- static inline uint32_t lean_int32_xor(uint32_t a1, uint32_t a2) {
 --     int32_t lhs = (int32_t)a1;
 --     int32_t rhs = (int32_t)a2;
--- 
+--
 --     return (uint32_t)(lhs ^ rhs);
 -- }
 -- ```
@@ -4685,7 +4704,7 @@ def lean_int32_xor := [JS_EXPR|#0 ^ #1]
 -- ```cpp
 -- static inline uint32_t lean_int32_shift_left(uint32_t a1, uint32_t a2) {
 --     int32_t rhs = (((int32_t)a2 % 32) + 32) % 32; // this is smod 32
--- 
+--
 --     // do not cast to `int32_t`, as there negative `a1` is undefined behavior
 --     return a1 << (uint32_t)rhs;
 -- }
@@ -4700,7 +4719,7 @@ def lean_int32_shift_left := [JS_EXPR|(#0 << #1) & 0xFFFFFFFF]
 -- static inline uint32_t lean_int32_shift_right(uint32_t a1, uint32_t a2) {
 --     int32_t lhs = (int32_t)a1;
 --     int32_t rhs = (((int32_t)a2 % 32) + 32) % 32; // this is smod 32
--- 
+--
 --     return (uint32_t)(lhs >> rhs);
 -- }
 -- ```
@@ -4713,7 +4732,7 @@ def lean_int32_shift_right := [JS_EXPR|(toSigned(#0, 0xFFFFFFFF, 32) >> #1) & 0x
 -- ```cpp
 -- static inline uint32_t lean_int32_complement(uint32_t a) {
 --     int32_t arg = (int32_t)a;
--- 
+--
 --     return (uint32_t)(~arg);
 -- }
 -- ```
@@ -4745,7 +4764,7 @@ def lean_int32_abs := [JS_EXPR|throw new Error("lean_int32_abs not implemented")
 -- static inline uint8_t lean_int32_dec_eq(uint32_t a1, uint32_t a2) {
 --     int32_t lhs = (int32_t)a1;
 --     int32_t rhs = (int32_t)a2;
--- 
+--
 --     return lhs == rhs;
 -- }
 -- ```
@@ -4769,7 +4788,7 @@ def lean_bool_to_int32 := [JS_EXPR|#0 ? 1 : 0]
 -- static inline uint8_t lean_int32_dec_lt(uint32_t a1, uint32_t a2) {
 --     int32_t lhs = (int32_t)a1;
 --     int32_t rhs = (int32_t)a2;
--- 
+--
 --     return lhs < rhs;
 -- }
 -- ```
@@ -4784,7 +4803,7 @@ def lean_int32_dec_lt := [JS_EXPR|toSigned(#0, 0xFFFFFFFF, 32) < toSigned(#1, 0x
 -- static inline uint8_t lean_int32_dec_le(uint32_t a1, uint32_t a2) {
 --     int32_t lhs = (int32_t)a1;
 --     int32_t rhs = (int32_t)a2;
--- 
+--
 --     return lhs <= rhs;
 -- }
 -- ```
@@ -4797,13 +4816,13 @@ def lean_int32_dec_le := [JS_EXPR|toSigned(#0, 0xFFFFFFFF, 32) <= toSigned(#1, 0
 -- ```cpp
 -- static inline uint64_t lean_int64_of_int(b_lean_obj_arg a) {
 --     int64_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = lean_scalar_to_int64(a);
 --     } else {
 --         res = lean_int64_of_big_int(a);
 --     }
--- 
+--
 --     return (uint64_t)res;
 -- }
 -- ```
@@ -4816,13 +4835,13 @@ def lean_int64_of_int := [JS_EXPR|fromSigned(#0, 0xFFFFFFFFFFFFFFFF)]
 -- ```cpp
 -- static inline uint64_t lean_int64_of_nat(b_lean_obj_arg a) {
 --     int64_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = (int64_t)lean_unbox(a);
 --     } else {
 --         res = lean_int64_of_big_int(a);
 --     }
--- 
+--
 --     return (uint64_t)res;
 -- }
 -- ```
@@ -4982,7 +5001,7 @@ def lean_int64_mod := [JS_EXPR|fromSigned(toSigned(#0, 0xFFFFFFFFFFFFFFFF, 64) %
 -- static inline uint64_t lean_int64_land(uint64_t a1, uint64_t a2) {
 --     int64_t lhs = (int64_t)a1;
 --     int64_t rhs = (int64_t)a2;
--- 
+--
 --     return (uint64_t)(lhs & rhs);
 -- }
 -- ```
@@ -4996,7 +5015,7 @@ def lean_int64_land := [JS_EXPR|#0 & #1]
 -- static inline uint64_t lean_int64_lor(uint64_t a1, uint64_t a2) {
 --     int64_t lhs = (int64_t)a1;
 --     int64_t rhs = (int64_t)a2;
--- 
+--
 --     return (uint64_t)(lhs | rhs);
 -- }
 -- ```
@@ -5010,7 +5029,7 @@ def lean_int64_lor := [JS_EXPR|#0 | #1]
 -- static inline uint64_t lean_int64_xor(uint64_t a1, uint64_t a2) {
 --     int64_t lhs = (int64_t)a1;
 --     int64_t rhs = (int64_t)a2;
--- 
+--
 --     return (uint64_t)(lhs ^ rhs);
 -- }
 -- ```
@@ -5023,7 +5042,7 @@ def lean_int64_xor := [JS_EXPR|#0 ^ #1]
 -- ```cpp
 -- static inline uint64_t lean_int64_shift_left(uint64_t a1, uint64_t a2) {
 --     int64_t rhs = (((int64_t)a2 % 64) + 64) % 64; // this is smod 64
--- 
+--
 --     // do not cast to `int64_t`, as there negative `a1` is undefined behavior
 --     return a1 << (uint64_t)rhs;
 -- }
@@ -5038,7 +5057,7 @@ def lean_int64_shift_left := [JS_EXPR|(#0 << #1) & 0xFFFFFFFFFFFFFFFF]
 -- static inline uint64_t lean_int64_shift_right(uint64_t a1, uint64_t a2) {
 --     int64_t lhs = (int64_t)a1;
 --     int64_t rhs = (((int64_t)a2 % 64) + 64) % 64; // this is smod 64
--- 
+--
 --     return (uint64_t)(lhs >> rhs);
 -- }
 -- ```
@@ -5051,7 +5070,7 @@ def lean_int64_shift_right := [JS_EXPR|(toSigned(#0, 0xFFFFFFFFFFFFFFFF, 64) >> 
 -- ```cpp
 -- static inline uint64_t lean_int64_complement(uint64_t a) {
 --     int64_t arg = (int64_t)a;
--- 
+--
 --     return (uint64_t)(~arg);
 -- }
 -- ```
@@ -5083,7 +5102,7 @@ def lean_int64_abs := [JS_EXPR|throw new Error("lean_int64_abs not implemented")
 -- static inline uint8_t lean_int64_dec_eq(uint64_t a1, uint64_t a2) {
 --     int64_t lhs = (int64_t)a1;
 --     int64_t rhs = (int64_t)a2;
--- 
+--
 --     return lhs == rhs;
 -- }
 -- ```
@@ -5107,7 +5126,7 @@ def lean_bool_to_int64 := [JS_EXPR|#0 ? 1 : 0]
 -- static inline uint8_t lean_int64_dec_lt(uint64_t a1, uint64_t a2) {
 --     int64_t lhs = (int64_t)a1;
 --     int64_t rhs = (int64_t)a2;
--- 
+--
 --     return lhs < rhs;
 -- }
 -- ```
@@ -5122,7 +5141,7 @@ def lean_int64_dec_lt := [JS_EXPR|toSigned(#0, 0xFFFFFFFFFFFFFFFF, 64) < toSigne
 -- static inline uint8_t lean_int64_dec_le(uint64_t a1, uint64_t a2) {
 --     int64_t lhs = (int64_t)a1;
 --     int64_t rhs = (int64_t)a2;
--- 
+--
 --     return lhs <= rhs;
 -- }
 -- ```
@@ -5135,13 +5154,13 @@ def lean_int64_dec_le := [JS_EXPR|toSigned(#0, 0xFFFFFFFFFFFFFFFF, 64) <= toSign
 -- ```cpp
 -- static inline size_t lean_isize_of_int(b_lean_obj_arg a) {
 --     ptrdiff_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = (ptrdiff_t)lean_scalar_to_int64(a);
 --     } else {
 --         res = lean_isize_of_big_int(a);
 --     }
--- 
+--
 --     return (size_t)res;
 -- }
 -- ```
@@ -5154,13 +5173,13 @@ def lean_isize_of_int := [JS_EXPR|fromSigned(#0, 0xFFFFFFFFFFFFFFFF)]
 -- ```cpp
 -- static inline size_t lean_isize_of_nat(b_lean_obj_arg a) {
 --     ptrdiff_t res;
--- 
+--
 --     if (lean_is_scalar(a)) {
 --         res = (ptrdiff_t)lean_unbox(a);
 --     } else {
 --         res = lean_isize_of_big_int(a);
 --     }
--- 
+--
 --     return (size_t)res;
 -- }
 -- ```
@@ -5338,7 +5357,7 @@ def lean_isize_mod := [JS_EXPR|throw new Error("lean_isize_mod not implemented")
 -- static inline size_t lean_isize_land(size_t a1, size_t a2) {
 --     ptrdiff_t lhs = (ptrdiff_t)a1;
 --     ptrdiff_t rhs = (ptrdiff_t)a2;
--- 
+--
 --     return (size_t)(lhs & rhs);
 -- }
 -- ```
@@ -5352,7 +5371,7 @@ def lean_isize_land := [JS_EXPR|throw new Error("lean_isize_land not implemented
 -- static inline size_t lean_isize_lor(size_t a1, size_t a2) {
 --     ptrdiff_t lhs = (ptrdiff_t)a1;
 --     ptrdiff_t rhs = (ptrdiff_t)a2;
--- 
+--
 --     return (size_t)(lhs | rhs);
 -- }
 -- ```
@@ -5366,7 +5385,7 @@ def lean_isize_lor := [JS_EXPR|throw new Error("lean_isize_lor not implemented")
 -- static inline size_t lean_isize_xor(size_t a1, size_t a2) {
 --     ptrdiff_t lhs = (ptrdiff_t)a1;
 --     ptrdiff_t rhs = (ptrdiff_t)a2;
--- 
+--
 --     return (size_t)(lhs ^ rhs);
 -- }
 -- ```
@@ -5380,7 +5399,7 @@ def lean_isize_xor := [JS_EXPR|throw new Error("lean_isize_xor not implemented")
 -- static inline size_t lean_isize_shift_left(size_t a1, size_t a2) {
 --     ptrdiff_t size = sizeof(ptrdiff_t) * 8;
 --     ptrdiff_t rhs = (((ptrdiff_t)a2 % size) + size) % size; // this is smod
--- 
+--
 --     // do not cast to `int64_t`, as there negative `a1` is undefined behavior
 --     return a1 << (size_t)rhs;
 -- }
@@ -5396,7 +5415,7 @@ def lean_isize_shift_left := [JS_EXPR|throw new Error("lean_isize_shift_left not
 --     ptrdiff_t lhs = (ptrdiff_t)a1;
 --     ptrdiff_t size = sizeof(ptrdiff_t) * 8;
 --     ptrdiff_t rhs = (((ptrdiff_t)a2 % size) + size) % size; // this is smod
--- 
+--
 --     return (size_t)(lhs >> rhs);
 -- }
 -- ```
@@ -5409,7 +5428,7 @@ def lean_isize_shift_right := [JS_EXPR|throw new Error("lean_isize_shift_right n
 -- ```cpp
 -- static inline size_t lean_isize_complement(size_t a) {
 --     ptrdiff_t arg = (ptrdiff_t)a;
--- 
+--
 --     return (size_t)(~arg);
 -- }
 -- ```
@@ -5441,7 +5460,7 @@ def lean_isize_abs := [JS_EXPR|throw new Error("lean_isize_abs not implemented")
 -- static inline uint8_t lean_isize_dec_eq(size_t a1, size_t a2) {
 --     ptrdiff_t lhs = (ptrdiff_t)a1;
 --     ptrdiff_t rhs = (ptrdiff_t)a2;
--- 
+--
 --     return lhs == rhs;
 -- }
 -- ```
@@ -5465,7 +5484,7 @@ def lean_bool_to_isize := [JS_EXPR|throw new Error("lean_bool_to_isize not imple
 -- static inline uint8_t lean_isize_dec_lt(size_t a1, size_t a2) {
 --     ptrdiff_t lhs = (ptrdiff_t)a1;
 --     ptrdiff_t rhs = (ptrdiff_t)a2;
--- 
+--
 --     return lhs < rhs;
 -- }
 -- ```
@@ -5480,7 +5499,7 @@ def lean_isize_dec_lt := [JS_EXPR|throw new Error("lean_isize_dec_lt not impleme
 -- static inline uint8_t lean_isize_dec_le(size_t a1, size_t a2) {
 --     ptrdiff_t lhs = (ptrdiff_t)a1;
 --     ptrdiff_t rhs = (ptrdiff_t)a2;
--- 
+--
 --     return lhs <= rhs;
 -- }
 -- ```
@@ -5882,7 +5901,7 @@ def lean_string_utf8_prev := [JS_EXPR|throw new Error("lean_string_utf8_prev not
 --   go₁ : List Char → Pos.Raw → Pos.Raw → Pos.Raw → List Char
 --     | [],        _, _, _ => []
 --     | s@(c::cs), i, b, e => if i = b then go₂ s i e else go₁ cs (i + c) b e
--- 
+--
 --   go₂ : List Char → Pos.Raw → Pos.Raw → List Char
 --     | [],    _, _ => []
 --     | c::cs, i, e => if i = e then [] else c :: go₂ cs (i + c) e
@@ -7737,7 +7756,7 @@ def lean_string_utf8_set := [JS_FUNC|inputs(str, pos, char)|
 --     lean_assert(lean_is_scalar(lstart));
 --     lean_assert(lean_is_scalar(rstart));
 --     lean_assert(lean_is_scalar(len));
--- 
+--
 --     char const * lbase = lean_string_cstr(s1) + lean_unbox(lstart);
 --     char const * rbase = lean_string_cstr(s2) + lean_unbox(rstart);
 --     return std::memcmp(lbase, rbase, lean_unbox(len)) == 0;
@@ -7927,23 +7946,23 @@ def lean_io_mono_nanos_now := [JS_EXPR|BigInt(Date.now( )) * 1000000]
 -- ```cpp
 -- extern "C" LEAN_EXPORT obj_res lean_io_get_random_bytes (size_t nbytes) {
 --     // Adapted from https://github.com/rust-random/getrandom/blob/30308ae845b0bf3839e5a92120559eaf56048c28/src/
--- 
+--
 --     if (nbytes == 0) return io_result_mk_ok(lean_alloc_sarray(1, 0, 0));
--- 
+--
 -- #if !defined(LEAN_WINDOWS)
 --     int fd_urandom = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
 --     if (fd_urandom < 0) {
 --         return io_result_mk_error(decode_io_error(errno, lean_mk_ascii_string_unchecked("/dev/urandom")));
 --     }
 -- #endif
--- 
+--
 --     if (lean_alloc_sarray_would_overflow(1, nbytes)) {
 --         return io_result_mk_error(decode_io_error(ENOMEM, NULL));
 --     }
 --     obj_res res = lean_alloc_sarray(1, 0, nbytes);
 --     size_t remain = nbytes;
 --     uint8_t *dst = lean_sarray_cptr(res);
--- 
+--
 --     while (remain > 0) {
 -- #if defined(LEAN_WINDOWS)
 --         // Prevent ULONG (32-bit) overflow
@@ -7980,7 +7999,7 @@ def lean_io_mono_nanos_now := [JS_EXPR|BigInt(Date.now( )) * 1000000]
 --         }
 -- #endif
 --     }
--- 
+--
 -- #if !defined(LEAN_WINDOWS)
 --     close(fd_urandom);
 -- #endif
@@ -8393,7 +8412,7 @@ def lean_io_prim_handle_write := [JS_EXPR|throw new Error("lean_io_prim_handle_w
 -- ```cpp
 -- extern "C" LEAN_EXPORT obj_res lean_io_prim_handle_get_line(b_obj_arg h) {
 --     FILE * fp = io_get_handle(h);
--- 
+--
 --     std::string result;
 --     int c; // Note: int, not char, required to handle EOF
 --     LEAN_IO_LOCK_FILE(fp);
@@ -8404,7 +8423,7 @@ def lean_io_prim_handle_write := [JS_EXPR|throw new Error("lean_io_prim_handle_w
 --         }
 --     }
 --     LEAN_IO_UNLOCK_FILE(fp);
--- 
+--
 --     if (std::ferror(fp)) {
 --         return io_result_mk_error(decode_io_error(errno, nullptr));
 --     } else if (std::feof(fp)) {
@@ -8559,7 +8578,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return io_result_mk_error(decode_io_error(errno, p));
 --     }
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_remove_dir(b_obj_arg p) {
 --     const char* str = string_cstr(p);
 --     if (strlen(str) != lean_string_size(p) - 1) {
@@ -8571,7 +8590,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return io_result_mk_error(decode_io_error(errno, p));
 --     }
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_rename(b_obj_arg from, b_obj_arg to) {
 --     const char* from_str = string_cstr(from);
 --     if (strlen(from_str) != lean_string_size(from) - 1) {
@@ -8602,7 +8621,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 -- #endif
 --     return io_result_mk_ok(box(0));
 -- }
--- 
+--
 -- /* hardLink (orig link : @& FilePath) : IO Unit */
 -- extern "C" LEAN_EXPORT obj_res lean_io_hard_link(b_obj_arg orig, b_obj_arg link) {
 --     const char* orig_str = string_cstr(orig);
@@ -8622,7 +8641,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return io_result_mk_ok(box(0));
 --     }
 -- }
--- 
+--
 -- /* createTempFile : IO (Handle × FilePath) */
 -- extern "C" LEAN_EXPORT obj_res lean_io_create_tempfile(lean_object * /* w */) {
 --     char path[PATH_MAX];
@@ -8633,7 +8652,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --     } else if (base_len == 0) {
 --         return lean_io_result_mk_error(decode_uv_error(UV_ENOENT, mk_string("")));
 --     }
--- 
+--
 -- #if defined(LEAN_WINDOWS)
 --     // On Windows `GetTempPathW` always returns a path ending in \, but libuv removes it.
 --     // https://learn.microsoft.com/en-us/windows/win32/fileio/creating-and-using-a-temporary-file
@@ -8648,12 +8667,12 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         strcat(path, "/");
 --     }
 -- #endif
--- 
+--
 --     const char* file_pattern = "tmp.XXXXXXXX";
 --     const size_t file_pattern_size = strlen(file_pattern);
 --     lean_always_assert(PATH_MAX >= strlen(path) + file_pattern_size + 1);
 --     strcat(path, file_pattern);
--- 
+--
 --     uv_fs_t req;
 --     // Differences from lean_io_create_tempdir start here
 --     ret = uv_fs_mkstemp(NULL, &req, path, NULL);
@@ -8668,7 +8687,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return lean_io_result_mk_ok(pair.steal());
 --     }
 -- }
--- 
+--
 -- /* createTempDir : IO FilePath */
 -- extern "C" LEAN_EXPORT obj_res lean_io_create_tempdir(lean_object * /* w */) {
 --     char path[PATH_MAX];
@@ -8679,7 +8698,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --     } else if (base_len == 0) {
 --         return lean_io_result_mk_error(decode_uv_error(UV_ENOENT, mk_string("")));
 --     }
--- 
+--
 -- #if defined(LEAN_WINDOWS)
 --     // On Windows `GetTempPathW` always returns a path ending in \, but libuv removes it.
 --     // https://learn.microsoft.com/en-us/windows/win32/fileio/creating-and-using-a-temporary-file
@@ -8694,12 +8713,12 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         strcat(path, "/");
 --     }
 -- #endif
--- 
+--
 --     const char* file_pattern = "tmp.XXXXXXXX";
 --     const size_t file_pattern_size = strlen(file_pattern);
 --     lean_always_assert(PATH_MAX >= strlen(path) + file_pattern_size + 1);
 --     strcat(path, file_pattern);
--- 
+--
 --     uv_fs_t req;
 --     // Differences from lean_io_create_tempfile start here
 --     ret = uv_fs_mkdtemp(NULL, &req, path, NULL);
@@ -8713,7 +8732,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return res;
 --     }
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_remove_file(b_obj_arg filename) {
 --     const char* fname = string_cstr(filename);
 --     if (strlen(fname) != lean_string_size(filename) - 1) {
@@ -8728,7 +8747,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return io_result_mk_ok(box(0));
 --     }
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_app_path() {
 -- #if defined(LEAN_WINDOWS)
 --     HMODULE hModule = GetModuleHandle(NULL);
@@ -8756,7 +8775,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         if ((typeof process === "undefined") || (process.release.name !== "node")) {
 --             return 0;
 --         }
--- 
+--
 --         var lengthBytes = lengthBytesUTF8(__filename)+1;
 --         var pathOnWasmHeap = _malloc(lengthBytes);
 --         stringToUTF8(__filename, pathOnWasmHeap, lengthBytes);
@@ -8765,7 +8784,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --     if (appPath == nullptr) {
 --         return io_result_mk_error("no Lean executable file exists in WASM outside of Node.js");
 --     }
--- 
+--
 --     object * appPathLean = mk_string(appPath);
 --     free(appPath);
 --     return io_result_mk_ok(appPathLean);
@@ -8783,7 +8802,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --     }
 -- #endif
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_current_dir() {
 --     char buffer[PATH_MAX];
 --     char * cwd = getcwd(buffer, sizeof(buffer));
@@ -8793,22 +8812,22 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return io_result_mk_error("failed to retrieve current working directory");
 --     }
 -- }
--- 
+--
 -- // =======================================
 -- // ST ref primitives
--- 
--- 
+--
+--
 -- extern "C" LEAN_EXPORT obj_res lean_st_mk_ref(obj_arg a) {
 --     lean_ref_object * o = (lean_ref_object*)lean_alloc_small_object(sizeof(lean_ref_object));
 --     lean_set_st_header((lean_object*)o, LeanRef, 0);
 --     o->m_value = a;
 --     return (lean_object*)o;
 -- }
--- 
+--
 -- static inline atomic<object*> * mt_ref_val_addr(object * o) {
 --     return reinterpret_cast<atomic<object*> *>(&(lean_to_ref(o)->m_value));
 -- }
--- 
+--
 -- /*
 --   Important: we have added support for initializing global constants
 --   at program startup. This feature is particularly useful for
@@ -8821,7 +8840,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --   the global `ST.Ref` may be used to communicate data between threads.
 -- */
 -- static inline bool ref_maybe_mt(b_obj_arg ref) { return lean_is_mt(ref) || lean_is_persistent(ref); }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_st_ref_get(b_obj_arg ref) {
 --     if (ref_maybe_mt(ref)) {
 --         atomic<object *> * val_addr = mt_ref_val_addr(ref);
@@ -8846,7 +8865,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return val;
 --     }
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_st_ref_take(b_obj_arg ref) {
 --     if (ref_maybe_mt(ref)) {
 --         atomic<object *> * val_addr = mt_ref_val_addr(ref);
@@ -8862,9 +8881,9 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return val;
 --     }
 -- }
--- 
+--
 -- static_assert(sizeof(atomic<unsigned short>) == sizeof(unsigned short), "`atomic<unsigned short>` and `unsigned short` must have the same size"); // NOLINT
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_st_ref_put(b_obj_arg ref, obj_arg a) {
 --     if (ref_maybe_mt(ref)) {
 --         /* We must mark `a` as multi-threaded if `ref` is marked as multi-threaded.
@@ -8883,7 +8902,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return box(0);
 --     }
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_st_ref_swap(b_obj_arg ref, obj_arg a) {
 --     if (ref_maybe_mt(ref)) {
 --         /* See io_ref_write */
@@ -8902,17 +8921,17 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         return old_a;
 --     }
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT uint8_t lean_st_ref_ptr_eq(b_obj_arg ref1, b_obj_arg ref2) {
 --     return lean_to_ref(ref1) == lean_to_ref(ref2);
 -- }
--- 
+--
 -- /* {α : Type} (act : BaseIO α) (_ : IO.RealWorld) : α */
 -- static obj_res lean_io_as_task_fn(obj_arg act, obj_arg) {
 --     object_ref r(apply_1(act, io_mk_world()));
 --     return object_ref(r.raw(), true).steal();
 -- }
--- 
+--
 -- /* asTask {α : Type} (act : BaseIO α) (prio : Nat) : BaseIO (Task α) */
 -- extern "C" LEAN_EXPORT obj_res lean_io_as_task(obj_arg act, obj_arg prio) {
 --     object * c = lean_alloc_closure((void*)lean_io_as_task_fn, 2, 1);
@@ -8920,13 +8939,13 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --     object * t = lean_task_spawn_core(c, lean_unbox(prio), /* keep_alive */ true);
 --     return t;
 -- }
--- 
+--
 -- /* {α β : Type} (f : α → BaseIO β) (a : α) : β */
 -- static obj_res lean_io_bind_task_fn(obj_arg f, obj_arg a) {
 --     object_ref r(apply_2(f, a, io_mk_world()));
 --     return object_ref(r.raw(), true).steal();
 -- }
--- 
+--
 -- /*  mapTask (f : α → BaseIO β) (t : Task α) (prio : Nat) (sync : Bool) : BaseIO (Task β) */
 -- extern "C" LEAN_EXPORT obj_res lean_io_map_task(obj_arg f, obj_arg t, obj_arg prio, uint8 sync) {
 --     object * c = lean_alloc_closure((void*)lean_io_bind_task_fn, 2, 1);
@@ -8934,7 +8953,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --     object * t2 = lean_task_map_core(c, t, lean_unbox(prio), sync, /* keep_alive */ true);
 --     return t2;
 -- }
--- 
+--
 -- /*  bindTask (t : Task α) (f : α → BaseIO (Task β)) (prio : Nat) (sync : Bool) : BaseIO (Task β) */
 -- extern "C" LEAN_EXPORT obj_res lean_io_bind_task(obj_arg t, obj_arg f, obj_arg prio, uint8 sync) {
 --     object * c = lean_alloc_closure((void*)lean_io_bind_task_fn, 2, 1);
@@ -8942,55 +8961,55 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --     object * t2 = lean_task_bind_core(t, c, lean_unbox(prio), sync, /* keep_alive */ true);
 --     return t2;
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT uint8_t lean_io_check_canceled() {
 --     return lean_io_check_canceled_core();
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_cancel(b_obj_arg t) {
 --     lean_io_cancel_core(t);
 --     return box(0);
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT uint8_t lean_io_get_task_state(b_obj_arg t) {
 --     return lean_io_get_task_state_core(t);
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_wait(obj_arg t) {
 --     return lean_task_get_own(t);
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_wait_any(b_obj_arg task_list) {
 --     object * t = lean_io_wait_any_core(task_list);
 --     object * v = lean_task_get(t);
 --     lean_inc(v);
 --     return v;
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_exit(uint8_t code) {
 --     exit(code);
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_io_force_exit(uint8_t code) {
 --     std::_Exit((int)code);
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_runtime_mark_multi_threaded(obj_arg a) {
 --     lean_mark_mt(a);
 --     return a;
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_runtime_mark_persistent(obj_arg a) {
 --     lean_mark_persistent(a);
 --     return a;
 -- }
--- 
+--
 -- #if defined(__has_feature)
 -- #if __has_feature(address_sanitizer)
 -- #include <sanitizer/lsan_interface.h>
 -- #endif
 -- #endif
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_runtime_forget(obj_arg o) {
 -- #if defined(__has_feature)
 -- #if __has_feature(address_sanitizer)
@@ -8999,7 +9018,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 -- #endif
 --     return box(0);
 -- }
--- 
+--
 -- extern "C" LEAN_EXPORT obj_res lean_option_get_or_block(obj_arg o_opt) {
 --     option_ref<object_ref> opt = option_ref<object_ref>(o_opt);
 --     if (opt) {
@@ -9013,7 +9032,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --         }
 --     }
 -- }
--- 
+--
 -- void initialize_io() {
 --     g_io_handle_external_class = lean_register_external_class(io_handle_finalizer, io_handle_foreach);
 -- #if defined(LEAN_WINDOWS)
@@ -9032,7 +9051,7 @@ def lean_io_remove_dir := [JS_EXPR|throw new Error("lean_io_remove_dir not imple
 --     lean_always_assert(signal(SIGPIPE, SIG_IGN) != SIG_ERR);
 -- #endif
 -- }
--- 
+--
 -- void finalize_io() {
 -- }
 -- }
@@ -9117,7 +9136,7 @@ def lean_io_hard_link := [JS_EXPR|throw new Error("lean_io_hard_link not impleme
 --     } else if (base_len == 0) {
 --         return lean_io_result_mk_error(decode_uv_error(UV_ENOENT, mk_string("")));
 --     }
--- 
+--
 -- #if defined(LEAN_WINDOWS)
 --     // On Windows `GetTempPathW` always returns a path ending in \, but libuv removes it.
 --     // https://learn.microsoft.com/en-us/windows/win32/fileio/creating-and-using-a-temporary-file
@@ -9132,12 +9151,12 @@ def lean_io_hard_link := [JS_EXPR|throw new Error("lean_io_hard_link not impleme
 --         strcat(path, "/");
 --     }
 -- #endif
--- 
+--
 --     const char* file_pattern = "tmp.XXXXXXXX";
 --     const size_t file_pattern_size = strlen(file_pattern);
 --     lean_always_assert(PATH_MAX >= strlen(path) + file_pattern_size + 1);
 --     strcat(path, file_pattern);
--- 
+--
 --     uv_fs_t req;
 --     // Differences from lean_io_create_tempdir start here
 --     ret = uv_fs_mkstemp(NULL, &req, path, NULL);
@@ -9169,7 +9188,7 @@ def lean_io_create_tempfile := [JS_EXPR|"/tmp/lean_tmp_file"]
 --     } else if (base_len == 0) {
 --         return lean_io_result_mk_error(decode_uv_error(UV_ENOENT, mk_string("")));
 --     }
--- 
+--
 -- #if defined(LEAN_WINDOWS)
 --     // On Windows `GetTempPathW` always returns a path ending in \, but libuv removes it.
 --     // https://learn.microsoft.com/en-us/windows/win32/fileio/creating-and-using-a-temporary-file
@@ -9184,12 +9203,12 @@ def lean_io_create_tempfile := [JS_EXPR|"/tmp/lean_tmp_file"]
 --         strcat(path, "/");
 --     }
 -- #endif
--- 
+--
 --     const char* file_pattern = "tmp.XXXXXXXX";
 --     const size_t file_pattern_size = strlen(file_pattern);
 --     lean_always_assert(PATH_MAX >= strlen(path) + file_pattern_size + 1);
 --     strcat(path, file_pattern);
--- 
+--
 --     uv_fs_t req;
 --     // Differences from lean_io_create_tempfile start here
 --     ret = uv_fs_mkdtemp(NULL, &req, path, NULL);
@@ -9231,7 +9250,7 @@ def lean_io_create_tempdir := [JS_EXPR|"/tmp/lean_tmp_dir"]
 --             return 0;
 --         }
 --     }, env_var_str));
--- 
+--
 --     if (val) {
 --         object * valLean = mk_string(val);
 --         free(val);
@@ -9283,7 +9302,7 @@ def lean_io_getenv := [JS_EXPR|throw new Error("lean_io_getenv not implemented")
 --         if ((typeof process === "undefined") || (process.release.name !== "node")) {
 --             return 0;
 --         }
--- 
+--
 --         var lengthBytes = lengthBytesUTF8(__filename)+1;
 --         var pathOnWasmHeap = _malloc(lengthBytes);
 --         stringToUTF8(__filename, pathOnWasmHeap, lengthBytes);
@@ -9292,7 +9311,7 @@ def lean_io_getenv := [JS_EXPR|throw new Error("lean_io_getenv not implemented")
 --     if (appPath == nullptr) {
 --         return io_result_mk_error("no Lean executable file exists in WASM outside of Node.js");
 --     }
--- 
+--
 --     object * appPathLean = mk_string(appPath);
 --     free(appPath);
 --     return io_result_mk_ok(appPathLean);
