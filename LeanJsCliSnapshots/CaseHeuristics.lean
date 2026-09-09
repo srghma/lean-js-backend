@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 
 inductive Column where
@@ -31,9 +29,3 @@ def testPBAN : Column → Column → Int
   | .one 2, .one 2 => 2
   | .two _ _, .two _ _ => 3
   | _, _ => 4
-
-def main : IO Unit := do
-  IO.println (testP 1 2 2)
-  IO.println (testPB (.two 2 3) (.two 2 3))
-  IO.println (testPBA (.two 1 9) (.two 4 5))
-  IO.println (testPBAN (.two 7 8) (.two 4 5))

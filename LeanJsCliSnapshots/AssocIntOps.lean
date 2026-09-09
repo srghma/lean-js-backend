@@ -1,4 +1,3 @@
-prelude
 import Init.Data.Int.Basic
 
 def test1 (x : Int) : Int :=

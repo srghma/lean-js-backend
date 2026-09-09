@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Array.Basic
 import Init.Data.Option.Basic
 
@@ -22,9 +20,3 @@ def test3 : Array Int :=
 
 def test4 : Array (Array Int) :=
   if some 3 == (extern2[0]? |>.map (fun a => a.size)) then extern2 else #[]
-
-def main : IO Unit := do
-  IO.println (repr (test1 (fun _ => 0)))
-  IO.println (repr (test2 (fun _ => 0)))
-  IO.println (repr test3)
-  IO.println (repr test4)

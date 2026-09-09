@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Array.Basic
 
@@ -33,11 +32,3 @@ def test4 (ref : IO.Ref Int) (arr : Array Int) : IO Unit := do
       ref.set (val + a)
     else
       ref.set (val + 1)
-
-def main : IO Unit := do
-  let ref ← IO.mkRef 0
-  test1 ref (fun i => #[i])
-  test2 ref (fun i => #[i])
-  test3 ref #[1, 20]
-  test4 ref #[1, 20]
-  IO.println (← ref.get)

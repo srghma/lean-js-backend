@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 
 structure RecC where
@@ -23,7 +21,3 @@ def extern1 : RecA :=
 
 def test2 : Int :=
   if extern1.a.b.c then 42 else 99
-
-def main : IO Unit := do
-  IO.println test1
-  IO.println test2

@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 import Init.Data.String.Basic
 import Init.Data.Float
@@ -31,7 +29,3 @@ def test1 : R1 :=
 def test2 (args : Args) : R1 :=
   let fns : Fns := { a := fun i => i + 1, b := fun f => ("bar", f), c := fun b => !b }
   zipRecord fns args
-
-def main : IO Unit := do
-  IO.println (repr test1)
-  IO.println (repr (test2 { a := 10, b := 10.0, c := false }))

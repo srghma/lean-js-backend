@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.String.Basic
 import Init.Data.List.Basic
 
@@ -25,6 +23,3 @@ def test (user : String) : Html :=
             ]
         ]
     ]
-
-def main : IO Unit := do
-  IO.println (render (test "Alice"))

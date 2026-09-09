@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 import Init.Data.String
 
@@ -49,18 +47,3 @@ def test5 (x? : Option (Except Int Int)) : Int :=
   | some (.ok y) => y
   | some (.error 2) => 4
   | _ => 5
-
-def main : IO Unit := do
-  IO.println (test1 0)
-  IO.println (test1 50)
-  IO.println (test1 200)
-  IO.println (test2 (.mk 0))
-  IO.println (test2 (.mk 2))
-  IO.println (test3 (.mk 1 1 2))
-  let r : Test4UnnamedRecord := { a := 1, b := 2, c := 3, d := 4, e := 5, f := 6 }
-  IO.println (repr (test4 r))
-  IO.println (repr (test4 { r with a := 0 }))
-  IO.println (repr (test4 { r with a := 0, b := 0 }))
-  IO.println (test5 (some (.ok 42)))
-  IO.println (test5 (some (.error 2)))
-  IO.println (test5 none)

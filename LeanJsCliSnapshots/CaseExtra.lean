@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 import Init.Data.Float
 import Init.Data.String
@@ -103,25 +101,3 @@ def caseNamed2 (x : Product3) : String :=
   | ⟨a, 1, b⟩ => toString a ++ toString b ++ "1"
   | ⟨a, b, 1⟩ => toString a ++ toString b ++ "1"
   | ⟨a, b, c⟩ => toString a ++ toString a ++ toString b ++ toString b ++ toString c ++ toString c
-
-def main : IO Unit := do
-  IO.println (caseBoolean true)
-  IO.println (caseBoolean false)
-  IO.println (caseChar 'a')
-  IO.println (caseChar 'z')
-  IO.println (caseInt 2)
-  IO.println (caseInt 9)
-  IO.println (caseNumber 3.0)
-  IO.println (caseNumber 4.0)
-  IO.println (caseGrafting true false true)
-  IO.println (caseGrafting false true false)
-  IO.println (caseHeuristicP 1 2 2)
-  IO.println (caseHeuristicPB (.two 2 3) (.two 2 3))
-  IO.println (caseHeuristicPBA (.two 1 9) (.two 4 5))
-  IO.println (caseHeuristicPBAN (.two 7 8) (.two 4 5))
-  IO.println (caseJacobs (.add .zero .zero))
-  IO.println (caseJacobs (.mul (.add .zero (.succ .zero)) (.succ .zero)))
-  IO.println (caseNamed1 1)
-  IO.println (caseNamed1 9)
-  IO.println (caseNamed2 ⟨1, 2, 3⟩)
-  IO.println (caseNamed2 ⟨4, 5, 6⟩)

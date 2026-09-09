@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Int.Basic
 
@@ -32,11 +31,3 @@ def test3 : IO (IO.Ref Int × (Int → IO Unit)) := do
   pure (count, fun n => do
     let val ← count.get
     count.set (val + n))
-
-def main : IO Unit := do
-  IO.println (← test1 5)
-  let f ← test2
-  f 10
-  let (ref, f2) ← test3
-  f2 20
-  IO.println (← ref.get)

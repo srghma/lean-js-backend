@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Array.Basic
 import Init.Data.String.Basic
@@ -58,23 +57,9 @@ def diffWithKeyAndIxE {a b c d : Type} [Inhabited b]
     | none =>
       let v2 ← f3 k i a
       o2 := (k, v2) :: o2
-  
+
   for (k, v1) in o1 do
     if o2.find? (fun (k', _) => k' == k) |>.isNone then
       let _ ← f2 k v1
-  
-  pure o2.reverse
 
-def main : IO Unit := do
-  let result ← diffWithIxE
-    #[ "1", "2", "3" ]
-    #[ 1, 2 ]
-    (fun ix a b => do
-      pure ({ ix := ix, a := a, b := b } : Result))
-    (fun _ _ => pure ())
-    (fun ix b => do
-      pure ({ ix := ix, a := "", b := b } : Result))
-  IO.println (repr (#[({ a := "1", b := 1 } : Merged), { a := "2", b := 2 }]))
-  IO.println (repr (#[] : Array Int))
-  IO.println (repr (#["3"] : Array String))
-  IO.println (repr result)
+  pure o2.reverse

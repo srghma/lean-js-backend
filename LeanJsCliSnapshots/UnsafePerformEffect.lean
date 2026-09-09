@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Int.Basic
 
@@ -9,7 +8,3 @@ def test (f : IO.Ref Int → IO.Ref Int) : IO Unit := do
   wat.set (v1 + 1)
   let v2 ← ref.get
   ref.set (v2 + 1)
-
-def main : IO Unit := do
-  test (fun r => r)
-  IO.println "ok"

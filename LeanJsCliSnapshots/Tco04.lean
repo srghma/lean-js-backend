@@ -1,11 +1,9 @@
-prelude
-import Init.System.IO
+import Init.Data.Int.Basic
 
-def test1 : Nat → Nat
-  | 0 => 0
-  | 1 => 1
-  | 2 => 2
-  | n + 3 => test1 (n + 1)
+mutual
+  partial def test1 (n : Int) : Int :=
+    if n == 1 then n else test2 (n - 1)
 
-def main : IO Unit := do
-  IO.println (test1 9)
+  partial def test2 (m : Int) : Int :=
+    if m == 2 then m else test1 (m - 2)
+end

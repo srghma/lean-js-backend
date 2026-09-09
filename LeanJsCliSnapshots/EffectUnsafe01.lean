@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Int.Basic
 
@@ -7,7 +6,3 @@ def test2 (random : Unit → IO Int) : IO Int := do
   let n ← random ()
   let m ← random ()
   pure (n + m)
-
-def main : IO Unit := do
-  IO.println test1
-  IO.println (← test2 (fun _ => pure 42))

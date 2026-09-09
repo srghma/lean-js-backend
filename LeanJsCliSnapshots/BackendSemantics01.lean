@@ -1,14 +1,15 @@
-prelude
-import Init.System.IO
-import Init.Data.Int.Basic
-
-def test1 : Int := 2147483646
-def test2 : Int := -2147483647
-def test3 : Char := Char.ofNat 0xFFFF
+def test1 : Int32 := Int32.maxValue - 1
+def test2 : Int32 := Int32.minValue + 1
+def test3 : Char :=
+  ⟨UInt32.ofNatLT
+    -- Max 16-bit BMP char
+    -- (PureScript's `top :: Char` / JS UTF-16 code unit)
+    -- Not Lean's max Unicode char (0x10FFFF)
+    0xFFFF
+    (of_decide_eq_true rfl),
+    Or.inr
+    ⟨of_decide_eq_true rfl,
+    of_decide_eq_true rfl
+    ⟩
+  ⟩
 def test4 : Char := Char.ofNat 0
-
-def main : IO Unit := do
-  IO.println test1
-  IO.println test2
-  IO.println (repr test3)
-  IO.println (repr test4)

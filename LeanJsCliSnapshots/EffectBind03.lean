@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Int.Basic
 
@@ -16,6 +15,3 @@ def test : MyEffect Int := do
   let a ← ({ val := pure 1 } : MyEffect Int)
   let b ← ({ val := pure 1 } : MyEffect Int)
   pure (a + b)
-
-def main : IO Unit := do
-  IO.println 2

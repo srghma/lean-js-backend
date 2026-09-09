@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Array.Basic
 
 def test1 {α β : Type} (f : α → β) (as : Array α) : Array β := Id.run do
@@ -15,7 +13,3 @@ def test2 {α β : Type} (f : α → Array β) (as : Array α) : Array β := Id.
     for a' in as' do
       bs := bs.push a'
   pure bs
-
-def main : IO Unit := do
-  IO.println (repr (test1 (fun i => i + 1) #[1, 2, 3]))
-  IO.println (repr (test2 (fun i => #[i, i]) #[1, 2, 3]))

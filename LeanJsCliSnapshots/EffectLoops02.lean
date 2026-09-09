@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Int.Basic
 import Init.Data.ToString.Basic
@@ -34,10 +33,3 @@ def test4 (lo hi : Int) : IO Unit :=
     if a < 10 then
       IO.println (toString a)
     else
-      IO.println "wat"
-
-def main : IO Unit := do
-  test1 0 2
-  test2 0 1
-  test3 5 15
-  test4 5 15

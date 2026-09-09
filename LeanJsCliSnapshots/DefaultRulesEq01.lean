@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 
 structure Rec where
@@ -18,9 +16,3 @@ def test2 : Bool := { a := 1, b := 2 : Rec } == { a := 2, b := 2 : Rec }
 
 def test3 : Bool := { a := 1, b := 2, c := 3 : Rec2 } == { a := 1, b := 2, c := 3 : Rec2 }
 def test4 : Bool := { a := 1, b := 2, c := 3 : Rec2 } == { a := 1, b := 2, c := 4 : Rec2 }
-
-def main : IO Unit := do
-  IO.println test1
-  IO.println test2
-  IO.println test3
-  IO.println test4

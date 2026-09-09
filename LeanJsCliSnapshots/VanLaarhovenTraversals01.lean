@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.String.Basic
 
 inductive Fun where
@@ -16,6 +14,3 @@ partial def rewriteBottomUpM {m : Type → Type} [Monad m] (k : Fun → m Fun) :
 
 def rewriteBottomUp (k : Fun → Fun) : Fun → Fun := fun a =>
   Id.run (rewriteBottomUpM (m := Id) (fun f => pure (k f)) a)
-
-def main : IO Unit := do
-  IO.println "ok"

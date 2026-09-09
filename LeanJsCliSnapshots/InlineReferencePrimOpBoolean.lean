@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 
 def fn {α : Type} (_ : α) : Int := 0
@@ -38,11 +36,3 @@ def test5 : Int :=
 
 def test6 : Int :=
   if !extern1.a.b.c then 99 else 42
-
-def main : IO Unit := do
-  IO.println test1
-  IO.println test2
-  IO.println test3
-  IO.println test4
-  IO.println test5
-  IO.println test6

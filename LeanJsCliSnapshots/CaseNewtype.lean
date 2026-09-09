@@ -13,8 +13,3 @@ def test2 : NewTypeInt → String
   | ⟨2⟩ => "2"
   | ⟨3⟩ => "3"
   | _ => "catch"
-
-
-def main : IO Unit := do
-  IO.println (test1 (.mk 42))
-  IO.println (test2 (.mk 42))

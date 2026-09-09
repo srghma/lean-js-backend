@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Float
 
 def fn {α : Type} (_ : α) : Float := 0.0
@@ -36,13 +34,3 @@ def test5 : Float := externTest (fun rec => rec.a.b.c + rec.e)
 def test6 : Float := externTest (fun rec => rec.a.b.c - rec.e)
 def test7 : Float := externTest (fun rec => rec.a.b.c * rec.e)
 def test8 : Float := externTest (fun rec => rec.a.b.c / rec.e)
-
-def main : IO Unit := do
-  IO.println test1
-  IO.println test2
-  IO.println test3
-  IO.println test4
-  IO.println test5
-  IO.println test6
-  IO.println test7
-  IO.println test8

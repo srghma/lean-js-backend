@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Bool
 import Init.Data.Float
 import Init.Data.OfScientific
@@ -23,15 +21,3 @@ def test6 := numValues (fun a b => decide (a ≤ b))
 def test9 := numValues (· * ·)
 def test10 := numValues (· / ·)
 def test11 := [ -1.5, -(-1.5) ]
-
-
-def main : IO Unit := do
-  IO.println (repr test1)
-  IO.println (repr test2)
-  IO.println (repr test3)
-  IO.println (repr test4)
-  IO.println (repr test5)
-  IO.println (repr test6)
-  IO.println (repr test9)
-  IO.println (repr test10)
-  IO.println (repr test11)

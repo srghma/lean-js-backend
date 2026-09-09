@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 import Init.Data.String.Basic
 import Init.Data.Array.Basic
@@ -15,8 +13,3 @@ def test2 (f : String → String → String) (x : Int) : String :=
 def test3 (x : Int) : Bool :=
   let a := if x > 42 then some true else none
   a.get! && !(a.get!)
-
-def main : IO Unit := do
-  IO.println (repr (test1 43))
-  IO.println (test2 (fun s1 s2 => s1 ++ " | " ++ s2) 43)
-  IO.println (test3 43)

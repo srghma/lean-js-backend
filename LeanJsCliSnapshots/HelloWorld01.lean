@@ -1,5 +1,4 @@
-prelude
 import Init.System.IO
 
-def main : IO Unit := do
+def test : IO Unit := do
   IO.println "Hello, World!"

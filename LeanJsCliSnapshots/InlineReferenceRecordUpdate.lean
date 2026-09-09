@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 
 structure Rec where
@@ -20,7 +18,3 @@ def extern1 : Rec :=
 
 def test2 : Int :=
   if extern1.a == 42 then extern1.c else 0
-
-def main : IO Unit := do
-  IO.println (test1 (fun _ => { a := 1, b := 2, c := 3 }))
-  IO.println test2

@@ -1,0 +1,13 @@
+import Init.Data.Int.Basic
+
+inductive Box (α : Type) where
+  | mk : α → Box α
+
+def test1 (v : Int × Int) (b : Int) : Int :=
+  v.1 + b
+
+def test2 (v : Int × Int) : Int → Int :=
+  fun b => v.1 + b
+
+def test3 (v : Int × Int) : Box (Int → Int) :=
+  .mk (fun b => v.1 + b)

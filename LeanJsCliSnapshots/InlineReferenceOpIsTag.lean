@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 
 inductive MyList (α : Type) where
   | Cons : α → MyList α → MyList α
@@ -58,11 +56,3 @@ def test6 : MyList Int :=
   match extern3.d.a.b.c with
   | MyList.Cons _ _ => MyList.Cons 0 extern3.d.a.b.c
   | _ => MyList.Nil
-
-def main : IO Unit := do
-  IO.println (repr (test1 (fun _ => MyList.Nil)))
-  IO.println (repr (test2 (fun _ => MyList.Nil)))
-  IO.println (repr (test3 (fun _ => MyList.Nil)))
-  IO.println (repr test4)
-  IO.println (repr test5)
-  IO.println (repr test6)

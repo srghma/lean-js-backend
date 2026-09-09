@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.String.Basic
 import Init.Data.Array.Basic
 
@@ -13,12 +11,3 @@ def test4 := stringValues (fun a b => decide (a > b))
 def test5 := stringValues (fun a b => decide (a <= b))
 def test6 := stringValues (fun a b => decide (a >= b))
 def test7 := stringValues (fun a b => a ++ b)
-
-def main : IO Unit := do
-  IO.println (repr test1)
-  IO.println (repr test2)
-  IO.println (repr test3)
-  IO.println (repr test4)
-  IO.println (repr test5)
-  IO.println (repr test6)
-  IO.println (repr test7)

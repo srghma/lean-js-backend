@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Option.Basic
 import Init.Data.Sum.Basic
 import Init.Data.Int.Basic
@@ -55,13 +53,3 @@ def test6 (a : String) : Int :=
   | some .Baz => 3
   | some .Qux => 4
   | none => 0
-
-
-def main : IO Unit := do
-  IO.println known1
-  IO.println (test1 (.inl 1))
-  IO.println (test2 2)
-  IO.println (test3 3)
-  IO.println (test4 (fun x y => x ++ y) 4)
-  IO.println (test5 5)
-  IO.println (test6 "6")

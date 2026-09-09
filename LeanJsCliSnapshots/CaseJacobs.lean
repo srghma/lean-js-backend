@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.String
 
 inductive Expr where
@@ -22,7 +20,3 @@ def test1 : Expr → String
   | .mul (.add x y) z => "e5: " ++ renderExpr x ++ " " ++ renderExpr y ++ " " ++ renderExpr z
   | .add x .zero => "e6: " ++ renderExpr x
   | x => "e7: " ++ renderExpr x
-
-def main : IO Unit := do
-  IO.println (test1 (.add .zero .zero))
-  IO.println (test1 (.mul (.add .zero (.succ .zero)) (.succ .zero)))

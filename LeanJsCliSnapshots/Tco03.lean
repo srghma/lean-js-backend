@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int
 import Init.Data.Bool
 
@@ -13,6 +11,3 @@ partial def test (n : Int) : Int :=
     else if n <= 100 then go (n - 1)
     else k (n - 1)
   go n
-
-def main : IO Unit := do
-  IO.println (test 150)

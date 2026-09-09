@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Array.Basic
 import Init.Data.String.Basic
@@ -39,18 +38,3 @@ structure Result where
   a : String
   b : Int
   deriving Repr
-
-def main : IO Unit := do
-  let result ← diffWithIxE
-    #[ "1", "2", "3" ]
-    #[ 1, 2 ]
-    (fun ix a b => do
-        pure ({ ix := ix, a := a, b := b } : Result)
-    )
-    (fun _ _ => pure ())
-    (fun ix b => pure ({ ix := ix, a := "", b := b } : Result))
-
-  IO.println (repr (#[({ a := "1", b := 1 } : Merged), { a := "2", b := 2 }]))
-  IO.println (repr (#[] : Array Int))
-  IO.println (repr (#["3"] : Array String))
-  IO.println (repr result)

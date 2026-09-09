@@ -1,17 +1,15 @@
-// @inline Snapshot.BranchSpecialization01.eqTest.eq arity=2
-const $Test = tag => tag;
-const Foo = /* #__PURE__ */ $Test("Foo");
-const Bar = /* #__PURE__ */ $Test("Bar");
-const Baz = /* #__PURE__ */ $Test("Baz");
-const Qux = /* #__PURE__ */ $Test("Qux");
-const eqTest = {
-  eq: x => y => {
-    if (x === "Foo") { return y === "Foo"; }
-    if (x === "Bar") { return y === "Bar"; }
-    if (x === "Baz") { return y === "Baz"; }
-    return x === "Qux" && y === "Qux";
+const $TestEnum$foo = "foo";
+const $TestEnum$bar = "bar";
+const $TestEnum$baz = "baz";
+const $TestEnum$qux = "qux";
+const instBEqTestEnum = {
+  beq: x => y => {
+    if (x === "foo") { return y === "foo"; }
+    if (x === "bar") { return y === "bar"; }
+    if (x === "baz") { return y === "baz"; }
+    return x === "qux" && y === "qux";
   }
 };
-const test1 = a => a === "Baz";
-const test2 = a => a === "Baz";
-export {$Test, Bar, Baz, Foo, Qux, eqTest, test1, test2};
+const test1 = a => a === "baz";
+const test2 = a => a === "baz";
+export { $TestEnum$bar, $TestEnum$baz, $TestEnum$foo, $TestEnum$qux, instBEqTestEnum, test1, test2 };

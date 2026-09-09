@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 
 structure RecBaz where
@@ -36,15 +34,3 @@ def test7 (a : RecFooBar) :=
 def test8 (a : RecFooBar) :=
   let a' := { a with foo := a.foo + 1 }
   { a' with bar := a'.bar + 42 }
-
-def main : IO Unit := do
-  let r : RecFooBaz := { foo := 1, bar := { baz := 10 } }
-  IO.println (test1 r)
-  IO.println (test2 r)
-  let r2 : RecFooBar := { foo := 1, bar := 10 }
-  IO.println (repr (test3 r2))
-  IO.println (repr (test4 r2))
-  IO.println (repr (test5 r))
-  IO.println (repr (test6 r))
-  IO.println (repr (test7 r2))
-  IO.println (repr (test8 r2))

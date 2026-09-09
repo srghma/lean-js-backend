@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 
 structure Rec where
@@ -23,7 +21,3 @@ def test7 (f : Int → Int) (y : Int) : Rec :=
   c
 
 deriving instance Repr for Rec
-
-def main : IO Unit := do
-  IO.println (test1 (fun _ => { a := 0, b := 0, c := 0 }) 42)
-  IO.println (repr (test7 (fun x => x + 1) 10))

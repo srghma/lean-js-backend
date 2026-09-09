@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Array.Basic
 import Init.Data.Int.Basic
@@ -25,10 +24,3 @@ def test4 (arr : Array Int) : IO Unit :=
     if a < 10 then
       IO.println (repr a)
     else
-      IO.println "wat") arr
-
-def main : IO Unit := do
-  test1 (fun x => #[x, x + 1])
-  test2 (fun x => #[x])
-  test3 #[5, 15]
-  test4 #[5, 15]

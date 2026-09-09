@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.String.Basic
 
 inductive Test where | Foo | Bar | Baz | Qux
@@ -18,10 +16,3 @@ def test (a : String) : Int :=
   | some Test.Baz => 3
   | some Test.Qux => 4
   | none => 0
-
-def main : IO Unit := do
-  IO.println (test "foo")
-  IO.println (test "bar")
-  IO.println (test "baz")
-  IO.println (test "qux")
-  IO.println (test "wat")

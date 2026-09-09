@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Int.Basic
 
@@ -24,11 +23,3 @@ def test9 (g : Int → Int) : IO Int := do
   ref.set (prev + 1)
   ref.modify (fun x => x + 1)
   ref.get
-
-def main : IO Unit := do
-  let r ← test1
-  IO.println (← test3 r)
-  test5 r
-  IO.println (← test3 r)
-  let res ← test9 (fun x => x * 2)
-  IO.println res

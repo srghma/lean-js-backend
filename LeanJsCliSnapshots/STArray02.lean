@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Array.Basic
 
 def test1 (inp : Array Int) : Array Int := Id.run do
@@ -23,7 +21,3 @@ def test2 (inp : Array Int) : Array Int := Id.run do
   arr := (inp ++ #[2, 3, 4]) ++ arr
   arr := (#[1, 2, 3] ++ inp ++ #[5, 6, 7]) ++ arr
   pure arr
-
-def main : IO Unit := do
-  IO.println (repr (test1 #[10, 20]))
-  IO.println (repr (test2 #[10, 20]))

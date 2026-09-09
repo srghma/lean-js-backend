@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Int.Basic
 
@@ -15,13 +14,3 @@ def test6 (f : Int → Int → Int → IO Unit) (g : Int → Int) : IO Unit := d
   f (g 1) 2 3
   f (g 1) 2 3
   f (g 1) 2 3
-
-def main : IO Unit := do
-  let f := fun i j k => IO.println (s!"f {i} {j} {k}")
-  let g := fun i => i + 10
-  test1 f g
-  test2 f g 3
-  test3 f g 2 3
-  test4 f 1 2 3
-  test5 f g
-  test6 f g

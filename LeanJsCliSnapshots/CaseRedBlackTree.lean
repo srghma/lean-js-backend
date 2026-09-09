@@ -41,15 +41,3 @@ def test1 (t : RedBlackTree Nat) : Option Result :=
   | .Node .Black a x (.Node .Red (.Node .Red b y c) z d) => some { i := 3, a, x, b, y, c, z, d }
   | .Node .Black a x (.Node .Red b y (.Node .Red c z d)) => some { i := 4, a, x, b, y, c, z, d }
   | _ => none
-
-def main : IO Unit := do
-  let t1 := node .Black (node .Red (node .Red leaf 1 leaf) 2 leaf) 3 leaf
-  let t2 := node .Black (node .Red leaf 1 (node .Red leaf 2 leaf)) 3 leaf
-  let t3 := node .Black leaf 1 (node .Red (node .Red leaf 2 leaf) 3 leaf)
-  let t4 := node .Black leaf 1 (node .Red leaf 2 (node .Red leaf 3 leaf))
-  let t5 := node .Red leaf 1 leaf
-  IO.println (renderOptionResult (test1 t1))
-  IO.println (renderOptionResult (test1 t2))
-  IO.println (renderOptionResult (test1 t3))
-  IO.println (renderOptionResult (test1 t4))
-  IO.println (renderOptionResult (test1 t5))

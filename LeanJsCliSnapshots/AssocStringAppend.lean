@@ -1,4 +1,3 @@
-prelude
 import Init.Data.String
 
 def test1 (x : String) : String :=

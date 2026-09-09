@@ -29,11 +29,3 @@ def test2 (x : Outer) : Int :=
   | { a := { b := _, c := 2 }, d := { e := 1, f := 2 } } => 2
   | { a := { b := 1, c := 2 }, d := _ } => 3
   | _ => 4
-
-
-def main : IO Unit := do
-  IO.println (test1 { a := 1, b := 2, c := 3 })
-  IO.println (test2 { a := { b := 1, c := 2 }, d := { e := 1, f := 2 } })
-  IO.println (test2 { a := { b := 5, c := 2 }, d := { e := 1, f := 2 } })
-  IO.println (test2 { a := { b := 1, c := 2 }, d := { e := 9, f := 9 } })
-  IO.println (test2 { a := { b := 9, c := 9 }, d := { e := 9, f := 9 } })

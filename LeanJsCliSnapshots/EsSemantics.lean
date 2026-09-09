@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Int.Basic
 import Init.Data.Float
 import Init.Data.String
@@ -22,13 +20,3 @@ def sharedElse (a b c : Bool) : Int :=
     2
   else
     3
-
-def main : IO Unit := do
-  IO.println (prec1 (fun _ => true) () ())
-  IO.println (prec2_1 1.5)
-  IO.println (prec2_2 1.5)
-  IO.println (prec2_3 1.5)
-  IO.println (prec2_4 1.5)
-  IO.println (prec2_5 1.5)
-  IO.println (sharedElse true false true)
-  IO.println (sharedElse false false false)

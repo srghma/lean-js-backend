@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 
 inductive ExprF (α : Type) where
   | Lit : Int → ExprF α
@@ -21,7 +19,3 @@ partial def cata {α : Type} [Inhabited α] (f : ExprF α → α) (fix : FixExpr
 def evalF : ExprF Int → Int
   | ExprF.Lit n => n
   | ExprF.Add a b => a + b
-
-def main : IO Unit := do
-  let expr := add (lit 1) (add (lit 2) (lit 3))
-  IO.println (cata evalF expr)

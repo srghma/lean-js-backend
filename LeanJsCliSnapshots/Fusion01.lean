@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Array.Basic
 import Init.Data.Int.Basic
@@ -50,8 +49,3 @@ def printArray (arr : Array String) : IO Unit := do
     IO.print a
     IO.print "\""
     first := false
-  IO.println "]"
-
-def main : IO Unit := do
-  let arr := #[9, 10, 11, 12, 19, 20]
-  printArray (test arr)

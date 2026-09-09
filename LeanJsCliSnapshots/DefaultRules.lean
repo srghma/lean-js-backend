@@ -1,5 +1,3 @@
-prelude
-import Init.System.IO
 import Init.Data.Option.Basic
 import Init.Data.String
 import Init.Data.Int.Basic
@@ -38,15 +36,3 @@ def maybeConst (x : Option String) : Option Int :=
 
 def pipeDemo (g : Unit → String) (f : String → String) : String :=
   () |> g |> f
-
-def main : IO Unit := do
-  IO.println eqTest1
-  IO.println eqTest2
-  IO.println eqTest3
-  IO.println (12 != (12 : Int))
-  IO.println (12 != (13 : Int))
-  IO.println (functionAppend (fun x => s!"a{x}") (fun x => s!"b{x}") 7)
-  IO.println (functionAppend4 (fun x => s!"a{x}") (fun x => s!"b{x}") 7)
-  IO.println ((maybeShow (some 42)).getD "none")
-  IO.println (toString ((maybeConst (some "x")).getD 0))
-  IO.println (pipeDemo (fun _ => "ok") (fun s => s ++ "!"))

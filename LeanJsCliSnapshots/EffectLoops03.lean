@@ -1,4 +1,3 @@
-prelude
 import Init.System.IO
 import Init.Data.Int.Basic
 
@@ -35,23 +34,3 @@ def test4 (cond : IO.Ref Bool) (ref : IO.Ref Int) : IO Unit :=
     if a < 10 then
       IO.println "foo"
     else
-      IO.println "wat"
-
-def main : IO Unit := do
-  let cond ← IO.mkRef true
-  let ref ← IO.mkRef 0
-  
-  -- Simple test with false
-  cond.set false
-  test1 cond
-  test2 cond
-  test3 cond ref
-  test4 cond ref
-  
-  -- Test with one iteration
-  cond.set true
-  let random := do
-    let c ← cond.get
-    if c then cond.set false
-    pure c
-  whileE random (IO.println "once")
