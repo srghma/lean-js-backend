@@ -1,7 +1,3 @@
-import Init.System.IO
-import Init.Data.Array.Basic
-import Init.Data.String.Basic
-
 structure Merged where
   a : String
   b : Int

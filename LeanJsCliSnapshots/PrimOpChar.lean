@@ -1,5 +1,3 @@
-import Init.Data.Char.Basic
-
 def test1 (a b : Char) : Bool := a == b
 def test2 (a b : Char) : Bool := a != b
 def test3 (a b : Char) : Bool := decide (a < b)

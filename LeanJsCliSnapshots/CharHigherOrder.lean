@@ -1,6 +1,3 @@
-import Init.Data.Char.Basic
-import Init.Data.List.Basic
-
 def charValues (op : Char → Char → Bool) : List Bool :=
   [ op 'a' 'a'
   , op 'a' 'b'

@@ -1,6 +1,3 @@
-import Init.Data.Array.Basic
-import Init.Data.String
-
 def test1 : Array Nat → String
   | #[] => "0"
   | #[1] => "1"

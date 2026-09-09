@@ -1,6 +1,3 @@
-import Init.Data.Char.Basic
-import Init.Data.Array.Basic
-
 def charValues (op : Char → Char → Bool) : Array Bool :=
   #[ op 'a' 'a', op 'a' 'b', op 'b' 'a' ]
 

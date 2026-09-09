@@ -1,6 +1,3 @@
-import Init.System.IO
-import Init.Data.Int.Basic
-
 partial def whileE (cond : IO Bool) (f : IO Unit) : IO Unit := do
   let c ← cond
   if c then

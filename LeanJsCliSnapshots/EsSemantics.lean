@@ -1,7 +1,3 @@
-import Init.Data.Int.Basic
-import Init.Data.Float
-import Init.Data.String
-
 def prec1 (f : Unit → Bool) (_a _b : Unit) : Bool :=
   let x := if f () then f () else false
   let y := if x then f () else true

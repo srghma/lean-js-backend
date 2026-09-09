@@ -1,6 +1,3 @@
-import Init.Data.Int.Basic
-import Init.Data.List.Basic
-
 def guardList {M : Type} (empty : M) (b : Bool) (m : M) : M :=
   if b then m else empty
 

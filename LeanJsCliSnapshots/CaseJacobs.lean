@@ -1,5 +1,3 @@
-import Init.Data.String
-
 inductive Expr where
   | add (a : Expr) (b : Expr)
   | mul (a : Expr) (b : Expr)
@@ -12,11 +10,16 @@ def renderExpr : Expr → String
   | .succ a => "Succ(" ++ renderExpr a ++ ")"
   | .zero => "Zero"
 
+instance : ToString Expr where
+  toString a := renderExpr a -- will be inlined
+
+-- #print instToStringExpr
+
 def test1 : Expr → String
   | .add .zero .zero => "e1"
-  | .mul .zero x => "e2: " ++ renderExpr x
-  | .add (.succ x) y => "e3: " ++ renderExpr x ++ " " ++ renderExpr y
-  | .mul x .zero => "e4: " ++ renderExpr x
-  | .mul (.add x y) z => "e5: " ++ renderExpr x ++ " " ++ renderExpr y ++ " " ++ renderExpr z
-  | .add x .zero => "e6: " ++ renderExpr x
-  | x => "e7: " ++ renderExpr x
+  | .mul .zero x => "e2: " ++ toString x -- though toString is used - will use renderExpr anyway, tnx to optimization
+  | .add (.succ x) y => "e3: " ++ toString x ++ " " ++ toString y
+  | .mul x .zero => "e4: " ++ toString x
+  | .mul (.add x y) z => "e5: " ++ toString x ++ " " ++ toString y ++ " " ++ toString z
+  | .add x .zero => "e6: " ++ toString x
+  | x => "e7: " ++ toString x

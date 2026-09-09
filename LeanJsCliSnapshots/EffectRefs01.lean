@@ -1,6 +1,3 @@
-import Init.System.IO
-import Init.Data.Int.Basic
-
 def test1 : IO (IO.Ref Int) := IO.mkRef 42
 
 def test2 {α : Type} (g : Int → α) : IO (IO.Ref α) := IO.mkRef (g 42)

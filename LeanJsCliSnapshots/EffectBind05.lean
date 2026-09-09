@@ -1,5 +1,3 @@
-import Init.System.IO
-
 def MyId (α : Type) := Unit → α
 
 instance : Monad MyId where

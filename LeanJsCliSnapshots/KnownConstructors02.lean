@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 def test (a : Except Int Int) : Int :=
   match some a with
   | some (Except.error b) => b

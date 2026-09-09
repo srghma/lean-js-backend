@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 mutual
   partial def test1 (n : Int) : Int :=
     if n == 1 then n else test2 (n - 1)

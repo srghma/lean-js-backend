@@ -1,5 +1,3 @@
-import Init.Data.Float
-
 def test1 (a : Float) : Float := a + (a + (a + a))
 def test2 (a : Float) : Float := ((a + a) + a) + a
 def test3 (a : Float) : Float := a + (a + (a - a))

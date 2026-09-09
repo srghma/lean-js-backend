@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 structure RecBaz where
   baz : Int
 deriving Repr

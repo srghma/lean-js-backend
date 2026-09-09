@@ -1,6 +1,3 @@
-import Init.System.IO
-import Init.Data.Int.Basic
-
 structure MyEffect (α : Type) where
   val : IO α
 

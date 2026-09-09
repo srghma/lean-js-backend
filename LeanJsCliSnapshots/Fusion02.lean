@@ -1,9 +1,3 @@
-import Init.System.IO
-import Init.Data.Array.Basic
-import Init.Data.Int.Basic
-import Init.Data.String.Basic
-import Init.Data.String.TakeDrop
-
 structure Unfold (α : Type) where
   σ : Type
   s : σ

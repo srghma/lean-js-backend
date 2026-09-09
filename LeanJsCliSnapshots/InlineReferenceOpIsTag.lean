@@ -1,4 +1,3 @@
-
 inductive MyList (α : Type) where
   | Cons : α → MyList α → MyList α
   | Nil  : MyList α

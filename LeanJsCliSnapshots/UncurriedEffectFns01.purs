@@ -30,4 +30,3 @@ test6 f g = do
   runEffectFn3 f (g 1) 2 3
   runEffectFn3 f (g 1) 2 3
   runEffectFn3 f (g 1) 2 3
-

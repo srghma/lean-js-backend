@@ -1,7 +1,3 @@
-import Init.System.IO
-import Init.Data.Int.Basic
-import Init.Data.ToString.Basic
-
 partial def forE (lo hi : Int) (f : Int → IO Unit) : IO Unit := do
   let rec loop (i : Int) : IO Unit := do
     if i < hi then

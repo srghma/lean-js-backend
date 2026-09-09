@@ -1,6 +1,3 @@
-import Init.System.IO
-import Init.Data.Int.Basic
-
 def test (f : IO.Ref Int → IO.Ref Int) : IO Unit := do
   let ref ← IO.mkRef 0
   let wat := f ref

@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 def test1 : Int → String
   | 1 => "1"
   | 2 => "2"

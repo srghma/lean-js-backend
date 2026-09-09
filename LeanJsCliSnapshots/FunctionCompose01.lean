@@ -1,6 +1,3 @@
-import Init.Core
-import Init.Data.String
-
 def f (_ : String) : String := "a"
 def g (_ : String) : String := "b"
 

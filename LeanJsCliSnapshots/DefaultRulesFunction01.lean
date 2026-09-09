@@ -1,6 +1,3 @@
-import Init.Data.Int.Basic
-import Init.Data.String.Basic
-
 def flip' {α β γ : Type} (f : α → β → γ) : β → α → γ :=
   fun b a => f a b
 

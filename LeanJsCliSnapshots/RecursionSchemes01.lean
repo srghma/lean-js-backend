@@ -1,4 +1,3 @@
-
 inductive ExprF (α : Type) where
   | Lit : Int → ExprF α
   | Add : α → α → ExprF α

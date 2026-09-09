@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 inductive Column where
   | zero
   | one (n : Int)

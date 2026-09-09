@@ -1,6 +1,3 @@
-import Init.Data.Int.Basic
-import Init.Data.String
-
 def test1 (x : Int) : String :=
   match x with
   | 1 => "111"

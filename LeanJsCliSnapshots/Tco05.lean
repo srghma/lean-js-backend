@@ -1,6 +1,3 @@
-import Init.Data.Array.Basic
-import Init.Data.Int.Basic
-
 def span (p : Int → Bool) (arr : Array Int) : Option Nat :=
   let rec go (i : Nat) : Option Nat :=
     if h : i < arr.size then

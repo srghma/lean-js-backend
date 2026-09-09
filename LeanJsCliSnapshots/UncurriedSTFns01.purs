@@ -30,4 +30,3 @@ test6 f g = do
   runSTFn3 f (g 1) 2 3
   runSTFn3 f (g 1) 2 3
   runSTFn3 f (g 1) 2 3
-

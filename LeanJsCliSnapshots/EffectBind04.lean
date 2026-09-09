@@ -1,6 +1,3 @@
-import Init.System.IO
-import Init.Data.Int.Basic
-
 def test1 (random : Unit → IO Int) : IO Unit := do
   let n ← random ()
   if n > 100 then

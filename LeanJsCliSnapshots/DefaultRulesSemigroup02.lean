@@ -1,6 +1,3 @@
-import Init.Data.String.Basic
-import Init.Data.List.Basic
-
 structure R where
   foo : String
   bar : List String

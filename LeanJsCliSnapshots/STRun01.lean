@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 def test1 : Int := Id.run (pure 1)
 def test2 : Int := Id.run (pure (1 + 2))
 def test3 : Int := Id.run do

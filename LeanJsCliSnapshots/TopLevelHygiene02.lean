@@ -1,4 +1,3 @@
-
 def wat : Int := 42
 
 def test1 {α β : Type} (wat : α → β) (a : α) : β := wat a

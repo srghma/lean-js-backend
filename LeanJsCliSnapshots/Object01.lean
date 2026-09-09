@@ -1,6 +1,3 @@
-import Init.Data.Array.Basic
-import Init.Data.String.Basic
-
 def test1 (a : List (String × Int)) : Int :=
   a.find? (fun p => p.1 == "foo") |>.map (fun p => p.2) |>.getD 0
 

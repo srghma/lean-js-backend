@@ -1,5 +1,3 @@
-import Init.System.IO
-
 def when' (bool : Bool) (k : Unit → IO Unit) : IO Unit :=
   if bool then k () else pure ()
 

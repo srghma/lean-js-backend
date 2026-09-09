@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 structure PairBox where
   foo : Int
   bar : Int

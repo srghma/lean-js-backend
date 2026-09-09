@@ -1,7 +1,3 @@
-import Init.Data.Option.Basic
-import Init.Data.Int.Basic
-import Init.Data.ToString.Basic
-
 def preview_left {α β : Type} : Except α β → Option α
   | Except.error a => some a
   | Except.ok _ => none

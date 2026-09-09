@@ -1,7 +1,3 @@
-import Init.Data.Int.Basic
-import Init.Data.String.Basic
-import Init.Data.Float
-
 structure R1 where
   a : Int
   b : String × Float

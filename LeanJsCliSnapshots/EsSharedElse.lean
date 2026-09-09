@@ -1,6 +1,3 @@
-import Init.Data.Bool
-import Init.Data.Int.Basic
-
 def test1 (a b c : Bool) : Int :=
   if a then
     if b then

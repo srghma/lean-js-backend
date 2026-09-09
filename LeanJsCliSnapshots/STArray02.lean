@@ -1,5 +1,3 @@
-import Init.Data.Array.Basic
-
 def test1 (inp : Array Int) : Array Int := Id.run do
   let mut arr := #[]
   arr := arr.push 1

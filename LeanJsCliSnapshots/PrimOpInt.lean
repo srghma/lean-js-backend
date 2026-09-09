@@ -1,6 +1,3 @@
-import Init.Data.Int
-import Init.Data.Bool
-
 def test1 (a b : Int) : Int := a + b
 def test2 (a b : Int) : Int := a - b
 def test3 (a b : Int) : Bool := a == b

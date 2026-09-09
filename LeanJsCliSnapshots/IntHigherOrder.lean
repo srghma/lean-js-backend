@@ -1,8 +1,3 @@
-import Init.Data.Int.Basic
-import Init.Data.Int.DivMod
-import Init.Data.Bool
-import Init.Data.List.Basic
-
 def intValues (op : Int → Int → α) : List α :=
   [ op 1 1
   , op 1 2

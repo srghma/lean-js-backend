@@ -1,6 +1,3 @@
-import Init.Data.List
-import Init.Data.String
-
 def test1 : List Nat → String
   | [] => "0"
   | [1] => "1"

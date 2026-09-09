@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 def fc2_1 (f g : Int → Int) : Int → Int := f ∘ g
 def fc2_2 (f g : Int → Int) : Int → Int := g ∘ (f ∘ g)
 def fc2_3 (f g : Int → Int) : Int → Int := (f ∘ g) ∘ (f ∘ g)

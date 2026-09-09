@@ -1,7 +1,3 @@
-import Init.System.IO
-import Init.Data.Array.Basic
-import Init.Data.Int.Basic
-
 def test1 (k : Int → Array Int) : IO Unit :=
   Array.forM (fun a => do
     IO.println (repr a)

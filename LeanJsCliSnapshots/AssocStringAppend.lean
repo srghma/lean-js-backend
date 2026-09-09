@@ -1,5 +1,3 @@
-import Init.Data.String
-
 def test1 (x : String) : String :=
   "a" ++ ((((("b" ++ x) ++ x) ++ x) ++ x) ++ "c") ++ "d"
 

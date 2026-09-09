@@ -1,7 +1,3 @@
-import Init.Data.String.Basic
-import Init.Data.Int.Basic
-import Init.Data.Bool
-
 inductive Variant where
   | foo : Int → Variant
   | bar : Bool → Variant

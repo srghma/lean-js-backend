@@ -1,4 +1,3 @@
-
 @[noinline]
 def foo : String := "foo"
 

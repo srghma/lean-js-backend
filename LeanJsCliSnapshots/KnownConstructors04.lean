@@ -1,7 +1,3 @@
-import Init.Data.Int.Basic
-import Init.Data.String.Basic
-import Init.Data.Array.Basic
-
 def test1 (x : Int) : Array String :=
   let a := if x > 42 then some "Hello" else none
   #[ a.get! ++ ", World", a.get! ++ ", Universe" ]

@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 def fn {α : Type} (_ : α) : Int := 0
 
 structure SubRec2 where

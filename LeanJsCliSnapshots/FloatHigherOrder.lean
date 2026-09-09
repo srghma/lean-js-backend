@@ -1,8 +1,3 @@
-import Init.Data.Bool
-import Init.Data.Float
-import Init.Data.OfScientific
-import Init.Data.List.Basic
-
 def numValues (op : Float → Float → α) : List α :=
   [ op 1.5 1.0
   , op 1.5 2.0

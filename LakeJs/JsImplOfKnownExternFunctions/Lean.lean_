@@ -1929,7 +1929,7 @@ def lean_get_usize_size := [JS_EXPR|throw new Error("lean_get_usize_size is not 
 --           overlaps := s.overlaps
 --           }
 --       | none => pure ()
--- 
+--
 --     trace[Meta.Match.debug] "matcher: {matcher}"
 --     let unusedAltIdxs := lhss.length.fold (init := []) fun i _ r =>
 --       if s.used.contains i then r else i::r
@@ -1939,7 +1939,7 @@ def lean_get_usize_size := [JS_EXPR|throw new Error("lean_get_usize_size is not 
 --       unusedAltIdxs := unusedAltIdxs.reverse,
 --       addMatcher
 --     }
--- 
+--
 --   let motiveType ← mkForallFVars discrs (mkSort uElimGen)
 --   trace[Meta.Match.debug] "motiveType: {motiveType}"
 --   withLocalDeclD `motive motiveType fun motive => do

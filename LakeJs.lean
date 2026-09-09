@@ -1,11 +1,15 @@
 module
 
-prelude
+def main (args : List String) : IO Unit := do
+  let args := args.toArray
 
-public import LakeJs.LeanEnum.Schema
-public meta import LakeJs.LeanEnum.Schema
-public import LakeJs.LeanEnum.SchemaMeta
-public meta import LakeJs.LeanEnum.SchemaMeta
+-- prelude
+--
+-- public import LakeJs.LeanEnum.Schema
+-- public meta import LakeJs.LeanEnum.Schema
+-- public import LakeJs.LeanEnum.SchemaMeta
+-- public meta import LakeJs.LeanEnum.SchemaMeta
+
 -- public import LakeJs.LeanEnum.Enum
 -- public meta import LakeJs.LeanEnum.Enum
 -- public import LakeJs.LeanEnum.EnumMeta

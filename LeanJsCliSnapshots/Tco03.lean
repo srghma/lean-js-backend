@@ -1,6 +1,3 @@
-import Init.Data.Int
-import Init.Data.Bool
-
 partial def test (n : Int) : Int :=
   let rec go (n : Int) : Int :=
     let rec k (m : Int) : Int :=

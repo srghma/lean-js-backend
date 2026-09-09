@@ -1,7 +1,3 @@
-import Init.Data.Bool
-import Init.Data.String.Basic
-import Init.Data.List.Basic
-
 def stringValues (op : String → String → α) : List α :=
   [ op "a" "a"
   , op "a" "b"

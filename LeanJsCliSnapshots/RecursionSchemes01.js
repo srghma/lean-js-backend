@@ -1,7 +1,6 @@
 // @inline Snapshot.RecursionSchemes01.cata arity=2
 // @inline Snapshot.RecursionSchemes01.functorExprF.map arity=2
-import * as $runtime from "../runtime.js";
-const $ExprF = (tag, _1, _2) => ({tag, _1, _2});
+const $ExprF = (tag, _1, _2) => ({ tag, _1, _2 });
 const Add = value0 => value1 => $ExprF("Add", value0, value1);
 const Mul = value0 => value1 => $ExprF("Mul", value0, value1);
 const Lit = value0 => $ExprF("Lit", value0);
@@ -10,7 +9,7 @@ const functorExprF = {
     if (m.tag === "Add") { return $ExprF("Add", f(m._1), f(m._2)); }
     if (m.tag === "Mul") { return $ExprF("Mul", f(m._1), f(m._2)); }
     if (m.tag === "Lit") { return $ExprF("Lit", m._1); }
-    $runtime.fail();
+    throw new Error('UNREACHABLE');
   }
 };
 const test1 = /* #__PURE__ */ (() => {
@@ -18,7 +17,7 @@ const test1 = /* #__PURE__ */ (() => {
     if (v.tag === "Add") { return go(v._1) + go(v._2) | 0; }
     if (v.tag === "Mul") { return go(v._1) * go(v._2) | 0; }
     if (v.tag === "Lit") { return v._1; }
-    $runtime.fail();
+    throw new Error('UNREACHABLE');
   };
   return go;
 })();
@@ -27,8 +26,8 @@ const test2 = /* #__PURE__ */ (() => {
     if (v.tag === "Add") { return go(v._1) + go(v._2) | 0; }
     if (v.tag === "Mul") { return go(v._1) * go(v._2) | 0; }
     if (v.tag === "Lit") { return v._1 + 1 | 0; }
-    $runtime.fail();
+    throw new Error('UNREACHABLE');
   };
   return go;
 })();
-export {$ExprF, Add, Lit, Mul, functorExprF, test1, test2};
+export { $ExprF, Add, Lit, Mul, functorExprF, test1, test2 };

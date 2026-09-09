@@ -1,6 +1,3 @@
-import Init.Data.String.Basic
-import Init.Data.List.Basic
-
 inductive Html where
   | elem (tag : String) (children : List Html)
   | text (content : String)

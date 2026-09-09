@@ -1,6 +1,3 @@
-import Init.Data.Float
-import Init.Data.Array.Basic
-
 def nan : Float := 0.0 / 0.0
 
 def numValues {α : Type} (op : Float → Float → α) : Array α :=

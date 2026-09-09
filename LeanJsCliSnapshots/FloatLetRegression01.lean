@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 structure FloatLetResult where
   b : Int
   c1 : Int

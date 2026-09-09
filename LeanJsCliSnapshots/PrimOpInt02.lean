@@ -1,6 +1,3 @@
-import Init.Data.Int.Basic
-import Init.Data.Array.Basic
-
 def intValues {α : Type} (op : Int → Int → α) : Array α :=
   #[ op 1 1, op 1 2, op 2 1, op 1 (-2), op (-1) 2, op (-1) (-1) ]
 

@@ -1,4 +1,3 @@
-
 partial def test (n : Nat) : Nat :=
   let k (wat : Bool) : Nat :=
     let j (i : Nat) (_ : Unit) : Nat := test i

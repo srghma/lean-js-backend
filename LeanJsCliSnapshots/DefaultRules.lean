@@ -1,7 +1,3 @@
-import Init.Data.Option.Basic
-import Init.Data.String
-import Init.Data.Int.Basic
-
 structure R where
   foo : Int
   bar : String

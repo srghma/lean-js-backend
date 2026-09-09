@@ -1,5 +1,3 @@
-import Init.Data.Float
-
 def fn {α : Type} (_ : α) : Float := 0.0
 
 structure SubRec2 where

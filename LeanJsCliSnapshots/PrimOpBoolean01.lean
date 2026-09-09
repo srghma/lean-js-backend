@@ -1,5 +1,3 @@
-import Init.Data.Bool
-
 def test1 (a b : Bool) : Bool := a && b
 def test2 (a b : Bool) : Bool := a || b
 def test3 (a b : Bool) : Bool := a == b

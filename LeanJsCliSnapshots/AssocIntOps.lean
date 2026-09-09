@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 def test1 (x : Int) : Int :=
   1 + (((((2 + x) + x) + x) + x) + 3) + 4
 

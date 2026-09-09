@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 def maybe {α β : Type} (d : β) (f : α → β) : Option α → β
   | some a => f a
   | none => d

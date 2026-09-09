@@ -1,5 +1,3 @@
-import Init.Data.UInt
-
 def test1 : UInt32 := (1023 : UInt32) &&& (8 : UInt32)
 def test2 : UInt32 := (16 : UInt32) ||| (15 : UInt32)
 def test3 : UInt32 := (1023 : UInt32) <<< 2

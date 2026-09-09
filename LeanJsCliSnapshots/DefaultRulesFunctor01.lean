@@ -1,8 +1,3 @@
-import Init.Data.Int.Basic
-import Init.Data.String.Basic
-import Init.Data.Option.Basic
-import Init.Data.ToString.Basic
-
 def test1 : Option Int → Option String
   | some i => some (toString i)
   | none   => none

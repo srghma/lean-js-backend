@@ -1,6 +1,3 @@
-import Init.System.IO
-import Init.Data.Array.Basic
-
 def test1 {α β : Type} (f : α → β) (as : Array α) : IO Unit := do
   let ref ← IO.mkRef #[]
   for a in as do

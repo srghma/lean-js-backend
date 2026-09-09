@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 def cpsResult (s : Int) : Int × Unit :=
   let res1 := s
   let s := res1 + 1

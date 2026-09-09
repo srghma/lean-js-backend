@@ -1,6 +1,3 @@
-import Init.System.IO
-import Init.Data.Array.Basic
-
 def test1 (ref : IO.Ref Int) (k : Int → Array Int) : IO Unit := do
   for a in k 42 do
     let val ← ref.get

@@ -1,5 +1,3 @@
-import Init.Data.Array.Basic
-
 def test (x : Bool) : Array Int := Id.run do
   let mut arr := #[]
   if x then

@@ -1,6 +1,3 @@
-import Init.System.IO
-import Init.Data.Int.Basic
-
 def MyEffect (α : Type) := IO α
 
 instance : Monad MyEffect := inferInstanceAs (Monad IO)

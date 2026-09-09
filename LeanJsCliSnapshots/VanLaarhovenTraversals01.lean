@@ -1,5 +1,3 @@
-import Init.Data.String.Basic
-
 inductive Fun where
   | Abs : String → Fun → Fun
   | App : Fun → Fun → Fun

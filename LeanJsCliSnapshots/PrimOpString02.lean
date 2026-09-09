@@ -1,6 +1,3 @@
-import Init.Data.String.Basic
-import Init.Data.Array.Basic
-
 def stringValues {α : Type} (op : String → String → α) : Array α :=
   #[ op "a" "a", op "a" "b", op "b" "a" ]
 

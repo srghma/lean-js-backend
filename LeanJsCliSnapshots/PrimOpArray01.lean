@@ -1,5 +1,3 @@
-import Init.Data.Array.Basic
-
 def test1 {α : Type} (a : Array α) : Int := (a.size : Int)
 
 def test2 {α : Type} [Inhabited α] (a : Array α) : α := a[2]!

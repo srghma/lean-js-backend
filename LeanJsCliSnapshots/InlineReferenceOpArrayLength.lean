@@ -1,6 +1,3 @@
-import Init.Data.Array.Basic
-import Init.Data.Option.Basic
-
 def test1 (fn : Unit → Int) : Array Int :=
   let array := #[ 1, 2, fn () ]
   if array.size == 3 then array else #[]

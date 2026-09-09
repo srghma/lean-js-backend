@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 structure RecC where
   c : Bool
 

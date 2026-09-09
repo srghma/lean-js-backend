@@ -1,6 +1,3 @@
-import Init.Data.Bool
-import Init.Data.Array.Basic
-
 def boolValues (op : Bool → Bool → Bool) : Array Bool :=
   #[ op true true, op true false, op false true, op false false ]
 

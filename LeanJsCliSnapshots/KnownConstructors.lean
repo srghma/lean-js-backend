@@ -1,8 +1,3 @@
-import Init.Data.Option.Basic
-import Init.Data.Sum.Basic
-import Init.Data.Int.Basic
-import Init.Data.String.Basic
-
 def known1 : String :=
   (some "c").map (fun _ => "b") |>.getD "a"
 

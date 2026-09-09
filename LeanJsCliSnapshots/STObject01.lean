@@ -1,7 +1,3 @@
-import Init.Data.String.Basic
-import Init.Data.Int.Basic
-import Init.Data.List.Basic
-
 def poke (k : String) (v : Int) (m : List (String × Int)) : List (String × Int) :=
   (k, v) :: m.filter (fun p => p.1 != k)
 

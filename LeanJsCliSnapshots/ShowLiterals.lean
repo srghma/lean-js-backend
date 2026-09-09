@@ -1,10 +1,3 @@
-import Init.Data.String.Basic
-import Init.Data.Int.Basic
-import Init.Data.Float
-import Init.Data.Bool
-import Init.Data.Char.Basic
-import Init.Data.Array.Basic
-
 structure MyRec where
   foo : String
   bar : Bool

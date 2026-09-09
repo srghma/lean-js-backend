@@ -1,6 +1,3 @@
-import Init.System.IO
-import Init.Data.Int.Basic
-
 def test (random : Unit → IO Int) : IO Int := do
   let x ← random ()
   let n ← do

@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 structure Rec where
   a : Int
   b : Int

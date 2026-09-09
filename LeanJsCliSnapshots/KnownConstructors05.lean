@@ -1,5 +1,3 @@
-import Init.Data.String.Basic
-
 inductive Test where | Foo | Bar | Baz | Qux
 
 def fromString : String → Option Test

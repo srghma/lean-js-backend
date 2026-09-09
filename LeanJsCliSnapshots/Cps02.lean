@@ -1,5 +1,3 @@
-import Init.Data.Int.Basic
-
 def CPS (α : Type) (ρ : Type) := (α → ρ) → ρ
 
 @[inline] def pureCPS {α ρ : Type} (a : α) : CPS α ρ := fun k => k a
