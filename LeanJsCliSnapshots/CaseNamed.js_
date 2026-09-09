@@ -1,0 +1,12 @@
+const test2 = v => {
+  if (v._1 === 1) { return v._2.toString() + v._3.toString() + v._1.toString(); }
+  if (v._2 === 1) { return v._1.toString() + v._3.toString() + v._2.toString(); }
+  if (v._3 === 1) { return v._1.toString() + v._2.toString() + v._3.toString(); }
+  return v._1.toString() + v._1.toString() + v._2.toString() + v._2.toString() + v._3.toString() + v._3.toString();
+};
+const test1 = v => {
+  if (v === 1) { return v.toString() + v.toString() + v.toString(); }
+  if (v === 2) { return v.toString(); }
+  return "any: " + v.toString() + v.toString() + v.toString();
+};
+export { test1, test2 };

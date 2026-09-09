@@ -1,5 +1,5 @@
 structure NewTypeInt where
-  val : Nat
+  val : Int
 
 def test1 (v : NewTypeInt) : String :=
   match v.val with

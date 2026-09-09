@@ -1,9 +1,7 @@
-const $Color = tag => tag;
-const $RedBlackTree = (tag, _1, _2, _3, _4) => ({ tag, _1, _2, _3, _4 });
-const Red = /* #__PURE__ */ $Color("Red");
-const Black = /* #__PURE__ */ $Color("Black");
-const Leaf = /* #__PURE__ */ $RedBlackTree("Leaf");
-const Node = value0 => value1 => value2 => value3 => $RedBlackTree("Node", value0, value1, value2, value3);
+const Red = "Red";
+const Black = "Black";
+const Leaf = { tag: "Leaf" };
+const Node = (value0, value1, value2, value3) => ({ tag: "Node", _1: value0, _2: value1, _3: value2, _4: value3 });
 const test1 = () => v => {
   if (v.tag === "Node" && v._1 === "Black") {
     if (v._2.tag === "Node") {
@@ -51,4 +49,4 @@ const test1 = () => v => {
   }
   throw new Error('UNREACHABLE');
 };
-export { $Color, $RedBlackTree, Black, Leaf, Node, Red, test1 };
+export { Black, Leaf, Node, Red, test1 };

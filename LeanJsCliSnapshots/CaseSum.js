@@ -1,6 +1,5 @@
-const $SumType = (tag, _1) => ({ tag, _1 });
-const L = value0 => $SumType("L", value0);
-const R = value0 => $SumType("R", value0);
+const $SumType$L = value0 => ({ tag: "L", _1: value0 });
+const $SumType$R = value0 => ({ tag: "R", _1: value0 });
 const test1 = v => {
   if (v.tag === "L") {
     if (v._1 === 1) { return "1"; }
@@ -10,4 +9,4 @@ const test1 = v => {
   if (v.tag === "R") { return "4"; }
   throw new Error('UNREACHABLE');
 };
-export { $SumType, L, R, test1 };
+export { $SumType$L, $SumType$R, test1 };
