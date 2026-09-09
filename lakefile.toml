@@ -20,7 +20,7 @@ rev = "v4.34.0-rc2"
 
 [[lean_lib]]
 name = "LakeJs"
-roots = ["LakeJs.LeanEnumSchema"]
+roots = ["LakeJs.LeanEnum"]
 
 [[lean_exe]]
 name = "LakeJsTest"
