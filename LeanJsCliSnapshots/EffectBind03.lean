@@ -8,7 +8,7 @@ instance : Monad MyEffect where
     (k a).val
   }
 
-def test : MyEffect Int := do
-  let a ← ({ val := pure 1 } : MyEffect Int)
-  let b ← ({ val := pure 1 } : MyEffect Int)
+def test (random : MyEffect Int) : MyEffect Int := do
+  let a ← random
+  let b ← random
   pure (a + b)

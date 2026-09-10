@@ -1,4 +1,3 @@
-import * as Data$dMaybe from "../Data.Maybe/index.js";
 const span = p => arr => {
   const go = go$a0$copy => {
     let go$a0 = go$a0$copy, go$c = true, go$r;
@@ -10,11 +9,11 @@ const span = p => arr => {
           continue;
         }
         go$c = false;
-        go$r = Data$dMaybe.$Maybe("Just", i);
+        go$r = $Option$some(i);
         continue;
       }
       go$c = false;
-      go$r = Data$dMaybe.Nothing;
+      go$r = $Option$none;
     }
     return go$r;
   };

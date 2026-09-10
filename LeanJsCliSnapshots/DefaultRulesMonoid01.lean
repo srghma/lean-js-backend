@@ -1,8 +1,22 @@
-def guardList {M : Type} (empty : M) (b : Bool) (m : M) : M :=
-  if b then m else empty
+-- 2. Scoped to `Monoid` to avoid clashing with Lean's built-in Alternative `guard`
+namespace Monoid
+  def guard {M : Type} [EmptyCollection M] (b : Bool) (a : M) : M :=
+    if b then a else ∅
+end Monoid
 
-def test1 (b : Bool) : List Int :=
-  guardList [] b [1, 2, 3]
+-- type F = forall a. a -> a
+def F := ∀ {α : Type}, α → α
 
-def test2 (f : List Int → List Int) (b : Bool) : List Int :=
-  guardList [] b (f [1, 2, 3])
+-- test1 :: Boolean -> Array Int
+-- test1 = flip guard [ 1, 2, 3 ]
+def test1 : Bool → Array Int :=
+  flip Monoid.guard #[1, 2, 3]
+
+-- test2 :: F -> Boolean -> Array Int
+-- test2 f = flip guard (f [ 1, 2, 3 ])
+def test2 (f : F) : Bool → Array Int :=
+  flip Monoid.guard (f #[1, 2, 3])
+
+-- Verification:
+-- #eval test1 true   -- #[1, 2, 3]
+-- #eval test1 false  -- #[]

@@ -1,10 +1,9 @@
-import * as Effect$dConsole from "../Effect.Console/index.js";
 const test = eff => () => {
   const res = eff();
-  if (res.tag === "Nothing") { return; }
-  if (res.tag === "Just") {
+  if (res.tag === "none") { return; }
+  if (res.tag === "some") {
     for (const a of res._1) {
-      Effect$dConsole.log(a)();
+      console.log(a);
     }
     return;
   }

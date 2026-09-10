@@ -33,4 +33,4 @@ const rewriteBottomUp = k => {
   };
   return a => k(go(a));
 };
-export { $Fun, Abs, App, rewriteBottomUp, rewriteBottomUpM, traverseFun1 };
+export {$Fun, Abs, App, rewriteBottomUp, rewriteBottomUpM, traverseFun1};

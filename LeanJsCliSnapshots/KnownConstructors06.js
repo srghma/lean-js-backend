@@ -35,4 +35,4 @@ const showTest = {
     throw new Error('UNREACHABLE');
   }
 };
-export { $Test, Bar, Baz, Foo, Qux, genericTest, showTest };
+export {$Test, Bar, Baz, Foo, Qux, genericTest, showTest};

@@ -1,6 +1,6 @@
 const test5 = v => {
-  if (v.tag === "Just" && v._1.tag === "Right") { return v._1._1; }
-  if (v.tag === "Just" && v._1.tag === "Left" && v._1._1 === 2) { return 4; }
+  if (v.tag === "some" && v._1.tag === "ok") { return v._1._1; }
+  if (v.tag === "some" && v._1.tag === "error" && v._1._1 === 2) { return 4; }
   return 5;
 };
 const test4 = v => v1 => {

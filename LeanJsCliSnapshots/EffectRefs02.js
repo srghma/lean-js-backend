@@ -1,32 +1,30 @@
-import * as Data$dTuple from "../Data.Tuple/index.js";
 const test3 = () => {
-  const count = {value: 0};
-  return Data$dTuple.$Tuple(
-    count,
-    n => () => {
+  const count = { value: 0 };
+  return {
+    _1: count,
+    _2: n => () => {
       const $0 = count.value;
       count.value = $0 + n | 0;
     }
-  );
+  };
 };
 const test2 = () => {
   let count = 0;
   return n => () => {
-    const $0 = count;
-    count = $0 + n | 0;
+    count = count + n | 0;
   };
 };
 const test1 = hi => () => {
   let count = 0;
-  let $$continue = true;
-  while ($$continue) {
+  let continue_ = true;
+  while (continue_) {
     const n = count;
     if (n < hi) {
       count = n + 1 | 0;
     } else {
-      $$continue = false;
+      continue_ = false;
     }
   }
   return count;
 };
-export {test1, test2, test3};
+export { test1, test2, test3 };

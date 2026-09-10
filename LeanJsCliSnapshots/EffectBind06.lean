@@ -1,8 +1,8 @@
-def test (random : Unit → IO Int) : IO Int := do
-  let x ← random ()
+def test (random : IO Int) : IO Int := do
+  let x ← random
   let n ← do
-    let x ← random ()
-    let y ← random ()
+    let x ← random -- Shadowed on purpose
+    let y ← random
     pure (x + y)
-  let m ← random ()
+  let m ← random
   pure (x + n - m)

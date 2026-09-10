@@ -1,10 +1,9 @@
 // @inline export variantBuildMatchCons arity=5
-import * as Data$dShow from "../Data.Show/index.js";
 import * as Data$dVariant from "../Data.Variant/index.js";
 import * as Partial from "../Partial/index.js";
 import * as Record$dUnsafe from "../Record.Unsafe/index.js";
 import * as Type$dProxy from "../Type.Proxy/index.js";
-const variantBuildMatchNil = {variantBuildMatch: v => k => v1 => k};
+const variantBuildMatchNil = { variantBuildMatch: v => k => v1 => k };
 const variantBuildMatch = dict => dict.variantBuildMatch;
 const variantBuildMatchCons = dictTypeEquals => () => () => dictIsSymbol => dictVariantBuildMatch => (
   {
@@ -25,7 +24,7 @@ const test1 = r => {
     return "false";
   }
   if (r.type === "baz") { return r.value; }
-  if (r.type === "foo") { return Data$dShow.showIntImpl(r.value); }
+  if (r.type === "foo") { return r.value.toString(); }
   return Partial._crashWith("Data.Variant: pattern match failure [" + r.type + "]");
 };
 export {match, test1, variantBuildMatch, variantBuildMatchCons, variantBuildMatchNil};

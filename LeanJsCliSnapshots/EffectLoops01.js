@@ -1,32 +1,28 @@
-import * as Data$dShow from "../Data.Show/index.js";
-import * as Effect$dConsole from "../Effect.Console/index.js";
 const test4 = arr => () => {
   for (const a of arr) {
     if (a < 10) {
-      Effect$dConsole.log(Data$dShow.showIntImpl(a))();
+      console.log(a.toString());
     } else {
-      Effect$dConsole.log("wat")();
+      console.log("wat");
     }
   }
 };
 const test3 = arr => () => {
   for (const a of arr) {
-    const $0 = Effect$dConsole.log(Data$dShow.showIntImpl(a));
-    if (a < 10) { $0(); }
+    if (a < 10) { console.log(a.toString()); }
   }
 };
 const test2 = k => {
   const $0 = k(42);
   return () => {
     for (const a of $0) {
-      Effect$dConsole.log(Data$dShow.showIntImpl(a))();
+      console.log(a.toString());
     }
-    for (const $1 of k(42)) {
-      Effect$dConsole.log(Data$dShow.showIntImpl($1))();
+    for (const $1 of $0) {
+      console.log($1.toString());
     }
-    const $1 = Effect$dConsole.log("wat");
-    for (const $2 of k(42)) {
-      $1();
+    for (const $2 of $0) {
+      console.log("wat");
     }
   };
 };
@@ -34,8 +30,9 @@ const test1 = k => {
   const $0 = k(42);
   return () => {
     for (const a of $0) {
-      Effect$dConsole.log(Data$dShow.showIntImpl(a))();
-      Effect$dConsole.log(Data$dShow.showIntImpl(a))();
+      const $1 = a.toString();
+      console.log($1);
+      console.log($1);
     }
   };
 };

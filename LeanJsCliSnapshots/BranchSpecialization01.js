@@ -12,4 +12,4 @@ const instBEqTestEnum = {
 };
 const test1 = a => a === "baz";
 const test2 = a => a === "baz";
-export { $TestEnum$bar, $TestEnum$baz, $TestEnum$foo, $TestEnum$qux, instBEqTestEnum, test1, test2 };
+export {$TestEnum$bar, $TestEnum$baz, $TestEnum$foo, $TestEnum$qux, instBEqTestEnum, test1, test2};

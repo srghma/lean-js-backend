@@ -30,4 +30,4 @@ const test2 = /* #__PURE__ */ (() => {
   };
   return go;
 })();
-export { $ExprF, Add, Lit, Mul, functorExprF, test1, test2 };
+export {$ExprF, Add, Lit, Mul, functorExprF, test1, test2};

@@ -9,4 +9,4 @@ const test1 = v => {
   if (v.tag === "R") { return "4"; }
   throw new Error('UNREACHABLE');
 };
-export { $SumType$L, $SumType$R, test1 };
+export {$SumType$L, $SumType$R, test1};

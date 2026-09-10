@@ -29,4 +29,4 @@ const test1 = v => {
   }
   return "e7: " + renderExpr(v);
 };
-export { $Expr$add, $Expr$mul, $Expr$succ, $Expr$zero, instToStringExpr, test1 };
+export {$Expr$add, $Expr$mul, $Expr$succ, $Expr$zero, instToStringExpr, test1};

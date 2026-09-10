@@ -1,13 +1,13 @@
-def test (random : Unit → IO Int) (value : Unit → Int) : IO Int := do
-  let x ← random ()
+def test (random : IO Int) (value : Unit → Int) : IO Int := do
+  let x ← random
   let n ← do
     let a :=
       let b :=
         let c := value ()
         c + c
       b + b
-    let x ← random ()
-    let y ← random ()
+    let x ← random
+    let y ← random
     pure (x + y + a + a)
-  let m ← random ()
+  let m ← random
   pure (x + n - m)

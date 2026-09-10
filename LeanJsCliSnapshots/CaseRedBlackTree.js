@@ -1,7 +1,7 @@
-const Red = "Red";
-const Black = "Black";
-const Leaf = { tag: "Leaf" };
-const Node = (value0, value1, value2, value3) => ({ tag: "Node", _1: value0, _2: value1, _3: value2, _4: value3 });
+const $Color$Red = "Red";
+const $Color$Black = "Black";
+const $RedBlackTree$Leaf = { tag: "Leaf" };
+const $RedBlackTree$Node = (value0, value1, value2, value3) => ({ tag: "Node", _1: value0, _2: value1, _3: value2, _4: value3 });
 const test1 = () => v => {
   if (v.tag === "Node" && v._1 === "Black") {
     if (v._2.tag === "Node") {
@@ -49,4 +49,4 @@ const test1 = () => v => {
   }
   throw new Error('UNREACHABLE');
 };
-export { Black, Leaf, Node, Red, test1 };
+export {$Color$Black, $Color$Red, $RedBlackTree$Leaf, $RedBlackTree$Node, test1};

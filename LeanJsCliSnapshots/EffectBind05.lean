@@ -4,6 +4,8 @@ instance : Monad MyId where
   pure a := fun _ => a
   bind x k := k (x ())
 
+-- #print instMonadMyId
+
 def test1 (k : Unit → IO Unit) : IO Unit := do
   let _ ← pure ()
   k ()

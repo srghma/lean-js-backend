@@ -1,33 +1,24 @@
-partial def whileE (cond : IO Bool) (f : IO Unit) : IO Unit := do
-  let c ← cond
-  if c then
-    f
-    whileE cond f
-  else
-    pure ()
-
-def test1 (cond : IO.Ref Bool) : IO Unit :=
-  whileE cond.get do
+def test1 (cond : IO.Ref Bool) : IO Unit := do
+  while (← cond.get) do
     IO.println "foo"
     IO.println "bar"
 
 def test2 (cond : IO.Ref Bool) : IO Unit := do
-  whileE cond.get do
+  while (← cond.get) do
     IO.println "foo"
-  whileE cond.get do
+  while (← cond.get) do
     IO.println "bar"
 
-def test3 (cond : IO.Ref Bool) (ref : IO.Ref Int) : IO Unit :=
-  whileE cond.get do
+def test3 (cond : IO.Ref Bool) (ref : IO.Ref Int) : IO Unit := do
+  while (← cond.get) do
     let a ← ref.get
     if a < 10 then
       IO.println "foo"
-    else
-      pure ()
 
-def test4 (cond : IO.Ref Bool) (ref : IO.Ref Int) : IO Unit :=
-  whileE cond.get do
+def test4 (cond : IO.Ref Bool) (ref : IO.Ref Int) : IO Unit := do
+  while (← cond.get) do
     let a ← ref.get
     if a < 10 then
       IO.println "foo"
     else
+      IO.println "wat"

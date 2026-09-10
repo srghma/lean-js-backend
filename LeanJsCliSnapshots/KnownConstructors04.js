@@ -10,4 +10,4 @@ const test1 = x => {
   if (x > 42) { return ["Hello, World", "Hello, Universe"]; }
   throw new Error('UNREACHABLE');
 };
-export { test1, test2, test3 };
+export {test1, test2, test3};

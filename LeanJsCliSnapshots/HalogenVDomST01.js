@@ -1,7 +1,7 @@
-import * as $runtime from "../runtime.js";
 const diffWithKeyAndIxE = (o1, as, fk, f1, f2, f3) => {
   const o2 = {};
-  for (const i of $runtime.range(0, as.length)) {
+  const $0 = as.length;
+  for (let i = 0; i < $0; i++) {
     const a = as[i];
     const k = fk(a);
     if (Object.hasOwn(o1, k)) {
@@ -22,7 +22,8 @@ const diffWithIxE = (a1, a2, f1, f2, f3) => {
   const a3 = [];
   const l1 = a1.length;
   const l2 = a2.length;
-  for (const i of $runtime.range(0, l1 < l2 ? l2 : l1)) {
+  const $0 = l1 < l2 ? l2 : l1;
+  for (let i = 0; i < $0; i++) {
     if (i < l1) {
       if (i < l2) {
         const v3 = f1(i, a1[i], a2[i]);
