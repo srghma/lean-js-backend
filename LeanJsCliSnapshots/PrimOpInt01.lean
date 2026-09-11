@@ -1,3 +1,4 @@
+-- @js_export: test1, test10, test11, test2, test3, test4, test5, test6, test7, test8, test9
 def test1 (a b : Int) : Int := a + b
 def test2 (a b : Int) : Int := a - b
 def test3 (a b : Int) : Bool := a == b

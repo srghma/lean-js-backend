@@ -1,3 +1,4 @@
+-- @js_export: ExprF, Add, Lit, Mul, functorExprF, test1, test2
 inductive ExprF (α : Type) where
   | Lit : Int → ExprF α
   | Add : α → α → ExprF α

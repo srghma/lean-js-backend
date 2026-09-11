@@ -1,3 +1,4 @@
+-- @js_export: test1, test2
 def test1 {α β : Type} (f : α → β) (as : Array α) : Array β := Id.run do
   let mut bs := #[]
   for a in as do

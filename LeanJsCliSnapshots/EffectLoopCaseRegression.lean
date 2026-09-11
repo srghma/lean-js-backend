@@ -1,3 +1,4 @@
+-- @js_export: test
 def test (eff : IO (Option (Array String))) : IO Unit := do
   let res ← eff
   match res with

@@ -1,3 +1,4 @@
+-- @js_export: boolValues, test1, test2, test3, test4, test5, test6, test7, test8, test9
 def boolValues (op : Bool → Bool → Bool) : Array Bool :=
   #[ op true true, op true false, op false true, op false false ]
 

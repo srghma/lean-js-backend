@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4, test5
 def test1 (a : List (String × Int)) : Int :=
   a.find? (fun p => p.1 == "foo") |>.map (fun p => p.2) |>.getD 0
 

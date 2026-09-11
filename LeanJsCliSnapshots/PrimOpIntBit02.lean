@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4, test5, test6, test7
 def test1 : UInt32 := (1023 : UInt32) &&& (8 : UInt32)
 def test2 : UInt32 := (16 : UInt32) ||| (15 : UInt32)
 def test3 : UInt32 := (1023 : UInt32) <<< 2

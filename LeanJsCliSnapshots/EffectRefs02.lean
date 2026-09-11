@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3
 def test1 (hi : Int) : IO Int := do
   let count ← IO.mkRef 0
   let continue_ ← IO.mkRef true

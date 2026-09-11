@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 def test1 (lo hi : Nat) : IO Unit := do
   for a in [lo + 1 : hi + 1] do
     IO.println a

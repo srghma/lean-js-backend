@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4, test5
 def maybe {α β : Type} (d : β) (f : α → β) : Option α → β
   | some a => f a
   | none => d

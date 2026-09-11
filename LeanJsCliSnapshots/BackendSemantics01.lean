@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 def test1 : Int32 := Int32.maxValue - 1
 def test2 : Int32 := Int32.minValue + 1
 def test3 : Char :=

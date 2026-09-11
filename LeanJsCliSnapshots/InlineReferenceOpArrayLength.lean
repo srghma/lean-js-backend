@@ -1,3 +1,4 @@
+-- @js_export: extern1, extern2, fn$p, test1, test2, test3, test4
 def test1 (fn : Unit → Int) : Array Int :=
   let array := #[ 1, 2, fn () ]
   if array.size == 3 then array else #[]

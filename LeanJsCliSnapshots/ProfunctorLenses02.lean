@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 def preview_left {α β : Type} : Except α β → Option α
   | Except.error a => some a
   | Except.ok _ => none

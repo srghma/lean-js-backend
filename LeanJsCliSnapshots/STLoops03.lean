@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 partial def whileE (cond : IO Bool) (m : IO Unit) : IO Unit := do
   let c ← cond
   if c then

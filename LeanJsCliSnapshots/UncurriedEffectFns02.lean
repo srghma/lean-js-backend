@@ -1,3 +1,4 @@
+-- @js_export: test1, test2
 def test1 : IO Unit := IO.println 12
 
 def test2 (random : Unit → IO Int) : IO Unit := do

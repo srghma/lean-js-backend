@@ -1,3 +1,4 @@
+-- @js_export: assertEqual, main, testArrayIndex
 def testArrayIndex {α : Type} (arr : Array α) (ix : Int) : Option α :=
   if ix < 0 then
     none

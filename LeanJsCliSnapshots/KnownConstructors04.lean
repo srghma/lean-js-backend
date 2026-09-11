@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3
 def test1 (x : Int) : Array String :=
   let a := if x > 42 then some "Hello" else none
   #[ a.get! ++ ", World", a.get! ++ ", Universe" ]

@@ -1,3 +1,4 @@
+-- @js_export: SumType, test1
 inductive SumType
   | L (n : Nat)
   | R (n : Nat)

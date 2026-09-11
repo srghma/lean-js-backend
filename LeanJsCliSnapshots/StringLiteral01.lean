@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 def test1 : String := "\x42"
 def test2 : String := "\x12"
 def test3 : String := "\x00"

@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4, test5, test6
 def F := ∀ {α β γ : Type}, α → β → γ
 
 -- test1: annotate that (g "foo" a) produces Unit

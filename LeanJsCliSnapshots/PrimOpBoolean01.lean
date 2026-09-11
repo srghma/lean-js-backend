@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4, test5, test6, test7, test8, test9
 def test1 (a b : Bool) : Bool := a && b
 def test2 (a b : Bool) : Bool := a || b
 def test3 (a b : Bool) : Bool := a == b

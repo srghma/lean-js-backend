@@ -1,3 +1,4 @@
+-- @js_export: Color, RedBlackTree, test1
 inductive Color where
   | Red
   | Black

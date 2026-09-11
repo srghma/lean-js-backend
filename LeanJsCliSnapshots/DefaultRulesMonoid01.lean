@@ -1,3 +1,4 @@
+-- @js_export: test1, test2
 -- 2. Scoped to `Monoid` to avoid clashing with Lean's built-in Alternative `guard`
 namespace Monoid
   def guard {M : Type} [EmptyCollection M] (b : Bool) (a : M) : M :=

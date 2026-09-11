@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 def test1 (f : Int → Int → Int → Int) (g : Int → Int) : Int := f (g 1) 2 3
 def test2 (f : Int → Int → Int → Int) (g : Int → Int) (i : Int) : Int := f (g 1) 2 i
 def test3 (f : Int → Int → Int → Int) (g : Int → Int) (i j : Int) : Int := f (g 1) i j

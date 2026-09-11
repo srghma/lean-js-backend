@@ -1,3 +1,4 @@
+-- @js_export: test
 def test (random : IO Int) (value : Unit → Int) : IO Int := do
   let x ← random
   let n ← do

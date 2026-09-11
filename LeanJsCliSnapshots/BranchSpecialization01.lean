@@ -1,3 +1,4 @@
+-- @js_export: TestEnum, instBEqTestEnum, test1, test2
 inductive TestEnum where
   | foo
   | bar

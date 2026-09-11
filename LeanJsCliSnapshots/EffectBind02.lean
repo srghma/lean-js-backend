@@ -1,3 +1,4 @@
+-- @js_export: test
 def MyEffect (α : Type) := IO α
 
 instance : Monad MyEffect := inferInstanceAs (Monad IO)

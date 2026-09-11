@@ -1,3 +1,4 @@
+-- @js_export: assertEqual, assertEqual3, main
 def diffWithIxE {b c d : Type} [Inhabited b] [Inhabited c]
   (a1 : Array b)
   (a2 : Array c)

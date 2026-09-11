@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 abbrev F := Unit → Int → Int
 
 -- f and g should be evaluated only once because of Common Subexpression Elimination (CSE)

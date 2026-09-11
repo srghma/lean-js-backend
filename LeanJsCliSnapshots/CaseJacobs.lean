@@ -1,3 +1,4 @@
+-- @js_export: Expr, instToStringExpr, test1
 inductive Expr where
   | add (a : Expr) (b : Expr)
   | mul (a : Expr) (b : Expr)

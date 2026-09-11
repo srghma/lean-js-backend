@@ -1,3 +1,4 @@
+-- @js_export: test1, test2
 def test1 (random : IO Int) : IO Unit := do
   let n ← random
   if n > 100 then

@@ -1,3 +1,4 @@
+-- @js_export: extern, externTest, fn, localTest, test1, test2, test3, test4, test5, test6, test7, test8
 def fn {α : Type} (_ : α) : Int := 0
 
 structure SubRec2 where

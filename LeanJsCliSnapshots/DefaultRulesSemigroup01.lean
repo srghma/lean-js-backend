@@ -1,3 +1,4 @@
+-- @js_export: test1, test2
 abbrev F := Int → String
 
 -- Pointwise Semigroup (Append) instance for functions: (f ++ g) x = f x ++ g x

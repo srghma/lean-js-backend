@@ -1,3 +1,4 @@
+-- @js_export: test1, test2
 def MyId (α : Type) := Unit → α
 
 instance : Monad MyId where

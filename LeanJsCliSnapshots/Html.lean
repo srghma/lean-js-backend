@@ -1,3 +1,4 @@
+-- @js_export: Html, Elem, Text, article1, h11, h21, p1, section1, test
 inductive Html where
   | elem (tag : String) (children : List Html)
   | text (content : String)

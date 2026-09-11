@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 def test1 : Int := 2000000000 + 2000000000
 def test2 : Int := -2000000000 - 2000000000
 def test3 : Int := 2000000000 * 2000000000

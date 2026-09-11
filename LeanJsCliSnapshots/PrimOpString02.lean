@@ -1,3 +1,4 @@
+-- @js_export: stringValues, test1, test2, test3, test4, test5, test6, test7
 def stringValues {α : Type} (op : String → String → α) : Array α :=
   #[ op "a" "a", op "a" "b", op "b" "a" ]
 

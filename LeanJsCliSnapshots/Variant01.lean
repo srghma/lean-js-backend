@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3
 inductive Variant where
   | foo : Int → Variant
   | bar : Bool → Variant

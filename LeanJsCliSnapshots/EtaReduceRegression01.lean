@@ -1,3 +1,4 @@
+-- @js_export: fold, identity, test
 -- 1. Identity function (exported standalone)
 def identity (x : α) : α := x
 

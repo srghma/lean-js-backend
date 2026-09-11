@@ -1,3 +1,4 @@
+-- @js_export: test1, when$p
 def when' (bool : Bool) (k : Unit → IO Unit) : IO Unit :=
   if bool then k () else pure ()
 

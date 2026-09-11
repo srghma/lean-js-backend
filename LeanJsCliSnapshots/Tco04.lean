@@ -1,3 +1,4 @@
+-- @js_export: test1, test2
 mutual
   partial def test1 (n : Int) : Int :=
     if n == 1 then n else test2 (n - 1)

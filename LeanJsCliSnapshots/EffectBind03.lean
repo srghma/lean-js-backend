@@ -1,3 +1,4 @@
+-- @js_export: test
 structure MyEffect (α : Type) where
   val : IO α
 

@@ -1,3 +1,4 @@
+-- @js_export: extern, fn$p, test1, test2
 structure Rec where
   a : Int
   b : Int

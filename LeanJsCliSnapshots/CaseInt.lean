@@ -1,3 +1,4 @@
+-- @js_export: test1
 def test1 : Int → String
   | 1 => "1"
   | 2 => "2"

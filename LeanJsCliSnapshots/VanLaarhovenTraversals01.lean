@@ -1,3 +1,4 @@
+-- @js_export: Fun, Abs, App, rewriteBottomUp, rewriteBottomUpM, traverseFun1
 inductive Fun where
   | Abs : String → Fun → Fun
   | App : Fun → Fun → Fun

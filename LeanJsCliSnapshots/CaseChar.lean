@@ -1,3 +1,4 @@
+-- @js_export: test1
 def test1 : Char → String
   | 'a' => "1"
   | 'b' => "2"

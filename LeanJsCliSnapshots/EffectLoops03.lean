@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 def test1 (cond : IO.Ref Bool) : IO Unit := do
   while (← cond.get) do
     IO.println "foo"

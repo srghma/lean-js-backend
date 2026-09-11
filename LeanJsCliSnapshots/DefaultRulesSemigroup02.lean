@@ -1,3 +1,4 @@
+-- @js_export: appendR, test1, test2, test3, test4
 structure R where
   foo : String
   bar : Array String

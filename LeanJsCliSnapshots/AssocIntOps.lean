@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4, test5, test6
 def test1 (x : Int) : Int :=
   1 + (((((2 + x) + x) + x) + x) + 3) + 4
 

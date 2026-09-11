@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4, test5
 open Option
 
 -- 1. PureScript's `<#>` (map flipped)

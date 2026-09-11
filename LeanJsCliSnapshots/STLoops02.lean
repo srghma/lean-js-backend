@@ -1,3 +1,4 @@
+-- @js_export: test1, test2, test3, test4
 def test1 (ref : IO.Ref Int) (lo hi : Nat) : IO Unit := do
   for a in [lo + 1 : hi + 1] do
     let val ← ref.get
