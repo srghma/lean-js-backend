@@ -1,3 +1,10 @@
+import Std.Data.HashMap
+open Std
+
+-- XXX:
+-- HashMap String a are optimized to JS.Object
+-- HashMap Int a are optimized to JS.Map
+
 structure Merged where
   a : String
   b : Int
@@ -15,11 +22,12 @@ def diffWithIxE {b c d : Type} [Inhabited b] [Inhabited c]
   (f1 : Int → b → c → IO d)
   (f2 : Int → b → IO Unit)
   (f3 : Int → c → IO d) : IO (Array d) := do
-  let mut a3 := #[]
+  let mut a3 : Array d := #[]
   let l1 := a1.size
   let l2 := a2.size
   let l3 := if l1 < l2 then l2 else l1
-  for i in List.range l3 do
+
+  for i in [:l3] do
     if i < l1 then
       if i < l2 then
         let v1 := a1[i]!
@@ -33,29 +41,33 @@ def diffWithIxE {b c d : Type} [Inhabited b] [Inhabited c]
       let v2 := a2[i]!
       let v3 ← f3 i v2
       a3 := a3.push v3
-  pure a3
+
+  return a3
 
 def diffWithKeyAndIxE {a b c d : Type} [Inhabited b]
-  (o1 : List (String × a))
+  (o1 : HashMap String a)
   (as : Array b)
   (fk : b → String)
   (f1 : String → Int → a → b → IO c)
   (f2 : String → a → IO d)
-  (f3 : String → Int → b → IO c) : IO (List (String × c)) := do
-  let mut o2 : List (String × c) := []
-  for i in List.range as.size do
-    let a := as[i]!
-    let k := fk a
-    match o1.find? (fun (k', _) => k' == k) with
-    | some (_, v1) =>
-      let v2 ← f1 k i v1 a
-      o2 := (k, v2) :: o2
-    | none =>
-      let v2 ← f3 k i a
-      o2 := (k, v2) :: o2
+  (f3 : String → Int → b → IO c) : IO (HashMap String c) := do
+  let mut o2 : HashMap String c := {}
 
+  -- 1. Traverse new array: update existing or create new
+  for i in [:as.size] do
+    let b := as[i]!
+    let k := fk b
+    match o1.get? k with
+    | some v1 =>
+      let v2 ← f1 k i v1 b
+      o2 := o2.insert k v2
+    | none =>
+      let v2 ← f3 k i b
+      o2 := o2.insert k v2
+
+  -- 2. Remove keys present in o1 but missing in o2
   for (k, v1) in o1 do
-    if o2.find? (fun (k', _) => k' == k) |>.isNone then
+    if !o2.contains k then
       let _ ← f2 k v1
 
-  pure o2.reverse
+  return o2

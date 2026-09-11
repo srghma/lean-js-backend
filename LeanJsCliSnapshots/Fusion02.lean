@@ -1,62 +1,76 @@
+-- Fusion02 is Unfold-based (Pull / Forward)
+-- → In Lean std, this corresponds to for x in arr or Array.filterMap.
+
+-- 1. Church-encoded Step
+def Step (α : Type) (s : Type) : Type 1 :=
+  {r : Type} → (Unit → r) → (s → α → r) → r
+
+-- 2. Existential Unfold Stream
 structure Unfold (α : Type) where
-  σ : Type
-  s : σ
-  step : σ → ∀ {ρ : Type}, (Unit → ρ) → (σ → α → ρ) → ρ
+  State : Type
+  seed  : State
+  step  : State → Step α State
 
-def mapU {α β : Type} (f : α → β) (u : Unfold α) : Unfold β :=
-  { σ := u.σ, s := u.s, step := fun s {_ρ} nothing just => u.step s nothing (fun s' a => just s' (f a)) }
+-- 3. Stream combinators (notice `{r}` added to `step`)
+@[inline]
+def mapU (f : α → β) (u : Unfold α) : Unfold β where
+  State := u.State
+  seed  := u.seed
+  step s {_r} nothing just :=
+    u.step s nothing (fun s' a => just s' (f a))
 
-def stepToOption (u : Unfold α) (s : u.σ) : Option (u.σ × α) :=
-  u.step s (fun _ => none) (fun s' a => some (s', a))
+@[inline]
+unsafe def filterMapU (f : α → Option β) (u : Unfold α) : Unfold β where
+  State := u.State
+  seed  := u.seed
+  step s2 {r} nothing just :=
+    let rec loop s3 :=
+      u.step s3 nothing (fun s4 a =>
+        match f a with
+        | none   => loop s4
+        | some b => just s4 b)
+    loop s2
 
-partial def filterMapU {α β : Type} (f : α → Option β) (u : Unfold α) : Unfold β :=
-  let rec step' (s : u.σ) : Option (u.σ × β) :=
-    match stepToOption u s with
-    | none => none
-    | some (s', a) =>
-      match f a with
-      | none => step' s'
-      | some b => some (s', b)
-  { σ := u.σ, s := u.s, step := fun s {_ρ} nothing just =>
-    match step' s with
-    | none => nothing ()
-    | some (s', b) => just s' b
-  }
-
-def filterU {α : Type} (p : α → Bool) (u : Unfold α) : Unfold α :=
+@[inline]
+unsafe def filterU (p : α → Bool) (u : Unfold α) : Unfold α :=
   filterMapU (fun a => if p a then some a else none) u
 
-def fromArray {α : Type} (arr : Array α) : Unfold α :=
-  { σ := Nat, s := 0, step := fun i {ρ} nothing just =>
-    if h : i < arr.size then
-      just (i + 1) arr[i]
+-- 4. Conversions (notice `{r}` added to `step`)
+@[inline]
+def fromArray (arr : Array α) : Unfold α where
+  State := Nat
+  seed  := 0
+  step ix {r} nothing just :=
+    if h : ix < arr.size then
+      just (ix + 1) arr[ix]
     else
       nothing ()
-  }
 
-partial def toArray {α : Type} (u : Unfold α) : Array α :=
-  let rec loop (s : u.σ) (acc : List α) : List α :=
-    match stepToOption u s with
-    | none => acc
-    | some (s', a) => loop s' (a :: acc)
-  (loop u.s []).reverse.toArray
+@[inline]
+unsafe def toArray (u : Unfold α) : Array α :=
+  let rec loop (s : u.State) (acc : List α) : Array α :=
+    u.step s
+      (fun _ => acc.reverse.toArray)
+      (fun s' a => loop s' (a :: acc))
+  loop u.seed []
 
-def test (arr : Array Int) : Array String :=
-  let u := fromArray arr
-  let u := mapU (fun x => x + 1) u
-  let u := mapU toString u
-  let u := filterMapU (fun s => if s.startsWith "1" then some (s.drop 1).copy else none) u
-  let u := mapU (fun s => "2" ++ s) u
-  let u := filterU (fun s => s != "wat") u
-  let u := mapU (fun s => s ++ "1") u
-  toArray u
+-- @[inline] export overArray
+@[inline]
+unsafe def overArray (f : Unfold α → Unfold β) (arr : Array α) : Array β :=
+  toArray (f (fromArray arr))
 
-def printArray (arr : Array String) : IO Unit := do
-  IO.print "#["
-  let mut first := true
-  for a in arr do
-    if !first then IO.print ", "
-    IO.print "\""
-    IO.print a
-    IO.print "\""
-    first := false
+-- 5. Helper for dropPrefix1
+@[inline]
+def dropPrefix1 (s : String) : Option String :=
+  if s.startsWith "1" then some (s.drop 1).toString else none
+
+-- 6. The fused pipeline
+unsafe def test (arr : Array Int) : Array String :=
+  flip overArray arr fun u =>
+    u
+      |> mapU (· + 1)
+      |> mapU toString
+      |> filterMapU dropPrefix1
+      |> mapU ("2" ++ ·)
+      |> filterU (· != "wat")
+      |> mapU (· ++ "1")

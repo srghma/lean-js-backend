@@ -1,23 +1,17 @@
 const test4 = f => g => {
   const $0 = g();
   const $1 = f();
-  const $2 = g();
-  const $3 = f();
-  const $4 = g();
-  return x => $0($1($2($3($4(x)))));
+  return x => $0($1($0($1($0(x)))));
 };
 const test3 = f => g => {
   const $0 = f();
   const $1 = g();
-  const $2 = f();
-  const $3 = g();
-  return x => $0($1($2($3(x))));
+  return x => $0($1($0($1(x))));
 };
 const test2 = f => g => {
   const $0 = g();
   const $1 = f();
-  const $2 = g();
-  return x => $0($1($2(x)));
+  return x => $0($1($0(x)));
 };
 const test1 = f => g => {
   const $0 = f();

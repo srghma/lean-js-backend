@@ -1,0 +1,6 @@
+{
+	"devDependencies": {
+		"mitata": "^1.0.34",
+		"playwright": "^1.63.0"
+	}
+}

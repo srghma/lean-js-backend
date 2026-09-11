@@ -1,5 +1,6 @@
 const test1 = f => a => b => {
-  if (f(a) && f(b) ? f(a) : true) { return f(a); }
+  const $0 = f(a);
+  if ($0 && f(b) ? $0 : true) { return $0; }
   return f();
 };
-export {test1};
+export { test1 };
