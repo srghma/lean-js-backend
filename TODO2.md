@@ -1,10 +1,3 @@
-is it true that dflt in
-| foldEnum (fam : LeanRecFamily) (scrut : Expr n g)
-           (branches : Branches fam n g)
-           (dflt : Expr n g) : Expr n g
-is not needed? bc in current implementation of renderer dflt is always an error?
-
-
 2. how can we improve ObjProps to not have duplicate keys? Does it make sense to restrict it?
 
 3.

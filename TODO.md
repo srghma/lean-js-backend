@@ -26,61 +26,6 @@ Concretely, in the fold-over-array case, descend into `body` under `Γ.extend [a
 
 -------------------
 
-## 4. A `letIn` node, and CSE on top of it
-
-Still the right answer to code size: the derived methods duplicate their callbacks, and there is no way to name a value. Add a binder node whose meaning is running the body in the environment extended with the right-hand side's value. It is strictly additive but it touches every traversal (both interpreters, renderer, renaming and substitution, the rewrite relation, termination and confluence, the checker). Budget it as a real project, and stage it: first the node with its meaning, renaming and typing rule; then the rewrite rules (inline a value, inline a variable used at most once, drop an unused binding); only then common-subexpression elimination, which needs an equality test on terms and a size measure to decide when sharing pays.
-
-Carry: the β-law, that inlining preserves meaning, and that the new rules do not disturb the termination measure — the last one is the one that can bite, since inlining duplicates terms.
-
-## What the proposal is
-
-Today the language has no way to *name* a value. Every binder in `Expr` is a fold branch, so anything that wants to use a sub-result twice has to duplicate the term that computes it — which is why the derived methods copy their callbacks, and why the optimizer sometimes has to choose between duplicating work and not firing a rule at all.
-
-The proposal adds one node, a non-recursive binder:
-
-```
-| letIn (rhs : Expr n g) (body : Expr (n + 1) g) : Expr n g
-```
-
-whose meaning is: evaluate `rhs`, then evaluate `body` in the environment extended with that value. Because the body is `Expr (n+1) g`, the new variable is just another de Bruijn hole and the existing convention (parameters occupy the last indices) carries over unchanged. It adds no new shape of recursion, so nothing about termination of the *object language* changes — a `letIn` is structurally smaller than nothing new, it is just another node with a sub-body.
-
-On top of it come, in stages:
-
-1. **The node and its meaning** — constructor, both interpreters, the size measure, renaming/substitution, the renderer, the typing rule (type the rhs, extend the environment, type the body).
-2. **The rewrite rules** — inline when the rhs is a literal/value, inline when the bound variable occurs at most once, drop the binding when it occurs zero times, and (optionally) float a `let` out of an operand position.
-3. **CSE** — introducing a `let` for a repeated subterm. This is the genuinely new machinery: it needs a decidable equality on terms (or a hash/structural key) and a size/occurrence measure to decide when sharing is worth it.
-
-The obligations that have to be re-established: the β-law (`run (letIn a b) ρ = run b (ρ, run a ρ)`), that inlining preserves meaning, and that the new rules keep the termination measure decreasing. The last is the risky one — inlining a variable that occurs once is size-decreasing, but inlining a value duplicates it, and CSE moves in the opposite direction from every other rule, so the measure (and the confluence/diamond argument) has to be re-tuned rather than merely re-checked. That is where the real cost of this project sits, not in the node itself.
-
-## Will `Expr`/`BExpr` change?
-
-`Expr` — yes, one new constructor in the mutual block. `BExpr` — no new constructor is needed: a boolean-valued `let` can be written as `BExpr.truthy (Expr.letIn …)`, and adding `letIn` to `BExpr` too would double the work on every traversal for no expressive gain. But `BExpr`'s *traversals* still change, because they recurse into `Expr`, and the fact that `BExpr` cannot bind means `let`-floating out of a condition has to go through `Expr`.
-
-## Main files touched (short list)
-
-- `LakeJs/Expr.lean` — the constructor, `mono`, `size`.
-- `LakeJs/Run.lean`, `LakeJs/RunStrict.lean`, `LakeJs/RunRefine.lean` — both interpreters and their agreement.
-- `LakeJs/Subst.lean`, `LakeJs/RenameNodes.lean`, `LakeJs/RenameEngine.lean`, `LakeJs/RunRename.lean` — renaming/substitution and their laws.
-- `LakeJs/EvalCore.lean`, `LakeJs/Eval.lean`, `LakeJs/EngineValue*.lean` — the partial evaluator and its value layer.
-- `LakeJs/Rewrite.lean`, `LakeJs/Terminating.lean`, `LakeJs/Diamond.lean`, `LakeJs/Idempotent.lean`, `LakeJs/Normal*.lean` — the rewrite relation and its metatheory (the expensive part).
-- `LakeJs/Render.lean` — emitting the binding (as an IIFE, a comma/sequence, or a statement if the statement layer is used).
-- `LakeJs/TyCheck.lean`, `LakeJs/TySound.lean`, `LakeJs/TyPreserve.lean` (and the deep-lattice counterparts) — the typing rule and preservation.
-- `LakeJs/Stage.lean`, `LakeJs/Elab.lean`, plus the test files.
-
-## Does `Expr.optimize` behave differently?
-
-Yes — that is the point of stages 2 and 3. On terms containing no `letIn` and with CSE switched off, it should be observationally the same optimizer; but once the derived methods start emitting `let` instead of duplicating callbacks, the *output terms* change (they become smaller and share work), and the normal forms change shape accordingly. Its type and its contracts — totality, determinism, idempotence, never inventing a global — are meant to survive with their statements unchanged; only their proofs grow cases.
-
-## Does `Expr.run` behave differently?
-
-Not on any term you can write today: `run` is defined by recursion on the term, so on `letIn`-free terms it is unchanged, and every existing theorem about it stays true as stated. What changes is that it gains one new equation for the new node. Note the semantic fine print: `letIn` is *call-by-value* in the interpreter (the rhs is evaluated once), whereas inlining it into a body that uses the variable zero or two times is call-by-name — since the language is pure and total, those agree in result, which is exactly why "inlining preserves meaning" is provable here and would not be in a language with effects or divergence.
-
-# ALSO
-
-optimize rendering when `letIn` is used inside of `cond` - instead of rendering IIFE - can render `if else + return` (if it makes sense)
-
-------------------------------
-
 ## 5. A recursive `tree` atom in the deep lattice
 
 The deep lattice can say "an array of numbers" but not "a list of numbers", so the deep checker falls back to the flat one for folds. Now that the tree judgement exists on values, promote it to an atom carrying a family (and, for a mutual family, a member), whose denotation is exactly that judgement, and give `foldEnum` a deep rule whose invariant is a deep type.
@@ -111,7 +56,6 @@ The separate piece that now exists is a judgement *on runtime values*: "this val
 ## 6. Object spread and computed keys
 
 Property lists have no spread, so `{...o, k: v}`, `Object.assign`, `Object.fromEntries` and `groupBy` remain out of reach; the array side has had spread all along. Add both to the property list, with the last-key-wins, first-position-wins order the property lookup already implements, and give the deep object type the corresponding merge. Smaller blast radius than a new expression node, and it closes the list of genuinely underivable methods.
-
 
 # What the proposal is
 
