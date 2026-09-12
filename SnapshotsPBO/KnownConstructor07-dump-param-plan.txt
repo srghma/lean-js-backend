@@ -1,0 +1,18 @@
+════ test
+-- IR
+def test (x_1 : obj) (x_2 : tobj) : obj :=
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : tobj := test._closed_0;
+  let x_5 : tobj := Int.add x_3 x_4;
+  dec x_4;
+  let x_6 : tobj := test._closed_1;
+  let x_7 : tobj := Int.sub x_3 x_6;
+  dec x_6;
+  dec x_3;
+  let x_8 : obj := ctor_0[PairBox.mk] x_5 x_7;
+  ret x_8
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+

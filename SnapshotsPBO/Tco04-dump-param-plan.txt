@@ -1,0 +1,44 @@
+════ test1
+-- IR
+def test1 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : u8 := Int.decEq x_1 x_2;
+  case x_3 : u8 of
+  Bool.false →
+    let x_4 : tobj := Int.sub x_1 x_2;
+    dec x_2;
+    let x_5 : tobj := test2 x_4;
+    dec x_4;
+    ret x_5
+  Bool.true →
+    dec x_2;
+    inc x_1;
+    ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+   from test2: [?]
+
+════ test2
+-- IR
+def test2 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test2._closed_0;
+  let x_3 : u8 := Int.decEq x_1 x_2;
+  case x_3 : u8 of
+  Bool.false →
+    let x_4 : tobj := Int.sub x_1 x_2;
+    dec x_2;
+    let x_5 : tobj := test1 x_4;
+    dec x_4;
+    ret x_5
+  Bool.true →
+    dec x_2;
+    inc x_1;
+    ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+   from test1: [?]
+

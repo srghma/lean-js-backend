@@ -1,0 +1,169 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : @& tobj) (x_2 : void) : obj :=
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test1.spec_1._redArg x_1 x_3 ◾;
+  case x_4 : obj of
+  EST.Out.ok →
+    let x_5 : u8 := isShared x_4;
+    case x_5 : u8 of
+    Bool.false →
+      let x_6 : tobj := proj[0] x_4;
+      dec x_6;
+      set x_4[0] := x_3;
+      ret x_4
+    Bool.true →
+      dec x_4;
+      let x_7 : obj := ctor_0[EST.Out.ok] x_3;
+      ret x_7
+  EST.Out.error →
+    ret x_4
+════ test1 after
+def test1 (x_1 : @& tobj) (x_2 : void) : obj :=
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test1.spec_1._redArg x_1 x_3 ◾;
+  case x_4 : obj of
+  EST.Out.ok →
+    let x_5 : u8 := isShared x_4;
+    case x_5 : u8 of
+    Bool.false →
+      let x_6 : tobj := proj[0] x_4;
+      dec x_6;
+      set x_4[0] := x_3;
+      ret x_4
+    Bool.true →
+      dec x_4;
+      let x_7 : obj := ctor_0[EST.Out.ok] x_3;
+      ret x_7
+  EST.Out.error →
+    ret x_4
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : @& tobj) (x_2 : void) : obj :=
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test2.spec_0._redArg x_1 x_3 ◾;
+  case x_4 : obj of
+  EST.Out.ok →
+    dec x_4;
+    let x_5 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test2.spec_1._redArg x_1 x_3 ◾;
+    case x_5 : obj of
+    EST.Out.ok →
+      let x_6 : u8 := isShared x_5;
+      case x_6 : u8 of
+      Bool.false →
+        let x_7 : tobj := proj[0] x_5;
+        dec x_7;
+        set x_5[0] := x_3;
+        ret x_5
+      Bool.true →
+        dec x_5;
+        let x_8 : obj := ctor_0[EST.Out.ok] x_3;
+        ret x_8
+    EST.Out.error →
+      ret x_5
+  EST.Out.error →
+    ret x_4
+════ test2 after
+def test2 (x_1 : @& tobj) (x_2 : void) : obj :=
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test2.spec_0._redArg x_1 x_3 ◾;
+  case x_4 : obj of
+  EST.Out.ok →
+    dec x_4;
+    let x_5 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test2.spec_1._redArg x_1 x_3 ◾;
+    case x_5 : obj of
+    EST.Out.ok →
+      let x_6 : u8 := isShared x_5;
+      case x_6 : u8 of
+      Bool.false →
+        let x_7 : tobj := proj[0] x_5;
+        dec x_7;
+        set x_5[0] := x_3;
+        ret x_5
+      Bool.true →
+        dec x_5;
+        let x_8 : obj := ctor_0[EST.Out.ok] x_3;
+        ret x_8
+    EST.Out.error →
+      ret x_5
+  EST.Out.error →
+    ret x_4
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : void) : obj :=
+  let x_4 : tagged := ctor_0[PUnit.unit];
+  let x_5 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test3.spec_0._redArg x_1 x_4 x_2 ◾;
+  case x_5 : obj of
+  EST.Out.ok →
+    let x_6 : u8 := isShared x_5;
+    case x_6 : u8 of
+    Bool.false →
+      let x_7 : tobj := proj[0] x_5;
+      dec x_7;
+      set x_5[0] := x_4;
+      ret x_5
+    Bool.true →
+      dec x_5;
+      let x_8 : obj := ctor_0[EST.Out.ok] x_4;
+      ret x_8
+  EST.Out.error →
+    ret x_5
+════ test3 after
+def test3 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : void) : obj :=
+  let x_4 : tagged := ctor_0[PUnit.unit];
+  let x_5 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test3.spec_0._redArg x_1 x_4 x_2 ◾;
+  case x_5 : obj of
+  EST.Out.ok →
+    let x_6 : u8 := isShared x_5;
+    case x_6 : u8 of
+    Bool.false →
+      let x_7 : tobj := proj[0] x_5;
+      dec x_7;
+      set x_5[0] := x_4;
+      ret x_5
+    Bool.true →
+      dec x_5;
+      let x_8 : obj := ctor_0[EST.Out.ok] x_4;
+      ret x_8
+  EST.Out.error →
+    ret x_5
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : void) : obj :=
+  let x_4 : tagged := ctor_0[PUnit.unit];
+  let x_5 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test4.spec_0._redArg x_1 x_4 x_2 ◾;
+  case x_5 : obj of
+  EST.Out.ok →
+    let x_6 : u8 := isShared x_5;
+    case x_6 : u8 of
+    Bool.false →
+      let x_7 : tobj := proj[0] x_5;
+      dec x_7;
+      set x_5[0] := x_4;
+      ret x_5
+    Bool.true →
+      dec x_5;
+      let x_8 : obj := ctor_0[EST.Out.ok] x_4;
+      ret x_8
+  EST.Out.error →
+    ret x_5
+════ test4 after
+def test4 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : void) : obj :=
+  let x_4 : tagged := ctor_0[PUnit.unit];
+  let x_5 : obj := _private.Init.While.0.Lean.Loop.forIn.loop._at_.test4.spec_0._redArg x_1 x_4 x_2 ◾;
+  case x_5 : obj of
+  EST.Out.ok →
+    let x_6 : u8 := isShared x_5;
+    case x_6 : u8 of
+    Bool.false →
+      let x_7 : tobj := proj[0] x_5;
+      dec x_7;
+      set x_5[0] := x_4;
+      ret x_5
+    Bool.true →
+      dec x_5;
+      let x_8 : obj := ctor_0[EST.Out.ok] x_4;
+      ret x_8
+  EST.Out.error →
+    ret x_5
+════ test4 parameter plan: (every parameter kept)

@@ -1,0 +1,42 @@
+════ 🎯 test
+def test random value a.1 : EST.Out IO.Error lcAny Int :=
+  let _x.2 := random a.1;
+  cases _x.2 : EST.Out IO.Error lcAny Int
+  | EST.Out.ok a.3 a.4 =>
+    let _x.5 := random a.4;
+    cases _x.5 : EST.Out IO.Error lcAny Int
+    | EST.Out.ok a.6 a.7 =>
+      let _x.8 := random a.7;
+      cases _x.8 : EST.Out IO.Error lcAny Int
+      | EST.Out.ok a.9 a.10 =>
+        let _x.11 := random a.10;
+        cases _x.11 : EST.Out IO.Error lcAny Int
+        | EST.Out.ok a.12 a.13 =>
+          let _x.14 := PUnit.unit;
+          let _x.15 := value _x.14;
+          let _x.16 := Int.add _x.15 _x.15;
+          let _x.17 := Int.add _x.16 _x.16;
+          let _x.18 := Int.add a.6 a.9;
+          let _x.19 := Int.add _x.18 _x.17;
+          let _x.20 := Int.add _x.19 _x.17;
+          let _x.21 := Int.add a.3 _x.20;
+          let _x.22 := Int.sub _x.21 a.12;
+          let _x.23 := @EST.Out.ok _ _ _ _x.22 a.13;
+          return _x.23
+        | EST.Out.error a.24 a.25 =>
+          return _x.11
+      | EST.Out.error a.26 a.27 =>
+        return _x.8
+    | EST.Out.error a.28 a.29 =>
+      return _x.5
+  | EST.Out.error a.30 a.31 =>
+    return _x.2
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 Int.sub
+def Int.sub @&m @&n : Int :=
+  extern
+

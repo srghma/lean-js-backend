@@ -1,0 +1,29 @@
+════ 🎯 f
+-- LCNF (saveMono): not stored
+
+════ 🎯 g
+-- LCNF (saveMono): not stored
+
+════ 🎯 test1
+def test1 : PUnit :=
+  let _x.1 := PUnit.unit;
+  return _x.1
+
+════ 🎯 test2
+def test2 : PUnit :=
+  let _x.1 := PUnit.unit;
+  return _x.1
+
+════ 🎯 testImpl
+def testImpl u : PUnit :=
+  return u
+
+════ 🎯 wat
+-- LCNF (saveMono): not stored
+
+════ 🎯 wat1
+-- LCNF (saveMono): not stored
+
+════ 🎯 watUnit
+-- LCNF (saveMono): not stored
+

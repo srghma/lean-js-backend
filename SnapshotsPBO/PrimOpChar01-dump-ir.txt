@@ -1,0 +1,54 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : u32) : tobj :=
+  let x_2 : tobj := UInt32.toNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+❌ ⚠️ Name 'test2' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 test3
+❌ ⚠️ Name 'test3' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 test4
+❌ ⚠️ Name 'test4' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 test5
+❌ ⚠️ Name 'test5' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 test6
+❌ ⚠️ Name 'test6' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 📦 UInt32.toNat
+-- IR (what the backend reads)
+extern UInt32.toNat (x_1 : u32) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_uint32_to_nat"
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.PrimOpChar01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (2): [`test1, `UInt32.toNat]
+ctors (0): []
+inducts (0): []

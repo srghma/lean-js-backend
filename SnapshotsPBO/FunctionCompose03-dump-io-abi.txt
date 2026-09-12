@@ -1,0 +1,1 @@
+FunctionCompose03: throws

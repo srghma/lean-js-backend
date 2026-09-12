@@ -1,0 +1,152 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : @& obj) : obj :=
+  let x_2 : tagged := Array.size ◾ x_1;
+  let x_3 : tagged := 0;
+  let x_4 : u8 := Nat.decEq x_2 x_3;
+  case x_4 : u8 of
+  Bool.false →
+    let x_5 : tagged := 1;
+    let x_6 : u8 := Nat.decEq x_2 x_5;
+    case x_6 : u8 of
+    Bool.false →
+      let x_7 : tagged := 2;
+      let x_8 : u8 := Nat.decEq x_2 x_7;
+      case x_8 : u8 of
+      Bool.false →
+        let x_9 : tagged := 3;
+        let x_10 : u8 := Nat.decEq x_2 x_9;
+        case x_10 : u8 of
+        Bool.false →
+          let x_11 : obj := test1._closed_0;
+          ret x_11
+        Bool.true →
+          let x_12 : obj := test1._closed_1;
+          ret x_12
+      Bool.true →
+        let x_13 : tobj := Array.getInternalBorrowed ◾ x_1 x_5 ◾;
+        let x_14 : u8 := Nat.decEq x_13 x_7;
+        case x_14 : u8 of
+        Bool.false →
+          let x_15 : obj := test1._closed_0;
+          ret x_15
+        Bool.true →
+          let x_16 : obj := test1._closed_2;
+          ret x_16
+    Bool.true →
+      let x_17 : tobj := Array.getInternalBorrowed ◾ x_1 x_3 ◾;
+      let x_18 : u8 := Nat.decEq x_17 x_5;
+      case x_18 : u8 of
+      Bool.false →
+        let x_19 : obj := test1._closed_3;
+        ret x_19
+      Bool.true →
+        let x_20 : obj := test1._closed_4;
+        ret x_20
+  Bool.true →
+    let x_21 : obj := test1._closed_5;
+    ret x_21
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Array.getInternalBorrowed
+-- IR (what the backend reads)
+extern Array.getInternalBorrowed (x_1 : ◾) (x_2 : @& obj) (x_3 : @& tobj) (x_4 : ◾) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_fget_borrowed"
+decl.hashKeyType?: none
+
+════ 📦 Array.size
+-- IR (what the backend reads)
+extern Array.size (x_1 : ◾) (x_2 : @& obj) : tagged
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_get_size"
+decl.hashKeyType?: none
+
+════ 📦 Nat.decEq
+-- IR (what the backend reads)
+extern Nat.decEq (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_dec_eq"
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_0
+-- IR (what the backend reads)
+def test1._closed_0 : obj :=
+  let x_1 : obj := "catch";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_1
+-- IR (what the backend reads)
+def test1._closed_1 : obj :=
+  let x_1 : obj := "3";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_2
+-- IR (what the backend reads)
+def test1._closed_2 : obj :=
+  let x_1 : obj := "2";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_3
+-- IR (what the backend reads)
+def test1._closed_3 : obj :=
+  let x_1 : obj := "any1";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_4
+-- IR (what the backend reads)
+def test1._closed_4 : obj :=
+  let x_1 : obj := "1";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_5
+-- IR (what the backend reads)
+def test1._closed_5 : obj :=
+  let x_1 : obj := "0";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.CaseArray]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (10): [`test1,
+ `Array.getInternalBorrowed,
+ `Array.size,
+ `Nat.decEq,
+ `test1._closed_0,
+ `test1._closed_1,
+ `test1._closed_2,
+ `test1._closed_3,
+ `test1._closed_4,
+ `test1._closed_5]
+ctors (2): [`Bool.false, `Bool.true]
+inducts (1): [`Bool]

@@ -1,0 +1,50 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : u8) (x_2 : u8) (x_3 : u8) : tobj :=
+  case x_1 : u8 of
+  Bool.false →
+    case x_3 : u8 of
+    Bool.false →
+      let x_4 : tobj := test1._closed_0;
+      ret x_4
+    Bool.true →
+      let x_5 : tobj := test1._closed_1;
+      ret x_5
+  Bool.true →
+    case x_2 : u8 of
+    Bool.false →
+      case x_3 : u8 of
+      Bool.false →
+        let x_6 : tobj := test1._closed_0;
+        ret x_6
+      Bool.true →
+        let x_7 : tobj := test1._closed_1;
+        ret x_7
+    Bool.true →
+      let x_8 : tobj := test1._closed_2;
+      ret x_8
+════ test1 after
+def test1 (x_1 : u8) (x_2 : u8) (x_3 : u8) : tobj :=
+  case x_1 : u8 of
+  Bool.false →
+    case x_3 : u8 of
+    Bool.false →
+      let x_4 : tobj := test1._closed_0;
+      ret x_4
+    Bool.true →
+      let x_5 : tobj := test1._closed_1;
+      ret x_5
+  Bool.true →
+    case x_2 : u8 of
+    Bool.false →
+      case x_3 : u8 of
+      Bool.false →
+        let x_6 : tobj := test1._closed_0;
+        ret x_6
+      Bool.true →
+        let x_7 : tobj := test1._closed_1;
+        ret x_7
+    Bool.true →
+      let x_8 : tobj := test1._closed_2;
+      ret x_8
+════ test1 parameter plan: (every parameter kept)

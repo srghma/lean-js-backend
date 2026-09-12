@@ -1,0 +1,19 @@
+════ split plans
+════ diffWithIxE before
+def diffWithIxE (x_1 : ◾) (x_2 : ◾) (x_3 : ◾) (x_4 : tobj) (x_5 : tobj) (x_6 : obj) (x_7 : obj) (x_8 : obj) (x_9 : obj) (x_10 : obj) (x_11 : void) : obj :=
+  let x_12 : obj := diffWithIxE._redArg x_4 x_5 x_6 x_7 x_8 x_9 x_10 ◾;
+  ret x_12
+════ diffWithIxE after
+def diffWithIxE (x_1 : ◾) (x_2 : ◾) (x_3 : ◾) (x_4 : tobj) (x_5 : tobj) (x_6 : obj) (x_7 : obj) (x_8 : obj) (x_9 : obj) (x_10 : obj) (x_11 : void) : obj :=
+  let x_12 : obj := diffWithIxE._redArg x_4 x_5 x_6 x_7 x_8 x_9 x_10 ◾;
+  ret x_12
+════ diffWithIxE parameter plan: (every parameter kept)
+════ diffWithKeyAndIxE before
+def diffWithKeyAndIxE (x_1 : ◾) (x_2 : ◾) (x_3 : ◾) (x_4 : ◾) (x_5 : tobj) (x_6 : obj) (x_7 : obj) (x_8 : obj) (x_9 : obj) (x_10 : obj) (x_11 : obj) (x_12 : void) : obj :=
+  let x_13 : obj := diffWithKeyAndIxE._redArg x_5 x_6 x_7 x_8 x_9 x_10 x_11 ◾;
+  ret x_13
+════ diffWithKeyAndIxE after
+def diffWithKeyAndIxE (x_1 : ◾) (x_2 : ◾) (x_3 : ◾) (x_4 : ◾) (x_5 : tobj) (x_6 : obj) (x_7 : obj) (x_8 : obj) (x_9 : obj) (x_10 : obj) (x_11 : obj) (x_12 : void) : obj :=
+  let x_13 : obj := diffWithKeyAndIxE._redArg x_5 x_6 x_7 x_8 x_9 x_10 x_11 ◾;
+  ret x_13
+════ diffWithKeyAndIxE parameter plan: (every parameter kept)

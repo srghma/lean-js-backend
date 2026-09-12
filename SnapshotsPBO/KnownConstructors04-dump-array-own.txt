@@ -1,0 +1,5 @@
+=== KnownConstructors04
+declarations looked at: 37
+copies of a shared array: inserted
+updates done in place: 2
+  2 in place: test1

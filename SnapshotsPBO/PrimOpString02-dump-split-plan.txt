@@ -1,0 +1,73 @@
+════ split plans
+════ stringValues before
+def stringValues (x_1 : ◾) (x_2 : tobj) : obj :=
+  let x_3 : obj := stringValues._redArg x_2;
+  ret x_3
+════ stringValues after
+def stringValues (x_1 : ◾) (x_2 : tobj) : obj :=
+  let x_3 : obj := stringValues._redArg x_2;
+  ret x_3
+════ stringValues parameter plan: (every parameter kept)
+════ test1 before
+def test1 : obj :=
+  let x_1 : obj := test1._closed_1;
+  ret x_1
+════ test1 after
+def test1 : obj :=
+  let x_1 : obj := test1._closed_1;
+  ret x_1
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 : obj :=
+  let x_1 : obj := test2._closed_1;
+  ret x_1
+════ test2 after
+def test2 : obj :=
+  let x_1 : obj := test2._closed_1;
+  ret x_1
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 : obj :=
+  let x_1 : obj := test3._closed_1;
+  ret x_1
+════ test3 after
+def test3 : obj :=
+  let x_1 : obj := test3._closed_1;
+  ret x_1
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 : obj :=
+  let x_1 : obj := test4._closed_1;
+  ret x_1
+════ test4 after
+def test4 : obj :=
+  let x_1 : obj := test4._closed_1;
+  ret x_1
+════ test4 parameter plan: (every parameter kept)
+════ test5 before
+def test5 : obj :=
+  let x_1 : obj := test5._closed_1;
+  ret x_1
+════ test5 after
+def test5 : obj :=
+  let x_1 : obj := test5._closed_1;
+  ret x_1
+════ test5 parameter plan: (every parameter kept)
+════ test6 before
+def test6 : obj :=
+  let x_1 : obj := test6._closed_1;
+  ret x_1
+════ test6 after
+def test6 : obj :=
+  let x_1 : obj := test6._closed_1;
+  ret x_1
+════ test6 parameter plan: (every parameter kept)
+════ test7 before
+def test7 : obj :=
+  let x_1 : obj := test7._closed_1;
+  ret x_1
+════ test7 after
+def test7 : obj :=
+  let x_1 : obj := test7._closed_1;
+  ret x_1
+════ test7 parameter plan: (every parameter kept)

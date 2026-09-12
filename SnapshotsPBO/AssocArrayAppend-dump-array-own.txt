@@ -1,0 +1,15 @@
+=== AssocArrayAppend
+declarations looked at: 19
+copies of a shared array: inserted
+updates done in place: 28
+  1 in place: _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg
+  3 in place: test1
+  1 in place: test1._closed_2
+  1 in place: test1._closed_4
+  1 in place: test1._closed_6
+  1 in place: test1._closed_8
+  7 in place: test2
+  10 in place: test3
+  1 in place: test3._closed_1
+  1 in place: test3._closed_3
+  1 in place: test3._closed_5

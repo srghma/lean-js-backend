@@ -1,0 +1,8 @@
+=== STArray05
+declarations looked at: 9
+copies of a shared array: inserted
+updates done in place: 4
+  1 in place: _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg
+  1 in place: test._closed_3
+  1 in place: test._closed_4
+  1 in place: test._closed_6

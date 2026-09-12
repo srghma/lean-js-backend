@@ -1,0 +1,50 @@
+════ 🎯 test1
+def test1 : UInt32 :=
+  let _x.1 := 2147483647;
+  let _x.2 := Int32.ofNat _x.1;
+  let _x.3 := 1;
+  let _x.4 := Int32.ofNat _x.3;
+  let _x.5 := Int32.sub _x.2 _x.4;
+  return _x.5
+
+════ 🎯 test2
+def test2 : UInt32 :=
+  let _x.1 := 2147483648;
+  let _x.2 := Int32.ofNat _x.1;
+  let _x.3 := Int32.neg _x.2;
+  let _x.4 := 1;
+  let _x.5 := Int32.ofNat _x.4;
+  let _x.6 := Int32.add _x.3 _x.5;
+  return _x.6
+
+════ 🎯 test3
+def test3 : UInt32 :=
+  let _x.1 := 65535;
+  let _x.2 := UInt32.ofNatLT _x.1 ◾;
+  return _x.2
+
+════ 🎯 test4
+def test4 : UInt32 :=
+  let _x.1 := 0;
+  return _x.1
+
+════ 📦 Int32.add
+def Int32.add a b : UInt32 :=
+  extern
+
+════ 📦 Int32.neg
+def Int32.neg i : UInt32 :=
+  extern
+
+════ 📦 Int32.ofNat
+def Int32.ofNat @&n : UInt32 :=
+  extern
+
+════ 📦 Int32.sub
+def Int32.sub a b : UInt32 :=
+  extern
+
+════ 📦 UInt32.ofNatLT
+def UInt32.ofNatLT @&n h : UInt32 :=
+  extern
+

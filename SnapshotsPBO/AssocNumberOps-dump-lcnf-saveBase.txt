@@ -1,0 +1,269 @@
+════ 🎯 test1
+def test1 x : Float :=
+  let _x.1 := 10;
+  let _x.2 := Bool.true;
+  let _x.3 := 1;
+  let _x.4 := Float.ofScientific _x.1 _x.2 _x.3;
+  let _x.5 := 20;
+  let _x.6 := Float.ofScientific _x.5 _x.2 _x.3;
+  let _x.7 := Float.add _x.6 x;
+  let _x.8 := Float.add _x.7 x;
+  let _x.9 := Float.add _x.8 x;
+  let _x.10 := Float.add _x.9 x;
+  let _x.11 := 30;
+  let _x.12 := Float.ofScientific _x.11 _x.2 _x.3;
+  let _x.13 := Float.add _x.10 _x.12;
+  let _x.14 := Float.add _x.4 _x.13;
+  let _x.15 := 40;
+  let _x.16 := Float.ofScientific _x.15 _x.2 _x.3;
+  let _x.17 := Float.add _x.14 _x.16;
+  return _x.17
+
+════ 🎯 test2
+def test2 x : Float :=
+  let _x.1 := 10;
+  let _x.2 := Bool.true;
+  let _x.3 := 1;
+  let _x.4 := Float.ofScientific _x.1 _x.2 _x.3;
+  let _x.5 := 20;
+  let _x.6 := Float.ofScientific _x.5 _x.2 _x.3;
+  let _x.7 := 30;
+  let _x.8 := Float.ofScientific _x.7 _x.2 _x.3;
+  let _x.9 := Float.add x _x.8;
+  let _x.10 := Float.add x _x.9;
+  let _x.11 := Float.add x _x.10;
+  let _x.12 := Float.add x _x.11;
+  let _x.13 := Float.add _x.6 _x.12;
+  let _x.14 := Float.add _x.4 _x.13;
+  let _x.15 := 40;
+  let _x.16 := Float.ofScientific _x.15 _x.2 _x.3;
+  let _x.17 := Float.add _x.14 _x.16;
+  return _x.17
+
+════ 🎯 test3
+def test3 x : Float :=
+  let _x.1 := 10;
+  let _x.2 := Bool.true;
+  let _x.3 := 1;
+  let _x.4 := Float.ofScientific _x.1 _x.2 _x.3;
+  let _x.5 := 20;
+  let _x.6 := Float.ofScientific _x.5 _x.2 _x.3;
+  let _x.7 := 30;
+  let _x.8 := Float.ofScientific _x.7 _x.2 _x.3;
+  let _x.9 := Float.add x _x.8;
+  let _x.10 := Float.add x _x.9;
+  let _x.11 := Float.add x _x.10;
+  let _x.12 := Float.add x _x.11;
+  let _x.13 := Float.add _x.6 _x.12;
+  let _x.14 := Float.add _x.4 _x.13;
+  let _x.15 := 40;
+  let _x.16 := Float.ofScientific _x.15 _x.2 _x.3;
+  let _x.17 := Float.add _x.14 _x.16;
+  let _x.18 := 50;
+  let _x.19 := Float.ofScientific _x.18 _x.2 _x.3;
+  let _x.20 := Float.add _x.19 x;
+  let _x.21 := Float.add _x.20 x;
+  let _x.22 := Float.add _x.21 x;
+  let _x.23 := Float.add _x.22 x;
+  let _x.24 := 60;
+  let _x.25 := Float.ofScientific _x.24 _x.2 _x.3;
+  let _x.26 := Float.add _x.23 _x.25;
+  let _x.27 := Float.add _x.17 _x.26;
+  let _x.28 := 70;
+  let _x.29 := Float.ofScientific _x.28 _x.2 _x.3;
+  let _x.30 := Float.add _x.27 _x.29;
+  return _x.30
+
+════ 🎯 test4
+def test4 x : Float :=
+  let _x.1 := 10;
+  let _x.2 := Bool.true;
+  let _x.3 := 1;
+  let _x.4 := Float.ofScientific _x.1 _x.2 _x.3;
+  let _x.5 := 20;
+  let _x.6 := Float.ofScientific _x.5 _x.2 _x.3;
+  let _x.7 := Float.mul _x.6 x;
+  let _x.8 := Float.mul _x.7 x;
+  let _x.9 := Float.mul _x.8 x;
+  let _x.10 := Float.mul _x.9 x;
+  let _x.11 := 30;
+  let _x.12 := Float.ofScientific _x.11 _x.2 _x.3;
+  let _x.13 := Float.mul _x.10 _x.12;
+  let _x.14 := Float.mul _x.4 _x.13;
+  let _x.15 := 40;
+  let _x.16 := Float.ofScientific _x.15 _x.2 _x.3;
+  let _x.17 := Float.mul _x.14 _x.16;
+  return _x.17
+
+════ 🎯 test5
+def test5 x : Float :=
+  let _x.1 := 10;
+  let _x.2 := Bool.true;
+  let _x.3 := 1;
+  let _x.4 := Float.ofScientific _x.1 _x.2 _x.3;
+  let _x.5 := 20;
+  let _x.6 := Float.ofScientific _x.5 _x.2 _x.3;
+  let _x.7 := 30;
+  let _x.8 := Float.ofScientific _x.7 _x.2 _x.3;
+  let _x.9 := Float.mul x _x.8;
+  let _x.10 := Float.mul x _x.9;
+  let _x.11 := Float.mul x _x.10;
+  let _x.12 := Float.mul x _x.11;
+  let _x.13 := Float.mul _x.6 _x.12;
+  let _x.14 := Float.mul _x.4 _x.13;
+  let _x.15 := 40;
+  let _x.16 := Float.ofScientific _x.15 _x.2 _x.3;
+  let _x.17 := Float.mul _x.14 _x.16;
+  return _x.17
+
+════ 🎯 test6
+def test6 x : Float :=
+  let _x.1 := 10;
+  let _x.2 := Bool.true;
+  let _x.3 := 1;
+  let _x.4 := Float.ofScientific _x.1 _x.2 _x.3;
+  let _x.5 := 20;
+  let _x.6 := Float.ofScientific _x.5 _x.2 _x.3;
+  let _x.7 := 30;
+  let _x.8 := Float.ofScientific _x.7 _x.2 _x.3;
+  let _x.9 := Float.mul x _x.8;
+  let _x.10 := Float.mul x _x.9;
+  let _x.11 := Float.mul x _x.10;
+  let _x.12 := Float.mul x _x.11;
+  let _x.13 := Float.mul _x.6 _x.12;
+  let _x.14 := Float.mul _x.4 _x.13;
+  let _x.15 := 40;
+  let _x.16 := Float.ofScientific _x.15 _x.2 _x.3;
+  let _x.17 := Float.mul _x.14 _x.16;
+  let _x.18 := 50;
+  let _x.19 := Float.ofScientific _x.18 _x.2 _x.3;
+  let _x.20 := Float.mul _x.19 x;
+  let _x.21 := Float.mul _x.20 x;
+  let _x.22 := Float.mul _x.21 x;
+  let _x.23 := Float.mul _x.22 x;
+  let _x.24 := 60;
+  let _x.25 := Float.ofScientific _x.24 _x.2 _x.3;
+  let _x.26 := Float.mul _x.23 _x.25;
+  let _x.27 := Float.mul _x.17 _x.26;
+  let _x.28 := 70;
+  let _x.29 := Float.ofScientific _x.28 _x.2 _x.3;
+  let _x.30 := Float.mul _x.27 _x.29;
+  return _x.30
+
+════ 📦 Float.add
+def Float.add a._@._internal._hyg.1 a._@._internal._hyg.2 : Float :=
+  extern
+
+════ 📦 Float.mul
+def Float.mul a._@._internal._hyg.1 a._@._internal._hyg.2 : Float :=
+  extern
+
+════ 📦 Float.ofBinaryScientific
+def Float.ofBinaryScientific m e : Float :=
+  let _x.1 := Nat.log2 m;
+  let _x.2 := 63;
+  let s := Nat.sub _x.1 _x.2;
+  let _x.3 := Nat.shiftRight m s;
+  let m := UInt64.ofNat _x.3;
+  let _x.4 := Nat.cast._at_.Float.ofBinaryScientific.spec_0 s;
+  let e := Int.add e _x.4;
+  let _x.5 := UInt64.toFloat m;
+  let _x.6 := Float.scaleB _x.5 e;
+  return _x.6
+
+════ 📦 Float.ofScientific
+def Float.ofScientific m s e : Float :=
+  cases s : Float
+  | Bool.false =>
+    let _x.1 := 5;
+    let _x.2 := Nat.pow _x.1 e;
+    let _x.3 := Nat.mul m _x.2;
+    let _x.4 := Int.ofNat e;
+    let _x.5 := Float.ofBinaryScientific _x.3 _x.4;
+    return _x.5
+  | Bool.true =>
+    let _x.6 := 64;
+    let _x.7 := Nat.log2 m;
+    let s := Nat.sub _x.6 _x.7;
+    let _x.8 := 3;
+    let _x.9 := Nat.mul _x.8 e;
+    let _x.10 := Nat.add _x.9 s;
+    let _x.11 := Nat.shiftLeft m _x.10;
+    let _x.12 := 5;
+    let _x.13 := Nat.pow _x.12 e;
+    let m := Nat.div _x.11 _x.13;
+    let _x.14 := 4;
+    let _x.15 := Int.ofNat _x.14;
+    let _x.16 := Int.neg _x.15;
+    let _x.17 := Int.ofNat e;
+    let _x.18 := Int.mul _x.16 _x.17;
+    let _x.19 := Int.ofNat s;
+    let _x.20 := Int.sub _x.18 _x.19;
+    let _x.21 := Float.ofBinaryScientific m _x.20;
+    return _x.21
+
+════ 📦 Float.scaleB
+def Float.scaleB x @&i : Float :=
+  extern
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 Int.mul
+def Int.mul @&m @&n : Int :=
+  extern
+
+════ 📦 Int.neg
+def Int.neg @&n : Int :=
+  extern
+
+════ 📦 Int.sub
+def Int.sub @&m @&n : Int :=
+  extern
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.div
+def Nat.div @&x @&y : Nat :=
+  extern
+
+════ 📦 Nat.log2
+def Nat.log2 @&n : Nat :=
+  extern
+
+════ 📦 Nat.mul
+def Nat.mul @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.pow
+def Nat.pow @&m @&a._@._internal._hyg.1 : Nat :=
+  extern
+
+════ 📦 Nat.shiftLeft
+def Nat.shiftLeft @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.shiftRight
+def Nat.shiftRight @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 UInt64.ofNat
+def UInt64.ofNat @&n : UInt64 :=
+  extern
+
+════ 📦 UInt64.toFloat
+def UInt64.toFloat n : Float :=
+  extern
+
+════ 📦 Nat.cast._at_.Float.ofBinaryScientific.spec_0
+def Nat.cast._at_.Float.ofBinaryScientific.spec_0 a.1 : Int :=
+  let _x.2 := Int.ofNat a.1;
+  return _x.2
+

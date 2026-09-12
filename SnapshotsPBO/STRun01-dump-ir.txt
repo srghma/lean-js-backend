@@ -1,0 +1,102 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 : tobj :=
+  let x_1 : tobj := test2._closed_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test3
+-- IR (what the backend reads)
+def test3 : tobj :=
+  let x_1 : tobj := test2._closed_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int.add
+-- IR (what the backend reads)
+extern Int.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_add"
+decl.hashKeyType?: none
+
+════ 📦 Int.negSucc
+-- IR (what the backend reads)
+extern Int.negSucc (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg_succ_of_nat"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 1
+ctor.numFields: 1
+
+════ 📦 Int.ofNat
+-- IR (what the backend reads)
+extern Int.ofNat (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_to_int"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 test1._closed_0
+-- IR (what the backend reads)
+def test1._closed_0 : tobj :=
+  let x_1 : tagged := 1;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2._closed_0
+-- IR (what the backend reads)
+def test2._closed_0 : tobj :=
+  let x_1 : tagged := 2;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2._closed_1
+-- IR (what the backend reads)
+def test2._closed_1 : tobj :=
+  let x_1 : tobj := test2._closed_0;
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := Int.add x_2 x_1;
+  dec x_1;
+  dec x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.STRun01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (9): [`test1, `test2, `test3, `Int.add, `Int.negSucc, `Int.ofNat, `test1._closed_0, `test2._closed_0, `test2._closed_1]
+ctors (2): [`Int.negSucc, `Int.ofNat]
+inducts (1): [`Int]

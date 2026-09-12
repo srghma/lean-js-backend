@@ -1,0 +1,86 @@
+════ 🎯 f
+-- IR (what the backend reads)
+def f (x_1 : @& obj) : obj :=
+  let x_2 : obj := f._closed_0;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 g
+-- IR (what the backend reads)
+def g (x_1 : @& obj) : obj :=
+  let x_2 : obj := g._closed_0;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : @& obj) : obj :=
+  let x_2 : obj := f._closed_0;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 (x_1 : @& obj) : obj :=
+  let x_2 : obj := g._closed_0;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test3
+-- IR (what the backend reads)
+def test3 (x_1 : @& obj) : obj :=
+  let x_2 : obj := f._closed_0;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test4
+-- IR (what the backend reads)
+def test4 (x_1 : @& obj) : obj :=
+  let x_2 : obj := g._closed_0;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 f._closed_0
+-- IR (what the backend reads)
+def f._closed_0 : obj :=
+  let x_1 : obj := "a";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 g._closed_0
+-- IR (what the backend reads)
+def g._closed_0 : obj :=
+  let x_1 : obj := "b";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.FunctionCompose01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (8): [`f, `g, `test1, `test2, `test3, `test4, `f._closed_0, `g._closed_0]
+ctors (0): []
+inducts (0): []

@@ -1,0 +1,48 @@
+════ 🎯 Test
+-- IR: not stored
+-- JsOleanData
+induct.isEnum: true
+induct.ctors: [`Test.Foo, `Test.Bar, `Test.Baz, `Test.Qux]
+
+════ 🎯 Bar
+❌ ⚠️ Name 'Bar' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 Baz
+❌ ⚠️ Name 'Baz' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 Foo
+❌ ⚠️ Name 'Foo' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 Qux
+❌ ⚠️ Name 'Qux' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 genericTest
+❌ ⚠️ Name 'genericTest' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 showTest
+❌ ⚠️ Name 'showTest' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.KnownConstructors06]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (0): []
+ctors (4): [`Test.Bar, `Test.Baz, `Test.Foo, `Test.Qux]
+inducts (1): [`Test]

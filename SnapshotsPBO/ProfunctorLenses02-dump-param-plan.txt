@@ -1,0 +1,40 @@
+════ test1
+-- IR
+def test1 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left._redArg x_1;
+  ret x_2
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left._redArg x_1;
+  ret x_2
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test3
+-- IR
+def test3 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left_right._redArg x_1;
+  ret x_2
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test4
+-- IR
+def test4 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left_right._redArg x_1;
+  ret x_2
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

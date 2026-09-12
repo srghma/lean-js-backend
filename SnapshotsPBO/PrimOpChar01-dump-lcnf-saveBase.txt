@@ -1,0 +1,25 @@
+════ 🎯 test1
+def test1 c : Nat :=
+  let _x.1 := c # 0;
+  let _x.2 := UInt32.toNat _x.1;
+  return _x.2
+
+════ 🎯 test2
+-- LCNF (saveBase): not stored
+
+════ 🎯 test3
+-- LCNF (saveBase): not stored
+
+════ 🎯 test4
+-- LCNF (saveBase): not stored
+
+════ 🎯 test5
+-- LCNF (saveBase): not stored
+
+════ 🎯 test6
+-- LCNF (saveBase): not stored
+
+════ 📦 UInt32.toNat
+def UInt32.toNat n : Nat :=
+  extern
+

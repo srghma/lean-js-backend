@@ -1,0 +1,38 @@
+════ 🎯 test1
+def test1 x.1 : String :=
+  let _x.2 := 1;
+  let _x.3 := Int.ofNat _x.2;
+  let _x.4 := Int.instDecidableEq x.1 _x.3;
+  cases _x.4 : String
+  | Decidable.isFalse h_1 =>
+    let _x.5 := 2;
+    let _x.6 := Int.ofNat _x.5;
+    let _x.7 := Int.instDecidableEq x.1 _x.6;
+    cases _x.7 : String
+    | Decidable.isFalse h_2 =>
+      let _x.8 := 3;
+      let _x.9 := Int.ofNat _x.8;
+      let _x.10 := Int.instDecidableEq x.1 _x.9;
+      cases _x.10 : String
+      | Decidable.isFalse h_3 =>
+        let _x.11 := "catch";
+        return _x.11
+      | Decidable.isTrue h_3 =>
+        let _x.12 := "3";
+        return _x.12
+    | Decidable.isTrue h_2 =>
+      let _x.13 := "2";
+      return _x.13
+  | Decidable.isTrue h_1 =>
+    let _x.14 := "1";
+    return _x.14
+
+════ 📦 Int.decEq
+def Int.decEq @&a @&b : Decidable lcErased :=
+  extern
+
+════ 📦 Int.instDecidableEq
+def Int.instDecidableEq @&a @&b : Decidable lcErased :=
+  let _x.1 := Int.decEq a b;
+  return _x.1
+

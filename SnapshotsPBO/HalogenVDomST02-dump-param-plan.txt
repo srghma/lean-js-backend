@@ -1,0 +1,24 @@
+════ assertEqual
+❌ ⚠️ Name 'assertEqual' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ assertEqual3
+❌ ⚠️ Name 'assertEqual3' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ main
+❌ ⚠️ Name 'main' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+

@@ -1,0 +1,183 @@
+════ 🎯 intValues
+def intValues α op : Array α :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := op _x.2 _x.2;
+  let _x.4 := 2;
+  let _x.5 := Int.ofNat _x.4;
+  let _x.6 := op _x.2 _x.5;
+  let _x.7 := op _x.5 _x.2;
+  let _x.8 := Int.neg _x.5;
+  let _x.9 := op _x.2 _x.8;
+  let _x.10 := Int.neg _x.2;
+  let _x.11 := op _x.10 _x.5;
+  let _x.12 := op _x.10 _x.10;
+  let _x.13 := 6;
+  let _x.14 := @Array.mkEmpty _ _x.13;
+  let _x.15 := @Array.push _ _x.14 _x.3;
+  let _x.16 := @Array.push _ _x.15 _x.6;
+  let _x.17 := @Array.push _ _x.16 _x.7;
+  let _x.18 := @Array.push _ _x.17 _x.9;
+  let _x.19 := @Array.push _ _x.18 _x.11;
+  let _x.20 := @Array.push _ _x.19 _x.12;
+  return _x.20
+
+════ 🎯 test1
+def test1 : Array Int :=
+  fun _f.1 a b : Int :=
+    let _x.2 := Int.add a b;
+    return _x.2;
+  let _x.3 := @intValues _ _f.1;
+  return _x.3
+
+════ 🎯 test10
+def test10 : Array Int :=
+  fun _f.1 a b : Int :=
+    let _x.2 := Int.ediv a b;
+    return _x.2;
+  let _x.3 := @intValues _ _f.1;
+  return _x.3
+
+════ 🎯 test11
+def test11 : Array Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := Int.neg _x.2;
+  let _x.4 := Int.neg _x.3;
+  let _x.5 := 2;
+  let _x.6 := @Array.mkEmpty _ _x.5;
+  let _x.7 := @Array.push _ _x.6 _x.3;
+  let _x.8 := @Array.push _ _x.7 _x.4;
+  return _x.8
+
+════ 🎯 test2
+def test2 : Array Int :=
+  fun _f.1 a b : Int :=
+    let _x.2 := Int.sub a b;
+    return _x.2;
+  let _x.3 := @intValues _ _f.1;
+  return _x.3
+
+════ 🎯 test3
+def test3 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Int.instDecidableEq a b;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := @intValues _ _f.1;
+  return _x.4
+
+════ 🎯 test4
+def test4 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Int.instDecidableEq a b;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    cases _x.3 : Bool
+    | Bool.false =>
+      let _x.4 := Bool.true;
+      return _x.4
+    | Bool.true =>
+      let _x.5 := Bool.false;
+      return _x.5;
+  let _x.6 := @intValues _ _f.1;
+  return _x.6
+
+════ 🎯 test5
+def test5 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Int.decLt a b;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := @intValues _ _f.1;
+  return _x.4
+
+════ 🎯 test6
+def test6 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Int.decLt b a;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := @intValues _ _f.1;
+  return _x.4
+
+════ 🎯 test7
+def test7 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Int.decLe a b;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := @intValues _ _f.1;
+  return _x.4
+
+════ 🎯 test8
+def test8 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Int.decLe b a;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := @intValues _ _f.1;
+  return _x.4
+
+════ 🎯 test9
+def test9 : Array Int :=
+  fun _f.1 a b : Int :=
+    let _x.2 := Int.mul a b;
+    return _x.2;
+  let _x.3 := @intValues _ _f.1;
+  return _x.3
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array α :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array α :=
+  extern
+
+════ 📦 Decidable.decide
+def Decidable.decide p h : Bool :=
+  cases h : Bool
+  | Decidable.isFalse x.1 =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Decidable.isTrue x.3 =>
+    let _x.4 := Bool.true;
+    return _x.4
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 Int.decEq
+def Int.decEq @&a @&b : Decidable lcErased :=
+  extern
+
+════ 📦 Int.decLe
+def Int.decLe @&a @&b : Decidable lcErased :=
+  extern
+
+════ 📦 Int.decLt
+def Int.decLt @&a @&b : Decidable lcErased :=
+  extern
+
+════ 📦 Int.ediv
+def Int.ediv @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Int :=
+  extern
+
+════ 📦 Int.instDecidableEq
+def Int.instDecidableEq @&a @&b : Decidable lcErased :=
+  let _x.1 := Int.decEq a b;
+  return _x.1
+
+════ 📦 Int.mul
+def Int.mul @&m @&n : Int :=
+  extern
+
+════ 📦 Int.neg
+def Int.neg @&n : Int :=
+  extern
+
+════ 📦 Int.sub
+def Int.sub @&m @&n : Int :=
+  extern
+

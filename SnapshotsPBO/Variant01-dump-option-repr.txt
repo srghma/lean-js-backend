@@ -1,0 +1,52 @@
+=== Variant01
+places holding an unboxed `Option`: 0
+  a constructor that is written into: List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+  a constructor that is written into: List.reverseAux._redArg
+  a parameter of a declaration the file is for: Nat.reprFast
+  a parameter of a declaration the file is for: test1
+  a scalar field is read out of it: test1
+  a value whose sharing is tested: List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+  a value whose sharing is tested: List.reverseAux._redArg
+  an argument of a primitive: List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+  an argument of a primitive: List.range.loop
+  an argument of a primitive: Nat.digitChar
+  an argument of a primitive: Nat.reprFast
+  an argument of a primitive: Nat.reprFast._closed_0
+  an argument of a primitive: Nat.reprFast._closed_1
+  an argument of a primitive: Nat.toDigits
+  an argument of a primitive: Nat.toDigitsCore
+  an argument of a primitive: System.Platform.numBits._closed_0
+  an argument of a primitive: _private.Init.Data.Repr.0.Nat.reprArray._closed_2
+  an argument of a primitive: test1
+  an argument of a primitive: test1._closed_0
+  stored in a constructor: List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+  stored in a constructor: List.range.loop
+  stored in a constructor: List.reverseAux._redArg
+  stored in a constructor: Nat.toDigitsCore
+  the answer of a declaration the file is for: Array.append
+  the answer of a declaration the file is for: Array.append._redArg
+  the answer of a declaration the file is for: Array.appendCore
+  the answer of a declaration the file is for: Array.appendCore._redArg
+  the answer of a declaration the file is for: Float.ofBinaryScientific
+  the answer of a declaration the file is for: Float.ofNat
+  the answer of a declaration the file is for: Float.ofScientific
+  the answer of a declaration the file is for: IO.Error.toString
+  the answer of a declaration the file is for: Int.repr
+  the answer of a declaration the file is for: Nat.repr
+  the answer of a declaration the file is for: Nat.reprFast
+  the answer of a declaration the file is for: main
+  the answer of a declaration the file is for: test1
+  the answer of a declaration the file is for: test2
+  the answer of a declaration the file is for: test3
+  the answer of a primitive: List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+  the answer of a primitive: List.range.loop
+  the answer of a primitive: Nat.digitChar
+  the answer of a primitive: Nat.reprFast
+  the answer of a primitive: Nat.reprFast._closed_0
+  the answer of a primitive: Nat.reprFast._closed_1
+  the answer of a primitive: Nat.toDigits
+  the answer of a primitive: Nat.toDigitsCore
+  the answer of a primitive: System.Platform.numBits._closed_0
+  the answer of a primitive: _private.Init.Data.Repr.0.Nat.reprArray._closed_2
+  the answer of a primitive: test1
+  the answer of a primitive: test1._closed_0

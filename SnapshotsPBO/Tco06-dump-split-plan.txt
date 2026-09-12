@@ -1,0 +1,31 @@
+════ split plans
+════ f before
+def f (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := Int.add x_1 x_2;
+  let x_4 : tobj := g x_3;
+  dec x_3;
+  ret x_4
+════ f after
+def f (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := Int.add x_1 x_2;
+  let x_4 : tobj := g x_3;
+  dec x_3;
+  ret x_4
+════ f parameter plan: (every parameter kept)
+════ g before
+def g (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := g._closed_0;
+  let x_3 : tobj := Int.add x_1 x_2;
+  dec x_2;
+  let x_4 : tobj := f x_1 x_3;
+  dec x_3;
+  ret x_4
+════ g after
+def g (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := g._closed_0;
+  let x_3 : tobj := Int.add x_1 x_2;
+  dec x_2;
+  let x_4 : tobj := f x_1 x_3;
+  dec x_3;
+  ret x_4
+════ g parameter plan: (every parameter kept)

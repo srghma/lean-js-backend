@@ -1,0 +1,9 @@
+════ 🎯 test1
+def test1 α a : Nat :=
+  let _x.1 := @Array.size _ a;
+  return _x.1
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+

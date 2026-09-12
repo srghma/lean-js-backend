@@ -1,0 +1,25 @@
+════ 🎯 test
+def test x : Array Int :=
+  let _x.1 := 1;
+  let _x.2 := @Array.mkEmpty _ _x.1;
+  let arr := @Array.push _ _x.2 x;
+  let _x.3 := 12;
+  let _x.4 := Int.ofNat _x.3;
+  let arr := @Array.push _ arr _x.4;
+  let _x.5 := @Array.size _ arr;
+  let len := Int.ofNat _x.5;
+  let arr := @Array.push _ arr len;
+  return arr
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array α :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array α :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+

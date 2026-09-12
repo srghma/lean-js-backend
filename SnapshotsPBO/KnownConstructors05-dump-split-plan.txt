@@ -1,0 +1,152 @@
+════ split plans
+════ Test before
+  (no compiled code)
+════ Test after
+  (no compiled code)
+════ Test parameter plan: (every parameter kept)
+════ Bar before
+  (no compiled code)
+════ Bar after
+  (no compiled code)
+════ Bar parameter plan: (every parameter kept)
+════ Baz before
+  (no compiled code)
+════ Baz after
+  (no compiled code)
+════ Baz parameter plan: (every parameter kept)
+════ Foo before
+  (no compiled code)
+════ Foo after
+  (no compiled code)
+════ Foo parameter plan: (every parameter kept)
+════ Qux before
+  (no compiled code)
+════ Qux after
+  (no compiled code)
+════ Qux parameter plan: (every parameter kept)
+════ fromString before
+def fromString (x_1 : @& obj) : tobj :=
+  let x_2 : obj := fromString._closed_0;
+  let x_3 : u8 := String.decEq x_1 x_2;
+  dec x_2;
+  case x_3 : u8 of
+  Bool.false →
+    let x_4 : obj := fromString._closed_1;
+    let x_5 : u8 := String.decEq x_1 x_4;
+    dec x_4;
+    case x_5 : u8 of
+    Bool.false →
+      let x_6 : obj := fromString._closed_2;
+      let x_7 : u8 := String.decEq x_1 x_6;
+      dec x_6;
+      case x_7 : u8 of
+      Bool.false →
+        let x_8 : obj := fromString._closed_3;
+        let x_9 : u8 := String.decEq x_1 x_8;
+        dec x_8;
+        case x_9 : u8 of
+        Bool.false →
+          let x_10 : tagged := ctor_0[Option.none];
+          ret x_10
+        Bool.true →
+          let x_11 : tobj := fromString._closed_4;
+          ret x_11
+      Bool.true →
+        let x_12 : tobj := fromString._closed_5;
+        ret x_12
+    Bool.true →
+      let x_13 : tobj := fromString._closed_6;
+      ret x_13
+  Bool.true →
+    let x_14 : tobj := fromString._closed_7;
+    ret x_14
+════ fromString after
+def fromString (x_1 : @& obj) : tobj :=
+  let x_2 : obj := fromString._closed_0;
+  let x_3 : u8 := String.decEq x_1 x_2;
+  dec x_2;
+  case x_3 : u8 of
+  Bool.false →
+    let x_4 : obj := fromString._closed_1;
+    let x_5 : u8 := String.decEq x_1 x_4;
+    dec x_4;
+    case x_5 : u8 of
+    Bool.false →
+      let x_6 : obj := fromString._closed_2;
+      let x_7 : u8 := String.decEq x_1 x_6;
+      dec x_6;
+      case x_7 : u8 of
+      Bool.false →
+        let x_8 : obj := fromString._closed_3;
+        let x_9 : u8 := String.decEq x_1 x_8;
+        dec x_8;
+        case x_9 : u8 of
+        Bool.false →
+          let x_10 : tagged := ctor_0[Option.none];
+          ret x_10
+        Bool.true →
+          let x_11 : tobj := fromString._closed_4;
+          ret x_11
+      Bool.true →
+        let x_12 : tobj := fromString._closed_5;
+        ret x_12
+    Bool.true →
+      let x_13 : tobj := fromString._closed_6;
+      ret x_13
+  Bool.true →
+    let x_14 : tobj := fromString._closed_7;
+    ret x_14
+════ fromString parameter plan: (every parameter kept)
+════ test before
+def test (x_1 : @& obj) : tobj :=
+  let x_2 : tobj := fromString x_1;
+  case x_2 : tobj of
+  Option.none →
+    let x_3 : tobj := test._closed_0;
+    ret x_3
+  Option.some →
+    let x_4 : tobj := proj[0] x_2;
+    inc x_4;
+    dec x_2;
+    let x_5 : u8 := unbox x_4;
+    dec x_4;
+    case x_5 : u8 of
+    Test.Foo →
+      let x_6 : tobj := test._closed_1;
+      ret x_6
+    Test.Bar →
+      let x_7 : tobj := test._closed_2;
+      ret x_7
+    Test.Baz →
+      let x_8 : tobj := test._closed_3;
+      ret x_8
+    Test.Qux →
+      let x_9 : tobj := test._closed_4;
+      ret x_9
+════ test after
+def test (x_1 : @& obj) : tobj :=
+  let x_2 : tobj := fromString x_1;
+  case x_2 : tobj of
+  Option.none →
+    let x_3 : tobj := test._closed_0;
+    ret x_3
+  Option.some →
+    let x_4 : tobj := proj[0] x_2;
+    inc x_4;
+    dec x_2;
+    let x_5 : u8 := unbox x_4;
+    dec x_4;
+    case x_5 : u8 of
+    Test.Foo →
+      let x_6 : tobj := test._closed_1;
+      ret x_6
+    Test.Bar →
+      let x_7 : tobj := test._closed_2;
+      ret x_7
+    Test.Baz →
+      let x_8 : tobj := test._closed_3;
+      ret x_8
+    Test.Qux →
+      let x_9 : tobj := test._closed_4;
+      ret x_9
+════ test parameter plan: (every parameter kept)

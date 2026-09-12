@@ -1,0 +1,124 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_0;
+  let x_3 : tobj := List.find?._redArg x_2 x_1;
+  case x_3 : tobj of
+  Option.none →
+    let x_4 : tobj := test1._closed_1;
+    ret x_4
+  Option.some →
+    let x_5 : tobj := proj[0] x_3;
+    inc x_5;
+    dec x_3;
+    let x_6 : tobj := proj[1] x_5;
+    inc x_6;
+    dec x_5;
+    ret x_6
+════ test1 after
+def test1 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_0;
+  let x_3 : tobj := List.find?._redArg x_2 x_1;
+  case x_3 : tobj of
+  Option.none →
+    let x_4 : tobj := test1._closed_1;
+    ret x_4
+  Option.some →
+    let x_5 : tobj := proj[0] x_3;
+    inc x_5;
+    dec x_3;
+    let x_6 : tobj := proj[1] x_5;
+    inc x_6;
+    dec x_5;
+    ret x_6
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test2._closed_0;
+  let x_3 : tobj := List.find?._redArg x_2 x_1;
+  case x_3 : tobj of
+  Option.none →
+    let x_4 : tobj := test1._closed_1;
+    ret x_4
+  Option.some →
+    let x_5 : tobj := proj[0] x_3;
+    inc x_5;
+    dec x_3;
+    let x_6 : tobj := proj[1] x_5;
+    inc x_6;
+    dec x_5;
+    ret x_6
+════ test2 after
+def test2 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test2._closed_0;
+  let x_3 : tobj := List.find?._redArg x_2 x_1;
+  case x_3 : tobj of
+  Option.none →
+    let x_4 : tobj := test1._closed_1;
+    ret x_4
+  Option.some →
+    let x_5 : tobj := proj[0] x_3;
+    inc x_5;
+    dec x_3;
+    let x_6 : tobj := proj[1] x_5;
+    inc x_6;
+    dec x_5;
+    ret x_6
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : tobj) (x_2 : obj) : tobj :=
+  let x_3 : obj := pap test3._lam_0._boxed x_2;
+  let x_4 : tobj := List.find?._redArg x_3 x_1;
+  case x_4 : tobj of
+  Option.none →
+    let x_5 : tobj := test1._closed_1;
+    ret x_5
+  Option.some →
+    let x_6 : tobj := proj[0] x_4;
+    inc x_6;
+    dec x_4;
+    let x_7 : tobj := proj[1] x_6;
+    inc x_7;
+    dec x_6;
+    ret x_7
+════ test3 after
+def test3 (x_1 : tobj) (x_2 : obj) : tobj :=
+  let x_3 : obj := pap test3._lam_0._boxed x_2;
+  let x_4 : tobj := List.find?._redArg x_3 x_1;
+  case x_4 : tobj of
+  Option.none →
+    let x_5 : tobj := test1._closed_1;
+    ret x_5
+  Option.some →
+    let x_6 : tobj := proj[0] x_4;
+    inc x_6;
+    dec x_4;
+    let x_7 : tobj := proj[1] x_6;
+    inc x_7;
+    dec x_6;
+    ret x_7
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 (x_1 : tobj) : obj :=
+  let x_2 : tagged := ctor_0[List.nil];
+  let x_3 : tobj := List.mapTR.loop._at_.test4.spec_0 x_1 x_2;
+  let x_4 : obj := Array.mk ◾ x_3;
+  ret x_4
+════ test4 after
+def test4 (x_1 : tobj) : obj :=
+  let x_2 : tagged := ctor_0[List.nil];
+  let x_3 : tobj := List.mapTR.loop._at_.test4.spec_0 x_1 x_2;
+  let x_4 : obj := Array.mk ◾ x_3;
+  ret x_4
+════ test4 parameter plan: (every parameter kept)
+════ test5 before
+def test5 (x_1 : tobj) : u8 :=
+  let x_2 : obj := test5._closed_0;
+  let x_3 : u8 := List.any._redArg x_1 x_2;
+  ret x_3
+════ test5 after
+def test5 (x_1 : tobj) : u8 :=
+  let x_2 : obj := test5._closed_0;
+  let x_3 : u8 := List.any._redArg x_1 x_2;
+  ret x_3
+════ test5 parameter plan: (every parameter kept)

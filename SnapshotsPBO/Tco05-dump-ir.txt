@@ -1,0 +1,82 @@
+════ 🎯 span
+-- IR (what the backend reads)
+def span (x_1 : obj) (x_2 : @& obj) : tobj :=
+  let x_3 : tagged := 0;
+  let x_4 : tobj := span.go x_1 x_2 x_3;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Array.getInternalBorrowed
+-- IR (what the backend reads)
+extern Array.getInternalBorrowed (x_1 : ◾) (x_2 : @& obj) (x_3 : @& tobj) (x_4 : ◾) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_fget_borrowed"
+decl.hashKeyType?: none
+
+════ 📦 Array.size
+-- IR (what the backend reads)
+extern Array.size (x_1 : ◾) (x_2 : @& obj) : tagged
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_get_size"
+decl.hashKeyType?: none
+
+════ 📦 Nat.add
+-- IR (what the backend reads)
+extern Nat.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_add"
+decl.hashKeyType?: none
+
+════ 📦 Nat.decLt
+-- IR (what the backend reads)
+extern Nat.decLt (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_dec_lt"
+decl.hashKeyType?: none
+
+════ 📦 span.go
+-- IR (what the backend reads)
+def span.go (x_1 : obj) (x_2 : @& obj) (x_3 : tobj) : tobj :=
+  let x_4 : tagged := Array.size ◾ x_2;
+  let x_5 : u8 := Nat.decLt x_3 x_4;
+  case x_5 : u8 of
+  Bool.false →
+    dec x_3;
+    dec x_1;
+    let x_6 : tagged := ctor_0[Option.none];
+    ret x_6
+  Bool.true →
+    let x_7 : tobj := Array.getInternalBorrowed ◾ x_2 x_3 ◾;
+    inc x_1;
+    inc x_7;
+    let x_8 : tagged := app x_1 x_7;
+    let x_9 : u8 := unbox x_8;
+    case x_9 : u8 of
+    Bool.false →
+      dec x_1;
+      let x_10 : obj := ctor_1[Option.some] x_3;
+      ret x_10
+    Bool.true →
+      let x_11 : tagged := 1;
+      let x_12 : tobj := Nat.add x_3 x_11;
+      dec x_3;
+      let x_13 : tobj := span.go x_1 x_2 x_12;
+      ret x_13
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.Tco05]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (6): [`span, `Array.getInternalBorrowed, `Array.size, `Nat.add, `Nat.decLt, `span.go]
+ctors (4): [`Bool.false, `Bool.true, `Option.none, `Option.some]
+inducts (2): [`Bool, `Option]

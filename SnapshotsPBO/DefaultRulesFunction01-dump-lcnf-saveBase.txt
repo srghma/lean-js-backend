@@ -1,0 +1,38 @@
+════ 🎯 test1
+def test1 f g a : PUnit :=
+  let _x.1 := 1;
+  let _x.2 := "foo";
+  let _x.3 := g _ _ _ _x.2 a;
+  let _x.4 := f _ _ _ _x.1 _x.3;
+  return _x.4
+
+════ 🎯 test2
+def test2 f g a : PUnit :=
+  let _x.1 := 1;
+  let _x.2 := "foo";
+  let _x.3 := g _ _ _ _x.2 a;
+  let _x.4 := f _ _ _ _x.1 _x.3;
+  return _x.4
+
+════ 🎯 test3
+def test3 f g x.1 : PUnit :=
+  let _x.2 := 3;
+  let _x.3 := 2;
+  let _x.4 := 1;
+  let _x.5 := g _ _ _ _x.4 _x.3;
+  let _x.6 := f _ _ _ _x.5 _x.2;
+  return _x.6
+
+════ 🎯 test4
+def test4 f α.1 β.2 γ.3 b a : γ.3 :=
+  let _x.4 := f _ _ _ b a;
+  return _x.4
+
+════ 🎯 test5
+def test5 α β a a.1 : α :=
+  return a
+
+════ 🎯 test6
+def test6 α a.1 : α :=
+  return a.1
+

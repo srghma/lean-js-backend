@@ -1,0 +1,50 @@
+════ 🎯 test
+-- IR (what the backend reads)
+def test (x_1 : obj) : obj :=
+  let x_2 : tobj := test._closed_0;
+  let x_3 : obj := ctor_0[Output.mk] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int.negSucc
+-- IR (what the backend reads)
+extern Int.negSucc (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg_succ_of_nat"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 1
+ctor.numFields: 1
+
+════ 📦 Int.ofNat
+-- IR (what the backend reads)
+extern Int.ofNat (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_to_int"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 test._closed_0
+-- IR (what the backend reads)
+def test._closed_0 : tobj :=
+  let x_1 : tagged := 42;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.RecordUnion01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (4): [`test, `Int.negSucc, `Int.ofNat, `test._closed_0]
+ctors (3): [`Int.negSucc, `Int.ofNat, `Output.mk]
+inducts (2): [`Int, `Output]

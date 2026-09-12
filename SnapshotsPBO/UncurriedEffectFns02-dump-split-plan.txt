@@ -1,0 +1,59 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : void) : obj :=
+  let x_2 : tagged := 12;
+  let x_3 : obj := IO.println._at_.test1.spec_0 x_2 ◾;
+  ret x_3
+════ test1 after
+def test1 (x_1 : void) : obj :=
+  let x_2 : tagged := 12;
+  let x_3 : obj := IO.println._at_.test1.spec_0 x_2 ◾;
+  ret x_3
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : obj) (x_2 : void) : obj :=
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : obj := app x_1 x_3 ◾;
+  case x_4 : obj of
+  EST.Out.ok →
+    let x_5 : tobj := proj[0] x_4;
+    inc x_5;
+    dec x_4;
+    let x_6 : obj := IO.println._at_.test2.spec_0 x_5 ◾;
+    dec x_5;
+    ret x_6
+  EST.Out.error →
+    let x_7 : u8 := isShared x_4;
+    case x_7 : u8 of
+    Bool.false →
+      ret x_4
+    Bool.true →
+      let x_8 : tobj := proj[0] x_4;
+      inc x_8;
+      dec x_4;
+      let x_9 : obj := ctor_1[EST.Out.error] x_8;
+      ret x_9
+════ test2 after
+def test2 (x_1 : obj) (x_2 : void) : obj :=
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : obj := app x_1 x_3 ◾;
+  case x_4 : obj of
+  EST.Out.ok →
+    let x_5 : tobj := proj[0] x_4;
+    inc x_5;
+    dec x_4;
+    let x_6 : obj := IO.println._at_.test2.spec_0 x_5 ◾;
+    dec x_5;
+    ret x_6
+  EST.Out.error →
+    let x_7 : u8 := isShared x_4;
+    case x_7 : u8 of
+    Bool.false →
+      ret x_4
+    Bool.true →
+      let x_8 : tobj := proj[0] x_4;
+      inc x_8;
+      dec x_4;
+      let x_9 : obj := ctor_1[EST.Out.error] x_8;
+      ret x_9
+════ test2 parameter plan: (every parameter kept)

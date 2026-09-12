@@ -1,0 +1,1 @@
+KnownConstructors02: throws

@@ -1,0 +1,62 @@
+=== PrimOpBoolean02
+places holding an unboxed `Option`: 0
+  a closure: test1._closed_0
+  a closure: test2._closed_0
+  a closure: test3._closed_0
+  a closure: test4._closed_0
+  a closure: test5._closed_0
+  a closure: test6._closed_0
+  a closure: test7._closed_0
+  a closure: test8._closed_0
+  a parameter of a closure: Bool.instDecidableLe._boxed
+  a parameter of a closure: Bool.instDecidableLt._boxed
+  a parameter of a closure: test1._lam_0._boxed
+  a parameter of a closure: test2._lam_0._boxed
+  a parameter of a closure: test3._lam_0._boxed
+  a parameter of a closure: test4._lam_0._boxed
+  a parameter of a closure: test6._lam_0._boxed
+  a parameter of a closure: test8._lam_0._boxed
+  a parameter of a declaration the file is for: boolValues
+  an argument of a primitive: boolValues
+  an argument of a primitive: boolValues._closed_0
+  an argument of a primitive: test9._closed_0
+  an argument of a primitive: test9._closed_1
+  an argument of a primitive: test9._closed_2
+  an argument of an unknown function: boolValues
+  an unknown function value: boolValues
+  the answer of a closure: Bool.instDecidableLe._boxed
+  the answer of a closure: Bool.instDecidableLt._boxed
+  the answer of a closure: test1._lam_0._boxed
+  the answer of a closure: test2._lam_0._boxed
+  the answer of a closure: test3._lam_0._boxed
+  the answer of a closure: test4._lam_0._boxed
+  the answer of a closure: test6._lam_0._boxed
+  the answer of a closure: test8._lam_0._boxed
+  the answer of a declaration the file is for: Array.append
+  the answer of a declaration the file is for: Array.append._redArg
+  the answer of a declaration the file is for: Array.appendCore
+  the answer of a declaration the file is for: Array.appendCore._redArg
+  the answer of a declaration the file is for: Float.ofBinaryScientific
+  the answer of a declaration the file is for: Float.ofNat
+  the answer of a declaration the file is for: Float.ofScientific
+  the answer of a declaration the file is for: IO.Error.toString
+  the answer of a declaration the file is for: Int.repr
+  the answer of a declaration the file is for: Nat.repr
+  the answer of a declaration the file is for: Nat.reprFast
+  the answer of a declaration the file is for: boolValues
+  the answer of a declaration the file is for: main
+  the answer of a declaration the file is for: test1
+  the answer of a declaration the file is for: test2
+  the answer of a declaration the file is for: test3
+  the answer of a declaration the file is for: test4
+  the answer of a declaration the file is for: test5
+  the answer of a declaration the file is for: test6
+  the answer of a declaration the file is for: test7
+  the answer of a declaration the file is for: test8
+  the answer of a declaration the file is for: test9
+  the answer of a primitive: boolValues
+  the answer of a primitive: boolValues._closed_0
+  the answer of a primitive: test9._closed_0
+  the answer of a primitive: test9._closed_1
+  the answer of a primitive: test9._closed_2
+  the answer of an unknown function: boolValues

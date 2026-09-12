@@ -1,0 +1,36 @@
+════ split plans
+════ ExprF before
+  (no compiled code)
+════ ExprF after
+  (no compiled code)
+════ ExprF parameter plan: (every parameter kept)
+════ Add before
+  (no compiled code)
+════ Add after
+  (no compiled code)
+════ Add parameter plan: (every parameter kept)
+════ Lit before
+  (no compiled code)
+════ Lit after
+  (no compiled code)
+════ Lit parameter plan: (every parameter kept)
+════ Mul before
+  (no compiled code)
+════ Mul after
+  (no compiled code)
+════ Mul parameter plan: (every parameter kept)
+════ functorExprF before
+  (no compiled code)
+════ functorExprF after
+  (no compiled code)
+════ functorExprF parameter plan: (every parameter kept)
+════ test1 before
+  (no compiled code)
+════ test1 after
+  (no compiled code)
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+  (no compiled code)
+════ test2 after
+  (no compiled code)
+════ test2 parameter plan: (every parameter kept)

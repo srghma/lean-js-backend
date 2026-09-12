@@ -1,0 +1,10 @@
+=== ArrayInPlace
+declarations looked at: 13
+copies of a shared array: inserted
+updates done in place: 6
+  1 in place: List.forIn'.loop._at_.test2.spec_0._redArg
+  1 in place: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg
+  1 in place: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test5.spec_0._redArg
+  1 in place: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test5.spec_1._redArg
+  1 in place: _private.LeanJsCliSnapshots.ArrayInPlace.0.buildRec
+  1 in place: test5

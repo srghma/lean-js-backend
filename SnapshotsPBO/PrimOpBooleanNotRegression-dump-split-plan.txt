@@ -1,0 +1,10 @@
+════ split plans
+════ test before
+def test (x_1 : ◾) (x_2 : obj) (x_3 : tobj) (x_4 : tobj) : u8 :=
+  let x_5 : u8 := test._redArg x_2 x_3 x_4;
+  ret x_5
+════ test after
+def test (x_1 : ◾) (x_2 : obj) (x_3 : tobj) (x_4 : tobj) : u8 :=
+  let x_5 : u8 := test._redArg x_2 x_3 x_4;
+  ret x_5
+════ test parameter plan: (every parameter kept)

@@ -1,0 +1,31 @@
+════ test1
+-- IR
+def test1 (x_1 : u8) (x_2 : u8) (x_3 : u8) : tobj :=
+  block_5 :=
+    let x_4 : tobj := test1._closed_0;
+    ret x_4;
+  case x_2 : u8 of
+  Bool.false →
+    case x_3 : u8 of
+    Bool.false →
+      jmp block_5
+    Bool.true →
+      let x_6 : tobj := test1._closed_1;
+      ret x_6
+  Bool.true →
+    case x_1 : u8 of
+    Bool.false →
+      let x_7 : tobj := test1._closed_2;
+      ret x_7
+    default →
+      case x_3 : u8 of
+      Bool.false →
+        jmp block_5
+      Bool.true →
+        let x_8 : tobj := test1._closed_3;
+        ret x_8
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+

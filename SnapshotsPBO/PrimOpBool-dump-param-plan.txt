@@ -1,0 +1,77 @@
+════ test1
+-- IR
+def test1 (x_1 : u8) (x_2 : u8) : u8 :=
+  case x_1 : u8 of
+  Bool.false →
+    ret x_1
+  Bool.true →
+    ret x_2
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : u8) (x_2 : u8) : u8 :=
+  case x_1 : u8 of
+  Bool.false →
+    ret x_2
+  Bool.true →
+    ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test3
+-- IR
+def test3 (x_1 : u8) (x_2 : u8) : u8 :=
+  case x_1 : u8 of
+  Bool.false →
+    case x_2 : u8 of
+    Bool.false →
+      let x_3 : u8 := 1;
+      ret x_3
+    Bool.true →
+      ret x_1
+  Bool.true →
+    ret x_2
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test4
+-- IR
+def test4 (x_1 : u8) (x_2 : u8) : u8 :=
+  case x_1 : u8 of
+  Bool.false →
+    ret x_2
+  Bool.true →
+    case x_2 : u8 of
+    Bool.false →
+      ret x_1
+    Bool.true →
+      let x_3 : u8 := 0;
+      ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test9
+-- IR
+def test9 (x_1 : u8) : u8 :=
+  case x_1 : u8 of
+  Bool.false →
+    let x_2 : u8 := 1;
+    ret x_2
+  Bool.true →
+    let x_3 : u8 := 0;
+    ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

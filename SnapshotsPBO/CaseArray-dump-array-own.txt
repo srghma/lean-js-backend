@@ -1,0 +1,4 @@
+=== CaseArray
+declarations looked at: 0
+copies of a shared array: not needed
+updates done in place: 0

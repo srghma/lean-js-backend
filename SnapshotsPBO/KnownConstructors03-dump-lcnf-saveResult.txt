@@ -1,0 +1,27 @@
+════ 🎯 test
+def test x : String :=
+  let _x.1 := 42;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := Int.decLt _x.2 x;
+  cases _x.3 : String
+  | Bool.false =>
+    let _x.4 := test._closed_1;
+    return _x.4
+  | Bool.true =>
+    let _x.5 := test._closed_2;
+    return _x.5
+
+════ 📦 Int.decLt
+def Int.decLt @&a @&b : Bool :=
+  extern
+
+════ 📦 test._closed_1
+def test._closed_1 : String :=
+  let _x.1 := "";
+  return _x.1
+
+════ 📦 test._closed_2
+def test._closed_2 : String :=
+  let _x.1 := "Hello, World!";
+  return _x.1
+

@@ -1,0 +1,21 @@
+════ split plans
+════ test1 before
+def test1 : obj :=
+  let x_1 : obj := test1._closed_7;
+  ret x_1
+════ test1 after
+def test1 : obj :=
+  let x_1 : obj := test1._closed_7;
+  ret x_1
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : obj) : obj :=
+  let x_2 : obj := test1._closed_3;
+  let x_3 : obj := zipRecord x_2 x_1;
+  ret x_3
+════ test2 after
+def test2 (x_1 : obj) : obj :=
+  let x_2 : obj := test1._closed_3;
+  let x_3 : obj := zipRecord x_2 x_1;
+  ret x_3
+════ test2 parameter plan: (every parameter kept)

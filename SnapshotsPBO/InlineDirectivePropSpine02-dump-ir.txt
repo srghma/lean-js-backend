@@ -1,0 +1,71 @@
+════ 🎯 f
+❌ ⚠️ Name 'f' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 g
+❌ ⚠️ Name 'g' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 : tagged :=
+  let x_1 : tagged := ctor_0[PUnit.unit];
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 : tagged :=
+  let x_1 : tagged := ctor_0[PUnit.unit];
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 testImpl
+-- IR (what the backend reads)
+def testImpl (x_1 : tagged) : tagged :=
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 wat1
+❌ ⚠️ Name 'wat1' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 wat2
+❌ ⚠️ Name 'wat2' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 watUnit
+❌ ⚠️ Name 'watUnit' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 watUnit1
+❌ ⚠️ Name 'watUnit1' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.InlineDirectivePropSpine02]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (3): [`test1, `test2, `testImpl]
+ctors (1): [`PUnit.unit]
+inducts (1): [`PUnit]

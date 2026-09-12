@@ -1,0 +1,83 @@
+════ extern1
+-- IR
+def extern1 : obj :=
+  let x_1 : obj := extern1._closed_1;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ fn
+-- IR
+def fn (x_1 : ◾) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := fn._closed_0;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+   from extern1._closed_0: [erased, ctor PUnit.unit]
+
+════ test1
+-- IR
+def test1 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test2
+-- IR
+def test2 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test3
+-- IR
+def test3 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test4
+-- IR
+def test4 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test5
+-- IR
+def test5 : tobj :=
+  block_2 :=
+    let x_1 : tobj := test1._closed_0;
+    ret x_1;
+  jmp block_2
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test6
+-- IR
+def test6 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+

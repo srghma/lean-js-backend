@@ -1,0 +1,148 @@
+════ 🎯 test1
+def test1 x : Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 2;
+  let _x.4 := Int.ofNat _x.3;
+  let _x.5 := Int.add _x.4 x;
+  let _x.6 := Int.add _x.5 x;
+  let _x.7 := Int.add _x.6 x;
+  let _x.8 := Int.add _x.7 x;
+  let _x.9 := 3;
+  let _x.10 := Int.ofNat _x.9;
+  let _x.11 := Int.add _x.8 _x.10;
+  let _x.12 := Int.add _x.2 _x.11;
+  let _x.13 := 4;
+  let _x.14 := Int.ofNat _x.13;
+  let _x.15 := Int.add _x.12 _x.14;
+  return _x.15
+
+════ 🎯 test2
+def test2 x : Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 2;
+  let _x.4 := Int.ofNat _x.3;
+  let _x.5 := 3;
+  let _x.6 := Int.ofNat _x.5;
+  let _x.7 := Int.add x _x.6;
+  let _x.8 := Int.add x _x.7;
+  let _x.9 := Int.add x _x.8;
+  let _x.10 := Int.add x _x.9;
+  let _x.11 := Int.add _x.4 _x.10;
+  let _x.12 := Int.add _x.2 _x.11;
+  let _x.13 := 4;
+  let _x.14 := Int.ofNat _x.13;
+  let _x.15 := Int.add _x.12 _x.14;
+  return _x.15
+
+════ 🎯 test3
+def test3 x : Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 2;
+  let _x.4 := Int.ofNat _x.3;
+  let _x.5 := 3;
+  let _x.6 := Int.ofNat _x.5;
+  let _x.7 := Int.add x _x.6;
+  let _x.8 := Int.add x _x.7;
+  let _x.9 := Int.add x _x.8;
+  let _x.10 := Int.add x _x.9;
+  let _x.11 := Int.add _x.4 _x.10;
+  let _x.12 := Int.add _x.2 _x.11;
+  let _x.13 := 4;
+  let _x.14 := Int.ofNat _x.13;
+  let _x.15 := Int.add _x.12 _x.14;
+  let _x.16 := 5;
+  let _x.17 := Int.ofNat _x.16;
+  let _x.18 := Int.add _x.17 x;
+  let _x.19 := Int.add _x.18 x;
+  let _x.20 := Int.add _x.19 x;
+  let _x.21 := Int.add _x.20 x;
+  let _x.22 := 6;
+  let _x.23 := Int.ofNat _x.22;
+  let _x.24 := Int.add _x.21 _x.23;
+  let _x.25 := Int.add _x.15 _x.24;
+  let _x.26 := 7;
+  let _x.27 := Int.ofNat _x.26;
+  let _x.28 := Int.add _x.25 _x.27;
+  return _x.28
+
+════ 🎯 test4
+def test4 x : Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 2;
+  let _x.4 := Int.ofNat _x.3;
+  let _x.5 := Int.mul _x.4 x;
+  let _x.6 := Int.mul _x.5 x;
+  let _x.7 := Int.mul _x.6 x;
+  let _x.8 := Int.mul _x.7 x;
+  let _x.9 := 3;
+  let _x.10 := Int.ofNat _x.9;
+  let _x.11 := Int.mul _x.8 _x.10;
+  let _x.12 := Int.mul _x.2 _x.11;
+  let _x.13 := 4;
+  let _x.14 := Int.ofNat _x.13;
+  let _x.15 := Int.mul _x.12 _x.14;
+  return _x.15
+
+════ 🎯 test5
+def test5 x : Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 2;
+  let _x.4 := Int.ofNat _x.3;
+  let _x.5 := 3;
+  let _x.6 := Int.ofNat _x.5;
+  let _x.7 := Int.mul x _x.6;
+  let _x.8 := Int.mul x _x.7;
+  let _x.9 := Int.mul x _x.8;
+  let _x.10 := Int.mul x _x.9;
+  let _x.11 := Int.mul _x.4 _x.10;
+  let _x.12 := Int.mul _x.2 _x.11;
+  let _x.13 := 4;
+  let _x.14 := Int.ofNat _x.13;
+  let _x.15 := Int.mul _x.12 _x.14;
+  return _x.15
+
+════ 🎯 test6
+def test6 x : Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 2;
+  let _x.4 := Int.ofNat _x.3;
+  let _x.5 := 3;
+  let _x.6 := Int.ofNat _x.5;
+  let _x.7 := Int.mul x _x.6;
+  let _x.8 := Int.mul x _x.7;
+  let _x.9 := Int.mul x _x.8;
+  let _x.10 := Int.mul x _x.9;
+  let _x.11 := Int.mul _x.4 _x.10;
+  let _x.12 := Int.mul _x.2 _x.11;
+  let _x.13 := 4;
+  let _x.14 := Int.ofNat _x.13;
+  let _x.15 := Int.mul _x.12 _x.14;
+  let _x.16 := 5;
+  let _x.17 := Int.ofNat _x.16;
+  let _x.18 := Int.mul _x.17 x;
+  let _x.19 := Int.mul _x.18 x;
+  let _x.20 := Int.mul _x.19 x;
+  let _x.21 := Int.mul _x.20 x;
+  let _x.22 := 6;
+  let _x.23 := Int.ofNat _x.22;
+  let _x.24 := Int.mul _x.21 _x.23;
+  let _x.25 := Int.mul _x.15 _x.24;
+  let _x.26 := 7;
+  let _x.27 := Int.ofNat _x.26;
+  let _x.28 := Int.mul _x.25 _x.27;
+  return _x.28
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 Int.mul
+def Int.mul @&m @&n : Int :=
+  extern
+

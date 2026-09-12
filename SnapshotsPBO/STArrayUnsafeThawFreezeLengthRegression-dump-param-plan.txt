@@ -1,0 +1,16 @@
+════ test
+-- IR
+def test (x_1 : tobj) : obj :=
+  let x_2 : obj := test._closed_0;
+  let x_3 : obj := Array.push ◾ x_2 x_1;
+  let x_4 : tobj := test._closed_1;
+  let x_5 : obj := Array.push ◾ x_3 x_4;
+  let x_6 : tagged := Array.size ◾ x_5;
+  let x_7 : tobj := Int.ofNat x_6;
+  let x_8 : obj := Array.push ◾ x_5 x_7;
+  ret x_8
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

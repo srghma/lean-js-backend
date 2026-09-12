@@ -1,0 +1,16 @@
+════ split plans
+════ assertEqual before
+  (no compiled code)
+════ assertEqual after
+  (no compiled code)
+════ assertEqual parameter plan: (every parameter kept)
+════ assertEqual3 before
+  (no compiled code)
+════ assertEqual3 after
+  (no compiled code)
+════ assertEqual3 parameter plan: (every parameter kept)
+════ main before
+  (no compiled code)
+════ main after
+  (no compiled code)
+════ main parameter plan: (every parameter kept)

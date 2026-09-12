@@ -1,0 +1,756 @@
+════ 🎯 test1
+def test1 : String :=
+  let _x.1 := 42;
+  let _x.2 := Nat.reprFast _x.1;
+  return _x.2
+
+════ 🎯 test2
+def test2 : String :=
+  let _x.1 := 420;
+  let _x.2 := Bool.true;
+  let _x.3 := 1;
+  let _x.4 := Float.ofScientific _x.1 _x.2 _x.3;
+  let _x.5 := Float.toString _x.4;
+  return _x.5
+
+════ 🎯 test3
+def test3 : String :=
+  let _x.1 := "true";
+  return _x.1
+
+════ 🎯 test4
+def test4 : String :=
+  let _x.1 := "wat";
+  return _x.1
+
+════ 🎯 test5
+def test5 : String :=
+  let _x.1 := 119;
+  let _x.2 := "";
+  let _x.3 := String.push _x.2 _x.1;
+  return _x.3
+
+════ 🎯 test6
+def test6 : Std.Format :=
+  let _x.1 := "1";
+  let _x.2 := Bool.true;
+  let _x.3 := MyRec.mk _x.1 _x.2;
+  let _x.4 := 0;
+  let _x.5 := instReprMyRec.repr _x.3 _x.4;
+  return _x.5
+
+════ 🎯 test7
+def test7 : Std.Format :=
+  let _x.1 := 1;
+  let _x.2 := 2;
+  let _x.3 := 3;
+  let _x.4 := 4;
+  let _x.5 := @Array.mkEmpty _ _x.4;
+  let _x.6 := @Array.push _ _x.5 _x.1;
+  let _x.7 := @Array.push _ _x.6 _x.2;
+  let _x.8 := @Array.push _ _x.7 _x.3;
+  let _x.9 := @Array.push _ _x.8 _x.4;
+  let _x.10 := Array.Array.repr._at_.test7.spec_0 _x.9;
+  return _x.10
+
+════ 📦 hexDigitRepr
+def hexDigitRepr n : String :=
+  let _x.1 := Nat.digitChar n;
+  let _x.2 := "";
+  let _x.3 := String.push _x.2 _x.1;
+  return _x.3
+
+════ 📦 instDecidableEqChar
+def instDecidableEqChar c d : Decidable lcErased :=
+  let _x.1 := c # 0;
+  let _x.2 := d # 0;
+  let _x.3 := instDecidableEqUInt32 _x.1 _x.2;
+  cases _x.3 : Decidable lcErased
+  | Decidable.isFalse h.4 =>
+    let _x.5 := @Decidable.isFalse ◾ ◾;
+    return _x.5
+  | Decidable.isTrue h.6 =>
+    let _x.7 := @Decidable.isTrue ◾ ◾;
+    return _x.7
+
+════ 📦 instDecidableEqNat
+def instDecidableEqNat @&n @&m : Decidable lcErased :=
+  let _x.1 := Nat.decEq n m;
+  return _x.1
+
+════ 📦 instDecidableEqUInt32
+def instDecidableEqUInt32 a b : Decidable lcErased :=
+  let _x.1 := UInt32.decEq a b;
+  return _x.1
+
+════ 📦 Array.getInternal
+def Array.getInternal α @&a @&i h : α :=
+  extern
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array α :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array α :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Bool.repr
+def Bool.repr x.1 x.2 : Std.Format :=
+  cases x.1 : Std.Format
+  | Bool.false =>
+    let _x.3 := "false";
+    let _x.4 := Std.Format.text _x.3;
+    return _x.4
+  | Bool.true =>
+    let _x.5 := "true";
+    let _x.6 := Std.Format.text _x.5;
+    return _x.6
+
+════ 📦 Char.quoteCore
+def Char.quoteCore c inString : String :=
+  jp _jp.1 : String :=
+    let _x.2 := "\\x";
+    let _x.3 := Char.quoteCore.smallCharToHex.2 c;
+    let _x.4 := String.Internal.append _x.2 _x.3;
+    return _x.4;
+  jp _jp.5 : String :=
+    let _x.6 := c # 0;
+    let _x.7 := UInt32.toNat _x.6;
+    let _x.8 := 31;
+    let _x.9 := Nat.decLe _x.7 _x.8;
+    cases _x.9 : String
+    | Decidable.isFalse h.10 =>
+      let _x.11 := 127;
+      let _x.12 := instDecidableEqChar c _x.11;
+      cases _x.12 : String
+      | Decidable.isFalse h.13 =>
+        let _x.14 := "";
+        let _x.15 := String.push _x.14 c;
+        return _x.15
+      | Decidable.isTrue h.16 =>
+        goto _jp.1
+    | Decidable.isTrue h.17 =>
+      goto _jp.1;
+  let _x.18 := 10;
+  let _x.19 := instDecidableEqChar c _x.18;
+  cases _x.19 : String
+  | Decidable.isFalse x.20 =>
+    let _x.21 := 9;
+    let _x.22 := instDecidableEqChar c _x.21;
+    cases _x.22 : String
+    | Decidable.isFalse x.23 =>
+      let _x.24 := 92;
+      let _x.25 := instDecidableEqChar c _x.24;
+      cases _x.25 : String
+      | Decidable.isFalse x.26 =>
+        let _x.27 := 34;
+        let _x.28 := instDecidableEqChar c _x.27;
+        cases _x.28 : String
+        | Decidable.isFalse x.29 =>
+          cases inString : String
+          | Bool.false =>
+            let _x.30 := 39;
+            let _x.31 := instDecidableEqChar c _x.30;
+            let _x.32 := Decidable.decide ◾ _x.31;
+            cases _x.32 : String
+            | Bool.false =>
+              goto _jp.5
+            | Bool.true =>
+              let _x.33 := "\\'";
+              return _x.33
+          | Bool.true =>
+            goto _jp.5
+        | Decidable.isTrue x.34 =>
+          let _x.35 := "\\\"";
+          return _x.35
+      | Decidable.isTrue x.36 =>
+        let _x.37 := "\\\\";
+        return _x.37
+    | Decidable.isTrue x.38 =>
+      let _x.39 := "\\t";
+      return _x.39
+  | Decidable.isTrue x.40 =>
+    let _x.41 := "\\n";
+    return _x.41
+
+════ 📦 Decidable.decide
+def Decidable.decide p h : Bool :=
+  cases h : Bool
+  | Decidable.isFalse x.1 =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Decidable.isTrue x.3 =>
+    let _x.4 := Bool.true;
+    return _x.4
+
+════ 📦 Float.ofBinaryScientific
+def Float.ofBinaryScientific m e : Float :=
+  let _x.1 := Nat.log2 m;
+  let _x.2 := 63;
+  let s := Nat.sub _x.1 _x.2;
+  let _x.3 := Nat.shiftRight m s;
+  let m := UInt64.ofNat _x.3;
+  let _x.4 := Nat.cast._at_.Float.ofBinaryScientific.spec_0 s;
+  let e := Int.add e _x.4;
+  let _x.5 := UInt64.toFloat m;
+  let _x.6 := Float.scaleB _x.5 e;
+  return _x.6
+
+════ 📦 Float.ofScientific
+def Float.ofScientific m s e : Float :=
+  cases s : Float
+  | Bool.false =>
+    let _x.1 := 5;
+    let _x.2 := Nat.pow _x.1 e;
+    let _x.3 := Nat.mul m _x.2;
+    let _x.4 := Int.ofNat e;
+    let _x.5 := Float.ofBinaryScientific _x.3 _x.4;
+    return _x.5
+  | Bool.true =>
+    let _x.6 := 64;
+    let _x.7 := Nat.log2 m;
+    let s := Nat.sub _x.6 _x.7;
+    let _x.8 := 3;
+    let _x.9 := Nat.mul _x.8 e;
+    let _x.10 := Nat.add _x.9 s;
+    let _x.11 := Nat.shiftLeft m _x.10;
+    let _x.12 := 5;
+    let _x.13 := Nat.pow _x.12 e;
+    let m := Nat.div _x.11 _x.13;
+    let _x.14 := 4;
+    let _x.15 := Int.ofNat _x.14;
+    let _x.16 := Int.neg _x.15;
+    let _x.17 := Int.ofNat e;
+    let _x.18 := Int.mul _x.16 _x.17;
+    let _x.19 := Int.ofNat s;
+    let _x.20 := Int.sub _x.18 _x.19;
+    let _x.21 := Float.ofBinaryScientific m _x.20;
+    return _x.21
+
+════ 📦 Float.scaleB
+def Float.scaleB x @&i : Float :=
+  extern
+
+════ 📦 Float.toString
+def Float.toString a._@._internal._hyg.1 : String :=
+  extern
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 Int.mul
+def Int.mul @&m @&n : Int :=
+  extern
+
+════ 📦 Int.neg
+def Int.neg @&n : Int :=
+  extern
+
+════ 📦 Int.sub
+def Int.sub @&m @&n : Int :=
+  extern
+
+════ 📦 List.range
+def List.range n : List Nat :=
+  let _x.1 := @List.nil _;
+  let _x.2 := List.range.loop n _x.1;
+  return _x.2
+
+════ 📦 List.reverse
+def List.reverse α as : List α :=
+  let _x.1 := @List.nil _;
+  let _x.2 := @List.reverseAux _ as _x.1;
+  return _x.2
+
+════ 📦 List.reverseAux
+def List.reverseAux α x.1 x.2 : List α :=
+  cases x.1 : List α
+  | List.nil =>
+    return x.2
+  | List.cons head.3 tail.4 =>
+    let _x.5 := @List.cons _ head.3 x.2;
+    let _x.6 := @List.reverseAux _ tail.4 _x.5;
+    return _x.6
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.decLe
+def Nat.decLe @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.digitChar
+def Nat.digitChar n : Char :=
+  let _x.1 := 0;
+  let _x.2 := instDecidableEqNat n _x.1;
+  cases _x.2 : Char
+  | Decidable.isFalse x.3 =>
+    let _x.4 := 1;
+    let _x.5 := instDecidableEqNat n _x.4;
+    cases _x.5 : Char
+    | Decidable.isFalse x.6 =>
+      let _x.7 := 2;
+      let _x.8 := instDecidableEqNat n _x.7;
+      cases _x.8 : Char
+      | Decidable.isFalse x.9 =>
+        let _x.10 := 3;
+        let _x.11 := instDecidableEqNat n _x.10;
+        cases _x.11 : Char
+        | Decidable.isFalse x.12 =>
+          let _x.13 := 4;
+          let _x.14 := instDecidableEqNat n _x.13;
+          cases _x.14 : Char
+          | Decidable.isFalse x.15 =>
+            let _x.16 := 5;
+            let _x.17 := instDecidableEqNat n _x.16;
+            cases _x.17 : Char
+            | Decidable.isFalse x.18 =>
+              let _x.19 := 6;
+              let _x.20 := instDecidableEqNat n _x.19;
+              cases _x.20 : Char
+              | Decidable.isFalse x.21 =>
+                let _x.22 := 7;
+                let _x.23 := instDecidableEqNat n _x.22;
+                cases _x.23 : Char
+                | Decidable.isFalse x.24 =>
+                  let _x.25 := 8;
+                  let _x.26 := instDecidableEqNat n _x.25;
+                  cases _x.26 : Char
+                  | Decidable.isFalse x.27 =>
+                    let _x.28 := 9;
+                    let _x.29 := instDecidableEqNat n _x.28;
+                    cases _x.29 : Char
+                    | Decidable.isFalse x.30 =>
+                      let _x.31 := 10;
+                      let _x.32 := instDecidableEqNat n _x.31;
+                      cases _x.32 : Char
+                      | Decidable.isFalse x.33 =>
+                        let _x.34 := 11;
+                        let _x.35 := instDecidableEqNat n _x.34;
+                        cases _x.35 : Char
+                        | Decidable.isFalse x.36 =>
+                          let _x.37 := 12;
+                          let _x.38 := instDecidableEqNat n _x.37;
+                          cases _x.38 : Char
+                          | Decidable.isFalse x.39 =>
+                            let _x.40 := 13;
+                            let _x.41 := instDecidableEqNat n _x.40;
+                            cases _x.41 : Char
+                            | Decidable.isFalse x.42 =>
+                              let _x.43 := 14;
+                              let _x.44 := instDecidableEqNat n _x.43;
+                              cases _x.44 : Char
+                              | Decidable.isFalse x.45 =>
+                                let _x.46 := 15;
+                                let _x.47 := instDecidableEqNat n _x.46;
+                                cases _x.47 : Char
+                                | Decidable.isFalse x.48 =>
+                                  let _x.49 := 42;
+                                  return _x.49
+                                | Decidable.isTrue x.50 =>
+                                  let _x.51 := 102;
+                                  return _x.51
+                              | Decidable.isTrue x.52 =>
+                                let _x.53 := 101;
+                                return _x.53
+                            | Decidable.isTrue x.54 =>
+                              let _x.55 := 100;
+                              return _x.55
+                          | Decidable.isTrue x.56 =>
+                            let _x.57 := 99;
+                            return _x.57
+                        | Decidable.isTrue x.58 =>
+                          let _x.59 := 98;
+                          return _x.59
+                      | Decidable.isTrue x.60 =>
+                        let _x.61 := 97;
+                        return _x.61
+                    | Decidable.isTrue x.62 =>
+                      let _x.63 := 57;
+                      return _x.63
+                  | Decidable.isTrue x.64 =>
+                    let _x.65 := 56;
+                    return _x.65
+                | Decidable.isTrue x.66 =>
+                  let _x.67 := 55;
+                  return _x.67
+              | Decidable.isTrue x.68 =>
+                let _x.69 := 54;
+                return _x.69
+            | Decidable.isTrue x.70 =>
+              let _x.71 := 53;
+              return _x.71
+          | Decidable.isTrue x.72 =>
+            let _x.73 := 52;
+            return _x.73
+        | Decidable.isTrue x.74 =>
+          let _x.75 := 51;
+          return _x.75
+      | Decidable.isTrue x.76 =>
+        let _x.77 := 50;
+        return _x.77
+    | Decidable.isTrue x.78 =>
+      let _x.79 := 49;
+      return _x.79
+  | Decidable.isTrue x.80 =>
+    let _x.81 := 48;
+    return _x.81
+
+════ 📦 Nat.div
+def Nat.div @&x @&y : Nat :=
+  extern
+
+════ 📦 Nat.log2
+def Nat.log2 @&n : Nat :=
+  extern
+
+════ 📦 Nat.mod
+def Nat.mod @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.mul
+def Nat.mul @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.pow
+def Nat.pow @&m @&a._@._internal._hyg.1 : Nat :=
+  extern
+
+════ 📦 Nat.reprFast
+def Nat.reprFast n : String :=
+  let _x.1 := Nat.reprArray.2;
+  let _x.2 := @Array.size _ _x.1;
+  let _x.3 := Nat.decLt n _x.2;
+  cases _x.3 : String
+  | Decidable.isFalse h =>
+    let _x.4 := 2;
+    let _x.5 := System.Platform.numBits;
+    let _x.6 := Nat.pow _x.4 _x.5;
+    let _x.7 := Nat.decLt n _x.6;
+    cases _x.7 : String
+    | Decidable.isFalse h =>
+      let _x.8 := 10;
+      let _x.9 := Nat.toDigits _x.8 n;
+      let _x.10 := String.ofList _x.9;
+      return _x.10
+    | Decidable.isTrue h =>
+      let _x.11 := USize.ofNatLT n ◾;
+      let _x.12 := USize.repr _x.11;
+      return _x.12
+  | Decidable.isTrue h =>
+    let _x.13 := @Array.getInternal _ _x.1 n ◾;
+    return _x.13
+
+════ 📦 Nat.shiftLeft
+def Nat.shiftLeft @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.shiftRight
+def Nat.shiftRight @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.toDigits
+def Nat.toDigits base n : List Char :=
+  let _x.1 := 1;
+  let _x.2 := Nat.add n _x.1;
+  let _x.3 := @List.nil _;
+  let _x.4 := Nat.toDigitsCore base _x.2 n _x.3;
+  return _x.4
+
+════ 📦 Nat.toDigitsCore
+def Nat.toDigitsCore base x.1 x.2 x.3 : List Char :=
+  cases x.1 : List Char
+  | Nat.zero =>
+    return x.3
+  | Nat.succ n.4 =>
+    let _x.5 := Nat.mod x.2 base;
+    let d := Nat.digitChar _x.5;
+    let n' := Nat.div x.2 base;
+    let _x.6 := 0;
+    let _x.7 := instDecidableEqNat n' _x.6;
+    cases _x.7 : List Char
+    | Decidable.isFalse x.8 =>
+      let _x.9 := @List.cons _ d x.3;
+      let _x.10 := Nat.toDigitsCore base n.4 n' _x.9;
+      return _x.10
+    | Decidable.isTrue x.11 =>
+      let _x.12 := @List.cons _ d x.3;
+      return _x.12
+
+════ 📦 String.ofList
+def String.ofList data : String :=
+  extern
+
+════ 📦 String.push
+def String.push a._@._internal._hyg.1 a._@._internal._hyg.2 : String :=
+  extern
+
+════ 📦 String.quote
+def String.quote s : String :=
+  let _x.1 := String.Internal.isEmpty s;
+  cases _x.1 : String
+  | Bool.false =>
+    let _x.2 := Bool.true;
+    fun _f.3 s c : String :=
+      let _x.4 := @Char.quoteCore c _x.2;
+      let _x.5 := String.Internal.append s _x.4;
+      return _x.5;
+    let _x.6 := "\"";
+    let _x.7 := String.Internal.foldl _f.3 _x.6 s;
+    let _x.8 := String.Internal.append _x.7 _x.6;
+    return _x.8
+  | Bool.true =>
+    let _x.9 := "\"\"";
+    return _x.9
+
+════ 📦 UInt32.decEq
+def UInt32.decEq a b : Decidable lcErased :=
+  extern
+
+════ 📦 UInt32.toNat
+def UInt32.toNat n : Nat :=
+  extern
+
+════ 📦 UInt64.ofNat
+def UInt64.ofNat @&n : UInt64 :=
+  extern
+
+════ 📦 UInt64.toFloat
+def UInt64.toFloat n : Float :=
+  extern
+
+════ 📦 USize.ofNat
+def USize.ofNat @&n : USize :=
+  extern
+
+════ 📦 USize.ofNatLT
+def USize.ofNatLT @&n h : USize :=
+  extern
+
+════ 📦 USize.repr
+def USize.repr @&n : String :=
+  extern
+
+════ 📦 instReprMyRec.repr
+def instReprMyRec.repr x.1 prec.2 : Std.Format :=
+  let _x.3 := "{ ";
+  let _x.4 := Std.Format.nil;
+  let _x.5 := "foo";
+  let _x.6 := Std.Format.text _x.5;
+  let _x.7 := Std.Format.append _x.4 _x.6;
+  let _x.8 := " := ";
+  let _x.9 := Std.Format.text _x.8;
+  let _x.10 := Std.Format.append _x.7 _x.9;
+  let _x.11 := 7;
+  let _x.12 := Int.ofNat _x.11;
+  let _x.13 := x.1 # 0;
+  let _x.14 := String.quote _x.13;
+  let _x.15 := Std.Format.text _x.14;
+  let _x.16 := Std.Format.nest _x.12 _x.15;
+  let _x.17 := Std.Format.FlattenBehavior.allOrNone;
+  let _x.18 := @Std.Format.group _x.16 _x.17;
+  let _x.19 := Std.Format.append _x.10 _x.18;
+  let _x.20 := ",";
+  let _x.21 := Std.Format.text _x.20;
+  let _x.22 := Std.Format.append _x.19 _x.21;
+  let _x.23 := Std.Format.line;
+  let _x.24 := Std.Format.append _x.22 _x.23;
+  let _x.25 := "bar";
+  let _x.26 := Std.Format.text _x.25;
+  let _x.27 := Std.Format.append _x.24 _x.26;
+  let _x.28 := Std.Format.append _x.27 _x.9;
+  let _x.29 := x.1 # 1;
+  let _x.30 := 0;
+  let _x.31 := Bool.repr _x.29 _x.30;
+  let _x.32 := Std.Format.nest _x.12 _x.31;
+  let _x.33 := @Std.Format.group _x.32 _x.17;
+  let _x.34 := Std.Format.append _x.28 _x.33;
+  let _x.35 := " }";
+  let _x.36 := String.Internal.length _x.3;
+  let _x.37 := Int.ofNat _x.36;
+  let _x.38 := Std.Format.text _x.3;
+  let _x.39 := Std.Format.append _x.38 _x.34;
+  let _x.40 := Std.Format.text _x.35;
+  let _x.41 := Std.Format.append _x.39 _x.40;
+  let _x.42 := Std.Format.nest _x.37 _x.41;
+  let _x.43 := @Std.Format.group _x.42 _x.17;
+  return _x.43
+
+════ 📦 _private.Init.Data.Repr.0.Nat.reprArray
+def _private.Init.Data.Repr.0.Nat.reprArray : Array String :=
+  let _x.1 := 128;
+  let _x.2 := List.range _x.1;
+  let _x.3 := @List.nil _;
+  let _x.4 := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 _x.2 _x.3;
+  let _x.5 := @Array.mk _ _x.4;
+  return _x.5
+
+════ 📦 List.range.loop
+def List.range.loop x.1 x.2 : List Nat :=
+  cases x.1 : List Nat
+  | Nat.zero =>
+    return x.2
+  | Nat.succ n.3 =>
+    let _x.4 := @List.cons _ n.3 x.2;
+    let _x.5 := List.range.loop n.3 _x.4;
+    return _x.5
+
+════ 📦 Std.Format.fill
+def Std.Format.fill f : Std.Format :=
+  let _x.1 := Std.Format.FlattenBehavior.fill;
+  let _x.2 := @Std.Format.group f _x.1;
+  return _x.2
+
+════ 📦 String.Internal.append
+def String.Internal.append a._@._internal._hyg.1 @&a._@._internal._hyg.2 : String :=
+  extern
+
+════ 📦 String.Internal.foldl
+def String.Internal.foldl f init s : String :=
+  extern
+
+════ 📦 String.Internal.isEmpty
+def String.Internal.isEmpty s : Bool :=
+  extern
+
+════ 📦 String.Internal.length
+def String.Internal.length @&a._@._internal._hyg.1 : Nat :=
+  extern
+
+════ 📦 System.Platform.getNumBits
+def System.Platform.getNumBits a._@._internal._hyg.1 : Subtype lcErased :=
+  extern
+
+════ 📦 System.Platform.numBits
+def System.Platform.numBits : Nat :=
+  let _x.1 := PUnit.unit;
+  let _x.2 := System.Platform.getNumBits _x.1;
+  let _x.3 := _x.2 # 0;
+  return _x.3
+
+════ 📦 _private.Init.Data.Repr.0.Char.quoteCore.smallCharToHex
+def _private.Init.Data.Repr.0.Char.quoteCore.smallCharToHex c : String :=
+  let _x.1 := c # 0;
+  let n := UInt32.toNat _x.1;
+  let _x.2 := 16;
+  let _x.3 := 4;
+  let d2 := Nat.shiftRight n _x.3;
+  let d1 := Nat.mod n _x.2;
+  let _x.4 := hexDigitRepr d2;
+  let _x.5 := hexDigitRepr d1;
+  let _x.6 := String.Internal.append _x.4 _x.5;
+  return _x.6
+
+════ 📦 List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+def List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 x.1 x.2 : List String :=
+  cases x.1 : List String
+  | List.nil =>
+    let _x.3 := @List.reverse _ x.2;
+    return _x.3
+  | List.cons head.4 tail.5 =>
+    let _x.6 := USize.ofNat head.4;
+    let _x.7 := USize.repr _x.6;
+    let _x.8 := @List.cons _ _x.7 x.2;
+    let _x.9 := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 tail.5 _x.8;
+    return _x.9
+
+════ 📦 Array.Array.repr._at_.test7.spec_0
+def Array.Array.repr._at_.test7.spec_0 xs : Std.Format :=
+  let _x.1 := @Array.size _ xs;
+  let _x.2 := 0;
+  let _x.3 := instDecidableEqNat _x.1 _x.2;
+  let _x.4 := Decidable.decide ◾ _x.3;
+  cases _x.4 : Std.Format
+  | Bool.false =>
+    let _x.5 := "#[";
+    let _x.6 := @Array.toList _ xs;
+    let _x.7 := ",";
+    let _x.8 := Std.Format.text _x.7;
+    let _x.9 := Std.Format.line;
+    let _x.10 := Std.Format.append _x.8 _x.9;
+    let _x.11 := Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0 _x.6 _x.10;
+    let _x.12 := "]";
+    let _x.13 := String.Internal.length _x.5;
+    let _x.14 := Int.ofNat _x.13;
+    let _x.15 := Std.Format.text _x.5;
+    let _x.16 := Std.Format.append _x.15 _x.11;
+    let _x.17 := Std.Format.text _x.12;
+    let _x.18 := Std.Format.append _x.16 _x.17;
+    let _x.19 := Std.Format.nest _x.14 _x.18;
+    let _x.20 := Std.Format.fill _x.19;
+    return _x.20
+  | Bool.true =>
+    let _x.21 := "#[]";
+    let _x.22 := Std.Format.text _x.21;
+    return _x.22
+
+════ 📦 Nat.cast._at_.Float.ofBinaryScientific.spec_0
+def Nat.cast._at_.Float.ofBinaryScientific.spec_0 a.1 : Int :=
+  let _x.2 := Int.ofNat a.1;
+  return _x.2
+
+════ 📦 Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0
+def Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0 x.1 x.2 : Std.Format :=
+  fun _f.3 _y.4 : Std.Format :=
+    let _x.5 := Nat.reprFast _y.4;
+    let _x.6 := Std.Format.text _x.5;
+    return _x.6;
+  cases x.1 : Std.Format
+  | List.nil =>
+    let _x.7 := Std.Format.nil;
+    return _x.7
+  | List.cons head.8 tail.9 =>
+    cases tail.9 : Std.Format
+    | List.nil =>
+      let _x.10 := _f.3 head.8;
+      return _x.10
+    | _ =>
+      let _x.11 := _f.3 head.8;
+      let _x.12 := List.foldl._at_.Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0.spec_1 x.2 _x.11 tail.9;
+      return _x.12
+
+════ 📦 List.foldl._at_.Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0.spec_1
+def List.foldl._at_.Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0.spec_1 x.1 x.2 x.3 : Std.Format :=
+  cases x.3 : Std.Format
+  | List.nil =>
+    return x.2
+  | List.cons head.4 tail.5 =>
+    let _x.6 := Std.Format.append x.2 x.1;
+    let _x.7 := Nat.reprFast head.4;
+    let _x.8 := Std.Format.text _x.7;
+    let _x.9 := Std.Format.append _x.6 _x.8;
+    let _x.10 := List.foldl._at_.List.foldl._at_.Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0.spec_1.spec_2 x.1 _x.9 tail.5;
+    return _x.10
+
+════ 📦 List.foldl._at_.List.foldl._at_.Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0.spec_1.spec_2
+def List.foldl._at_.List.foldl._at_.Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0.spec_1.spec_2 x.1 x.2 x.3 : Std.Format :=
+  cases x.3 : Std.Format
+  | List.nil =>
+    return x.2
+  | List.cons head.4 tail.5 =>
+    let _x.6 := Std.Format.append x.2 x.1;
+    let _x.7 := Nat.reprFast head.4;
+    let _x.8 := Std.Format.text _x.7;
+    let _x.9 := Std.Format.append _x.6 _x.8;
+    let _x.10 := List.foldl._at_.List.foldl._at_.Std.Format.joinSep._at_.Array.Array.repr._at_.test7.spec_0.spec_0.spec_1.spec_2 x.1 _x.9 tail.5;
+    return _x.10
+

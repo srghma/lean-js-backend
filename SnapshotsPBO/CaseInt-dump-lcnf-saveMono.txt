@@ -1,0 +1,33 @@
+════ 🎯 test1
+def test1 x.1 : String :=
+  let _x.2 := 1;
+  let _x.3 := Int.ofNat _x.2;
+  let _x.4 := Int.decEq x.1 _x.3;
+  cases _x.4 : String
+  | Bool.false =>
+    let _x.5 := 2;
+    let _x.6 := Int.ofNat _x.5;
+    let _x.7 := Int.decEq x.1 _x.6;
+    cases _x.7 : String
+    | Bool.false =>
+      let _x.8 := 3;
+      let _x.9 := Int.ofNat _x.8;
+      let _x.10 := Int.decEq x.1 _x.9;
+      cases _x.10 : String
+      | Bool.false =>
+        let _x.11 := "catch";
+        return _x.11
+      | Bool.true =>
+        let _x.12 := "3";
+        return _x.12
+    | Bool.true =>
+      let _x.13 := "2";
+      return _x.13
+  | Bool.true =>
+    let _x.14 := "1";
+    return _x.14
+
+════ 📦 Int.decEq
+def Int.decEq @&a @&b : Bool :=
+  extern
+

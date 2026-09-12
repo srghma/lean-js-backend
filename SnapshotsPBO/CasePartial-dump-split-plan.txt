@@ -1,0 +1,116 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : @& tobj) : tobj :=
+  let x_2 : tagged := 1;
+  let x_3 : tobj := test1._closed_0;
+  let x_4 : u8 := Int.decEq x_1 x_3;
+  case x_4 : u8 of
+  Bool.false →
+    dec x_3;
+    let x_5 : tobj := test1._closed_1;
+    let x_6 : u8 := Int.decEq x_1 x_5;
+    case x_6 : u8 of
+    Bool.false →
+      dec x_5;
+      let x_7 : tobj := test1._closed_2;
+      let x_8 : u8 := Int.decEq x_1 x_7;
+      case x_8 : u8 of
+      Bool.false →
+        dec x_7;
+        let x_9 : obj := test1._closed_3;
+        let x_10 : obj := test1._closed_4;
+        let x_11 : tagged := 6;
+        let x_12 : tagged := 9;
+        let x_13 : obj := test1._closed_5;
+        block_18 (x_14 : obj) :=
+          let x_15 : obj := String.append x_13 x_14;
+          dec x_14;
+          let x_16 : obj := mkPanicMessageWithDecl x_9 x_10 x_11 x_12 x_15;
+          dec x_15;
+          dec x_10;
+          dec x_9;
+          let x_17 : tobj := panic._at_.test1.spec_0 x_16;
+          ret x_17;
+        let x_19 : tobj := test1._closed_6;
+        let x_20 : u8 := Int.decLt x_1 x_19;
+        dec x_19;
+        case x_20 : u8 of
+        Bool.false →
+          let x_21 : tobj := Int.natAbs x_1;
+          let x_22 : obj := Nat.reprFast x_21;
+          jmp block_18 x_22
+        Bool.true →
+          let x_23 : tobj := Int.natAbs x_1;
+          let x_24 : tobj := Nat.sub x_23 x_2;
+          dec x_23;
+          let x_25 : obj := test1._closed_7;
+          let x_26 : tobj := Nat.add x_24 x_2;
+          dec x_24;
+          let x_27 : obj := Nat.reprFast x_26;
+          let x_28 : obj := String.Internal.append x_25 x_27;
+          dec x_27;
+          jmp block_18 x_28
+      Bool.true →
+        ret x_7
+    Bool.true →
+      ret x_5
+  Bool.true →
+    ret x_3
+════ test1 after
+def test1 (x_1 : @& tobj) : tobj :=
+  let x_2 : tagged := 1;
+  let x_3 : tobj := test1._closed_0;
+  let x_4 : u8 := Int.decEq x_1 x_3;
+  case x_4 : u8 of
+  Bool.false →
+    dec x_3;
+    let x_5 : tobj := test1._closed_1;
+    let x_6 : u8 := Int.decEq x_1 x_5;
+    case x_6 : u8 of
+    Bool.false →
+      dec x_5;
+      let x_7 : tobj := test1._closed_2;
+      let x_8 : u8 := Int.decEq x_1 x_7;
+      case x_8 : u8 of
+      Bool.false →
+        dec x_7;
+        let x_9 : obj := test1._closed_3;
+        let x_10 : obj := test1._closed_4;
+        let x_11 : tagged := 6;
+        let x_12 : tagged := 9;
+        let x_13 : obj := test1._closed_5;
+        block_18 (x_14 : obj) :=
+          let x_15 : obj := String.append x_13 x_14;
+          dec x_14;
+          let x_16 : obj := mkPanicMessageWithDecl x_9 x_10 x_11 x_12 x_15;
+          dec x_15;
+          dec x_10;
+          dec x_9;
+          let x_17 : tobj := panic._at_.test1.spec_0 x_16;
+          ret x_17;
+        let x_19 : tobj := test1._closed_6;
+        let x_20 : u8 := Int.decLt x_1 x_19;
+        dec x_19;
+        case x_20 : u8 of
+        Bool.false →
+          let x_21 : tobj := Int.natAbs x_1;
+          let x_22 : obj := Nat.reprFast x_21;
+          jmp block_18 x_22
+        Bool.true →
+          let x_23 : tobj := Int.natAbs x_1;
+          let x_24 : tobj := Nat.sub x_23 x_2;
+          dec x_23;
+          let x_25 : obj := test1._closed_7;
+          let x_26 : tobj := Nat.add x_24 x_2;
+          dec x_24;
+          let x_27 : obj := Nat.reprFast x_26;
+          let x_28 : obj := String.Internal.append x_25 x_27;
+          dec x_27;
+          jmp block_18 x_28
+      Bool.true →
+        ret x_7
+    Bool.true →
+      ret x_5
+  Bool.true →
+    ret x_3
+════ test1 parameter plan: (every parameter kept)

@@ -1,0 +1,188 @@
+════ 🎯 test1
+def test1 arr : Array String :=
+  let _x.1 := test1._closed_0;
+  let _x.2 := 1;
+  let _x.3 := Array.mkEmpty ◾ _x.2;
+  let x := Array.push ◾ _x.3 _x.1;
+  let _x.4 := test1._closed_3;
+  let y := Array.push ◾ _x.3 _x.4;
+  let _x.5 := test1._closed_5;
+  let z := Array.push ◾ _x.3 _x.5;
+  let _x.6 := test1._closed_7;
+  let w := Array.push ◾ _x.3 _x.6;
+  let _x.7 := Array.append._redArg arr z;
+  let _x.8 := Array.append._redArg arr _x.7;
+  let _x.9 := Array.append._redArg arr _x.8;
+  let _x.10 := Array.append._redArg arr _x.9;
+  let _x.11 := Array.append._redArg y _x.10;
+  let _x.12 := Array.append._redArg x _x.11;
+  let _x.13 := Array.append._redArg _x.12 w;
+  return _x.13
+
+════ 🎯 test2
+def test2 arr : Array String :=
+  let _x.1 := test1._closed_0;
+  let _x.2 := 1;
+  let _x.3 := Array.mkEmpty ◾ _x.2;
+  let x := Array.push ◾ _x.3 _x.1;
+  let _x.4 := test1._closed_3;
+  let y := Array.push ◾ _x.3 _x.4;
+  let _x.5 := test1._closed_5;
+  let z := Array.push ◾ _x.3 _x.5;
+  let _x.6 := test1._closed_7;
+  let w := Array.push ◾ _x.3 _x.6;
+  let _x.7 := Array.append._redArg y arr;
+  let _x.8 := Array.append._redArg _x.7 arr;
+  let _x.9 := Array.append._redArg _x.8 arr;
+  let _x.10 := Array.append._redArg _x.9 arr;
+  let _x.11 := Array.append._redArg _x.10 z;
+  let _x.12 := Array.append._redArg x _x.11;
+  let _x.13 := Array.append._redArg _x.12 w;
+  return _x.13
+
+════ 🎯 test3
+def test3 arr : Array String :=
+  let _x.1 := test1._closed_0;
+  let _x.2 := 1;
+  let _x.3 := Array.mkEmpty ◾ _x.2;
+  let _x.4 := Array.push ◾ _x.3 _x.1;
+  let _x.5 := test1._closed_3;
+  let _x.6 := Array.push ◾ _x.3 _x.5;
+  let _x.7 := test1._closed_5;
+  let _x.8 := Array.push ◾ _x.3 _x.7;
+  let _x.9 := Array.append._redArg arr _x.8;
+  let _x.10 := Array.append._redArg arr _x.9;
+  let _x.11 := Array.append._redArg arr _x.10;
+  let _x.12 := Array.append._redArg arr _x.11;
+  let _x.13 := Array.append._redArg _x.6 _x.12;
+  let _x.14 := Array.append._redArg _x.4 _x.13;
+  let _x.15 := test1._closed_7;
+  let _x.16 := Array.push ◾ _x.3 _x.15;
+  let _x.17 := Array.append._redArg _x.14 _x.16;
+  let _x.18 := test3._closed_0;
+  let _x.19 := Array.push ◾ _x.3 _x.18;
+  let _x.20 := Array.append._redArg _x.19 arr;
+  let _x.21 := Array.append._redArg _x.20 arr;
+  let _x.22 := Array.append._redArg _x.21 arr;
+  let _x.23 := Array.append._redArg _x.22 arr;
+  let _x.24 := test3._closed_2;
+  let _x.25 := Array.push ◾ _x.3 _x.24;
+  let _x.26 := Array.append._redArg _x.23 _x.25;
+  let _x.27 := Array.append._redArg _x.17 _x.26;
+  let _x.28 := test3._closed_4;
+  let _x.29 := Array.push ◾ _x.3 _x.28;
+  let _x.30 := Array.append._redArg _x.27 _x.29;
+  return _x.30
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array lcAny :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array lcAny :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : lcAny :=
+  extern
+
+════ 📦 Nat.decLe
+def Nat.decLe @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Bool :=
+  extern
+
+════ 📦 USize.add
+def USize.add a b : USize :=
+  extern
+
+════ 📦 USize.decEq
+def USize.decEq a b : Bool :=
+  extern
+
+════ 📦 USize.ofNat
+def USize.ofNat @&n : USize :=
+  extern
+
+════ 📦 test1._closed_0
+def test1._closed_0 : String :=
+  let _x.1 := "a";
+  return _x.1
+
+════ 📦 test1._closed_3
+def test1._closed_3 : String :=
+  let _x.1 := "b";
+  return _x.1
+
+════ 📦 test1._closed_5
+def test1._closed_5 : String :=
+  let _x.1 := "c";
+  return _x.1
+
+════ 📦 test1._closed_7
+def test1._closed_7 : String :=
+  let _x.1 := "d";
+  return _x.1
+
+════ 📦 test3._closed_0
+def test3._closed_0 : String :=
+  let _x.1 := "e";
+  return _x.1
+
+════ 📦 test3._closed_2
+def test3._closed_2 : String :=
+  let _x.1 := "f";
+  return _x.1
+
+════ 📦 test3._closed_4
+def test3._closed_4 : String :=
+  let _x.1 := "g";
+  return _x.1
+
+════ 📦 Array.append._redArg
+def Array.append._redArg as bs : Array lcAny :=
+  let _x.1 := 0;
+  let _x.2 := Array.size ◾ bs;
+  let _x.3 := Nat.decLt _x.1 _x.2;
+  cases _x.3 : Array lcAny
+  | Bool.false =>
+    return as
+  | Bool.true =>
+    let _x.4 := Nat.decLe _x.2 _x.2;
+    cases _x.4 : Array lcAny
+    | Bool.false =>
+      cases _x.3 : Array lcAny
+      | Bool.false =>
+        return as
+      | Bool.true =>
+        let _x.5 := 0;
+        let _x.6 := USize.ofNat _x.2;
+        let _x.7 := Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg.2 bs _x.5 _x.6 as;
+        return _x.7
+    | Bool.true =>
+      let _x.8 := 0;
+      let _x.9 := USize.ofNat _x.2;
+      let _x.10 := Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg.2 bs _x.8 _x.9 as;
+      return _x.10
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg
+def _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg as i stop b : Array
+  lcAny :=
+  let _x.1 := USize.decEq i stop;
+  cases _x.1 : Array lcAny
+  | Bool.false =>
+    let _x.2 := Array.uget ◾ as i ◾;
+    let _x.3 := Array.push ◾ b _x.2;
+    let _x.4 := 1;
+    let _x.5 := USize.add i _x.4;
+    let _x.6 := Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg.2 as _x.5 stop _x.3;
+    return _x.6
+  | Bool.true =>
+    return b
+

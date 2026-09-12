@@ -1,0 +1,504 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) (x_4 : void) : obj :=
+  let x_5 : tagged := 1;
+  let x_6 : tobj := Nat.add x_2 x_5;
+  let x_7 : tobj := Nat.add x_3 x_5;
+  inc x_6;
+  let x_8 : obj := ctor_0[Std.Legacy.Range.mk] x_6 x_7 x_5;
+  let x_9 : tagged := ctor_0[PUnit.unit];
+  let x_10 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg x_1 x_9 x_8 x_9 x_6 ◾;
+  dec x_8;
+  let x_11 : u8 := isShared x_10;
+  case x_11 : u8 of
+  Bool.false →
+    let x_12 : tobj := proj[0] x_10;
+    dec x_12;
+    set x_10[0] := x_9;
+    ret x_10
+  Bool.true →
+    dec x_10;
+    let x_13 : obj := ctor_0[EST.Out.ok] x_9;
+    ret x_13
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) (x_4 : void) : obj :=
+  let x_5 : tagged := 1;
+  let x_6 : tobj := Nat.add x_2 x_5;
+  let x_7 : tobj := Nat.add x_3 x_5;
+  inc x_6;
+  let x_8 : obj := ctor_0[Std.Legacy.Range.mk] x_6 x_7 x_5;
+  let x_9 : tagged := ctor_0[PUnit.unit];
+  inc x_6;
+  let x_10 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg x_1 x_9 x_8 x_9 x_6 ◾;
+  dec x_10;
+  inc x_6;
+  let x_11 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg x_1 x_9 x_8 x_9 x_6 ◾;
+  dec x_11;
+  let x_12 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_1._redArg x_1 x_5 x_9 x_8 x_9 x_6 ◾;
+  dec x_8;
+  let x_13 : u8 := isShared x_12;
+  case x_13 : u8 of
+  Bool.false →
+    let x_14 : tobj := proj[0] x_12;
+    dec x_14;
+    set x_12[0] := x_9;
+    ret x_12
+  Bool.true →
+    dec x_12;
+    let x_15 : obj := ctor_0[EST.Out.ok] x_9;
+    ret x_15
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test3
+-- IR (what the backend reads)
+def test3 (x_1 : @& tobj) (x_2 : tobj) (x_3 : tobj) (x_4 : void) : obj :=
+  let x_5 : tagged := 1;
+  inc x_2;
+  let x_6 : obj := ctor_0[Std.Legacy.Range.mk] x_2 x_3 x_5;
+  let x_7 : tagged := ctor_0[PUnit.unit];
+  let x_8 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0._redArg x_7 x_1 x_6 x_7 x_2 ◾;
+  dec x_6;
+  let x_9 : u8 := isShared x_8;
+  case x_9 : u8 of
+  Bool.false →
+    let x_10 : tobj := proj[0] x_8;
+    dec x_10;
+    set x_8[0] := x_7;
+    ret x_8
+  Bool.true →
+    dec x_8;
+    let x_11 : obj := ctor_0[EST.Out.ok] x_7;
+    ret x_11
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test4
+-- IR (what the backend reads)
+def test4 (x_1 : @& tobj) (x_2 : tobj) (x_3 : tobj) (x_4 : void) : obj :=
+  let x_5 : tagged := 1;
+  inc x_2;
+  let x_6 : obj := ctor_0[Std.Legacy.Range.mk] x_2 x_3 x_5;
+  let x_7 : tagged := ctor_0[PUnit.unit];
+  let x_8 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0._redArg x_1 x_5 x_7 x_6 x_7 x_2 ◾;
+  dec x_6;
+  let x_9 : u8 := isShared x_8;
+  case x_9 : u8 of
+  Bool.false →
+    let x_10 : tobj := proj[0] x_8;
+    dec x_10;
+    set x_8[0] := x_7;
+    ret x_8
+  Bool.true →
+    dec x_8;
+    let x_11 : obj := ctor_0[EST.Out.ok] x_7;
+    ret x_11
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int.add
+-- IR (what the backend reads)
+extern Int.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_add"
+decl.hashKeyType?: none
+
+════ 📦 Int.negSucc
+-- IR (what the backend reads)
+extern Int.negSucc (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg_succ_of_nat"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 1
+ctor.numFields: 1
+
+════ 📦 Int.ofNat
+-- IR (what the backend reads)
+extern Int.ofNat (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_to_int"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 Nat.add
+-- IR (what the backend reads)
+extern Nat.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_add"
+decl.hashKeyType?: none
+
+════ 📦 Nat.decLt
+-- IR (what the backend reads)
+extern Nat.decLt (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_dec_lt"
+decl.hashKeyType?: none
+
+════ 📦 ST.Prim.Ref.get
+-- IR (what the backend reads)
+extern ST.Prim.Ref.get (x_1 : ◾) (x_2 : ◾) (x_3 : @& tobj) (x_4 : void) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_st_ref_get"
+decl.hashKeyType?: none
+
+════ 📦 ST.Prim.Ref.set
+-- IR (what the backend reads)
+extern ST.Prim.Ref.set (x_1 : ◾) (x_2 : ◾) (x_3 : @& tobj) (x_4 : tobj) (x_5 : void) : tagged
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_st_ref_set"
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg (x_1 : @& tobj) (x_2 : tagged) (x_3 : @& obj) (x_4 : tagged) (x_5 : tobj) (x_6 : void) : obj :=
+  let x_7 : tobj := proj[1] x_3;
+  let x_8 : tobj := proj[2] x_3;
+  let x_9 : u8 := Nat.decLt x_5 x_7;
+  case x_9 : u8 of
+  Bool.false →
+    dec x_5;
+    let x_10 : obj := ctor_0[EST.Out.ok] x_4;
+    ret x_10
+  Bool.true →
+    let x_11 : tobj := ST.Prim.Ref.get ◾ ◾ x_1 ◾;
+    inc x_5;
+    let x_12 : tobj := Int.ofNat x_5;
+    let x_13 : tobj := Int.add x_11 x_12;
+    dec x_11;
+    let x_14 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_13 ◾;
+    let x_15 : tobj := ST.Prim.Ref.get ◾ ◾ x_1 ◾;
+    let x_16 : tobj := Int.add x_15 x_12;
+    dec x_12;
+    dec x_15;
+    let x_17 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_16 ◾;
+    let x_18 : tobj := Nat.add x_5 x_8;
+    dec x_5;
+    let x_19 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0.spec_0._redArg x_1 x_2 x_3 x_2 x_18 ◾;
+    ret x_19
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg (x_1 : @& tobj) (x_2 : tagged) (x_3 : @& obj) (x_4 : tagged) (x_5 : tobj) (x_6 : void) : obj :=
+  let x_7 : tobj := proj[1] x_3;
+  let x_8 : tobj := proj[2] x_3;
+  let x_9 : u8 := Nat.decLt x_5 x_7;
+  case x_9 : u8 of
+  Bool.false →
+    dec x_5;
+    let x_10 : obj := ctor_0[EST.Out.ok] x_4;
+    ret x_10
+  Bool.true →
+    let x_11 : tobj := ST.Prim.Ref.get ◾ ◾ x_1 ◾;
+    inc x_5;
+    let x_12 : tobj := Int.ofNat x_5;
+    let x_13 : tobj := Int.add x_11 x_12;
+    dec x_12;
+    dec x_11;
+    let x_14 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_13 ◾;
+    let x_15 : tobj := Nat.add x_5 x_8;
+    dec x_5;
+    let x_16 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0.spec_0._redArg x_1 x_2 x_3 x_2 x_15 ◾;
+    ret x_16
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_1._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_1._redArg (x_1 : @& tobj) (x_2 : tobj) (x_3 : tagged) (x_4 : @& obj) (x_5 : tagged) (x_6 : tobj) (x_7 : void) : obj :=
+  let x_8 : tobj := proj[1] x_4;
+  let x_9 : tobj := proj[2] x_4;
+  let x_10 : u8 := Nat.decLt x_6 x_8;
+  case x_10 : u8 of
+  Bool.false →
+    dec x_6;
+    dec x_2;
+    let x_11 : obj := ctor_0[EST.Out.ok] x_5;
+    ret x_11
+  Bool.true →
+    let x_12 : tobj := ST.Prim.Ref.get ◾ ◾ x_1 ◾;
+    inc x_2;
+    let x_13 : tobj := Int.ofNat x_2;
+    let x_14 : tobj := Int.add x_12 x_13;
+    dec x_13;
+    dec x_12;
+    let x_15 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_14 ◾;
+    let x_16 : tobj := Nat.add x_6 x_9;
+    dec x_6;
+    let x_17 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_1._redArg x_1 x_2 x_3 x_4 x_3 x_16 ◾;
+    ret x_17
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0._redArg (x_1 : tagged) (x_2 : @& tobj) (x_3 : @& obj) (x_4 : tagged) (x_5 : tobj) (x_6 : void) : obj :=
+  let x_7 : tobj := proj[1] x_3;
+  let x_8 : tobj := proj[2] x_3;
+  block_13 (x_9 : tagged) (x_10 : void) :=
+    let x_11 : tobj := Nat.add x_5 x_8;
+    dec x_5;
+    let x_12 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0.spec_0._redArg x_1 x_2 x_3 x_9 x_11 ◾;
+    ret x_12;
+  let x_14 : u8 := Nat.decLt x_5 x_7;
+  case x_14 : u8 of
+  Bool.false →
+    dec x_5;
+    let x_15 : obj := ctor_0[EST.Out.ok] x_4;
+    ret x_15
+  Bool.true →
+    let x_16 : tagged := 10;
+    let x_17 : u8 := Nat.decLt x_5 x_16;
+    case x_17 : u8 of
+    Bool.false →
+      jmp block_13 x_1 ◾
+    Bool.true →
+      let x_18 : tobj := ST.Prim.Ref.get ◾ ◾ x_2 ◾;
+      inc x_5;
+      let x_19 : tobj := Int.ofNat x_5;
+      let x_20 : tobj := Int.add x_18 x_19;
+      dec x_19;
+      dec x_18;
+      let x_21 : tagged := ST.Prim.Ref.set ◾ ◾ x_2 x_20 ◾;
+      jmp block_13 x_1 ◾
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0._redArg (x_1 : @& tobj) (x_2 : tobj) (x_3 : tagged) (x_4 : @& obj) (x_5 : tagged) (x_6 : tobj) (x_7 : void) : obj :=
+  let x_8 : tobj := proj[1] x_4;
+  let x_9 : tobj := proj[2] x_4;
+  block_14 (x_10 : tagged) (x_11 : void) :=
+    let x_12 : tobj := Nat.add x_6 x_9;
+    dec x_6;
+    let x_13 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0.spec_0._redArg x_1 x_2 x_3 x_4 x_10 x_12 ◾;
+    ret x_13;
+  let x_15 : u8 := Nat.decLt x_6 x_8;
+  case x_15 : u8 of
+  Bool.false →
+    dec x_6;
+    dec x_2;
+    let x_16 : obj := ctor_0[EST.Out.ok] x_5;
+    ret x_16
+  Bool.true →
+    let x_17 : tobj := ST.Prim.Ref.get ◾ ◾ x_1 ◾;
+    let x_18 : tagged := 10;
+    let x_19 : u8 := Nat.decLt x_6 x_18;
+    case x_19 : u8 of
+    Bool.false →
+      inc x_2;
+      let x_20 : tobj := Int.ofNat x_2;
+      let x_21 : tobj := Int.add x_17 x_20;
+      dec x_20;
+      dec x_17;
+      let x_22 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_21 ◾;
+      jmp block_14 x_3 ◾
+    Bool.true →
+      inc x_6;
+      let x_23 : tobj := Int.ofNat x_6;
+      let x_24 : tobj := Int.add x_17 x_23;
+      dec x_23;
+      dec x_17;
+      let x_25 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_24 ◾;
+      jmp block_14 x_3 ◾
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0.spec_0._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0.spec_0._redArg (x_1 : @& tobj) (x_2 : tagged) (x_3 : @& obj) (x_4 : tagged) (x_5 : tobj) (x_6 : void) : obj :=
+  let x_7 : tobj := proj[1] x_3;
+  let x_8 : tobj := proj[2] x_3;
+  let x_9 : u8 := Nat.decLt x_5 x_7;
+  case x_9 : u8 of
+  Bool.false →
+    dec x_5;
+    let x_10 : obj := ctor_0[EST.Out.ok] x_4;
+    ret x_10
+  Bool.true →
+    let x_11 : tobj := ST.Prim.Ref.get ◾ ◾ x_1 ◾;
+    inc x_5;
+    let x_12 : tobj := Int.ofNat x_5;
+    let x_13 : tobj := Int.add x_11 x_12;
+    dec x_11;
+    let x_14 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_13 ◾;
+    let x_15 : tobj := ST.Prim.Ref.get ◾ ◾ x_1 ◾;
+    let x_16 : tobj := Int.add x_15 x_12;
+    dec x_12;
+    dec x_15;
+    let x_17 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_16 ◾;
+    let x_18 : tobj := Nat.add x_5 x_8;
+    dec x_5;
+    let x_19 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0.spec_0._redArg x_1 x_2 x_3 x_2 x_18 ◾;
+    ret x_19
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0.spec_0._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0.spec_0._redArg (x_1 : @& tobj) (x_2 : tagged) (x_3 : @& obj) (x_4 : tagged) (x_5 : tobj) (x_6 : void) : obj :=
+  let x_7 : tobj := proj[1] x_3;
+  let x_8 : tobj := proj[2] x_3;
+  let x_9 : u8 := Nat.decLt x_5 x_7;
+  case x_9 : u8 of
+  Bool.false →
+    dec x_5;
+    let x_10 : obj := ctor_0[EST.Out.ok] x_4;
+    ret x_10
+  Bool.true →
+    let x_11 : tobj := ST.Prim.Ref.get ◾ ◾ x_1 ◾;
+    inc x_5;
+    let x_12 : tobj := Int.ofNat x_5;
+    let x_13 : tobj := Int.add x_11 x_12;
+    dec x_12;
+    dec x_11;
+    let x_14 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_13 ◾;
+    let x_15 : tobj := Nat.add x_5 x_8;
+    dec x_5;
+    let x_16 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0.spec_0._redArg x_1 x_2 x_3 x_2 x_15 ◾;
+    ret x_16
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0.spec_0._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0.spec_0._redArg (x_1 : tagged) (x_2 : @& tobj) (x_3 : @& obj) (x_4 : tagged) (x_5 : tobj) (x_6 : void) : obj :=
+  let x_7 : tobj := proj[1] x_3;
+  let x_8 : tobj := proj[2] x_3;
+  block_13 (x_9 : tagged) (x_10 : void) :=
+    let x_11 : tobj := Nat.add x_5 x_8;
+    dec x_5;
+    let x_12 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0.spec_0._redArg x_1 x_2 x_3 x_9 x_11 ◾;
+    ret x_12;
+  let x_14 : u8 := Nat.decLt x_5 x_7;
+  case x_14 : u8 of
+  Bool.false →
+    dec x_5;
+    let x_15 : obj := ctor_0[EST.Out.ok] x_4;
+    ret x_15
+  Bool.true →
+    let x_16 : tagged := 10;
+    let x_17 : u8 := Nat.decLt x_5 x_16;
+    case x_17 : u8 of
+    Bool.false →
+      jmp block_13 x_1 ◾
+    Bool.true →
+      let x_18 : tobj := ST.Prim.Ref.get ◾ ◾ x_2 ◾;
+      inc x_5;
+      let x_19 : tobj := Int.ofNat x_5;
+      let x_20 : tobj := Int.add x_18 x_19;
+      dec x_19;
+      dec x_18;
+      let x_21 : tagged := ST.Prim.Ref.set ◾ ◾ x_2 x_20 ◾;
+      jmp block_13 x_1 ◾
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0.spec_0._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0.spec_0._redArg (x_1 : @& tobj) (x_2 : tobj) (x_3 : tagged) (x_4 : @& obj) (x_5 : tagged) (x_6 : tobj) (x_7 : void) : obj :=
+  let x_8 : tobj := proj[1] x_4;
+  let x_9 : tobj := proj[2] x_4;
+  block_14 (x_10 : tagged) (x_11 : void) :=
+    let x_12 : tobj := Nat.add x_6 x_9;
+    dec x_6;
+    let x_13 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_._private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0.spec_0._redArg x_1 x_2 x_3 x_4 x_10 x_12 ◾;
+    ret x_13;
+  let x_15 : u8 := Nat.decLt x_6 x_8;
+  case x_15 : u8 of
+  Bool.false →
+    dec x_6;
+    dec x_2;
+    let x_16 : obj := ctor_0[EST.Out.ok] x_5;
+    ret x_16
+  Bool.true →
+    let x_17 : tobj := ST.Prim.Ref.get ◾ ◾ x_1 ◾;
+    let x_18 : tagged := 10;
+    let x_19 : u8 := Nat.decLt x_6 x_18;
+    case x_19 : u8 of
+    Bool.false →
+      inc x_2;
+      let x_20 : tobj := Int.ofNat x_2;
+      let x_21 : tobj := Int.add x_17 x_20;
+      dec x_20;
+      dec x_17;
+      let x_22 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_21 ◾;
+      jmp block_14 x_3 ◾
+    Bool.true →
+      inc x_6;
+      let x_23 : tobj := Int.ofNat x_6;
+      let x_24 : tobj := Int.add x_17 x_23;
+      dec x_23;
+      dec x_17;
+      let x_25 : tagged := ST.Prim.Ref.set ◾ ◾ x_1 x_24 ◾;
+      jmp block_14 x_3 ◾
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.STLoops02]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (20): [`test1,
+ `test2,
+ `test3,
+ `test4,
+ `Int.add,
+ `Int.negSucc,
+ `Int.ofNat,
+ `Nat.add,
+ `Nat.decLt,
+ `ST.Prim.Ref.get,
+ `ST.Prim.Ref.set,
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Range.Basic 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "test1") "spec_0") "_redArg",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Range.Basic 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "test2") "spec_0") "_redArg",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Range.Basic 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "test2") "spec_1") "_redArg",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Range.Basic 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "test3") "spec_0") "_redArg",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Range.Basic 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "test4") "spec_0") "_redArg",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Range.Basic 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "_private") "Init") "Data") "Range") "Basic") 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "test1") "spec_0") "spec_0") "_redArg",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Range.Basic 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "_private") "Init") "Data") "Range") "Basic") 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "test2") "spec_0") "spec_0") "_redArg",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Range.Basic 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "_private") "Init") "Data") "Range") "Basic") 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "test3") "spec_0") "spec_0") "_redArg",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Range.Basic 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "_private") "Init") "Data") "Range") "Basic") 0) "Std") "Legacy") "Range") "forIn'") "loop") "_at_") "test4") "spec_0") "spec_0") "_redArg"]
+ctors (8): [`Bool.false, `Bool.true, `Int.negSucc, `Int.ofNat, `PUnit.unit, `EST.Out.error, `EST.Out.ok, `Std.Legacy.Range.mk]
+inducts (5): [`Bool, `Int, `PUnit, `EST.Out, `Std.Legacy.Range]

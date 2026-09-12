@@ -1,0 +1,150 @@
+════ 🎯 test1
+def test1 x : String :=
+  cases x : String
+  | ABC.mk a.1 b.2 c.3 =>
+    let _x.4 := 1;
+    let _x.5 := Int.ofNat _x.4;
+    let _x.6 := Int.decEq a.1 _x.5;
+    cases _x.6 : String
+    | Bool.false =>
+      let _x.7 := 2;
+      let _x.8 := Int.ofNat _x.7;
+      let _x.9 := Int.decEq a.1 _x.8;
+      cases _x.9 : String
+      | Bool.false =>
+        let _x.10 := Int.decEq b.2 _x.5;
+        cases _x.10 : String
+        | Bool.false =>
+          let _x.11 := Int.decEq c.3 _x.5;
+          cases _x.11 : String
+          | Bool.false =>
+            let _x.12 := "catch";
+            return _x.12
+          | Bool.true =>
+            let _x.13 := "2";
+            return _x.13
+        | Bool.true =>
+          let _x.14 := "1";
+          return _x.14
+      | Bool.true =>
+        let _x.15 := Int.decEq b.2 _x.5;
+        cases _x.15 : String
+        | Bool.false =>
+          let _x.16 := Int.decEq b.2 _x.8;
+          cases _x.16 : String
+          | Bool.false =>
+            let _x.17 := Int.decEq c.3 _x.5;
+            cases _x.17 : String
+            | Bool.false =>
+              let _x.18 := "catch";
+              return _x.18
+            | Bool.true =>
+              let _x.19 := "2";
+              return _x.19
+          | Bool.true =>
+            let _x.20 := Int.decEq c.3 _x.5;
+            cases _x.20 : String
+            | Bool.false =>
+              let _x.21 := "3";
+              return _x.21
+            | Bool.true =>
+              let _x.22 := "2";
+              return _x.22
+        | Bool.true =>
+          let _x.23 := "1";
+          return _x.23
+    | Bool.true =>
+      let _x.24 := "0";
+      return _x.24
+
+════ 🎯 test2
+-- LCNF (saveMono): not stored
+
+════ 🎯 test3
+def test3 x : Int :=
+  cases x : Int
+  | AB.mk a.1 b.2 =>
+    let _x.3 := 0;
+    let _x.4 := Int.ofNat _x.3;
+    let _x.5 := Int.decLt _x.4 a.1;
+    cases _x.5 : Int
+    | Bool.false =>
+      let _x.6 := 1;
+      let _x.7 := Int.ofNat _x.6;
+      let _x.8 := Int.decLt _x.7 b.2;
+      cases _x.8 : Int
+      | Bool.false =>
+        let _x.9 := 3;
+        let _x.10 := Int.ofNat _x.9;
+        return _x.10
+      | Bool.true =>
+        return b.2
+    | Bool.true =>
+      return a.1
+
+════ 🎯 test4
+def test4 x : Int :=
+  cases x : Int
+  | AB.mk a.1 b.2 =>
+    let _x.3 := 0;
+    let _x.4 := Int.ofNat _x.3;
+    let _x.5 := Int.decLt _x.4 a.1;
+    cases _x.5 : Int
+    | Bool.false =>
+      let _x.6 := 1;
+      let _x.7 := Int.ofNat _x.6;
+      let _x.8 := Int.decLt _x.7 b.2;
+      cases _x.8 : Int
+      | Bool.false =>
+        let _x.9 := 3;
+        let _x.10 := Int.ofNat _x.9;
+        return _x.10
+      | Bool.true =>
+        return b.2
+    | Bool.true =>
+      return a.1
+
+════ 🎯 test5
+def test5 x : Int :=
+  cases x : Int
+  | AB.mk a.1 b.2 =>
+    let _x.3 := 0;
+    let _x.4 := Int.ofNat _x.3;
+    let _x.5 := Int.decLt _x.4 a.1;
+    cases _x.5 : Int
+    | Bool.false =>
+      let _x.6 := Int.decLt _x.4 b.2;
+      cases _x.6 : Int
+      | Bool.false =>
+        return _x.4
+      | Bool.true =>
+        return b.2
+    | Bool.true =>
+      return a.1
+
+════ 🎯 test6
+def test6 x : Int :=
+  cases x : Int
+  | AB.mk a.1 b.2 =>
+    let _x.3 := 0;
+    let _x.4 := Int.ofNat _x.3;
+    let _x.5 := Int.decLt _x.4 a.1;
+    cases _x.5 : Int
+    | Bool.false =>
+      let _x.6 := Int.decLt _x.4 b.2;
+      cases _x.6 : Int
+      | Bool.false =>
+        return _x.4
+      | Bool.true =>
+        return b.2
+    | Bool.true =>
+      return a.1
+
+════ 📦 Int.decEq
+def Int.decEq @&a @&b : Bool :=
+  extern
+
+════ 📦 Int.decLt
+def Int.decLt @&a @&b : Bool :=
+  extern
+

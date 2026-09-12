@@ -1,0 +1,81 @@
+════ split plans
+════ instReprRec before
+def instReprRec : obj :=
+  let x_1 : obj := instReprRec._closed_0;
+  ret x_1
+════ instReprRec after
+def instReprRec : obj :=
+  let x_1 : obj := instReprRec._closed_0;
+  ret x_1
+════ instReprRec parameter plan: (every parameter kept)
+════ test1 before
+def test1 (x_1 : obj) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := test1._closed_0;
+  let x_4 : u8 := Int.decEq x_2 x_3;
+  dec x_3;
+  case x_4 : u8 of
+  Bool.false →
+    let x_5 : tagged := ctor_0[PUnit.unit];
+    let x_6 : obj := app x_1 x_5;
+    let x_7 : tobj := proj[2] x_6;
+    inc x_7;
+    dec x_6;
+    ret x_7
+  Bool.true →
+    dec x_1;
+    let x_8 : tobj := test1._closed_1;
+    let x_9 : tobj := Int.add x_2 x_8;
+    dec x_8;
+    ret x_9
+════ test1 after
+def test1 (x_1 : obj) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := test1._closed_0;
+  let x_4 : u8 := Int.decEq x_2 x_3;
+  dec x_3;
+  case x_4 : u8 of
+  Bool.false →
+    let x_5 : tagged := ctor_0[PUnit.unit];
+    let x_6 : obj := app x_1 x_5;
+    let x_7 : tobj := proj[2] x_6;
+    inc x_7;
+    dec x_6;
+    ret x_7
+  Bool.true →
+    dec x_1;
+    let x_8 : tobj := test1._closed_1;
+    let x_9 : tobj := Int.add x_2 x_8;
+    dec x_8;
+    ret x_9
+════ test1 parameter plan: (every parameter kept)
+════ test7 before
+def test7 (x_1 : obj) (x_2 : tobj) : obj :=
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : tobj := test1._closed_1;
+  let x_5 : tobj := Int.add x_3 x_4;
+  dec x_4;
+  let x_6 : tobj := test7._closed_0;
+  let x_7 : tobj := Int.sub x_3 x_6;
+  dec x_6;
+  let x_8 : obj := ctor_0[Rec.mk] x_5 x_7 x_3;
+  ret x_8
+════ test7 after
+def test7 (x_1 : obj) (x_2 : tobj) : obj :=
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : tobj := test1._closed_1;
+  let x_5 : tobj := Int.add x_3 x_4;
+  dec x_4;
+  let x_6 : tobj := test7._closed_0;
+  let x_7 : tobj := Int.sub x_3 x_6;
+  dec x_6;
+  let x_8 : obj := ctor_0[Rec.mk] x_5 x_7 x_3;
+  ret x_8
+════ test7 parameter plan: (every parameter kept)
+════ instReprRec.repr before
+def instReprRec.repr (x_1 : @& obj) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := instReprRec.repr._redArg x_1;
+  ret x_3
+════ instReprRec.repr after
+def instReprRec.repr (x_1 : @& obj) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := instReprRec.repr._redArg x_1;
+  ret x_3
+════ instReprRec.repr parameter plan: (every parameter kept)

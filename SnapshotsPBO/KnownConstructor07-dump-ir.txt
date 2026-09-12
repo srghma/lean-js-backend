@@ -1,0 +1,84 @@
+════ 🎯 test
+-- IR (what the backend reads)
+def test (x_1 : obj) (x_2 : tobj) : obj :=
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : tobj := test._closed_0;
+  let x_5 : tobj := Int.add x_3 x_4;
+  dec x_4;
+  let x_6 : tobj := test._closed_1;
+  let x_7 : tobj := Int.sub x_3 x_6;
+  dec x_6;
+  dec x_3;
+  let x_8 : obj := ctor_0[PairBox.mk] x_5 x_7;
+  ret x_8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int.add
+-- IR (what the backend reads)
+extern Int.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_add"
+decl.hashKeyType?: none
+
+════ 📦 Int.negSucc
+-- IR (what the backend reads)
+extern Int.negSucc (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg_succ_of_nat"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 1
+ctor.numFields: 1
+
+════ 📦 Int.ofNat
+-- IR (what the backend reads)
+extern Int.ofNat (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_to_int"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 Int.sub
+-- IR (what the backend reads)
+extern Int.sub (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_sub"
+decl.hashKeyType?: none
+
+════ 📦 test._closed_0
+-- IR (what the backend reads)
+def test._closed_0 : tobj :=
+  let x_1 : tagged := 1;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_1
+-- IR (what the backend reads)
+def test._closed_1 : tobj :=
+  let x_1 : tagged := 2;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.KnownConstructor07]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (7): [`test, `Int.add, `Int.negSucc, `Int.ofNat, `Int.sub, `test._closed_0, `test._closed_1]
+ctors (3): [`Int.negSucc, `Int.ofNat, `PairBox.mk]
+inducts (2): [`Int, `PairBox]

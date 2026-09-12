@@ -1,0 +1,191 @@
+════ 🎯 counter
+-- IR (what the backend reads)
+def counter : tobj :=
+  ⊥
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 : tobj :=
+  let x_1 : tobj := test1.unsafe_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 (x_1 : obj) : tobj :=
+  let x_2 : tobj := test2.unsafe_1 x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int.add
+-- IR (what the backend reads)
+extern Int.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_add"
+decl.hashKeyType?: none
+
+════ 📦 Int.negSucc
+-- IR (what the backend reads)
+extern Int.negSucc (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg_succ_of_nat"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 1
+ctor.numFields: 1
+
+════ 📦 Int.ofNat
+-- IR (what the backend reads)
+extern Int.ofNat (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_to_int"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 test1.unsafe_1
+-- IR (what the backend reads)
+def test1.unsafe_1 : tobj :=
+  let x_1 : tobj := test1.unsafe_1._closed_2;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2.unsafe_1
+-- IR (what the backend reads)
+def test2.unsafe_1 (x_1 : obj) : tobj :=
+  let x_2 : obj := pap test2.unsafe_1._lam_0._boxed x_1;
+  let x_3 : tobj := unsafeBaseIO._redArg x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 unsafeBaseIO._redArg
+-- IR (what the backend reads)
+def unsafeBaseIO._redArg (x_1 : obj) : tobj :=
+  let x_2 : tagged := ctor_0[PUnit.unit];
+  let x_3 : tobj := app x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1.unsafe_1._closed_0
+-- IR (what the backend reads)
+def test1.unsafe_1._closed_0 : tobj :=
+  let x_1 : tagged := 1;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1.unsafe_1._closed_1
+-- IR (what the backend reads)
+def test1.unsafe_1._closed_1 : obj :=
+  let x_1 : tobj := test1.unsafe_1._closed_0;
+  let x_2 : obj := pap test1.unsafe_1._lam_0._boxed x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1.unsafe_1._closed_2
+-- IR (what the backend reads)
+def test1.unsafe_1._closed_2 : tobj :=
+  let x_1 : obj := test1.unsafe_1._closed_1;
+  let x_2 : tobj := unsafeBaseIO._redArg x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1.unsafe_1._lam_0
+-- IR (what the backend reads)
+def test1.unsafe_1._lam_0 (x_1 : @& tobj) (x_2 : void) : tobj :=
+  inc x_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2.unsafe_1._lam_0
+-- IR (what the backend reads)
+def test2.unsafe_1._lam_0 (x_1 : obj) (x_2 : void) : tobj :=
+  inc x_1;
+  let x_3 : tobj := app x_1 ◾;
+  let x_4 : tobj := app x_1 ◾;
+  let x_5 : tobj := Int.add x_3 x_4;
+  dec x_4;
+  dec x_3;
+  ret x_5
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1.unsafe_1._lam_0._boxed
+-- IR (what the backend reads)
+def test1.unsafe_1._lam_0._boxed (x_1 : tobj) (x_2 : tagged) : tobj :=
+  let x_3 : tobj := test1.unsafe_1._lam_0 x_1 x_2;
+  dec x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2.unsafe_1._lam_0._boxed
+-- IR (what the backend reads)
+def test2.unsafe_1._lam_0._boxed (x_1 : obj) (x_2 : tagged) : tobj :=
+  let x_3 : tobj := test2.unsafe_1._lam_0 x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.EffectUnsafe01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (16): [`counter,
+ `test1,
+ `test2,
+ `Int.add,
+ `Int.negSucc,
+ `Int.ofNat,
+ `test1.unsafe_1,
+ `test2.unsafe_1,
+ `unsafeBaseIO._redArg,
+ `test1.unsafe_1._closed_0,
+ `test1.unsafe_1._closed_1,
+ `test1.unsafe_1._closed_2,
+ `test1.unsafe_1._lam_0,
+ `test2.unsafe_1._lam_0,
+ `test1.unsafe_1._lam_0._boxed,
+ `test2.unsafe_1._lam_0._boxed]
+ctors (3): [`Int.negSucc, `Int.ofNat, `PUnit.unit]
+inducts (2): [`Int, `PUnit]

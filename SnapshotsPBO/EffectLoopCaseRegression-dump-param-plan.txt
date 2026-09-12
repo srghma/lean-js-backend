@@ -1,0 +1,81 @@
+════ test
+-- IR
+def test (x_1 : obj) (x_2 : void) : obj :=
+  let x_3 : obj := app x_1 ◾;
+  case x_3 : obj of
+  EST.Out.ok →
+    let x_4 : u8 := isShared x_3;
+    case x_4 : u8 of
+    Bool.false →
+      let x_5 : tobj := proj[0] x_3;
+      case x_5 : tobj of
+      Option.none →
+        let x_6 : tagged := ctor_0[PUnit.unit];
+        set x_3[0] := x_6;
+        ret x_3
+      Option.some →
+        del x_3;
+        let x_7 : tobj := proj[0] x_5;
+        inc x_7;
+        dec x_5;
+        let x_8 : tagged := ctor_0[PUnit.unit];
+        let x_9 : usize := Array.usize ◾ x_7;
+        let x_10 : usize := 0;
+        let x_11 : obj := _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test.spec_1 x_8 x_7 x_9 x_10 x_8 ◾;
+        dec x_7;
+        case x_11 : obj of
+        EST.Out.ok →
+          let x_12 : u8 := isShared x_11;
+          case x_12 : u8 of
+          Bool.false →
+            let x_13 : tobj := proj[0] x_11;
+            dec x_13;
+            set x_11[0] := x_8;
+            ret x_11
+          Bool.true →
+            dec x_11;
+            let x_14 : obj := ctor_0[EST.Out.ok] x_8;
+            ret x_14
+        EST.Out.error →
+          ret x_11
+    Bool.true →
+      let x_15 : tobj := proj[0] x_3;
+      inc x_15;
+      dec x_3;
+      case x_15 : tobj of
+      Option.none →
+        let x_16 : tagged := ctor_0[PUnit.unit];
+        let x_17 : obj := ctor_0[EST.Out.ok] x_16;
+        ret x_17
+      Option.some →
+        let x_18 : tobj := proj[0] x_15;
+        inc x_18;
+        dec x_15;
+        let x_19 : tagged := ctor_0[PUnit.unit];
+        let x_20 : usize := Array.usize ◾ x_18;
+        let x_21 : usize := 0;
+        let x_22 : obj := _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test.spec_1 x_19 x_18 x_20 x_21 x_19 ◾;
+        dec x_18;
+        case x_22 : obj of
+        EST.Out.ok →
+          let x_23 : tobj := reset[1] x_22;
+          let x_24 : obj := reuse x_23 in ctor_0[EST.Out.ok] x_19;
+          ret x_24
+        EST.Out.error →
+          ret x_22
+  EST.Out.error →
+    let x_25 : u8 := isShared x_3;
+    case x_25 : u8 of
+    Bool.false →
+      ret x_3
+    Bool.true →
+      let x_26 : tobj := proj[0] x_3;
+      inc x_26;
+      dec x_3;
+      let x_27 : obj := ctor_1[EST.Out.error] x_26;
+      ret x_27
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+

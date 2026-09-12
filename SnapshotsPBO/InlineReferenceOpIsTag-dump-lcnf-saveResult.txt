@@ -1,0 +1,112 @@
+════ 🎯 List
+-- LCNF (result): not stored
+
+════ 🎯 Cons
+-- LCNF (result): not stored
+
+════ 🎯 Nil
+-- LCNF (result): not stored
+
+════ 🎯 extern1
+def extern1 : MyList Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := @MyList.Nil ◾;
+  let _x.4 := @MyList.Cons ◾ _x.2 _x.3;
+  return _x.4
+
+════ 🎯 extern2
+def extern2 : MyList Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := @MyList.Nil ◾;
+  let _x.4 := @MyList.Cons ◾ _x.2 _x.3;
+  return _x.4
+
+════ 🎯 extern3
+def extern3 : RecD :=
+  let _x.1 := extern2;
+  let _x.2 := @MyList.Nil ◾;
+  let _x.3 := RecD.mk _x.1 _x.2;
+  return _x.3
+
+════ 🎯 [anonymous]
+-- LCNF (result): not stored
+
+════ 🎯 test1
+def test1 fn : MyList Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := PUnit.unit;
+  let _x.4 := fn _x.3;
+  let list := @MyList.Cons ◾ _x.2 _x.4;
+  let _x.5 := 0;
+  let _x.6 := Int.ofNat _x.5;
+  let _x.7 := @MyList.Cons ◾ _x.6 list;
+  return _x.7
+
+════ 🎯 test2
+def test2 fn : MyList Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := PUnit.unit;
+  let _x.4 := fn _x.3;
+  let _x.5 := @MyList.Cons ◾ _x.2 _x.4;
+  let _x.6 := 0;
+  let _x.7 := Int.ofNat _x.6;
+  let _x.8 := @MyList.Cons ◾ _x.7 _x.5;
+  return _x.8
+
+════ 🎯 test3
+def test3 fn : MyList Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := PUnit.unit;
+  let _x.4 := fn _x.3;
+  let _x.5 := @MyList.Cons ◾ _x.2 _x.4;
+  let _x.6 := 0;
+  let _x.7 := Int.ofNat _x.6;
+  let _x.8 := @MyList.Cons ◾ _x.7 _x.5;
+  return _x.8
+
+════ 🎯 test4
+def test4 : MyList Int :=
+  let _x.1 := extern1;
+  cases _x.1 : MyList Int
+  | MyList.Cons a.2 a.3 =>
+    let _x.4 := 0;
+    let _x.5 := Int.ofNat _x.4;
+    let _x.6 := @MyList.Cons ◾ _x.5 _x.1;
+    return _x.6
+  | _ =>
+    let _x.7 := @MyList.Nil ◾;
+    return _x.7
+
+════ 🎯 test5
+def test5 : MyList Int :=
+  let _x.1 := extern2;
+  cases _x.1 : MyList Int
+  | MyList.Cons a.2 a.3 =>
+    let _x.4 := 0;
+    let _x.5 := Int.ofNat _x.4;
+    let _x.6 := @MyList.Cons ◾ _x.5 _x.1;
+    return _x.6
+  | _ =>
+    let _x.7 := @MyList.Nil ◾;
+    return _x.7
+
+════ 🎯 test6
+def test6 : MyList Int :=
+  let _x.1 := extern3;
+  cases _x.1 : MyList Int
+  | RecD.mk d e =>
+    let _x.2 := @MyList.Nil ◾;
+    cases d : MyList Int
+    | MyList.Cons a.3 a.4 =>
+      let _x.5 := 0;
+      let _x.6 := Int.ofNat _x.5;
+      let _x.7 := @MyList.Cons ◾ _x.6 d;
+      return _x.7
+    | _ =>
+      return _x.2
+

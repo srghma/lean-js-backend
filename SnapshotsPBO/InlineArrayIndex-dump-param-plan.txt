@@ -1,0 +1,26 @@
+════ assertEqual
+❌ ⚠️ Name 'assertEqual' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ main
+❌ ⚠️ Name 'main' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ testArrayIndex
+-- IR
+def testArrayIndex (x_1 : ◾) (x_2 : @& obj) (x_3 : @& tobj) : tobj :=
+  let x_4 : tobj := testArrayIndex._redArg x_2 x_3;
+  ret x_4
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+

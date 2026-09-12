@@ -1,0 +1,53 @@
+════ 🎯 test1
+def test1 a.1 : Array Int :=
+  let _x.2 := 1;
+  let _x.3 := Int.ofNat _x.2;
+  let _x.4 := 2;
+  let _x.5 := Int.ofNat _x.4;
+  let _x.6 := 3;
+  let _x.7 := Int.ofNat _x.6;
+  let _x.8 := @Array.mkEmpty _ _x.6;
+  let _x.9 := @Array.push _ _x.8 _x.3;
+  let _x.10 := @Array.push _ _x.9 _x.5;
+  let _x.11 := @Array.push _ _x.10 _x.7;
+  let _x.12 := Monoid.guard._at_.test1.spec_0 a.1 _x.11;
+  return _x.12
+
+════ 🎯 test2
+def test2 f a.1 : Array Int :=
+  let _x.2 := 1;
+  let _x.3 := Int.ofNat _x.2;
+  let _x.4 := 2;
+  let _x.5 := Int.ofNat _x.4;
+  let _x.6 := 3;
+  let _x.7 := Int.ofNat _x.6;
+  let _x.8 := @Array.mkEmpty _ _x.6;
+  let _x.9 := @Array.push _ _x.8 _x.3;
+  let _x.10 := @Array.push _ _x.9 _x.5;
+  let _x.11 := @Array.push _ _x.10 _x.7;
+  let _x.12 := f _ _x.11;
+  let _x.13 := Monoid.guard._at_.test1.spec_0 a.1 _x.12;
+  return _x.13
+
+════ 📦 Array.emptyWithCapacity
+def Array.emptyWithCapacity α @&c : Array α :=
+  extern
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array α :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array α :=
+  extern
+
+════ 📦 Monoid.guard._at_.test1.spec_0
+def Monoid.guard._at_.test1.spec_0 b a : Array Int :=
+  cases b : Array Int
+  | Bool.false =>
+    let _x.1 := 0;
+    let _x.2 := @Array.emptyWithCapacity _ _x.1;
+    return _x.2
+  | Bool.true =>
+    return a
+

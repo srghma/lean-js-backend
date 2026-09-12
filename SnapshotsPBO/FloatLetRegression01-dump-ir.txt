@@ -1,0 +1,66 @@
+════ 🎯 test
+-- IR (what the backend reads)
+def test (x_1 : obj) : obj :=
+  let x_2 : tobj := test._closed_0;
+  inc x_1;
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : tobj := test._closed_1;
+  let x_5 : tobj := app x_1 x_4;
+  inc x_5;
+  let x_6 : obj := ctor_0[FloatLetResult.mk] x_3 x_5 x_5;
+  ret x_6
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int.negSucc
+-- IR (what the backend reads)
+extern Int.negSucc (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg_succ_of_nat"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 1
+ctor.numFields: 1
+
+════ 📦 Int.ofNat
+-- IR (what the backend reads)
+extern Int.ofNat (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_to_int"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 test._closed_0
+-- IR (what the backend reads)
+def test._closed_0 : tobj :=
+  let x_1 : tagged := 1;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_1
+-- IR (what the backend reads)
+def test._closed_1 : tobj :=
+  let x_1 : tagged := 2;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.FloatLetRegression01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (5): [`test, `Int.negSucc, `Int.ofNat, `test._closed_0, `test._closed_1]
+ctors (3): [`FloatLetResult.mk, `Int.negSucc, `Int.ofNat]
+inducts (2): [`FloatLetResult, `Int]

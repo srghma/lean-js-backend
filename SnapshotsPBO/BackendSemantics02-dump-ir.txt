@@ -1,0 +1,16 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 : tobj :=
+  let x_1 : tagged := 97;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.BackendSemantics02]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (1): [`test1]
+ctors (0): []
+inducts (0): []

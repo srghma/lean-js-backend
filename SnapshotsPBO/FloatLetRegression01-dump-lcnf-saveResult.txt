@@ -1,0 +1,11 @@
+════ 🎯 test
+def test f : FloatLetResult :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let b := f _x.2;
+  let _x.3 := 2;
+  let _x.4 := Int.ofNat _x.3;
+  let c := f _x.4;
+  let _x.5 := FloatLetResult.mk b c c;
+  return _x.5
+

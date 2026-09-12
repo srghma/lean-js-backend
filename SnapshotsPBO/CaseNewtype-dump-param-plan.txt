@@ -1,0 +1,68 @@
+════ test1
+-- IR
+def test1 (x_1 : @& tobj) : obj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : u8 := Int.decEq x_1 x_2;
+  dec x_2;
+  case x_3 : u8 of
+  Bool.false →
+    let x_4 : tobj := test1._closed_1;
+    let x_5 : u8 := Int.decEq x_1 x_4;
+    dec x_4;
+    case x_5 : u8 of
+    Bool.false →
+      let x_6 : tobj := test1._closed_2;
+      let x_7 : u8 := Int.decEq x_1 x_6;
+      dec x_6;
+      case x_7 : u8 of
+      Bool.false →
+        let x_8 : obj := test1._closed_3;
+        ret x_8
+      Bool.true →
+        let x_9 : obj := test1._closed_4;
+        ret x_9
+    Bool.true →
+      let x_10 : obj := test1._closed_5;
+      ret x_10
+  Bool.true →
+    let x_11 : obj := test1._closed_6;
+    ret x_11
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : @& tobj) : obj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : u8 := Int.decEq x_1 x_2;
+  dec x_2;
+  case x_3 : u8 of
+  Bool.false →
+    let x_4 : tobj := test1._closed_1;
+    let x_5 : u8 := Int.decEq x_1 x_4;
+    dec x_4;
+    case x_5 : u8 of
+    Bool.false →
+      let x_6 : tobj := test1._closed_2;
+      let x_7 : u8 := Int.decEq x_1 x_6;
+      dec x_6;
+      case x_7 : u8 of
+      Bool.false →
+        let x_8 : obj := test1._closed_3;
+        ret x_8
+      Bool.true →
+        let x_9 : obj := test1._closed_4;
+        ret x_9
+    Bool.true →
+      let x_10 : obj := test1._closed_5;
+      ret x_10
+  Bool.true →
+    let x_11 : obj := test1._closed_6;
+    ret x_11
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

@@ -1,0 +1,57 @@
+════ split plans
+_private.Init.Data.String.Slice.0.String.Slice.dropEndWhile.go._at_.String.trimRight.spec_0: #[some { ctor := `String.Slice.mk, numFields := 3 }, none]
+════ main before
+def main (x_1 : void) : obj :=
+  let x_2 : obj := IO.getStdin ◾;
+  let x_3 : tagged := 0;
+  let x_4 : obj := echoLines x_2 x_3 ◾;
+  case x_4 : obj of
+  EST.Out.ok →
+    let x_5 : tobj := proj[0] x_4;
+    inc x_5;
+    dec x_4;
+    let x_6 : obj := Nat.reprFast x_5;
+    let x_7 : obj := main._closed_0;
+    let x_8 : obj := String.append x_6 x_7;
+    dec x_7;
+    let x_9 : obj := IO.println._at_.echoLines.spec_0 x_8 ◾;
+    ret x_9
+  EST.Out.error →
+    let x_10 : u8 := isShared x_4;
+    case x_10 : u8 of
+    Bool.false →
+      ret x_4
+    Bool.true →
+      let x_11 : tobj := proj[0] x_4;
+      inc x_11;
+      dec x_4;
+      let x_12 : obj := ctor_1[EST.Out.error] x_11;
+      ret x_12
+════ main after
+def main (x_1 : void) : obj :=
+  let x_2 : obj := IO.getStdin ◾;
+  let x_3 : tagged := 0;
+  let x_4 : obj := echoLines x_2 x_3 ◾;
+  case x_4 : obj of
+  EST.Out.ok →
+    let x_5 : tobj := proj[0] x_4;
+    inc x_5;
+    dec x_4;
+    let x_6 : obj := Nat.reprFast x_5;
+    let x_7 : obj := main._closed_0;
+    let x_8 : obj := String.append x_6 x_7;
+    dec x_7;
+    let x_9 : obj := IO.println._at_.echoLines.spec_0 x_8 ◾;
+    ret x_9
+  EST.Out.error →
+    let x_10 : u8 := isShared x_4;
+    case x_10 : u8 of
+    Bool.false →
+      ret x_4
+    Bool.true →
+      let x_11 : tobj := proj[0] x_4;
+      inc x_11;
+      dec x_4;
+      let x_12 : obj := ctor_1[EST.Out.error] x_11;
+      ret x_12
+════ main parameter plan: #[Lean.Compiler.JS.ParamStatus.dropped]

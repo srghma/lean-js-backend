@@ -1,0 +1,79 @@
+════ 🎯 Fun
+-- LCNF (saveBase): not stored
+
+════ 🎯 Abs
+-- LCNF (saveBase): not stored
+
+════ 🎯 App
+-- LCNF (saveBase): not stored
+
+════ 🎯 rewriteBottomUp
+def rewriteBottomUp k a : Fun :=
+  fun _f.1 f : Fun :=
+    let _x.2 := k f;
+    return _x.2;
+  let _x.3 := rewriteBottomUpM._at_.rewriteBottomUp.spec_0 _f.1 a;
+  return _x.3
+
+════ 🎯 rewriteBottomUpM
+def rewriteBottomUpM m inst.1 k a : m Fun :=
+  fun _f.2 a' : m Fun :=
+    let _x.3 := k a';
+    return _x.3;
+  let _x.4 := inst.1 # 1;
+  let _x.5 := _x.4 # 0;
+  let _x.6 := inst.1 # 0;
+  let _x.7 := @rewriteBottomUpM _ inst.1 k;
+  let _x.8 := @traverseFun1 _ _x.6 _x.7 a;
+  let _x.9 := _x.5 _ _ _x.8 _f.2;
+  return _x.9
+
+════ 🎯 traverseFun1
+def traverseFun1 f inst.1 k x.2 : f Fun :=
+  fun _f.3 a.4 a.5 : Fun :=
+    let _x.6 := Fun.App a.4 a.5;
+    return _x.6;
+  let _x.7 := inst.1 # 0;
+  let _x.8 := inst.1 # 2;
+  cases x.2 : f Fun
+  | Fun.Abs a.9 a.10 =>
+    fun _f.11 a.12 : Fun :=
+      let _x.13 := Fun.Abs a.9 a.12;
+      return _x.13;
+    let _x.14 := _x.7 # 0;
+    let _x.15 := k a.10;
+    let _x.16 := _x.14 _ _ _f.11 _x.15;
+    return _x.16
+  | Fun.App a.17 a.18 =>
+    fun _f.19 x.20 : f Fun :=
+      let _x.21 := k a.18;
+      return _x.21;
+    let _x.22 := _x.8 # 0;
+    let _x.23 := _x.7 # 0;
+    let _x.24 := k a.17;
+    let _x.25 := _x.23 _ _ _f.3 _x.24;
+    let _x.26 := _x.22 _ _ _x.25 _f.19;
+    return _x.26
+
+════ 📦 rewriteBottomUpM._at_.rewriteBottomUp.spec_0
+def rewriteBottomUpM._at_.rewriteBottomUp.spec_0 k a : Fun :=
+  fun _f.1 _y.2 : Fun :=
+    let _x.3 := rewriteBottomUpM._at_.rewriteBottomUp.spec_0 k _y.2;
+    return _x.3;
+  let _x.4 := traverseFun1._at_.rewriteBottomUpM._at_.rewriteBottomUp.spec_0.spec_0 _f.1 a;
+  let _x.5 := k _x.4;
+  return _x.5
+
+════ 📦 traverseFun1._at_.rewriteBottomUpM._at_.rewriteBottomUp.spec_0.spec_0
+def traverseFun1._at_.rewriteBottomUpM._at_.rewriteBottomUp.spec_0.spec_0 k x.1 : Fun :=
+  cases x.1 : Fun
+  | Fun.Abs a.2 a.3 =>
+    let _x.4 := k a.3;
+    let _x.5 := Fun.Abs a.2 _x.4;
+    return _x.5
+  | Fun.App a.6 a.7 =>
+    let _x.8 := k a.6;
+    let _x.9 := k a.7;
+    let _x.10 := Fun.App _x.8 _x.9;
+    return _x.10
+

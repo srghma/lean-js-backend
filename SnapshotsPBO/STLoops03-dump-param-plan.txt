@@ -1,0 +1,63 @@
+════ test1
+-- IR
+def test1 (x_1 : tobj) (x_2 : tobj) (x_3 : void) : obj :=
+  let x_4 : obj := pap test1._lam_0._boxed x_1;
+  let x_5 : obj := pap test1._lam_1._boxed x_2;
+  let x_6 : obj := whileE x_4 x_5 ◾;
+  ret x_6
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : tobj) (x_2 : tobj) (x_3 : void) : obj :=
+  let x_4 : obj := pap test1._lam_0._boxed x_1;
+  inc x_2;
+  let x_5 : obj := pap test2._lam_1._boxed x_2;
+  inc x_2;
+  inc x_5;
+  let x_6 : obj := pap test2._lam_0._boxed x_5 x_2;
+  inc x_4;
+  let x_7 : obj := whileE x_4 x_6 ◾;
+  case x_7 : obj of
+  EST.Out.ok →
+    dec x_7;
+    let x_8 : obj := pap test2._lam_2._boxed x_5 x_2;
+    let x_9 : obj := whileE x_4 x_8 ◾;
+    ret x_9
+  EST.Out.error →
+    dec x_5;
+    dec x_4;
+    dec x_2;
+    ret x_7
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+
+════ test3
+-- IR
+def test3 (x_1 : tobj) (x_2 : tobj) (x_3 : void) : obj :=
+  let x_4 : obj := pap test1._lam_0._boxed x_1;
+  let x_5 : obj := pap test3._lam_1._boxed x_2;
+  let x_6 : obj := whileE x_4 x_5 ◾;
+  ret x_6
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+
+════ test4
+-- IR
+def test4 (x_1 : tobj) (x_2 : tobj) (x_3 : void) : obj :=
+  let x_4 : obj := pap test1._lam_0._boxed x_1;
+  let x_5 : obj := pap test4._lam_1._boxed x_2;
+  let x_6 : obj := whileE x_4 x_5 ◾;
+  ret x_6
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+

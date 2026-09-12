@@ -1,0 +1,11 @@
+════ 🎯 test1
+def test1 : Nat :=
+  let _x.1 := 97;
+  let _x.2 := _x.1 # 0;
+  let _x.3 := UInt32.toNat _x.2;
+  return _x.3
+
+════ 📦 UInt32.toNat
+def UInt32.toNat n : Nat :=
+  extern
+

@@ -1,0 +1,324 @@
+════ Column
+❌ ⚠️ Name 'Column' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ testP
+-- IR
+def testP (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) : tobj :=
+  block_5 :=
+    let x_4 : tobj := testP._closed_0;
+    ret x_4;
+  block_7 :=
+    let x_6 : tobj := testP._closed_1;
+    ret x_6;
+  block_9 :=
+    let x_8 : tobj := testP._closed_2;
+    ret x_8;
+  let x_10 : tobj := testP._closed_3;
+  let x_11 : u8 := Int.decEq x_1 x_10;
+  case x_11 : u8 of
+  Bool.false →
+    dec x_10;
+    let x_12 : tobj := testP._closed_4;
+    let x_13 : u8 := Int.decEq x_2 x_12;
+    dec x_12;
+    case x_13 : u8 of
+    Bool.false →
+      jmp block_7
+    Bool.true →
+      let x_14 : tobj := testP._closed_0;
+      let x_15 : u8 := Int.decEq x_3 x_14;
+      dec x_14;
+      case x_15 : u8 of
+      Bool.false →
+        jmp block_7
+      Bool.true →
+        jmp block_5
+  Bool.true →
+    let x_16 : tobj := testP._closed_4;
+    let x_17 : u8 := Int.decEq x_2 x_16;
+    case x_17 : u8 of
+    Bool.false →
+      dec x_16;
+      dec x_10;
+      let x_18 : tobj := testP._closed_2;
+      let x_19 : u8 := Int.decEq x_3 x_18;
+      dec x_18;
+      case x_19 : u8 of
+      Bool.false →
+        jmp block_7
+      Bool.true →
+        jmp block_9
+    Bool.true →
+      let x_20 : u8 := Int.decEq x_3 x_10;
+      case x_20 : u8 of
+      Bool.false →
+        dec x_10;
+        let x_21 : u8 := Int.decEq x_3 x_16;
+        case x_21 : u8 of
+        Bool.false →
+          dec x_16;
+          let x_22 : tobj := testP._closed_0;
+          let x_23 : u8 := Int.decEq x_3 x_22;
+          dec x_22;
+          case x_23 : u8 of
+          Bool.false →
+            let x_24 : tobj := testP._closed_2;
+            let x_25 : u8 := Int.decEq x_3 x_24;
+            dec x_24;
+            case x_25 : u8 of
+            Bool.false →
+              jmp block_7
+            Bool.true →
+              jmp block_9
+          Bool.true →
+            jmp block_5
+        Bool.true →
+          ret x_16
+      Bool.true →
+        dec x_16;
+        ret x_10
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+
+════ testPB
+-- IR
+def testPB (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  block_4 :=
+    let x_3 : tobj := testP._closed_0;
+    ret x_3;
+  block_6 :=
+    let x_5 : tobj := testP._closed_2;
+    ret x_5;
+  case x_1 : tobj of
+  Column.one →
+    let x_7 : tobj := proj[0] x_1;
+    let x_8 : tobj := testP._closed_3;
+    let x_9 : u8 := Int.decEq x_7 x_8;
+    case x_9 : u8 of
+    Bool.false →
+      dec x_8;
+      case x_2 : tobj of
+      Column.zero →
+        jmp block_4
+      default →
+        jmp block_6
+    Bool.true →
+      case x_2 : tobj of
+      Column.one →
+        let x_10 : tobj := proj[0] x_2;
+        let x_11 : u8 := Int.decEq x_10 x_8;
+        case x_11 : u8 of
+        Bool.false →
+          dec x_8;
+          jmp block_6
+        Bool.true →
+          ret x_8
+      Column.zero →
+        dec x_8;
+        jmp block_4
+      default →
+        dec x_8;
+        jmp block_6
+  Column.two →
+    let x_12 : tobj := proj[0] x_1;
+    let x_13 : tobj := proj[1] x_1;
+    let x_14 : tobj := testP._closed_4;
+    let x_15 : u8 := Int.decEq x_12 x_14;
+    case x_15 : u8 of
+    Bool.false →
+      dec x_14;
+      case x_2 : tobj of
+      Column.zero →
+        jmp block_4
+      default →
+        jmp block_6
+    Bool.true →
+      let x_16 : tobj := testP._closed_0;
+      let x_17 : u8 := Int.decEq x_13 x_16;
+      case x_17 : u8 of
+      Bool.false →
+        dec x_16;
+        dec x_14;
+        case x_2 : tobj of
+        Column.zero →
+          jmp block_4
+        default →
+          jmp block_6
+      Bool.true →
+        case x_2 : tobj of
+        Column.two →
+          let x_18 : tobj := proj[0] x_2;
+          let x_19 : tobj := proj[1] x_2;
+          let x_20 : u8 := Int.decEq x_18 x_14;
+          case x_20 : u8 of
+          Bool.false →
+            dec x_16;
+            dec x_14;
+            jmp block_6
+          Bool.true →
+            let x_21 : u8 := Int.decEq x_19 x_16;
+            dec x_16;
+            case x_21 : u8 of
+            Bool.false →
+              dec x_14;
+              jmp block_6
+            Bool.true →
+              ret x_14
+        Column.zero →
+          dec x_16;
+          dec x_14;
+          jmp block_4
+        default →
+          dec x_16;
+          dec x_14;
+          jmp block_6
+  default →
+    case x_2 : tobj of
+    Column.zero →
+      jmp block_4
+    default →
+      jmp block_6
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ testPBA
+-- IR
+def testPBA (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  block_4 :=
+    let x_3 : tobj := testP._closed_2;
+    ret x_3;
+  case x_1 : tobj of
+  Column.one →
+    let x_5 : tobj := proj[0] x_1;
+    let x_6 : tobj := testP._closed_3;
+    let x_7 : u8 := Int.decEq x_5 x_6;
+    case x_7 : u8 of
+    Bool.false →
+      dec x_6;
+      let x_8 : tobj := testP._closed_4;
+      let x_9 : u8 := Int.decEq x_5 x_8;
+      case x_9 : u8 of
+      Bool.false →
+        dec x_8;
+        jmp block_4
+      Bool.true →
+        case x_2 : tobj of
+        Column.one →
+          let x_10 : tobj := proj[0] x_2;
+          let x_11 : u8 := Int.decEq x_10 x_8;
+          case x_11 : u8 of
+          Bool.false →
+            dec x_8;
+            jmp block_4
+          Bool.true →
+            ret x_8
+        default →
+          dec x_8;
+          jmp block_4
+    Bool.true →
+      case x_2 : tobj of
+      Column.one →
+        let x_12 : tobj := proj[0] x_2;
+        let x_13 : u8 := Int.decEq x_12 x_6;
+        case x_13 : u8 of
+        Bool.false →
+          dec x_6;
+          jmp block_4
+        Bool.true →
+          ret x_6
+      default →
+        dec x_6;
+        jmp block_4
+  Column.two →
+    let x_14 : tobj := proj[0] x_1;
+    let x_15 : tobj := testP._closed_3;
+    let x_16 : u8 := Int.decEq x_14 x_15;
+    dec x_15;
+    case x_16 : u8 of
+    Bool.false →
+      jmp block_4
+    Bool.true →
+      case x_2 : tobj of
+      Column.two →
+        let x_17 : tobj := testP._closed_0;
+        ret x_17
+      default →
+        jmp block_4
+  default →
+    jmp block_4
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ testPBAN
+-- IR
+def testPBAN (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  block_4 :=
+    let x_3 : tobj := testP._closed_2;
+    ret x_3;
+  case x_1 : tobj of
+  Column.one →
+    let x_5 : tobj := proj[0] x_1;
+    let x_6 : tobj := testP._closed_3;
+    let x_7 : u8 := Int.decEq x_5 x_6;
+    case x_7 : u8 of
+    Bool.false →
+      dec x_6;
+      let x_8 : tobj := testP._closed_4;
+      let x_9 : u8 := Int.decEq x_5 x_8;
+      case x_9 : u8 of
+      Bool.false →
+        dec x_8;
+        jmp block_4
+      Bool.true →
+        case x_2 : tobj of
+        Column.one →
+          let x_10 : tobj := proj[0] x_2;
+          let x_11 : u8 := Int.decEq x_10 x_8;
+          case x_11 : u8 of
+          Bool.false →
+            dec x_8;
+            jmp block_4
+          Bool.true →
+            ret x_8
+        default →
+          dec x_8;
+          jmp block_4
+    Bool.true →
+      case x_2 : tobj of
+      Column.one →
+        let x_12 : tobj := proj[0] x_2;
+        let x_13 : u8 := Int.decEq x_12 x_6;
+        case x_13 : u8 of
+        Bool.false →
+          dec x_6;
+          jmp block_4
+        Bool.true →
+          ret x_6
+      default →
+        dec x_6;
+        jmp block_4
+  Column.two →
+    case x_2 : tobj of
+    Column.two →
+      let x_14 : tobj := testP._closed_0;
+      ret x_14
+    default →
+      jmp block_4
+  default →
+    jmp block_4
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+

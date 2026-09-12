@@ -1,0 +1,1306 @@
+════ 📦 Array.getInternal
+-- IR (what the backend reads)
+extern Array.getInternal (x_1 : ◾) (x_2 : @& obj) (x_3 : @& tobj) (x_4 : ◾) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_fget"
+decl.hashKeyType?: none
+
+════ 📦 Array.mk
+-- IR (what the backend reads)
+extern Array.mk (x_0 : ◾) (x_1 : tobj) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_mk"
+decl.hashKeyType?: none
+ctor.induct: Array
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 Array.size
+-- IR (what the backend reads)
+extern Array.size (x_1 : ◾) (x_2 : @& obj) : tagged
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_get_size"
+decl.hashKeyType?: none
+
+════ 📦 List.range
+-- IR (what the backend reads)
+def List.range (x_1 : tobj) : tobj :=
+  let x_2 : tagged := ctor_0[List.nil];
+  let x_3 : tobj := List.range.loop x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Nat.add
+-- IR (what the backend reads)
+extern Nat.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_add"
+decl.hashKeyType?: none
+
+════ 📦 Nat.decEq
+-- IR (what the backend reads)
+extern Nat.decEq (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_dec_eq"
+decl.hashKeyType?: none
+
+════ 📦 Nat.decLt
+-- IR (what the backend reads)
+extern Nat.decLt (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_dec_lt"
+decl.hashKeyType?: none
+
+════ 📦 Nat.digitChar
+-- IR (what the backend reads)
+def Nat.digitChar (x_1 : @& tobj) : u32 :=
+  let x_2 : tagged := 0;
+  let x_3 : u8 := Nat.decEq x_1 x_2;
+  case x_3 : u8 of
+  Bool.false →
+    let x_4 : tagged := 1;
+    let x_5 : u8 := Nat.decEq x_1 x_4;
+    case x_5 : u8 of
+    Bool.false →
+      let x_6 : tagged := 2;
+      let x_7 : u8 := Nat.decEq x_1 x_6;
+      case x_7 : u8 of
+      Bool.false →
+        let x_8 : tagged := 3;
+        let x_9 : u8 := Nat.decEq x_1 x_8;
+        case x_9 : u8 of
+        Bool.false →
+          let x_10 : tagged := 4;
+          let x_11 : u8 := Nat.decEq x_1 x_10;
+          case x_11 : u8 of
+          Bool.false →
+            let x_12 : tagged := 5;
+            let x_13 : u8 := Nat.decEq x_1 x_12;
+            case x_13 : u8 of
+            Bool.false →
+              let x_14 : tagged := 6;
+              let x_15 : u8 := Nat.decEq x_1 x_14;
+              case x_15 : u8 of
+              Bool.false →
+                let x_16 : tagged := 7;
+                let x_17 : u8 := Nat.decEq x_1 x_16;
+                case x_17 : u8 of
+                Bool.false →
+                  let x_18 : tagged := 8;
+                  let x_19 : u8 := Nat.decEq x_1 x_18;
+                  case x_19 : u8 of
+                  Bool.false →
+                    let x_20 : tagged := 9;
+                    let x_21 : u8 := Nat.decEq x_1 x_20;
+                    case x_21 : u8 of
+                    Bool.false →
+                      let x_22 : tagged := 10;
+                      let x_23 : u8 := Nat.decEq x_1 x_22;
+                      case x_23 : u8 of
+                      Bool.false →
+                        let x_24 : tagged := 11;
+                        let x_25 : u8 := Nat.decEq x_1 x_24;
+                        case x_25 : u8 of
+                        Bool.false →
+                          let x_26 : tagged := 12;
+                          let x_27 : u8 := Nat.decEq x_1 x_26;
+                          case x_27 : u8 of
+                          Bool.false →
+                            let x_28 : tagged := 13;
+                            let x_29 : u8 := Nat.decEq x_1 x_28;
+                            case x_29 : u8 of
+                            Bool.false →
+                              let x_30 : tagged := 14;
+                              let x_31 : u8 := Nat.decEq x_1 x_30;
+                              case x_31 : u8 of
+                              Bool.false →
+                                let x_32 : tagged := 15;
+                                let x_33 : u8 := Nat.decEq x_1 x_32;
+                                case x_33 : u8 of
+                                Bool.false →
+                                  let x_34 : u32 := 42;
+                                  ret x_34
+                                Bool.true →
+                                  let x_35 : u32 := 102;
+                                  ret x_35
+                              Bool.true →
+                                let x_36 : u32 := 101;
+                                ret x_36
+                            Bool.true →
+                              let x_37 : u32 := 100;
+                              ret x_37
+                          Bool.true →
+                            let x_38 : u32 := 99;
+                            ret x_38
+                        Bool.true →
+                          let x_39 : u32 := 98;
+                          ret x_39
+                      Bool.true →
+                        let x_40 : u32 := 97;
+                        ret x_40
+                    Bool.true →
+                      let x_41 : u32 := 57;
+                      ret x_41
+                  Bool.true →
+                    let x_42 : u32 := 56;
+                    ret x_42
+                Bool.true →
+                  let x_43 : u32 := 55;
+                  ret x_43
+              Bool.true →
+                let x_44 : u32 := 54;
+                ret x_44
+            Bool.true →
+              let x_45 : u32 := 53;
+              ret x_45
+          Bool.true →
+            let x_46 : u32 := 52;
+            ret x_46
+        Bool.true →
+          let x_47 : u32 := 51;
+          ret x_47
+      Bool.true →
+        let x_48 : u32 := 50;
+        ret x_48
+    Bool.true →
+      let x_49 : u32 := 49;
+      ret x_49
+  Bool.true →
+    let x_50 : u32 := 48;
+    ret x_50
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Nat.div
+-- IR (what the backend reads)
+extern Nat.div (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_div"
+decl.hashKeyType?: none
+
+════ 📦 Nat.mod
+-- IR (what the backend reads)
+extern Nat.mod (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_mod"
+decl.hashKeyType?: none
+
+════ 📦 Nat.pow
+-- IR (what the backend reads)
+extern Nat.pow (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_pow"
+decl.hashKeyType?: none
+
+════ 📦 Nat.reprFast
+-- IR (what the backend reads)
+def Nat.reprFast (x_1 : tobj) : obj :=
+  let x_2 : obj := _private.Init.Data.Repr.0.Nat.reprArray;
+  let x_3 : tobj := Nat.reprFast._closed_0;
+  let x_4 : u8 := Nat.decLt x_1 x_3;
+  dec x_3;
+  case x_4 : u8 of
+  Bool.false →
+    dec x_2;
+    let x_5 : tobj := Nat.reprFast._closed_1;
+    let x_6 : u8 := Nat.decLt x_1 x_5;
+    dec x_5;
+    case x_6 : u8 of
+    Bool.false →
+      let x_7 : tagged := 10;
+      let x_8 : tobj := Nat.toDigits x_7 x_1;
+      let x_9 : obj := String.ofList x_8;
+      ret x_9
+    Bool.true →
+      let x_10 : usize := USize.ofNatLT x_1 ◾;
+      dec x_1;
+      let x_11 : obj := USize.repr x_10;
+      ret x_11
+  Bool.true →
+    let x_12 : tobj := Array.getInternal ◾ x_2 x_1 ◾;
+    dec x_1;
+    dec x_2;
+    ret x_12
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Nat.sub
+-- IR (what the backend reads)
+extern Nat.sub (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_sub"
+decl.hashKeyType?: none
+
+════ 📦 Nat.toDigits
+-- IR (what the backend reads)
+def Nat.toDigits (x_1 : @& tobj) (x_2 : tobj) : tobj :=
+  let x_3 : tagged := 1;
+  let x_4 : tobj := Nat.add x_2 x_3;
+  let x_5 : tagged := ctor_0[List.nil];
+  let x_6 : tobj := Nat.toDigitsCore x_1 x_4 x_2 x_5;
+  ret x_6
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Nat.toDigitsCore
+-- IR (what the backend reads)
+def Nat.toDigitsCore (x_1 : @& tobj) (x_2 : tobj) (x_3 : tobj) (x_4 : tobj) : tobj :=
+  let x_5 : tagged := 0;
+  let x_6 : u8 := Nat.decEq x_2 x_5;
+  case x_6 : u8 of
+  Bool.true →
+    dec x_3;
+    dec x_2;
+    ret x_4
+  Bool.false →
+    let x_7 : tobj := Nat.mod x_3 x_1;
+    let x_8 : u32 := Nat.digitChar x_7;
+    dec x_7;
+    let x_9 : tobj := Nat.div x_3 x_1;
+    dec x_3;
+    let x_10 : u8 := Nat.decEq x_9 x_5;
+    case x_10 : u8 of
+    Bool.false →
+      let x_11 : tagged := 1;
+      let x_12 : tobj := Nat.sub x_2 x_11;
+      dec x_2;
+      let x_13 : tobj := box x_8;
+      let x_14 : obj := ctor_1[List.cons] x_13 x_4;
+      let x_15 : tobj := Nat.toDigitsCore x_1 x_12 x_9 x_14;
+      ret x_15
+    Bool.true →
+      dec x_9;
+      dec x_2;
+      let x_16 : tobj := box x_8;
+      let x_17 : obj := ctor_1[List.cons] x_16 x_4;
+      ret x_17
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 String.append
+-- IR (what the backend reads)
+extern String.append (x_1 : obj) (x_2 : @& obj) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_append"
+decl.hashKeyType?: none
+
+════ 📦 String.ofList
+-- IR (what the backend reads)
+extern String.ofList (x_1 : tobj) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_mk"
+decl.hashKeyType?: none
+
+════ 📦 UInt32.add
+-- IR (what the backend reads)
+extern UInt32.add (x_1 : u32) (x_2 : u32) : u32
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_uint32_add"
+decl.hashKeyType?: none
+
+════ 📦 UInt32.decLe
+-- IR (what the backend reads)
+extern UInt32.decLe (x_1 : u32) (x_2 : u32) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_uint32_dec_le"
+decl.hashKeyType?: none
+
+════ 📦 UInt32.toNat
+-- IR (what the backend reads)
+extern UInt32.toNat (x_1 : u32) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_uint32_to_nat"
+decl.hashKeyType?: none
+
+════ 📦 USize.ofNat
+-- IR (what the backend reads)
+extern USize.ofNat (x_1 : @& tobj) : usize
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_usize_of_nat"
+decl.hashKeyType?: none
+
+════ 📦 USize.ofNatLT
+-- IR (what the backend reads)
+extern USize.ofNatLT (x_1 : @& tobj) (x_2 : ◾) : usize
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_usize_of_nat"
+decl.hashKeyType?: none
+
+════ 📦 USize.repr
+-- IR (what the backend reads)
+extern USize.repr (x_1 : @& usize) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_of_usize"
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Repr.0.Nat.reprArray
+-- IR (what the backend reads)
+def _private.Init.Data.Repr.0.Nat.reprArray : obj :=
+  let x_1 : obj := _private.Init.Data.Repr.0.Nat.reprArray._closed_2;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.fopenErrorToString
+-- IR (what the backend reads)
+def IO.Error.fopenErrorToString (x_1 : obj) (x_2 : @& obj) (x_3 : u32) (x_4 : tobj) : obj :=
+  case x_4 : tobj of
+  Option.none →
+    let x_5 : obj := _private.Init.System.IOError.0.IO.Error.downCaseFirst x_1;
+    let x_6 : obj := IO.Error.fopenErrorToString._closed_0;
+    let x_7 : obj := String.append x_5 x_6;
+    dec x_6;
+    let x_8 : tobj := UInt32.toNat x_3;
+    let x_9 : obj := Nat.reprFast x_8;
+    let x_10 : obj := String.append x_7 x_9;
+    dec x_9;
+    let x_11 : obj := IO.Error.fopenErrorToString._closed_1;
+    let x_12 : obj := String.append x_10 x_11;
+    dec x_11;
+    let x_13 : obj := String.append x_12 x_2;
+    ret x_13
+  Option.some →
+    let x_14 : tobj := proj[0] x_4;
+    inc x_14;
+    dec x_4;
+    let x_15 : obj := _private.Init.System.IOError.0.IO.Error.downCaseFirst x_1;
+    let x_16 : obj := IO.Error.fopenErrorToString._closed_0;
+    let x_17 : obj := String.append x_15 x_16;
+    dec x_16;
+    let x_18 : tobj := UInt32.toNat x_3;
+    let x_19 : obj := Nat.reprFast x_18;
+    let x_20 : obj := String.append x_17 x_19;
+    dec x_19;
+    let x_21 : obj := IO.Error.fopenErrorToString._closed_2;
+    let x_22 : obj := String.append x_20 x_21;
+    dec x_21;
+    let x_23 : obj := _private.Init.System.IOError.0.IO.Error.downCaseFirst x_14;
+    let x_24 : obj := String.append x_22 x_23;
+    dec x_23;
+    let x_25 : obj := IO.Error.fopenErrorToString._closed_1;
+    let x_26 : obj := String.append x_24 x_25;
+    dec x_25;
+    let x_27 : obj := String.append x_26 x_2;
+    ret x_27
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.otherErrorToString
+-- IR (what the backend reads)
+def IO.Error.otherErrorToString (x_1 : obj) (x_2 : u32) (x_3 : tobj) : obj :=
+  case x_3 : tobj of
+  Option.none →
+    let x_4 : obj := _private.Init.System.IOError.0.IO.Error.downCaseFirst x_1;
+    let x_5 : obj := IO.Error.fopenErrorToString._closed_0;
+    let x_6 : obj := String.append x_4 x_5;
+    dec x_5;
+    let x_7 : tobj := UInt32.toNat x_2;
+    let x_8 : obj := Nat.reprFast x_7;
+    let x_9 : obj := String.append x_6 x_8;
+    dec x_8;
+    let x_10 : obj := IO.Error.otherErrorToString._closed_0;
+    let x_11 : obj := String.append x_9 x_10;
+    dec x_10;
+    ret x_11
+  Option.some →
+    let x_12 : tobj := proj[0] x_3;
+    inc x_12;
+    dec x_3;
+    let x_13 : obj := _private.Init.System.IOError.0.IO.Error.downCaseFirst x_1;
+    let x_14 : obj := IO.Error.fopenErrorToString._closed_0;
+    let x_15 : obj := String.append x_13 x_14;
+    dec x_14;
+    let x_16 : tobj := UInt32.toNat x_2;
+    let x_17 : obj := Nat.reprFast x_16;
+    let x_18 : obj := String.append x_15 x_17;
+    dec x_17;
+    let x_19 : obj := IO.Error.fopenErrorToString._closed_2;
+    let x_20 : obj := String.append x_18 x_19;
+    dec x_19;
+    let x_21 : obj := _private.Init.System.IOError.0.IO.Error.downCaseFirst x_12;
+    let x_22 : obj := String.append x_20 x_21;
+    dec x_21;
+    let x_23 : obj := IO.Error.otherErrorToString._closed_0;
+    let x_24 : obj := String.append x_22 x_23;
+    dec x_23;
+    ret x_24
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString
+-- IR (what the backend reads)
+def IO.Error.toString (x_1 : tobj) : obj :=
+  block_6 (x_2 : u32) (x_3 : obj) :=
+    let x_4 : tagged := ctor_0[Option.none];
+    let x_5 : obj := IO.Error.otherErrorToString x_3 x_2 x_4;
+    ret x_5;
+  case x_1 : tobj of
+  IO.Error.alreadyExists →
+    let x_7 : tobj := proj[0] x_1;
+    inc x_7;
+    case x_7 : tobj of
+    Option.none →
+      let x_8 : u32 := sproj[2, 0] x_1;
+      let x_9 : obj := proj[1] x_1;
+      inc x_9;
+      dec x_1;
+      let x_10 : obj := IO.Error.toString._closed_0;
+      let x_11 : obj := ctor_1[Option.some] x_9;
+      let x_12 : obj := IO.Error.otherErrorToString x_10 x_8 x_11;
+      ret x_12
+    Option.some →
+      let x_13 : u32 := sproj[2, 0] x_1;
+      let x_14 : obj := proj[1] x_1;
+      inc x_14;
+      dec x_1;
+      let x_15 : u8 := isShared x_7;
+      case x_15 : u8 of
+      Bool.false →
+        let x_16 : tobj := proj[0] x_7;
+        let x_17 : obj := IO.Error.toString._closed_0;
+        set x_7[0] := x_14;
+        let x_18 : obj := IO.Error.fopenErrorToString x_17 x_16 x_13 x_7;
+        dec x_16;
+        ret x_18
+      Bool.true →
+        let x_19 : tobj := proj[0] x_7;
+        inc x_19;
+        dec x_7;
+        let x_20 : obj := IO.Error.toString._closed_0;
+        let x_21 : obj := ctor_1[Option.some] x_14;
+        let x_22 : obj := IO.Error.fopenErrorToString x_20 x_19 x_13 x_21;
+        dec x_19;
+        ret x_22
+  IO.Error.otherError →
+    let x_23 : u32 := sproj[1, 0] x_1;
+    let x_24 : obj := proj[0] x_1;
+    inc x_24;
+    dec x_1;
+    jmp block_6 x_23 x_24
+  IO.Error.resourceBusy →
+    let x_25 : u32 := sproj[1, 0] x_1;
+    let x_26 : obj := proj[0] x_1;
+    inc x_26;
+    dec x_1;
+    let x_27 : obj := IO.Error.toString._closed_1;
+    let x_28 : obj := ctor_1[Option.some] x_26;
+    let x_29 : obj := IO.Error.otherErrorToString x_27 x_25 x_28;
+    ret x_29
+  IO.Error.resourceVanished →
+    let x_30 : u32 := sproj[1, 0] x_1;
+    let x_31 : obj := proj[0] x_1;
+    inc x_31;
+    dec x_1;
+    let x_32 : obj := IO.Error.toString._closed_2;
+    let x_33 : obj := ctor_1[Option.some] x_31;
+    let x_34 : obj := IO.Error.otherErrorToString x_32 x_30 x_33;
+    ret x_34
+  IO.Error.unsupportedOperation →
+    let x_35 : u32 := sproj[1, 0] x_1;
+    let x_36 : obj := proj[0] x_1;
+    inc x_36;
+    dec x_1;
+    let x_37 : obj := IO.Error.toString._closed_3;
+    let x_38 : obj := ctor_1[Option.some] x_36;
+    let x_39 : obj := IO.Error.otherErrorToString x_37 x_35 x_38;
+    ret x_39
+  IO.Error.hardwareFault →
+    let x_40 : u32 := sproj[1, 0] x_1;
+    dec x_1;
+    let x_41 : obj := IO.Error.toString._closed_4;
+    let x_42 : tagged := ctor_0[Option.none];
+    let x_43 : obj := IO.Error.otherErrorToString x_41 x_40 x_42;
+    ret x_43
+  IO.Error.unsatisfiedConstraints →
+    let x_44 : u32 := sproj[1, 0] x_1;
+    dec x_1;
+    let x_45 : obj := IO.Error.toString._closed_5;
+    let x_46 : tagged := ctor_0[Option.none];
+    let x_47 : obj := IO.Error.otherErrorToString x_45 x_44 x_46;
+    ret x_47
+  IO.Error.illegalOperation →
+    let x_48 : u32 := sproj[1, 0] x_1;
+    let x_49 : obj := proj[0] x_1;
+    inc x_49;
+    dec x_1;
+    let x_50 : obj := IO.Error.toString._closed_6;
+    let x_51 : obj := ctor_1[Option.some] x_49;
+    let x_52 : obj := IO.Error.otherErrorToString x_50 x_48 x_51;
+    ret x_52
+  IO.Error.protocolError →
+    let x_53 : u32 := sproj[1, 0] x_1;
+    let x_54 : obj := proj[0] x_1;
+    inc x_54;
+    dec x_1;
+    let x_55 : obj := IO.Error.toString._closed_7;
+    let x_56 : obj := ctor_1[Option.some] x_54;
+    let x_57 : obj := IO.Error.otherErrorToString x_55 x_53 x_56;
+    ret x_57
+  IO.Error.timeExpired →
+    let x_58 : u32 := sproj[1, 0] x_1;
+    let x_59 : obj := proj[0] x_1;
+    inc x_59;
+    dec x_1;
+    let x_60 : obj := IO.Error.toString._closed_8;
+    let x_61 : obj := ctor_1[Option.some] x_59;
+    let x_62 : obj := IO.Error.otherErrorToString x_60 x_58 x_61;
+    ret x_62
+  IO.Error.interrupted →
+    let x_63 : obj := proj[0] x_1;
+    inc x_63;
+    let x_64 : u32 := sproj[2, 0] x_1;
+    let x_65 : obj := proj[1] x_1;
+    inc x_65;
+    dec x_1;
+    let x_66 : obj := IO.Error.toString._closed_9;
+    let x_67 : obj := ctor_1[Option.some] x_65;
+    let x_68 : obj := IO.Error.fopenErrorToString x_66 x_63 x_64 x_67;
+    dec x_63;
+    ret x_68
+  IO.Error.noFileOrDirectory →
+    let x_69 : obj := proj[0] x_1;
+    inc x_69;
+    let x_70 : u32 := sproj[2, 0] x_1;
+    dec x_1;
+    let x_71 : obj := IO.Error.toString._closed_10;
+    let x_72 : tagged := ctor_0[Option.none];
+    let x_73 : obj := IO.Error.fopenErrorToString x_71 x_69 x_70 x_72;
+    dec x_69;
+    ret x_73
+  IO.Error.invalidArgument →
+    let x_74 : tobj := proj[0] x_1;
+    inc x_74;
+    case x_74 : tobj of
+    Option.none →
+      let x_75 : u32 := sproj[2, 0] x_1;
+      let x_76 : obj := proj[1] x_1;
+      inc x_76;
+      dec x_1;
+      let x_77 : obj := IO.Error.toString._closed_11;
+      let x_78 : obj := ctor_1[Option.some] x_76;
+      let x_79 : obj := IO.Error.otherErrorToString x_77 x_75 x_78;
+      ret x_79
+    Option.some →
+      let x_80 : u32 := sproj[2, 0] x_1;
+      let x_81 : obj := proj[1] x_1;
+      inc x_81;
+      dec x_1;
+      let x_82 : u8 := isShared x_74;
+      case x_82 : u8 of
+      Bool.false →
+        let x_83 : tobj := proj[0] x_74;
+        let x_84 : obj := IO.Error.toString._closed_11;
+        set x_74[0] := x_81;
+        let x_85 : obj := IO.Error.fopenErrorToString x_84 x_83 x_80 x_74;
+        dec x_83;
+        ret x_85
+      Bool.true →
+        let x_86 : tobj := proj[0] x_74;
+        inc x_86;
+        dec x_74;
+        let x_87 : obj := IO.Error.toString._closed_11;
+        let x_88 : obj := ctor_1[Option.some] x_81;
+        let x_89 : obj := IO.Error.fopenErrorToString x_87 x_86 x_80 x_88;
+        dec x_86;
+        ret x_89
+  IO.Error.permissionDenied →
+    let x_90 : tobj := proj[0] x_1;
+    case x_90 : tobj of
+    Option.none →
+      let x_91 : u32 := sproj[2, 0] x_1;
+      let x_92 : obj := proj[1] x_1;
+      inc x_92;
+      dec x_1;
+      jmp block_6 x_91 x_92
+    Option.some →
+      inc x_90;
+      let x_93 : u32 := sproj[2, 0] x_1;
+      let x_94 : obj := proj[1] x_1;
+      inc x_94;
+      dec x_1;
+      let x_95 : tobj := proj[0] x_90;
+      inc x_95;
+      dec x_90;
+      let x_96 : tagged := ctor_0[Option.none];
+      let x_97 : obj := IO.Error.fopenErrorToString x_94 x_95 x_93 x_96;
+      dec x_95;
+      ret x_97
+  IO.Error.resourceExhausted →
+    let x_98 : tobj := proj[0] x_1;
+    inc x_98;
+    case x_98 : tobj of
+    Option.none →
+      let x_99 : u32 := sproj[2, 0] x_1;
+      let x_100 : obj := proj[1] x_1;
+      inc x_100;
+      dec x_1;
+      let x_101 : obj := IO.Error.toString._closed_12;
+      let x_102 : obj := ctor_1[Option.some] x_100;
+      let x_103 : obj := IO.Error.otherErrorToString x_101 x_99 x_102;
+      ret x_103
+    Option.some →
+      let x_104 : u32 := sproj[2, 0] x_1;
+      let x_105 : obj := proj[1] x_1;
+      inc x_105;
+      dec x_1;
+      let x_106 : u8 := isShared x_98;
+      case x_106 : u8 of
+      Bool.false →
+        let x_107 : tobj := proj[0] x_98;
+        let x_108 : obj := IO.Error.toString._closed_12;
+        set x_98[0] := x_105;
+        let x_109 : obj := IO.Error.fopenErrorToString x_108 x_107 x_104 x_98;
+        dec x_107;
+        ret x_109
+      Bool.true →
+        let x_110 : tobj := proj[0] x_98;
+        inc x_110;
+        dec x_98;
+        let x_111 : obj := IO.Error.toString._closed_12;
+        let x_112 : obj := ctor_1[Option.some] x_105;
+        let x_113 : obj := IO.Error.fopenErrorToString x_111 x_110 x_104 x_112;
+        dec x_110;
+        ret x_113
+  IO.Error.inappropriateType →
+    let x_114 : tobj := proj[0] x_1;
+    inc x_114;
+    case x_114 : tobj of
+    Option.none →
+      let x_115 : u32 := sproj[2, 0] x_1;
+      let x_116 : obj := proj[1] x_1;
+      inc x_116;
+      dec x_1;
+      let x_117 : obj := IO.Error.toString._closed_13;
+      let x_118 : obj := ctor_1[Option.some] x_116;
+      let x_119 : obj := IO.Error.otherErrorToString x_117 x_115 x_118;
+      ret x_119
+    Option.some →
+      let x_120 : u32 := sproj[2, 0] x_1;
+      let x_121 : obj := proj[1] x_1;
+      inc x_121;
+      dec x_1;
+      let x_122 : u8 := isShared x_114;
+      case x_122 : u8 of
+      Bool.false →
+        let x_123 : tobj := proj[0] x_114;
+        let x_124 : obj := IO.Error.toString._closed_13;
+        set x_114[0] := x_121;
+        let x_125 : obj := IO.Error.fopenErrorToString x_124 x_123 x_120 x_114;
+        dec x_123;
+        ret x_125
+      Bool.true →
+        let x_126 : tobj := proj[0] x_114;
+        inc x_126;
+        dec x_114;
+        let x_127 : obj := IO.Error.toString._closed_13;
+        let x_128 : obj := ctor_1[Option.some] x_121;
+        let x_129 : obj := IO.Error.fopenErrorToString x_127 x_126 x_120 x_128;
+        dec x_126;
+        ret x_129
+  IO.Error.noSuchThing →
+    let x_130 : tobj := proj[0] x_1;
+    inc x_130;
+    case x_130 : tobj of
+    Option.none →
+      let x_131 : u32 := sproj[2, 0] x_1;
+      let x_132 : obj := proj[1] x_1;
+      inc x_132;
+      dec x_1;
+      let x_133 : obj := IO.Error.toString._closed_14;
+      let x_134 : obj := ctor_1[Option.some] x_132;
+      let x_135 : obj := IO.Error.otherErrorToString x_133 x_131 x_134;
+      ret x_135
+    Option.some →
+      let x_136 : u32 := sproj[2, 0] x_1;
+      let x_137 : obj := proj[1] x_1;
+      inc x_137;
+      dec x_1;
+      let x_138 : u8 := isShared x_130;
+      case x_138 : u8 of
+      Bool.false →
+        let x_139 : tobj := proj[0] x_130;
+        let x_140 : obj := IO.Error.toString._closed_14;
+        set x_130[0] := x_137;
+        let x_141 : obj := IO.Error.fopenErrorToString x_140 x_139 x_136 x_130;
+        dec x_139;
+        ret x_141
+      Bool.true →
+        let x_142 : tobj := proj[0] x_130;
+        inc x_142;
+        dec x_130;
+        let x_143 : obj := IO.Error.toString._closed_14;
+        let x_144 : obj := ctor_1[Option.some] x_137;
+        let x_145 : obj := IO.Error.fopenErrorToString x_143 x_142 x_136 x_144;
+        dec x_142;
+        ret x_145
+  IO.Error.unexpectedEof →
+    let x_146 : obj := IO.Error.toString._closed_15;
+    ret x_146
+  IO.Error.userError →
+    let x_147 : obj := proj[0] x_1;
+    inc x_147;
+    dec x_1;
+    ret x_147
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 List.range.loop
+-- IR (what the backend reads)
+def List.range.loop (x_1 : tobj) (x_2 : tobj) : tobj :=
+  let x_3 : tagged := 0;
+  let x_4 : u8 := Nat.decEq x_1 x_3;
+  case x_4 : u8 of
+  Bool.true →
+    dec x_1;
+    ret x_2
+  Bool.false →
+    let x_5 : tagged := 1;
+    let x_6 : tobj := Nat.sub x_1 x_5;
+    dec x_1;
+    inc x_6;
+    let x_7 : obj := ctor_1[List.cons] x_6 x_2;
+    let x_8 : tobj := List.range.loop x_6 x_7;
+    ret x_8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 List.reverse._redArg
+-- IR (what the backend reads)
+def List.reverse._redArg (x_1 : tobj) : tobj :=
+  let x_2 : tagged := ctor_0[List.nil];
+  let x_3 : tobj := List.reverseAux._redArg x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 List.reverseAux._redArg
+-- IR (what the backend reads)
+def List.reverseAux._redArg (x_1 : tobj) (x_2 : tobj) : tobj :=
+  case x_1 : tobj of
+  List.nil →
+    ret x_2
+  List.cons →
+    let x_3 : u8 := isShared x_1;
+    case x_3 : u8 of
+    Bool.false →
+      let x_4 : tobj := proj[1] x_1;
+      set x_1[1] := x_2;
+      let x_5 : tobj := List.reverseAux._redArg x_4 x_1;
+      ret x_5
+    Bool.true →
+      let x_6 : tobj := proj[0] x_1;
+      let x_7 : tobj := proj[1] x_1;
+      inc x_7;
+      inc x_6;
+      dec x_1;
+      let x_8 : obj := ctor_1[List.cons] x_6 x_2;
+      let x_9 : tobj := List.reverseAux._redArg x_7 x_8;
+      ret x_9
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Nat.reprFast._closed_0
+-- IR (what the backend reads)
+def Nat.reprFast._closed_0 : tobj :=
+  let x_1 : obj := _private.Init.Data.Repr.0.Nat.reprArray;
+  let x_2 : tagged := Array.size ◾ x_1;
+  dec x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Nat.reprFast._closed_1
+-- IR (what the backend reads)
+def Nat.reprFast._closed_1 : tobj :=
+  let x_1 : tobj := System.Platform.numBits;
+  let x_2 : tagged := 2;
+  let x_3 : tobj := Nat.pow x_2 x_1;
+  dec x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 System.Platform.getNumBits
+-- IR (what the backend reads)
+extern System.Platform.getNumBits (x_1 : tagged) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_system_platform_nbits"
+decl.hashKeyType?: none
+
+════ 📦 System.Platform.numBits
+-- IR (what the backend reads)
+def System.Platform.numBits : tobj :=
+  let x_1 : tobj := System.Platform.numBits._closed_0;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Repr.0.Nat.reprArray._closed_0
+-- IR (what the backend reads)
+def _private.Init.Data.Repr.0.Nat.reprArray._closed_0 : tobj :=
+  let x_1 : tagged := 128;
+  let x_2 : tobj := List.range x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Repr.0.Nat.reprArray._closed_1
+-- IR (what the backend reads)
+def _private.Init.Data.Repr.0.Nat.reprArray._closed_1 : tobj :=
+  let x_1 : tagged := ctor_0[List.nil];
+  let x_2 : tobj := _private.Init.Data.Repr.0.Nat.reprArray._closed_0;
+  let x_3 : tobj := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Repr.0.Nat.reprArray._closed_2
+-- IR (what the backend reads)
+def _private.Init.Data.Repr.0.Nat.reprArray._closed_2 : obj :=
+  let x_1 : tobj := _private.Init.Data.Repr.0.Nat.reprArray._closed_1;
+  let x_2 : obj := Array.mk ◾ x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.System.IOError.0.IO.Error.downCaseFirst
+-- IR (what the backend reads)
+def _private.Init.System.IOError.0.IO.Error.downCaseFirst (x_1 : obj) : obj :=
+  let x_2 : tagged := 0;
+  let x_3 : u32 := String.Pos.Raw.get x_1 x_2;
+  let x_4 : u32 := 65;
+  let x_5 : u8 := UInt32.decLe x_4 x_3;
+  case x_5 : u8 of
+  Bool.false →
+    let x_6 : obj := String.Pos.Raw.set x_1 x_2 x_3;
+    ret x_6
+  Bool.true →
+    let x_7 : u32 := 90;
+    let x_8 : u8 := UInt32.decLe x_3 x_7;
+    case x_8 : u8 of
+    Bool.false →
+      let x_9 : obj := String.Pos.Raw.set x_1 x_2 x_3;
+      ret x_9
+    Bool.true →
+      let x_10 : u32 := 32;
+      let x_11 : u32 := UInt32.add x_3 x_10;
+      let x_12 : obj := String.Pos.Raw.set x_1 x_2 x_11;
+      ret x_12
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+-- IR (what the backend reads)
+def List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 (x_1 : tobj) (x_2 : tobj) : tobj :=
+  case x_1 : tobj of
+  List.nil →
+    let x_3 : tobj := List.reverse._redArg x_2;
+    ret x_3
+  List.cons →
+    let x_4 : u8 := isShared x_1;
+    case x_4 : u8 of
+    Bool.false →
+      let x_5 : tobj := proj[0] x_1;
+      let x_6 : tobj := proj[1] x_1;
+      let x_7 : usize := USize.ofNat x_5;
+      dec x_5;
+      let x_8 : obj := USize.repr x_7;
+      set x_1[1] := x_2;
+      set x_1[0] := x_8;
+      let x_9 : tobj := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 x_6 x_1;
+      ret x_9
+    Bool.true →
+      let x_10 : tobj := proj[0] x_1;
+      let x_11 : tobj := proj[1] x_1;
+      inc x_11;
+      inc x_10;
+      dec x_1;
+      let x_12 : usize := USize.ofNat x_10;
+      dec x_10;
+      let x_13 : obj := USize.repr x_12;
+      let x_14 : obj := ctor_1[List.cons] x_13 x_2;
+      let x_15 : tobj := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 x_11 x_14;
+      ret x_15
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.fopenErrorToString._closed_0
+-- IR (what the backend reads)
+def IO.Error.fopenErrorToString._closed_0 : obj :=
+  let x_1 : obj := " (error code: ";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.fopenErrorToString._closed_1
+-- IR (what the backend reads)
+def IO.Error.fopenErrorToString._closed_1 : obj :=
+  let x_1 : obj := ")\n  file: ";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.fopenErrorToString._closed_2
+-- IR (what the backend reads)
+def IO.Error.fopenErrorToString._closed_2 : obj :=
+  let x_1 : obj := ", ";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.otherErrorToString._closed_0
+-- IR (what the backend reads)
+def IO.Error.otherErrorToString._closed_0 : obj :=
+  let x_1 : obj := ")";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_0
+-- IR (what the backend reads)
+def IO.Error.toString._closed_0 : obj :=
+  let x_1 : obj := "already exists";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_1
+-- IR (what the backend reads)
+def IO.Error.toString._closed_1 : obj :=
+  let x_1 : obj := "resource busy";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_10
+-- IR (what the backend reads)
+def IO.Error.toString._closed_10 : obj :=
+  let x_1 : obj := "no such file or directory";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_11
+-- IR (what the backend reads)
+def IO.Error.toString._closed_11 : obj :=
+  let x_1 : obj := "invalid argument";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_12
+-- IR (what the backend reads)
+def IO.Error.toString._closed_12 : obj :=
+  let x_1 : obj := "resource exhausted";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_13
+-- IR (what the backend reads)
+def IO.Error.toString._closed_13 : obj :=
+  let x_1 : obj := "inappropriate type";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_14
+-- IR (what the backend reads)
+def IO.Error.toString._closed_14 : obj :=
+  let x_1 : obj := "no such thing";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_15
+-- IR (what the backend reads)
+def IO.Error.toString._closed_15 : obj :=
+  let x_1 : obj := "end of file";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_2
+-- IR (what the backend reads)
+def IO.Error.toString._closed_2 : obj :=
+  let x_1 : obj := "resource vanished";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_3
+-- IR (what the backend reads)
+def IO.Error.toString._closed_3 : obj :=
+  let x_1 : obj := "unsupported operation";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_4
+-- IR (what the backend reads)
+def IO.Error.toString._closed_4 : obj :=
+  let x_1 : obj := "hardware fault";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_5
+-- IR (what the backend reads)
+def IO.Error.toString._closed_5 : obj :=
+  let x_1 : obj := "directory not empty";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_6
+-- IR (what the backend reads)
+def IO.Error.toString._closed_6 : obj :=
+  let x_1 : obj := "illegal operation";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_7
+-- IR (what the backend reads)
+def IO.Error.toString._closed_7 : obj :=
+  let x_1 : obj := "protocol error";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_8
+-- IR (what the backend reads)
+def IO.Error.toString._closed_8 : obj :=
+  let x_1 : obj := "time expired";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 IO.Error.toString._closed_9
+-- IR (what the backend reads)
+def IO.Error.toString._closed_9 : obj :=
+  let x_1 : obj := "interrupted system call";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 String.Pos.Raw.get
+-- IR (what the backend reads)
+extern String.Pos.Raw.get (x_1 : @& obj) (x_2 : @& tobj) : u32
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_utf8_get"
+decl.hashKeyType?: none
+
+════ 📦 String.Pos.Raw.set
+-- IR (what the backend reads)
+extern String.Pos.Raw.set (x_1 : obj) (x_2 : @& tobj) (x_3 : u32) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_utf8_set"
+decl.hashKeyType?: none
+
+════ 📦 System.Platform.numBits._closed_0
+-- IR (what the backend reads)
+def System.Platform.numBits._closed_0 : tobj :=
+  let x_1 : tagged := ctor_0[PUnit.unit];
+  let x_2 : tobj := System.Platform.getNumBits x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.test_main]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (62): [`Array.getInternal,
+ `Array.mk,
+ `Array.size,
+ `List.range,
+ `Nat.add,
+ `Nat.decEq,
+ `Nat.decLt,
+ `Nat.digitChar,
+ `Nat.div,
+ `Nat.mod,
+ `Nat.pow,
+ `Nat.reprFast,
+ `Nat.sub,
+ `Nat.toDigits,
+ `Nat.toDigitsCore,
+ `String.append,
+ `String.ofList,
+ `UInt32.add,
+ `UInt32.decLe,
+ `UInt32.toNat,
+ `USize.ofNat,
+ `USize.ofNatLT,
+ `USize.repr,
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Repr 0) "Nat") "reprArray",
+ `IO.Error.fopenErrorToString,
+ `IO.Error.otherErrorToString,
+ `IO.Error.toString,
+ `List.range.loop,
+ `List.reverse._redArg,
+ `List.reverseAux._redArg,
+ `Nat.reprFast._closed_0,
+ `Nat.reprFast._closed_1,
+ `System.Platform.getNumBits,
+ `System.Platform.numBits,
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Repr 0) "Nat") "reprArray") "_closed_0",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Repr 0) "Nat") "reprArray") "_closed_1",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Repr 0) "Nat") "reprArray") "_closed_2",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.System.IOError 0) "IO") "Error") "downCaseFirst",
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `List.mapTR.loop._at_._private.Init.Data.Repr 0) "Nat") "reprArray") "spec_0",
+ `IO.Error.fopenErrorToString._closed_0,
+ `IO.Error.fopenErrorToString._closed_1,
+ `IO.Error.fopenErrorToString._closed_2,
+ `IO.Error.otherErrorToString._closed_0,
+ `IO.Error.toString._closed_0,
+ `IO.Error.toString._closed_1,
+ `IO.Error.toString._closed_10,
+ `IO.Error.toString._closed_11,
+ `IO.Error.toString._closed_12,
+ `IO.Error.toString._closed_13,
+ `IO.Error.toString._closed_14,
+ `IO.Error.toString._closed_15,
+ `IO.Error.toString._closed_2,
+ `IO.Error.toString._closed_3,
+ `IO.Error.toString._closed_4,
+ `IO.Error.toString._closed_5,
+ `IO.Error.toString._closed_6,
+ `IO.Error.toString._closed_7,
+ `IO.Error.toString._closed_8,
+ `IO.Error.toString._closed_9,
+ `String.Pos.Raw.get,
+ `String.Pos.Raw.set,
+ `System.Platform.numBits._closed_0]
+ctors (27): [`Array.mk,
+ `Bool.false,
+ `Bool.true,
+ `List.cons,
+ `List.nil,
+ `Option.none,
+ `Option.some,
+ `PUnit.unit,
+ `IO.Error.alreadyExists,
+ `IO.Error.hardwareFault,
+ `IO.Error.illegalOperation,
+ `IO.Error.inappropriateType,
+ `IO.Error.interrupted,
+ `IO.Error.invalidArgument,
+ `IO.Error.noFileOrDirectory,
+ `IO.Error.noSuchThing,
+ `IO.Error.otherError,
+ `IO.Error.permissionDenied,
+ `IO.Error.protocolError,
+ `IO.Error.resourceBusy,
+ `IO.Error.resourceExhausted,
+ `IO.Error.resourceVanished,
+ `IO.Error.timeExpired,
+ `IO.Error.unexpectedEof,
+ `IO.Error.unsatisfiedConstraints,
+ `IO.Error.unsupportedOperation,
+ `IO.Error.userError]
+inducts (6): [`Array, `Bool, `List, `Option, `PUnit, `IO.Error]

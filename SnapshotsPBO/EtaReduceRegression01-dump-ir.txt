@@ -1,0 +1,101 @@
+════ 🎯 fold
+-- IR (what the backend reads)
+def fold (x_1 : ◾) (x_2 : ◾) (x_3 : tobj) (x_4 : obj) (x_5 : tobj) : tobj :=
+  let x_6 : tobj := fold._redArg x_3 x_4 x_5;
+  ret x_6
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 identity
+-- IR (what the backend reads)
+def identity (x_1 : ◾) (x_2 : @& tobj) : tobj :=
+  inc x_2;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test
+-- IR (what the backend reads)
+def test (x_1 : @& tobj) : obj :=
+  let x_2 : obj := fold._at_.test.spec_0 x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 fold._redArg
+-- IR (what the backend reads)
+def fold._redArg (x_1 : tobj) (x_2 : obj) (x_3 : tobj) : tobj :=
+  let x_4 : tobj := fold._redArg._closed_0;
+  let x_5 : tobj := app x_1 ◾ ◾ x_2 x_4 x_3;
+  ret x_5
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 identity._boxed
+-- IR (what the backend reads)
+def identity._boxed (x_1 : tobj) (x_2 : tobj) : tobj :=
+  let x_3 : tobj := identity x_1 x_2;
+  dec x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 instMonoidString._closed_0
+-- IR (what the backend reads)
+def instMonoidString._closed_0 : obj :=
+  let x_1 : obj := "";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 fold._redArg._closed_0
+-- IR (what the backend reads)
+def fold._redArg._closed_0 : tobj :=
+  let x_1 : obj := pap identity._boxed ◾;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 fold._at_.test.spec_0
+-- IR (what the backend reads)
+def fold._at_.test.spec_0 (x_1 : @& tobj) : obj :=
+  case x_1 : tobj of
+  Option.none →
+    let x_2 : obj := instMonoidString._closed_0;
+    ret x_2
+  Option.some →
+    let x_3 : tobj := proj[0] x_1;
+    inc x_3;
+    ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.EtaReduceRegression01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (8): [`fold,
+ `identity,
+ `test,
+ `fold._redArg,
+ `identity._boxed,
+ `instMonoidString._closed_0,
+ `fold._redArg._closed_0,
+ `fold._at_.test.spec_0]
+ctors (2): [`Option.none, `Option.some]
+inducts (1): [`Option]

@@ -1,0 +1,523 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : float) : float :=
+  let x_2 : float := test1._closed_0;
+  let x_3 : float := test1._closed_1;
+  let x_4 : float := Float.add x_3 x_1;
+  let x_5 : float := Float.add x_4 x_1;
+  let x_6 : float := Float.add x_5 x_1;
+  let x_7 : float := Float.add x_6 x_1;
+  let x_8 : float := test1._closed_2;
+  let x_9 : float := Float.add x_7 x_8;
+  let x_10 : float := Float.add x_2 x_9;
+  let x_11 : float := test1._closed_3;
+  let x_12 : float := Float.add x_10 x_11;
+  ret x_12
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 (x_1 : float) : float :=
+  let x_2 : float := test1._closed_0;
+  let x_3 : float := test1._closed_1;
+  let x_4 : float := test1._closed_2;
+  let x_5 : float := Float.add x_1 x_4;
+  let x_6 : float := Float.add x_1 x_5;
+  let x_7 : float := Float.add x_1 x_6;
+  let x_8 : float := Float.add x_1 x_7;
+  let x_9 : float := Float.add x_3 x_8;
+  let x_10 : float := Float.add x_2 x_9;
+  let x_11 : float := test1._closed_3;
+  let x_12 : float := Float.add x_10 x_11;
+  ret x_12
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test3
+-- IR (what the backend reads)
+def test3 (x_1 : float) : float :=
+  let x_2 : float := test1._closed_0;
+  let x_3 : float := test1._closed_1;
+  let x_4 : float := test1._closed_2;
+  let x_5 : float := Float.add x_1 x_4;
+  let x_6 : float := Float.add x_1 x_5;
+  let x_7 : float := Float.add x_1 x_6;
+  let x_8 : float := Float.add x_1 x_7;
+  let x_9 : float := Float.add x_3 x_8;
+  let x_10 : float := Float.add x_2 x_9;
+  let x_11 : float := test1._closed_3;
+  let x_12 : float := Float.add x_10 x_11;
+  let x_13 : float := test3._closed_0;
+  let x_14 : float := Float.add x_13 x_1;
+  let x_15 : float := Float.add x_14 x_1;
+  let x_16 : float := Float.add x_15 x_1;
+  let x_17 : float := Float.add x_16 x_1;
+  let x_18 : float := test3._closed_1;
+  let x_19 : float := Float.add x_17 x_18;
+  let x_20 : float := Float.add x_12 x_19;
+  let x_21 : float := test3._closed_2;
+  let x_22 : float := Float.add x_20 x_21;
+  ret x_22
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test4
+-- IR (what the backend reads)
+def test4 (x_1 : float) : float :=
+  let x_2 : float := test1._closed_0;
+  let x_3 : float := test1._closed_1;
+  let x_4 : float := Float.mul x_3 x_1;
+  let x_5 : float := Float.mul x_4 x_1;
+  let x_6 : float := Float.mul x_5 x_1;
+  let x_7 : float := Float.mul x_6 x_1;
+  let x_8 : float := test1._closed_2;
+  let x_9 : float := Float.mul x_7 x_8;
+  let x_10 : float := Float.mul x_2 x_9;
+  let x_11 : float := test1._closed_3;
+  let x_12 : float := Float.mul x_10 x_11;
+  ret x_12
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test5
+-- IR (what the backend reads)
+def test5 (x_1 : float) : float :=
+  let x_2 : float := test1._closed_0;
+  let x_3 : float := test1._closed_1;
+  let x_4 : float := test1._closed_2;
+  let x_5 : float := Float.mul x_1 x_4;
+  let x_6 : float := Float.mul x_1 x_5;
+  let x_7 : float := Float.mul x_1 x_6;
+  let x_8 : float := Float.mul x_1 x_7;
+  let x_9 : float := Float.mul x_3 x_8;
+  let x_10 : float := Float.mul x_2 x_9;
+  let x_11 : float := test1._closed_3;
+  let x_12 : float := Float.mul x_10 x_11;
+  ret x_12
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test6
+-- IR (what the backend reads)
+def test6 (x_1 : float) : float :=
+  let x_2 : float := test1._closed_0;
+  let x_3 : float := test1._closed_1;
+  let x_4 : float := test1._closed_2;
+  let x_5 : float := Float.mul x_1 x_4;
+  let x_6 : float := Float.mul x_1 x_5;
+  let x_7 : float := Float.mul x_1 x_6;
+  let x_8 : float := Float.mul x_1 x_7;
+  let x_9 : float := Float.mul x_3 x_8;
+  let x_10 : float := Float.mul x_2 x_9;
+  let x_11 : float := test1._closed_3;
+  let x_12 : float := Float.mul x_10 x_11;
+  let x_13 : float := test3._closed_0;
+  let x_14 : float := Float.mul x_13 x_1;
+  let x_15 : float := Float.mul x_14 x_1;
+  let x_16 : float := Float.mul x_15 x_1;
+  let x_17 : float := Float.mul x_16 x_1;
+  let x_18 : float := test3._closed_1;
+  let x_19 : float := Float.mul x_17 x_18;
+  let x_20 : float := Float.mul x_12 x_19;
+  let x_21 : float := test3._closed_2;
+  let x_22 : float := Float.mul x_20 x_21;
+  ret x_22
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Float.add
+-- IR (what the backend reads)
+extern Float.add (x_1 : float) (x_2 : float) : float
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_add"
+decl.hashKeyType?: none
+
+════ 📦 Float.mul
+-- IR (what the backend reads)
+extern Float.mul (x_1 : float) (x_2 : float) : float
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_mul"
+decl.hashKeyType?: none
+
+════ 📦 Float.ofBinaryScientific
+-- IR (what the backend reads)
+def Float.ofBinaryScientific (x_1 : @& tobj) (x_2 : @& tobj) : float :=
+  let x_3 : tobj := Nat.log2 x_1;
+  let x_4 : tagged := 63;
+  let x_5 : tobj := Nat.sub x_3 x_4;
+  dec x_3;
+  let x_6 : tobj := Nat.shiftRight x_1 x_5;
+  let x_7 : u64 := UInt64.ofNat x_6;
+  dec x_6;
+  let x_8 : tobj := Int.ofNat x_5;
+  let x_9 : tobj := Int.add x_2 x_8;
+  dec x_8;
+  let x_10 : float := UInt64.toFloat x_7;
+  let x_11 : float := Float.scaleB x_10 x_9;
+  dec x_9;
+  ret x_11
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Float.ofScientific
+-- IR (what the backend reads)
+def Float.ofScientific (x_1 : @& tobj) (x_2 : u8) (x_3 : tobj) : float :=
+  case x_2 : u8 of
+  Bool.false →
+    let x_4 : tagged := 5;
+    let x_5 : tobj := Nat.pow x_4 x_3;
+    let x_6 : tobj := Nat.mul x_1 x_5;
+    dec x_5;
+    let x_7 : tobj := Int.ofNat x_3;
+    let x_8 : float := Float.ofBinaryScientific x_6 x_7;
+    dec x_7;
+    dec x_6;
+    ret x_8
+  Bool.true →
+    let x_9 : tagged := 64;
+    let x_10 : tobj := Nat.log2 x_1;
+    let x_11 : tobj := Nat.sub x_9 x_10;
+    dec x_10;
+    let x_12 : tagged := 3;
+    let x_13 : tobj := Nat.mul x_12 x_3;
+    let x_14 : tobj := Nat.add x_13 x_11;
+    dec x_13;
+    let x_15 : tobj := Nat.shiftLeft x_1 x_14;
+    dec x_14;
+    let x_16 : tagged := 5;
+    let x_17 : tobj := Nat.pow x_16 x_3;
+    let x_18 : tobj := Nat.div x_15 x_17;
+    dec x_17;
+    dec x_15;
+    let x_19 : tobj := Float.ofScientific._closed_1;
+    let x_20 : tobj := Int.ofNat x_3;
+    let x_21 : tobj := Int.mul x_19 x_20;
+    dec x_20;
+    dec x_19;
+    let x_22 : tobj := Int.ofNat x_11;
+    let x_23 : tobj := Int.sub x_21 x_22;
+    dec x_22;
+    dec x_21;
+    let x_24 : float := Float.ofBinaryScientific x_18 x_23;
+    dec x_23;
+    dec x_18;
+    ret x_24
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Float.scaleB
+-- IR (what the backend reads)
+extern Float.scaleB (x_1 : float) (x_2 : @& tobj) : float
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_scaleb"
+decl.hashKeyType?: none
+
+════ 📦 Int.add
+-- IR (what the backend reads)
+extern Int.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_add"
+decl.hashKeyType?: none
+
+════ 📦 Int.mul
+-- IR (what the backend reads)
+extern Int.mul (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_mul"
+decl.hashKeyType?: none
+
+════ 📦 Int.neg
+-- IR (what the backend reads)
+extern Int.neg (x_1 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg"
+decl.hashKeyType?: none
+
+════ 📦 Int.negSucc
+-- IR (what the backend reads)
+extern Int.negSucc (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg_succ_of_nat"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 1
+ctor.numFields: 1
+
+════ 📦 Int.ofNat
+-- IR (what the backend reads)
+extern Int.ofNat (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_to_int"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 Int.sub
+-- IR (what the backend reads)
+extern Int.sub (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_sub"
+decl.hashKeyType?: none
+
+════ 📦 Nat.add
+-- IR (what the backend reads)
+extern Nat.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_add"
+decl.hashKeyType?: none
+
+════ 📦 Nat.div
+-- IR (what the backend reads)
+extern Nat.div (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_div"
+decl.hashKeyType?: none
+
+════ 📦 Nat.log2
+-- IR (what the backend reads)
+extern Nat.log2 (x_1 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_log2"
+decl.hashKeyType?: none
+
+════ 📦 Nat.mul
+-- IR (what the backend reads)
+extern Nat.mul (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_mul"
+decl.hashKeyType?: none
+
+════ 📦 Nat.pow
+-- IR (what the backend reads)
+extern Nat.pow (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_pow"
+decl.hashKeyType?: none
+
+════ 📦 Nat.shiftLeft
+-- IR (what the backend reads)
+extern Nat.shiftLeft (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_shiftl"
+decl.hashKeyType?: none
+
+════ 📦 Nat.shiftRight
+-- IR (what the backend reads)
+extern Nat.shiftRight (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_shiftr"
+decl.hashKeyType?: none
+
+════ 📦 Nat.sub
+-- IR (what the backend reads)
+extern Nat.sub (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_sub"
+decl.hashKeyType?: none
+
+════ 📦 UInt64.ofNat
+-- IR (what the backend reads)
+extern UInt64.ofNat (x_1 : @& tobj) : u64
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_uint64_of_nat"
+decl.hashKeyType?: none
+
+════ 📦 UInt64.toFloat
+-- IR (what the backend reads)
+extern UInt64.toFloat (x_1 : u64) : float
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_uint64_to_float"
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_0
+-- IR (what the backend reads)
+def test1._closed_0 : float :=
+  let x_1 : tagged := 1;
+  let x_2 : u8 := 1;
+  let x_3 : tagged := 10;
+  let x_4 : float := Float.ofScientific x_3 x_2 x_1;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_1
+-- IR (what the backend reads)
+def test1._closed_1 : float :=
+  let x_1 : tagged := 1;
+  let x_2 : u8 := 1;
+  let x_3 : tagged := 20;
+  let x_4 : float := Float.ofScientific x_3 x_2 x_1;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_2
+-- IR (what the backend reads)
+def test1._closed_2 : float :=
+  let x_1 : tagged := 1;
+  let x_2 : u8 := 1;
+  let x_3 : tagged := 30;
+  let x_4 : float := Float.ofScientific x_3 x_2 x_1;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_3
+-- IR (what the backend reads)
+def test1._closed_3 : float :=
+  let x_1 : tagged := 1;
+  let x_2 : u8 := 1;
+  let x_3 : tagged := 40;
+  let x_4 : float := Float.ofScientific x_3 x_2 x_1;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_0
+-- IR (what the backend reads)
+def test3._closed_0 : float :=
+  let x_1 : tagged := 1;
+  let x_2 : u8 := 1;
+  let x_3 : tagged := 50;
+  let x_4 : float := Float.ofScientific x_3 x_2 x_1;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_1
+-- IR (what the backend reads)
+def test3._closed_1 : float :=
+  let x_1 : tagged := 1;
+  let x_2 : u8 := 1;
+  let x_3 : tagged := 60;
+  let x_4 : float := Float.ofScientific x_3 x_2 x_1;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_2
+-- IR (what the backend reads)
+def test3._closed_2 : float :=
+  let x_1 : tagged := 1;
+  let x_2 : u8 := 1;
+  let x_3 : tagged := 70;
+  let x_4 : float := Float.ofScientific x_3 x_2 x_1;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Float.ofScientific._closed_0
+-- IR (what the backend reads)
+def Float.ofScientific._closed_0 : tobj :=
+  let x_1 : tagged := 4;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Float.ofScientific._closed_1
+-- IR (what the backend reads)
+def Float.ofScientific._closed_1 : tobj :=
+  let x_1 : tobj := Float.ofScientific._closed_0;
+  let x_2 : tobj := Int.neg x_1;
+  dec x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.AssocNumberOps]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (36): [`test1,
+ `test2,
+ `test3,
+ `test4,
+ `test5,
+ `test6,
+ `Float.add,
+ `Float.mul,
+ `Float.ofBinaryScientific,
+ `Float.ofScientific,
+ `Float.scaleB,
+ `Int.add,
+ `Int.mul,
+ `Int.neg,
+ `Int.negSucc,
+ `Int.ofNat,
+ `Int.sub,
+ `Nat.add,
+ `Nat.div,
+ `Nat.log2,
+ `Nat.mul,
+ `Nat.pow,
+ `Nat.shiftLeft,
+ `Nat.shiftRight,
+ `Nat.sub,
+ `UInt64.ofNat,
+ `UInt64.toFloat,
+ `test1._closed_0,
+ `test1._closed_1,
+ `test1._closed_2,
+ `test1._closed_3,
+ `test3._closed_0,
+ `test3._closed_1,
+ `test3._closed_2,
+ `Float.ofScientific._closed_0,
+ `Float.ofScientific._closed_1]
+ctors (4): [`Bool.false, `Bool.true, `Int.negSucc, `Int.ofNat]
+inducts (2): [`Bool, `Int]

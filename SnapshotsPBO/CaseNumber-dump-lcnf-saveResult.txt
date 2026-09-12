@@ -1,0 +1,159 @@
+════ 🎯 test1
+def test1 f : String :=
+  let _x.1 := 10;
+  let _x.2 := Bool.true;
+  let _x.3 := 1;
+  let _x.4 := Float.ofScientific _x.1 _x.2 _x.3;
+  let _x.5 := Float.beq f _x.4;
+  cases _x.5 : String
+  | Bool.false =>
+    let _x.6 := 20;
+    let _x.7 := Float.ofScientific _x.6 _x.2 _x.3;
+    let _x.8 := Float.beq f _x.7;
+    cases _x.8 : String
+    | Bool.false =>
+      let _x.9 := 30;
+      let _x.10 := Float.ofScientific _x.9 _x.2 _x.3;
+      let _x.11 := Float.beq f _x.10;
+      cases _x.11 : String
+      | Bool.false =>
+        let _x.12 := test1._closed_3;
+        return _x.12
+      | Bool.true =>
+        let _x.13 := test1._closed_4;
+        return _x.13
+    | Bool.true =>
+      let _x.14 := test1._closed_5;
+      return _x.14
+  | Bool.true =>
+    let _x.15 := test1._closed_6;
+    return _x.15
+
+════ 📦 Float.beq
+def Float.beq a b : Bool :=
+  extern
+
+════ 📦 Float.ofBinaryScientific
+def Float.ofBinaryScientific m e : Float :=
+  let _x.1 := Nat.log2 m;
+  let _x.2 := 63;
+  let s := Nat.sub _x.1 _x.2;
+  let _x.3 := Nat.shiftRight m s;
+  let m := UInt64.ofNat _x.3;
+  let _x.4 := Int.ofNat s;
+  let e := Int.add e _x.4;
+  let _x.5 := UInt64.toFloat m;
+  let _x.6 := Float.scaleB _x.5 e;
+  return _x.6
+
+════ 📦 Float.ofScientific
+def Float.ofScientific m s e : Float :=
+  cases s : Float
+  | Bool.false =>
+    let _x.1 := 5;
+    let _x.2 := Nat.pow _x.1 e;
+    let _x.3 := Nat.mul m _x.2;
+    let _x.4 := Int.ofNat e;
+    let _x.5 := Float.ofBinaryScientific _x.3 _x.4;
+    return _x.5
+  | Bool.true =>
+    let _x.6 := 64;
+    let _x.7 := Nat.log2 m;
+    let s := Nat.sub _x.6 _x.7;
+    let _x.8 := 3;
+    let _x.9 := Nat.mul _x.8 e;
+    let _x.10 := Nat.add _x.9 s;
+    let _x.11 := Nat.shiftLeft m _x.10;
+    let _x.12 := 5;
+    let _x.13 := Nat.pow _x.12 e;
+    let m := Nat.div _x.11 _x.13;
+    let _x.14 := 4;
+    let _x.15 := Int.ofNat _x.14;
+    let _x.16 := Int.neg _x.15;
+    let _x.17 := Int.ofNat e;
+    let _x.18 := Int.mul _x.16 _x.17;
+    let _x.19 := Int.ofNat s;
+    let _x.20 := Int.sub _x.18 _x.19;
+    let _x.21 := Float.ofBinaryScientific m _x.20;
+    return _x.21
+
+════ 📦 Float.scaleB
+def Float.scaleB x @&i : Float :=
+  extern
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 Int.mul
+def Int.mul @&m @&n : Int :=
+  extern
+
+════ 📦 Int.neg
+def Int.neg @&n : Int :=
+  extern
+
+════ 📦 Int.sub
+def Int.sub @&m @&n : Int :=
+  extern
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.div
+def Nat.div @&x @&y : Nat :=
+  extern
+
+════ 📦 Nat.log2
+def Nat.log2 @&n : Nat :=
+  extern
+
+════ 📦 Nat.mul
+def Nat.mul @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.pow
+def Nat.pow @&m @&a._@._internal._hyg.1 : Nat :=
+  extern
+
+════ 📦 Nat.shiftLeft
+def Nat.shiftLeft @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.shiftRight
+def Nat.shiftRight @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 UInt64.ofNat
+def UInt64.ofNat @&n : UInt64 :=
+  extern
+
+════ 📦 UInt64.toFloat
+def UInt64.toFloat n : Float :=
+  extern
+
+════ 📦 test1._closed_3
+def test1._closed_3 : String :=
+  let _x.1 := "catch";
+  return _x.1
+
+════ 📦 test1._closed_4
+def test1._closed_4 : String :=
+  let _x.1 := "3";
+  return _x.1
+
+════ 📦 test1._closed_5
+def test1._closed_5 : String :=
+  let _x.1 := "2";
+  return _x.1
+
+════ 📦 test1._closed_6
+def test1._closed_6 : String :=
+  let _x.1 := "1";
+  return _x.1
+

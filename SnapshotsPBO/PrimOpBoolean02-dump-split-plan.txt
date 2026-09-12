@@ -1,0 +1,133 @@
+════ split plans
+════ boolValues before
+def boolValues (x_1 : obj) : obj :=
+  let x_2 : u8 := 1;
+  let x_3 : tobj := box x_2;
+  let x_4 : tobj := box x_2;
+  inc x_1;
+  let x_5 : tagged := app x_1 x_3 x_4;
+  let x_6 : u8 := 0;
+  let x_7 : tobj := box x_2;
+  let x_8 : tobj := box x_6;
+  inc x_1;
+  let x_9 : tagged := app x_1 x_7 x_8;
+  let x_10 : tobj := box x_6;
+  let x_11 : tobj := box x_2;
+  inc x_1;
+  let x_12 : tagged := app x_1 x_10 x_11;
+  let x_13 : tobj := box x_6;
+  let x_14 : tobj := box x_6;
+  let x_15 : tagged := app x_1 x_13 x_14;
+  let x_16 : obj := boolValues._closed_0;
+  let x_17 : obj := Array.push ◾ x_16 x_5;
+  let x_18 : obj := Array.push ◾ x_17 x_9;
+  let x_19 : obj := Array.push ◾ x_18 x_12;
+  let x_20 : obj := Array.push ◾ x_19 x_15;
+  ret x_20
+════ boolValues after
+def boolValues (x_1 : obj) : obj :=
+  let x_2 : u8 := 1;
+  let x_3 : tobj := box x_2;
+  let x_4 : tobj := box x_2;
+  inc x_1;
+  let x_5 : tagged := app x_1 x_3 x_4;
+  let x_6 : u8 := 0;
+  let x_7 : tobj := box x_2;
+  let x_8 : tobj := box x_6;
+  inc x_1;
+  let x_9 : tagged := app x_1 x_7 x_8;
+  let x_10 : tobj := box x_6;
+  let x_11 : tobj := box x_2;
+  inc x_1;
+  let x_12 : tagged := app x_1 x_10 x_11;
+  let x_13 : tobj := box x_6;
+  let x_14 : tobj := box x_6;
+  let x_15 : tagged := app x_1 x_13 x_14;
+  let x_16 : obj := boolValues._closed_0;
+  let x_17 : obj := Array.push ◾ x_16 x_5;
+  let x_18 : obj := Array.push ◾ x_17 x_9;
+  let x_19 : obj := Array.push ◾ x_18 x_12;
+  let x_20 : obj := Array.push ◾ x_19 x_15;
+  ret x_20
+════ boolValues parameter plan: (every parameter kept)
+════ test1 before
+def test1 : obj :=
+  let x_1 : obj := test1._closed_1;
+  ret x_1
+════ test1 after
+def test1 : obj :=
+  let x_1 : obj := test1._closed_1;
+  ret x_1
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 : obj :=
+  let x_1 : obj := test2._closed_1;
+  ret x_1
+════ test2 after
+def test2 : obj :=
+  let x_1 : obj := test2._closed_1;
+  ret x_1
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 : obj :=
+  let x_1 : obj := test3._closed_1;
+  ret x_1
+════ test3 after
+def test3 : obj :=
+  let x_1 : obj := test3._closed_1;
+  ret x_1
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 : obj :=
+  let x_1 : obj := test4._closed_1;
+  ret x_1
+════ test4 after
+def test4 : obj :=
+  let x_1 : obj := test4._closed_1;
+  ret x_1
+════ test4 parameter plan: (every parameter kept)
+════ test5 before
+def test5 : obj :=
+  let x_1 : obj := test5._closed_1;
+  ret x_1
+════ test5 after
+def test5 : obj :=
+  let x_1 : obj := test5._closed_1;
+  ret x_1
+════ test5 parameter plan: (every parameter kept)
+════ test6 before
+def test6 : obj :=
+  let x_1 : obj := test6._closed_1;
+  ret x_1
+════ test6 after
+def test6 : obj :=
+  let x_1 : obj := test6._closed_1;
+  ret x_1
+════ test6 parameter plan: (every parameter kept)
+════ test7 before
+def test7 : obj :=
+  let x_1 : obj := test7._closed_1;
+  ret x_1
+════ test7 after
+def test7 : obj :=
+  let x_1 : obj := test7._closed_1;
+  ret x_1
+════ test7 parameter plan: (every parameter kept)
+════ test8 before
+def test8 : obj :=
+  let x_1 : obj := test8._closed_1;
+  ret x_1
+════ test8 after
+def test8 : obj :=
+  let x_1 : obj := test8._closed_1;
+  ret x_1
+════ test8 parameter plan: (every parameter kept)
+════ test9 before
+def test9 : obj :=
+  let x_1 : obj := test9._closed_2;
+  ret x_1
+════ test9 after
+def test9 : obj :=
+  let x_1 : obj := test9._closed_2;
+  ret x_1
+════ test9 parameter plan: (every parameter kept)

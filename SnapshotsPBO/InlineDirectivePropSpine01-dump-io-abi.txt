@@ -1,0 +1,1 @@
+InlineDirectivePropSpine01: throws

@@ -1,0 +1,514 @@
+════ 🎯 test1
+def test1 lo hi a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 1;
+  let _x.3 := Nat.add lo _x.2;
+  let _x.4 := Nat.add hi _x.2;
+  let _x.5 := Std.Legacy.Range.mk _x.3 _x.4 _x.2 ◾;
+  let _x.6 := PUnit.unit;
+  let _x.7 := Std.Legacy.Range.forIn'.loop._at_.test1.spec_1.2 _x.6 _x.5 _x.6 _x.3 ◾ ◾ a.1;
+  cases _x.7 : EST.Out IO.Error lcAny PUnit
+  | EST.Out.ok a.8 a.9 =>
+    let _x.10 := @EST.Out.ok _ _ _ _x.6 a.9;
+    return _x.10
+  | EST.Out.error a.11 a.12 =>
+    return _x.7
+
+════ 🎯 test2
+def test2 lo hi a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 1;
+  let _x.3 := Nat.add lo _x.2;
+  let _x.4 := Nat.add hi _x.2;
+  let _x.5 := Std.Legacy.Range.mk _x.3 _x.4 _x.2 ◾;
+  let _x.6 := PUnit.unit;
+  let _x.7 := Std.Legacy.Range.forIn'.loop._at_.test2.spec_1.2 _x.6 _x.5 _x.6 _x.3 ◾ ◾ a.1;
+  cases _x.7 : EST.Out IO.Error lcAny PUnit
+  | EST.Out.ok a.8 a.9 =>
+    let _x.10 := Std.Legacy.Range.forIn'.loop._at_.test2.spec_1.2 _x.6 _x.5 _x.6 _x.3 ◾ ◾ a.9;
+    cases _x.10 : EST.Out IO.Error lcAny PUnit
+    | EST.Out.ok a.11 a.12 =>
+      let _x.13 := Std.Legacy.Range.forIn'.loop._at_.test2.spec_2.2 _x.6 _x.5 _x.6 _x.3 ◾ ◾ a.12;
+      cases _x.13 : EST.Out IO.Error lcAny PUnit
+      | EST.Out.ok a.14 a.15 =>
+        let _x.16 := @EST.Out.ok _ _ _ _x.6 a.15;
+        return _x.16
+      | EST.Out.error a.17 a.18 =>
+        return _x.13
+    | EST.Out.error a.19 a.20 =>
+      return _x.10
+  | EST.Out.error a.21 a.22 =>
+    return _x.7
+
+════ 🎯 test3
+def test3 lo hi a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 1;
+  let _x.3 := Std.Legacy.Range.mk lo hi _x.2 ◾;
+  let _x.4 := PUnit.unit;
+  let _x.5 := Std.Legacy.Range.forIn'.loop._at_.test3.spec_0.2 _x.4 _x.3 _x.4 lo ◾ ◾ a.1;
+  cases _x.5 : EST.Out IO.Error lcAny PUnit
+  | EST.Out.ok a.6 a.7 =>
+    let _x.8 := @EST.Out.ok _ _ _ _x.4 a.7;
+    return _x.8
+  | EST.Out.error a.9 a.10 =>
+    return _x.5
+
+════ 🎯 test4
+def test4 lo hi a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 1;
+  let _x.3 := Std.Legacy.Range.mk lo hi _x.2 ◾;
+  let _x.4 := PUnit.unit;
+  let _x.5 := Std.Legacy.Range.forIn'.loop._at_.test4.spec_0.2 _x.4 _x.3 _x.4 lo ◾ ◾ a.1;
+  cases _x.5 : EST.Out IO.Error lcAny PUnit
+  | EST.Out.ok a.6 a.7 =>
+    let _x.8 := @EST.Out.ok _ _ _ _x.4 a.7;
+    return _x.8
+  | EST.Out.error a.9 a.10 =>
+    return _x.5
+
+════ 📦 instDecidableEqNat
+def instDecidableEqNat @&n @&m : Decidable lcErased :=
+  let _x.1 := Nat.decEq n m;
+  return _x.1
+
+════ 📦 Array.getInternal
+def Array.getInternal α @&a @&i h : α :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 IO.getStdout
+def IO.getStdout a._@._internal._hyg.1 : ST.Out lcAny IO.FS.Stream :=
+  extern
+
+════ 📦 List.range
+def List.range n : List Nat :=
+  let _x.1 := @List.nil _;
+  let _x.2 := List.range.loop n _x.1;
+  return _x.2
+
+════ 📦 List.reverse
+def List.reverse α as : List α :=
+  let _x.1 := @List.nil _;
+  let _x.2 := @List.reverseAux _ as _x.1;
+  return _x.2
+
+════ 📦 List.reverseAux
+def List.reverseAux α x.1 x.2 : List α :=
+  cases x.1 : List α
+  | List.nil =>
+    return x.2
+  | List.cons head.3 tail.4 =>
+    let _x.5 := @List.cons _ head.3 x.2;
+    let _x.6 := @List.reverseAux _ tail.4 _x.5;
+    return _x.6
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.digitChar
+def Nat.digitChar n : Char :=
+  let _x.1 := 0;
+  let _x.2 := instDecidableEqNat n _x.1;
+  cases _x.2 : Char
+  | Decidable.isFalse x.3 =>
+    let _x.4 := 1;
+    let _x.5 := instDecidableEqNat n _x.4;
+    cases _x.5 : Char
+    | Decidable.isFalse x.6 =>
+      let _x.7 := 2;
+      let _x.8 := instDecidableEqNat n _x.7;
+      cases _x.8 : Char
+      | Decidable.isFalse x.9 =>
+        let _x.10 := 3;
+        let _x.11 := instDecidableEqNat n _x.10;
+        cases _x.11 : Char
+        | Decidable.isFalse x.12 =>
+          let _x.13 := 4;
+          let _x.14 := instDecidableEqNat n _x.13;
+          cases _x.14 : Char
+          | Decidable.isFalse x.15 =>
+            let _x.16 := 5;
+            let _x.17 := instDecidableEqNat n _x.16;
+            cases _x.17 : Char
+            | Decidable.isFalse x.18 =>
+              let _x.19 := 6;
+              let _x.20 := instDecidableEqNat n _x.19;
+              cases _x.20 : Char
+              | Decidable.isFalse x.21 =>
+                let _x.22 := 7;
+                let _x.23 := instDecidableEqNat n _x.22;
+                cases _x.23 : Char
+                | Decidable.isFalse x.24 =>
+                  let _x.25 := 8;
+                  let _x.26 := instDecidableEqNat n _x.25;
+                  cases _x.26 : Char
+                  | Decidable.isFalse x.27 =>
+                    let _x.28 := 9;
+                    let _x.29 := instDecidableEqNat n _x.28;
+                    cases _x.29 : Char
+                    | Decidable.isFalse x.30 =>
+                      let _x.31 := 10;
+                      let _x.32 := instDecidableEqNat n _x.31;
+                      cases _x.32 : Char
+                      | Decidable.isFalse x.33 =>
+                        let _x.34 := 11;
+                        let _x.35 := instDecidableEqNat n _x.34;
+                        cases _x.35 : Char
+                        | Decidable.isFalse x.36 =>
+                          let _x.37 := 12;
+                          let _x.38 := instDecidableEqNat n _x.37;
+                          cases _x.38 : Char
+                          | Decidable.isFalse x.39 =>
+                            let _x.40 := 13;
+                            let _x.41 := instDecidableEqNat n _x.40;
+                            cases _x.41 : Char
+                            | Decidable.isFalse x.42 =>
+                              let _x.43 := 14;
+                              let _x.44 := instDecidableEqNat n _x.43;
+                              cases _x.44 : Char
+                              | Decidable.isFalse x.45 =>
+                                let _x.46 := 15;
+                                let _x.47 := instDecidableEqNat n _x.46;
+                                cases _x.47 : Char
+                                | Decidable.isFalse x.48 =>
+                                  let _x.49 := 42;
+                                  return _x.49
+                                | Decidable.isTrue x.50 =>
+                                  let _x.51 := 102;
+                                  return _x.51
+                              | Decidable.isTrue x.52 =>
+                                let _x.53 := 101;
+                                return _x.53
+                            | Decidable.isTrue x.54 =>
+                              let _x.55 := 100;
+                              return _x.55
+                          | Decidable.isTrue x.56 =>
+                            let _x.57 := 99;
+                            return _x.57
+                        | Decidable.isTrue x.58 =>
+                          let _x.59 := 98;
+                          return _x.59
+                      | Decidable.isTrue x.60 =>
+                        let _x.61 := 97;
+                        return _x.61
+                    | Decidable.isTrue x.62 =>
+                      let _x.63 := 57;
+                      return _x.63
+                  | Decidable.isTrue x.64 =>
+                    let _x.65 := 56;
+                    return _x.65
+                | Decidable.isTrue x.66 =>
+                  let _x.67 := 55;
+                  return _x.67
+              | Decidable.isTrue x.68 =>
+                let _x.69 := 54;
+                return _x.69
+            | Decidable.isTrue x.70 =>
+              let _x.71 := 53;
+              return _x.71
+          | Decidable.isTrue x.72 =>
+            let _x.73 := 52;
+            return _x.73
+        | Decidable.isTrue x.74 =>
+          let _x.75 := 51;
+          return _x.75
+      | Decidable.isTrue x.76 =>
+        let _x.77 := 50;
+        return _x.77
+    | Decidable.isTrue x.78 =>
+      let _x.79 := 49;
+      return _x.79
+  | Decidable.isTrue x.80 =>
+    let _x.81 := 48;
+    return _x.81
+
+════ 📦 Nat.div
+def Nat.div @&x @&y : Nat :=
+  extern
+
+════ 📦 Nat.mod
+def Nat.mod @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.pow
+def Nat.pow @&m @&a._@._internal._hyg.1 : Nat :=
+  extern
+
+════ 📦 Nat.reprFast
+def Nat.reprFast n : String :=
+  let _x.1 := Nat.reprArray.2;
+  let _x.2 := @Array.size _ _x.1;
+  let _x.3 := Nat.decLt n _x.2;
+  cases _x.3 : String
+  | Decidable.isFalse h =>
+    let _x.4 := 2;
+    let _x.5 := System.Platform.numBits;
+    let _x.6 := Nat.pow _x.4 _x.5;
+    let _x.7 := Nat.decLt n _x.6;
+    cases _x.7 : String
+    | Decidable.isFalse h =>
+      let _x.8 := 10;
+      let _x.9 := Nat.toDigits _x.8 n;
+      let _x.10 := String.ofList _x.9;
+      return _x.10
+    | Decidable.isTrue h =>
+      let _x.11 := USize.ofNatLT n ◾;
+      let _x.12 := USize.repr _x.11;
+      return _x.12
+  | Decidable.isTrue h =>
+    let _x.13 := @Array.getInternal _ _x.1 n ◾;
+    return _x.13
+
+════ 📦 Nat.toDigits
+def Nat.toDigits base n : List Char :=
+  let _x.1 := 1;
+  let _x.2 := Nat.add n _x.1;
+  let _x.3 := @List.nil _;
+  let _x.4 := Nat.toDigitsCore base _x.2 n _x.3;
+  return _x.4
+
+════ 📦 Nat.toDigitsCore
+def Nat.toDigitsCore base x.1 x.2 x.3 : List Char :=
+  cases x.1 : List Char
+  | Nat.zero =>
+    return x.3
+  | Nat.succ n.4 =>
+    let _x.5 := Nat.mod x.2 base;
+    let d := Nat.digitChar _x.5;
+    let n' := Nat.div x.2 base;
+    let _x.6 := 0;
+    let _x.7 := instDecidableEqNat n' _x.6;
+    cases _x.7 : List Char
+    | Decidable.isFalse x.8 =>
+      let _x.9 := @List.cons _ d x.3;
+      let _x.10 := Nat.toDigitsCore base n.4 n' _x.9;
+      return _x.10
+    | Decidable.isTrue x.11 =>
+      let _x.12 := @List.cons _ d x.3;
+      return _x.12
+
+════ 📦 String.ofList
+def String.ofList data : String :=
+  extern
+
+════ 📦 String.push
+def String.push a._@._internal._hyg.1 a._@._internal._hyg.2 : String :=
+  extern
+
+════ 📦 USize.ofNat
+def USize.ofNat @&n : USize :=
+  extern
+
+════ 📦 USize.ofNatLT
+def USize.ofNatLT @&n h : USize :=
+  extern
+
+════ 📦 USize.repr
+def USize.repr @&n : String :=
+  extern
+
+════ 📦 _private.Init.Data.Repr.0.Nat.reprArray
+def _private.Init.Data.Repr.0.Nat.reprArray : Array String :=
+  let _x.1 := 128;
+  let _x.2 := List.range _x.1;
+  let _x.3 := @List.nil _;
+  let _x.4 := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 _x.2 _x.3;
+  let _x.5 := @Array.mk _ _x.4;
+  return _x.5
+
+════ 📦 List.range.loop
+def List.range.loop x.1 x.2 : List Nat :=
+  cases x.1 : List Nat
+  | Nat.zero =>
+    return x.2
+  | Nat.succ n.3 =>
+    let _x.4 := @List.cons _ n.3 x.2;
+    let _x.5 := List.range.loop n.3 _x.4;
+    return _x.5
+
+════ 📦 System.Platform.getNumBits
+def System.Platform.getNumBits a._@._internal._hyg.1 : Subtype lcErased :=
+  extern
+
+════ 📦 System.Platform.numBits
+def System.Platform.numBits : Nat :=
+  let _x.1 := PUnit.unit;
+  let _x.2 := System.Platform.getNumBits _x.1;
+  let _x.3 := _x.2 # 0;
+  return _x.3
+
+════ 📦 List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+def List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 x.1 x.2 : List String :=
+  cases x.1 : List String
+  | List.nil =>
+    let _x.3 := @List.reverse _ x.2;
+    return _x.3
+  | List.cons head.4 tail.5 =>
+    let _x.6 := USize.ofNat head.4;
+    let _x.7 := USize.repr _x.6;
+    let _x.8 := @List.cons _ _x.7 x.2;
+    let _x.9 := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 tail.5 _x.8;
+    return _x.9
+
+════ 📦 IO.println._at_.test1.spec_0
+def IO.println._at_.test1.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := Nat.reprFast s;
+  let _x.3 := 10;
+  let _x.4 := String.push _x.2 _x.3;
+  let _x.5 := IO.print._at_.IO.println._at_.test1.spec_0.spec_0 _x.4 a.1;
+  return _x.5
+
+════ 📦 IO.println._at_.test2.spec_0
+def IO.println._at_.test2.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 10;
+  let _x.3 := String.push s _x.2;
+  let _x.4 := IO.print._at_.IO.println._at_.test1.spec_0.spec_0 _x.3 a.1;
+  return _x.4
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_1
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_1 _x.1 range b i hs hl _y.2 : EST.Out
+  IO.Error lcAny PUnit :=
+  let _x.3 := range # 1;
+  let _x.4 := Nat.decLt i _x.3;
+  cases _x.4 : EST.Out IO.Error lcAny PUnit
+  | Decidable.isFalse h =>
+    let _x.5 := @EST.Out.ok _ _ _ b _y.2;
+    return _x.5
+  | Decidable.isTrue h =>
+    let _x.6 := IO.println._at_.test1.spec_0 i _y.2;
+    cases _x.6 : EST.Out IO.Error lcAny PUnit
+    | EST.Out.ok a.7 a.8 =>
+      let _x.9 := IO.println._at_.test1.spec_0 i a.8;
+      cases _x.9 : EST.Out IO.Error lcAny PUnit
+      | EST.Out.ok a.10 a.11 =>
+        let _x.12 := range # 2;
+        let _x.13 := Nat.add i _x.12;
+        let _x.14 := Std.Legacy.Range.forIn'.loop._at_.test1.spec_1.2 _x.1 range _x.1 _x.13 ◾ ◾ a.11;
+        return _x.14
+      | EST.Out.error a.15 a.16 =>
+        return _x.9
+    | EST.Out.error a.17 a.18 =>
+      return _x.6
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_1
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_1 _x.1 range b i hs hl _y.2 : EST.Out
+  IO.Error lcAny PUnit :=
+  let _x.3 := range # 1;
+  let _x.4 := Nat.decLt i _x.3;
+  cases _x.4 : EST.Out IO.Error lcAny PUnit
+  | Decidable.isFalse h =>
+    let _x.5 := @EST.Out.ok _ _ _ b _y.2;
+    return _x.5
+  | Decidable.isTrue h =>
+    let _x.6 := IO.println._at_.test1.spec_0 i _y.2;
+    cases _x.6 : EST.Out IO.Error lcAny PUnit
+    | EST.Out.ok a.7 a.8 =>
+      let _x.9 := range # 2;
+      let _x.10 := Nat.add i _x.9;
+      let _x.11 := Std.Legacy.Range.forIn'.loop._at_.test2.spec_1.2 _x.1 range _x.1 _x.10 ◾ ◾ a.8;
+      return _x.11
+    | EST.Out.error a.12 a.13 =>
+      return _x.6
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_2
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_2 _x.1 range b i hs hl _y.2 : EST.Out
+  IO.Error lcAny PUnit :=
+  let _x.3 := range # 1;
+  let _x.4 := Nat.decLt i _x.3;
+  cases _x.4 : EST.Out IO.Error lcAny PUnit
+  | Decidable.isFalse h =>
+    let _x.5 := @EST.Out.ok _ _ _ b _y.2;
+    return _x.5
+  | Decidable.isTrue h =>
+    let _x.6 := "wat";
+    let _x.7 := IO.println._at_.test2.spec_0 _x.6 _y.2;
+    cases _x.7 : EST.Out IO.Error lcAny PUnit
+    | EST.Out.ok a.8 a.9 =>
+      let _x.10 := range # 2;
+      let _x.11 := Nat.add i _x.10;
+      let _x.12 := Std.Legacy.Range.forIn'.loop._at_.test2.spec_2.2 _x.1 range _x.1 _x.11 ◾ ◾ a.9;
+      return _x.12
+    | EST.Out.error a.13 a.14 =>
+      return _x.7
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0 _x.1 range b i hs hl _y.2 : EST.Out
+  IO.Error lcAny PUnit :=
+  let _x.3 := range # 1;
+  let _x.4 := Nat.decLt i _x.3;
+  cases _x.4 : EST.Out IO.Error lcAny PUnit
+  | Decidable.isFalse h =>
+    let _x.5 := @EST.Out.ok _ _ _ b _y.2;
+    return _x.5
+  | Decidable.isTrue h =>
+    jp _jp.6 a.7 a.8 : EST.Out IO.Error lcAny PUnit :=
+      let _x.9 := range # 2;
+      let _x.10 := Nat.add i _x.9;
+      let _x.11 := Std.Legacy.Range.forIn'.loop._at_.test3.spec_0.2 _x.1 range a.7 _x.10 ◾ ◾ a.8;
+      return _x.11;
+    let _x.12 := 10;
+    let _x.13 := Nat.decLt i _x.12;
+    cases _x.13 : EST.Out IO.Error lcAny PUnit
+    | Decidable.isFalse x.14 =>
+      goto _jp.6 _x.1 _y.2
+    | Decidable.isTrue x.15 =>
+      let _x.16 := IO.println._at_.test1.spec_0 i _y.2;
+      cases _x.16 : EST.Out IO.Error lcAny PUnit
+      | EST.Out.ok a.17 a.18 =>
+        goto _jp.6 _x.1 a.18
+      | EST.Out.error a.19 a.20 =>
+        return _x.16
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0 _x.1 range b i hs hl _y.2 : EST.Out
+  IO.Error lcAny PUnit :=
+  let _x.3 := range # 1;
+  let _x.4 := Nat.decLt i _x.3;
+  cases _x.4 : EST.Out IO.Error lcAny PUnit
+  | Decidable.isFalse h =>
+    let _x.5 := @EST.Out.ok _ _ _ b _y.2;
+    return _x.5
+  | Decidable.isTrue h =>
+    jp _jp.6 a.7 a.8 : EST.Out IO.Error lcAny PUnit :=
+      let _x.9 := range # 2;
+      let _x.10 := Nat.add i _x.9;
+      let _x.11 := Std.Legacy.Range.forIn'.loop._at_.test4.spec_0.2 _x.1 range a.7 _x.10 ◾ ◾ a.8;
+      return _x.11;
+    let _x.12 := 10;
+    let _x.13 := Nat.decLt i _x.12;
+    cases _x.13 : EST.Out IO.Error lcAny PUnit
+    | Decidable.isFalse x.14 =>
+      let _x.15 := "wat";
+      let _x.16 := IO.println._at_.test2.spec_0 _x.15 _y.2;
+      cases _x.16 : EST.Out IO.Error lcAny PUnit
+      | EST.Out.ok a.17 a.18 =>
+        goto _jp.6 _x.1 a.18
+      | EST.Out.error a.19 a.20 =>
+        return _x.16
+    | Decidable.isTrue x.21 =>
+      let _x.22 := IO.println._at_.test1.spec_0 i _y.2;
+      cases _x.22 : EST.Out IO.Error lcAny PUnit
+      | EST.Out.ok a.23 a.24 =>
+        goto _jp.6 _x.1 a.24
+      | EST.Out.error a.25 a.26 =>
+        return _x.22
+
+════ 📦 IO.print._at_.IO.println._at_.test1.spec_0.spec_0
+def IO.print._at_.IO.println._at_.test1.spec_0.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := IO.getStdout a.1;
+  cases _x.2 : EST.Out IO.Error lcAny PUnit
+  | ST.Out.mk val.3 state.4 =>
+    let _x.5 := val.3 # 4;
+    let _x.6 := _x.5 s state.4;
+    return _x.6
+

@@ -1,0 +1,116 @@
+════ 🎯 test
+-- IR (what the backend reads)
+def test (x_1 : tobj) (x_2 : void) : obj :=
+  let x_3 : tobj := test._closed_0;
+  let x_4 : tobj := ST.Prim.mkRef ◾ ◾ x_3 ◾;
+  inc x_4;
+  let x_5 : tobj := app x_1 x_4;
+  let x_6 : tobj := ST.Prim.Ref.get ◾ ◾ x_5 ◾;
+  let x_7 : tobj := test._closed_1;
+  let x_8 : tobj := Int.add x_6 x_7;
+  dec x_6;
+  let x_9 : tagged := ST.Prim.Ref.set ◾ ◾ x_5 x_8 ◾;
+  dec x_5;
+  let x_10 : tobj := ST.Prim.Ref.get ◾ ◾ x_4 ◾;
+  let x_11 : tobj := Int.add x_10 x_7;
+  dec x_7;
+  dec x_10;
+  let x_12 : tagged := ST.Prim.Ref.set ◾ ◾ x_4 x_11 ◾;
+  dec x_4;
+  let x_13 : obj := ctor_0[EST.Out.ok] x_12;
+  ret x_13
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int.add
+-- IR (what the backend reads)
+extern Int.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_add"
+decl.hashKeyType?: none
+
+════ 📦 Int.negSucc
+-- IR (what the backend reads)
+extern Int.negSucc (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg_succ_of_nat"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 1
+ctor.numFields: 1
+
+════ 📦 Int.ofNat
+-- IR (what the backend reads)
+extern Int.ofNat (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_to_int"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 test._closed_0
+-- IR (what the backend reads)
+def test._closed_0 : tobj :=
+  let x_1 : tagged := 0;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_1
+-- IR (what the backend reads)
+def test._closed_1 : tobj :=
+  let x_1 : tagged := 1;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 ST.Prim.mkRef
+-- IR (what the backend reads)
+extern ST.Prim.mkRef (x_1 : ◾) (x_2 : ◾) (x_3 : tobj) (x_4 : void) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_st_mk_ref"
+decl.hashKeyType?: none
+
+════ 📦 ST.Prim.Ref.get
+-- IR (what the backend reads)
+extern ST.Prim.Ref.get (x_1 : ◾) (x_2 : ◾) (x_3 : @& tobj) (x_4 : void) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_st_ref_get"
+decl.hashKeyType?: none
+
+════ 📦 ST.Prim.Ref.set
+-- IR (what the backend reads)
+extern ST.Prim.Ref.set (x_1 : ◾) (x_2 : ◾) (x_3 : @& tobj) (x_4 : tobj) (x_5 : void) : tagged
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_st_ref_set"
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.UnsafePerformEffect]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (9): [`test,
+ `Int.add,
+ `Int.negSucc,
+ `Int.ofNat,
+ `test._closed_0,
+ `test._closed_1,
+ `ST.Prim.mkRef,
+ `ST.Prim.Ref.get,
+ `ST.Prim.Ref.set]
+ctors (4): [`Int.negSucc, `Int.ofNat, `EST.Out.error, `EST.Out.ok]
+inducts (2): [`Int, `EST.Out]

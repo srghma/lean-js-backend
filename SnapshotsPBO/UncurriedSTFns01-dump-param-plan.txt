@@ -1,0 +1,119 @@
+════ test1
+-- IR
+def test1 (x_1 : obj) (x_2 : obj) (x_3 : void) : obj :=
+  let x_4 : tobj := test1._closed_0;
+  let x_5 : tobj := app x_2 x_4;
+  let x_6 : tobj := test1._closed_1;
+  let x_7 : tobj := test1._closed_2;
+  let x_8 : obj := app x_1 x_5 x_6 x_7 ◾;
+  ret x_8
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : obj) (x_2 : obj) (x_3 : tobj) (x_4 : void) : obj :=
+  let x_5 : tobj := test1._closed_0;
+  let x_6 : tobj := app x_2 x_5;
+  let x_7 : tobj := test1._closed_1;
+  let x_8 : obj := app x_1 x_6 x_7 x_3 ◾;
+  ret x_8
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top, top]
+-- callers:
+
+════ test3
+-- IR
+def test3 (x_1 : obj) (x_2 : obj) (x_3 : tobj) (x_4 : tobj) (x_5 : void) : obj :=
+  let x_6 : tobj := test1._closed_0;
+  let x_7 : tobj := app x_2 x_6;
+  let x_8 : obj := app x_1 x_7 x_3 x_4 ◾;
+  ret x_8
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top, top, top]
+-- callers:
+
+════ test4
+-- IR
+def test4 (x_1 : obj) (x_2 : tobj) (x_3 : tobj) (x_4 : tobj) (x_5 : void) : obj :=
+  let x_6 : obj := app x_1 x_2 x_3 x_4 ◾;
+  ret x_6
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top, top, top]
+-- callers:
+
+════ test5
+-- IR
+def test5 (x_1 : obj) (x_2 : obj) (x_3 : void) : obj :=
+  let x_4 : tobj := test1._closed_0;
+  let x_5 : tobj := app x_2 x_4;
+  let x_6 : tobj := test1._closed_1;
+  let x_7 : tobj := test1._closed_2;
+  inc x_1;
+  inc x_7;
+  inc x_6;
+  inc x_5;
+  let x_8 : obj := app x_1 x_5 x_6 x_7 ◾;
+  case x_8 : obj of
+  EST.Out.ok →
+    dec x_8;
+    let x_9 : obj := app x_1 x_5 x_6 x_7 ◾;
+    ret x_9
+  EST.Out.error →
+    dec x_7;
+    dec x_6;
+    dec x_5;
+    dec x_1;
+    ret x_8
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+
+════ test6
+-- IR
+def test6 (x_1 : obj) (x_2 : obj) (x_3 : void) : obj :=
+  let x_4 : tobj := test1._closed_0;
+  let x_5 : tobj := app x_2 x_4;
+  let x_6 : tobj := test1._closed_1;
+  let x_7 : tobj := test1._closed_2;
+  inc x_1;
+  inc x_7;
+  inc x_6;
+  inc x_5;
+  let x_8 : obj := app x_1 x_5 x_6 x_7 ◾;
+  case x_8 : obj of
+  EST.Out.ok →
+    dec x_8;
+    inc x_1;
+    inc x_7;
+    inc x_6;
+    inc x_5;
+    let x_9 : obj := app x_1 x_5 x_6 x_7 ◾;
+    case x_9 : obj of
+    EST.Out.ok →
+      dec x_9;
+      let x_10 : obj := app x_1 x_5 x_6 x_7 ◾;
+      ret x_10
+    EST.Out.error →
+      dec x_7;
+      dec x_6;
+      dec x_5;
+      dec x_1;
+      ret x_9
+  EST.Out.error →
+    dec x_7;
+    dec x_6;
+    dec x_5;
+    dec x_1;
+    ret x_8
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+

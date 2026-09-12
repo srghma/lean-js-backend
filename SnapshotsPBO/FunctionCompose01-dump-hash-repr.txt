@@ -1,0 +1,5 @@
+=== FunctionCompose01
+the analysis did not settle: nothing is changed
+empty-container declarations: 0
+operations: 0
+nothing is blocked

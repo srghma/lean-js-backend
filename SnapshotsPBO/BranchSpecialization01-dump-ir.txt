@@ -1,0 +1,117 @@
+════ 🎯 TestEnum
+-- IR: not stored
+-- JsOleanData
+induct.isEnum: true
+induct.ctors: [`TestEnum.foo, `TestEnum.bar, `TestEnum.baz, `TestEnum.qux]
+
+════ 🎯 instBEqTestEnum
+-- IR (what the backend reads)
+def instBEqTestEnum : obj :=
+  let x_1 : obj := instBEqTestEnum._closed_0;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : u8) : u8 :=
+  let x_2 : u8 := 2;
+  let x_3 : u8 := instBEqTestEnum.beq x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 (x_1 : u8) : u8 :=
+  let x_2 : u8 := 2;
+  let x_3 : u8 := instBEqTestEnum.beq x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Nat.decEq
+-- IR (what the backend reads)
+extern Nat.decEq (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_dec_eq"
+decl.hashKeyType?: none
+
+════ 📦 TestEnum.ctorIdx
+-- IR (what the backend reads)
+def TestEnum.ctorIdx (x_1 : u8) : tobj :=
+  case x_1 : u8 of
+  TestEnum.foo →
+    let x_2 : tagged := 0;
+    ret x_2
+  TestEnum.bar →
+    let x_3 : tagged := 1;
+    ret x_3
+  TestEnum.baz →
+    let x_4 : tagged := 2;
+    ret x_4
+  TestEnum.qux →
+    let x_5 : tagged := 3;
+    ret x_5
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 instBEqTestEnum._closed_0
+-- IR (what the backend reads)
+def instBEqTestEnum._closed_0 : obj :=
+  let x_1 : obj := pap instBEqTestEnum.beq._boxed;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 instBEqTestEnum.beq
+-- IR (what the backend reads)
+def instBEqTestEnum.beq (x_1 : u8) (x_2 : u8) : u8 :=
+  let x_3 : tobj := TestEnum.ctorIdx x_1;
+  let x_4 : tobj := TestEnum.ctorIdx x_2;
+  let x_5 : u8 := Nat.decEq x_3 x_4;
+  dec x_4;
+  dec x_3;
+  ret x_5
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 instBEqTestEnum.beq._boxed
+-- IR (what the backend reads)
+def instBEqTestEnum.beq._boxed (x_1 : tagged) (x_2 : tagged) : tagged :=
+  let x_3 : u8 := unbox x_1;
+  let x_4 : u8 := unbox x_2;
+  let x_5 : u8 := instBEqTestEnum.beq x_3 x_4;
+  let x_6 : tagged := box x_5;
+  ret x_6
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.BranchSpecialization01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (8): [`instBEqTestEnum,
+ `test1,
+ `test2,
+ `Nat.decEq,
+ `TestEnum.ctorIdx,
+ `instBEqTestEnum._closed_0,
+ `instBEqTestEnum.beq,
+ `instBEqTestEnum.beq._boxed]
+ctors (4): [`TestEnum.bar, `TestEnum.baz, `TestEnum.foo, `TestEnum.qux]
+inducts (1): [`TestEnum]

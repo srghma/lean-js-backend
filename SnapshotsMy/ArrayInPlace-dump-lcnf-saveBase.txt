@@ -1,0 +1,206 @@
+════ 🎯 test1
+def test1 n : Array Nat :=
+  let a := @Array.emptyWithCapacity _ n;
+  let _x.1 := 0;
+  let _x.2 := 1;
+  let _x.3 := Std.Legacy.Range.mk _x.1 n _x.2 ◾;
+  let _x.4 := Std.Legacy.Range.forIn'.loop._at_.test1.spec_0.2 _x.3 a _x.1 ◾ ◾;
+  return _x.4
+
+════ 🎯 test2
+def test2 xs : Array Nat :=
+  let _x.1 := instInhabitedNat;
+  let _x.2 := 8;
+  let _x.3 := 0;
+  let a := @Array.replicate _ _x.2 _x.3;
+  let _x.4 := List.forIn'.loop._at_.test2.spec_0 _x.2 _x.1 xs xs a ◾;
+  return _x.4
+
+════ 🎯 test3
+def test3 a0 : Array Nat :=
+  let _x.1 := instInhabitedNat;
+  let _x.2 := 0;
+  let _x.3 := @Array.size _ a0;
+  let _x.4 := 1;
+  let _x.5 := Std.Legacy.Range.mk _x.2 _x.3 _x.4 ◾;
+  let _x.6 := Std.Legacy.Range.forIn'.loop._at_.test3.spec_0.2 _x.1 _x.5 a0 _x.2 ◾ ◾;
+  return _x.6
+
+════ 🎯 test4
+def test4 n : Prod (Array Nat) (Array Nat) :=
+  let _x.1 := 3;
+  let a := @Array.replicate _ _x.1 n;
+  let _x.2 := 0;
+  let _x.3 := 7;
+  let _x.4 := @Array.set! _ a _x.2 _x.3;
+  let _x.5 := @Prod.mk _ _ a _x.4;
+  return _x.5
+
+════ 🎯 test5
+def test5 n : Array Nat :=
+  let a := @Array.emptyWithCapacity _ n;
+  let _x.1 := 0;
+  let _x.2 := 1;
+  let _x.3 := Std.Legacy.Range.mk _x.1 n _x.2 ◾;
+  let _x.4 := Std.Legacy.Range.forIn'.loop._at_.test5.spec_0.2 _x.3 a _x.1 ◾ ◾;
+  let _x.5 := Nat.shiftRight n _x.2;
+  let _x.6 := Std.Legacy.Range.mk _x.1 _x.5 _x.2 ◾;
+  let _x.7 := Std.Legacy.Range.forIn'.loop._at_.test5.spec_1.2 n _x.2 _x.6 _x.4 _x.1 ◾ ◾;
+  let _x.8 := @Array.pop _ _x.7;
+  return _x.8
+
+════ 🎯 test6
+def test6 n : Array Nat :=
+  let _x.1 := @Array.emptyWithCapacity _ n;
+  let _x.2 := buildRec.2 n _x.1;
+  return _x.2
+
+════ 📦 instInhabitedNat
+def instInhabitedNat : Inhabited Nat :=
+  let _x.1 := Nat.zero;
+  let _x.2 := @Inhabited.mk _ _x.1;
+  return _x.2
+
+════ 📦 _private.LeanJsCliSnapshots.ArrayInPlace.0.buildRec
+def _private.LeanJsCliSnapshots.ArrayInPlace.0.buildRec x.1 x.2 : Array Nat :=
+  cases x.1 : Array Nat
+  | Nat.zero =>
+    return x.2
+  | Nat.succ n.3 =>
+    let _x.4 := @Array.push _ x.2 n.3;
+    let _x.5 := buildRec.2 n.3 _x.4;
+    return _x.5
+
+════ 📦 Array.emptyWithCapacity
+def Array.emptyWithCapacity α @&c : Array α :=
+  extern
+
+════ 📦 Array.get!Internal
+def Array.get!Internal α inst._@.Init.Prelude.3471936409._hygCtx._hyg.1 @&a @&i : α :=
+  extern
+
+════ 📦 Array.pop
+def Array.pop α xs : Array α :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array α :=
+  extern
+
+════ 📦 Array.replicate
+def Array.replicate α n v : Array α :=
+  extern
+
+════ 📦 Array.set!
+def Array.set! α xs @&i v : Array α :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Array.swapIfInBounds
+def Array.swapIfInBounds α xs @&i @&j : Array α :=
+  extern
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.mod
+def Nat.mod @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.mul
+def Nat.mul @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.shiftRight
+def Nat.shiftRight @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 List.forIn'.loop._at_.test2.spec_0
+def List.forIn'.loop._at_.test2.spec_0 _x.1 _x.2 as x.3 x.4 x.5 : Array Nat :=
+  cases x.3 : Array Nat
+  | List.nil =>
+    return x.4
+  | List.cons head.6 tail.7 =>
+    let _x.8 := Nat.mod head.6 _x.1;
+    let _x.9 := @Array.get!Internal _ _x.2 x.4 _x.8;
+    let _x.10 := 1;
+    let _x.11 := Nat.add _x.9 _x.10;
+    let _x.12 := @Array.set! _ x.4 _x.8 _x.11;
+    let _x.13 := List.forIn'.loop._at_.test2.spec_0 _x.1 _x.2 as tail.7 _x.12 ◾;
+    return _x.13
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0 range b i hs hl : Array Nat :=
+  let _x.1 := range # 1;
+  let _x.2 := Nat.decLt i _x.1;
+  cases _x.2 : Array Nat
+  | Decidable.isFalse h =>
+    return b
+  | Decidable.isTrue h =>
+    let _x.3 := Nat.mul i i;
+    let _x.4 := @Array.push _ b _x.3;
+    let _x.5 := range # 2;
+    let _x.6 := Nat.add i _x.5;
+    let _x.7 := Std.Legacy.Range.forIn'.loop._at_.test1.spec_0.2 range _x.4 _x.6 ◾ ◾;
+    return _x.7
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0 _x.1 range b i hs hl : Array Nat :=
+  let _x.2 := range # 1;
+  let _x.3 := Nat.decLt i _x.2;
+  cases _x.3 : Array Nat
+  | Decidable.isFalse h =>
+    return b
+  | Decidable.isTrue h =>
+    let _x.4 := 2;
+    let _x.5 := @Array.get!Internal _ _x.1 b i;
+    let _x.6 := Nat.mul _x.4 _x.5;
+    let _x.7 := @Array.set! _ b i _x.6;
+    let _x.8 := range # 2;
+    let _x.9 := Nat.add i _x.8;
+    let _x.10 := Std.Legacy.Range.forIn'.loop._at_.test3.spec_0.2 _x.1 range _x.7 _x.9 ◾ ◾;
+    return _x.10
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test5.spec_0
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test5.spec_0 range b i hs hl : Array Nat :=
+  let _x.1 := range # 1;
+  let _x.2 := Nat.decLt i _x.1;
+  cases _x.2 : Array Nat
+  | Decidable.isFalse h =>
+    return b
+  | Decidable.isTrue h =>
+    let _x.3 := @Array.push _ b i;
+    let _x.4 := range # 2;
+    let _x.5 := Nat.add i _x.4;
+    let _x.6 := Std.Legacy.Range.forIn'.loop._at_.test5.spec_0.2 range _x.3 _x.5 ◾ ◾;
+    return _x.6
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test5.spec_1
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test5.spec_1 n _x.1 range b i hs hl : Array
+  Nat :=
+  let _x.2 := range # 1;
+  let _x.3 := Nat.decLt i _x.2;
+  cases _x.3 : Array Nat
+  | Decidable.isFalse h =>
+    return b
+  | Decidable.isTrue h =>
+    let _x.4 := Nat.sub n i;
+    let _x.5 := Nat.sub _x.4 _x.1;
+    let _x.6 := @Array.swapIfInBounds _ b i _x.5;
+    let _x.7 := range # 2;
+    let _x.8 := Nat.add i _x.7;
+    let _x.9 := Std.Legacy.Range.forIn'.loop._at_.test5.spec_1.2 n _x.1 range _x.6 _x.8 ◾ ◾;
+    return _x.9
+

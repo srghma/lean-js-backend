@@ -1,0 +1,73 @@
+════ test1
+-- IR
+def test1 (x_1 : @& tobj) (x_2 : @& tobj) : obj :=
+  let x_3 : tobj := test1._closed_0;
+  let x_4 : u8 := Int.decEq x_1 x_3;
+  case x_4 : u8 of
+  Bool.false →
+    dec x_3;
+    let x_5 : tobj := test1._closed_1;
+    let x_6 : u8 := Int.decEq x_2 x_5;
+    dec x_5;
+    case x_6 : u8 of
+    Bool.false →
+      let x_7 : tobj := test1._closed_2;
+      let x_8 : u8 := Int.decEq x_2 x_7;
+      dec x_7;
+      case x_8 : u8 of
+      Bool.false →
+        let x_9 : obj := test1._closed_3;
+        ret x_9
+      Bool.true →
+        let x_10 : obj := test1._closed_4;
+        ret x_10
+    Bool.true →
+      let x_11 : obj := test1._closed_5;
+      ret x_11
+  Bool.true →
+    let x_12 : u8 := Int.decEq x_2 x_3;
+    dec x_3;
+    case x_12 : u8 of
+    Bool.false →
+      let x_13 : tobj := test1._closed_2;
+      let x_14 : u8 := Int.decEq x_2 x_13;
+      dec x_13;
+      case x_14 : u8 of
+      Bool.false →
+        let x_15 : tobj := test1._closed_6;
+        let x_16 : u8 := Int.decEq x_2 x_15;
+        dec x_15;
+        case x_16 : u8 of
+        Bool.false →
+          let x_17 : tobj := test1._closed_1;
+          let x_18 : u8 := Int.decEq x_2 x_17;
+          dec x_17;
+          case x_18 : u8 of
+          Bool.false →
+            let x_19 : tobj := test1._closed_7;
+            let x_20 : u8 := Int.decEq x_2 x_19;
+            dec x_19;
+            case x_20 : u8 of
+            Bool.false →
+              let x_21 : obj := test1._closed_3;
+              ret x_21
+            Bool.true →
+              let x_22 : obj := test1._closed_8;
+              ret x_22
+          Bool.true →
+            let x_23 : obj := test1._closed_5;
+            ret x_23
+        Bool.true →
+          let x_24 : obj := test1._closed_9;
+          ret x_24
+      Bool.true →
+        let x_25 : obj := test1._closed_10;
+        ret x_25
+    Bool.true →
+      let x_26 : obj := test1._closed_11;
+      ret x_26
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+

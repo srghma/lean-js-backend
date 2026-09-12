@@ -1,0 +1,18 @@
+════ divNoInline
+-- IR
+def divNoInline (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := Int.ediv x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ main
+❌ ⚠️ Name 'main' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+

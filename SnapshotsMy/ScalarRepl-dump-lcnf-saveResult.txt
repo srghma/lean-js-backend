@@ -1,0 +1,169 @@
+════ 🎯 test1
+def test1 n : Nat :=
+  let s := 0;
+  let _x.1 := 1;
+  let _x.2 := Std.Legacy.Range.mk s n _x.1 ◾;
+  let _x.3 := Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg.2 _x.2 s s;
+  return _x.3
+
+════ 🎯 test2
+def test2 n : Nat :=
+  let s := 0;
+  let _x.1 := 1;
+  let _x.2 := Std.Legacy.Range.mk s n _x.1 ◾;
+  let _x.3 := Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg.2 s _x.1 _x.2 s s;
+  return _x.3
+
+════ 🎯 test3
+def test3 a b : Nat :=
+  let _x.1 := Prod.mk ◾ ◾ a b;
+  let _x.2 := dist.2 _x.1;
+  let _x.3 := 1;
+  let _x.4 := Nat.add a _x.3;
+  let _x.5 := Prod.mk ◾ ◾ b _x.4;
+  let _x.6 := dist.2 _x.5;
+  let _x.7 := Nat.add _x.2 _x.6;
+  return _x.7
+
+════ 🎯 test4
+def test4 a b : Prod Nat Nat :=
+  let _x.1 := Prod.mk ◾ ◾ a b;
+  let _x.2 := bigger.2 _x.1;
+  return _x.2
+
+════ 🎯 test5
+def test5 a b : Nat :=
+  let _x.1 := Prod.mk ◾ ◾ a b;
+  let _x.2 := Option.some ◾ _x.1;
+  let _x.3 := sumOpt.2 _x.2;
+  let _x.4 := Option.none ◾;
+  let _x.5 := sumOpt.2 _x.4;
+  let _x.6 := Nat.add _x.3 _x.5;
+  return _x.6
+
+════ 🎯 test6
+def test6 n : Nat :=
+  let _x.1 := 3;
+  let _x.2 := Nat.mod n _x.1;
+  let _x.3 := 7;
+  let _x.4 := Nat.mod n _x.3;
+  let _x.5 := Nat.add _x.4 _x.1;
+  let _x.6 := Bounds.mk.2 _x.2 _x.5;
+  let _x.7 := 0;
+  let _x.8 := clampSum.2 _x.6 n _x.7;
+  return _x.8
+
+════ 📦 _private.LeanJsCliSnapshots.ScalarRepl.0.bigger
+def _private.LeanJsCliSnapshots.ScalarRepl.0.bigger p : Prod Nat Nat :=
+  cases p : Prod Nat Nat
+  | Prod.mk fst snd =>
+    let _x.1 := Nat.decLt fst snd;
+    cases _x.1 : Prod Nat Nat
+    | Bool.false =>
+      let _x.2 := Prod.mk ◾ ◾ snd fst;
+      return _x.2
+    | Bool.true =>
+      return p
+
+════ 📦 _private.LeanJsCliSnapshots.ScalarRepl.0.clampSum
+def _private.LeanJsCliSnapshots.ScalarRepl.0.clampSum b x.1 x.2 : Nat :=
+  let zero := 0;
+  let isZero := Nat.decEq x.1 zero;
+  cases isZero : Nat
+  | Bool.true =>
+    return x.2
+  | Bool.false =>
+    cases b : Nat
+    | _private.LeanJsCliSnapshots.ScalarRepl.0.Bounds.mk lo hi =>
+      let one := 1;
+      let n.3 := Nat.sub x.1 one;
+      jp _jp.4 _y.5 : Nat :=
+        let _x.6 := Nat.add x.2 _y.5;
+        let _x.7 := clampSum.2 b n.3 _x.6;
+        return _x.7;
+      let _x.8 := Nat.decLt n.3 lo;
+      cases _x.8 : Nat
+      | Bool.false =>
+        let _x.9 := Nat.decLt hi n.3;
+        cases _x.9 : Nat
+        | Bool.false =>
+          goto _jp.4 n.3
+        | Bool.true =>
+          goto _jp.4 hi
+      | Bool.true =>
+        goto _jp.4 lo
+
+════ 📦 _private.LeanJsCliSnapshots.ScalarRepl.0.dist
+def _private.LeanJsCliSnapshots.ScalarRepl.0.dist p : Nat :=
+  cases p : Nat
+  | Prod.mk fst snd =>
+    let _x.1 := Nat.decLt fst snd;
+    cases _x.1 : Nat
+    | Bool.false =>
+      let _x.2 := Nat.sub fst snd;
+      return _x.2
+    | Bool.true =>
+      let _x.3 := Nat.sub snd fst;
+      return _x.3
+
+════ 📦 _private.LeanJsCliSnapshots.ScalarRepl.0.sumOpt
+def _private.LeanJsCliSnapshots.ScalarRepl.0.sumOpt o : Nat :=
+  cases o : Nat
+  | Option.none =>
+    let _x.1 := 0;
+    return _x.1
+  | Option.some val.2 =>
+    cases val.2 : Nat
+    | Prod.mk fst.3 snd.4 =>
+      let _x.5 := Nat.add fst.3 snd.4;
+      return _x.5
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.mod
+def Nat.mod @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg range b i : Nat :=
+  cases range : Nat
+  | Std.Legacy.Range.mk start stop step step_pos =>
+    let _x.1 := Nat.decLt i stop;
+    cases _x.1 : Nat
+    | Bool.false =>
+      return b
+    | Bool.true =>
+      let _x.2 := Nat.add b i;
+      let _x.3 := Nat.add i step;
+      let _x.4 := Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg.2 range _x.2 _x.3;
+      return _x.4
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg s _x.1 range b i : Nat :=
+  cases range : Nat
+  | Std.Legacy.Range.mk start stop step step_pos =>
+    let _x.2 := Nat.decLt i stop;
+    cases _x.2 : Nat
+    | Bool.false =>
+      return b
+    | Bool.true =>
+      let _x.3 := Std.Legacy.Range.mk s i _x.1 ◾;
+      let _x.4 := Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg.2 _x.3 b s;
+      let _x.5 := Nat.add i step;
+      let _x.6 := Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg.2 s _x.1 range _x.4 _x.5;
+      return _x.6
+

@@ -1,0 +1,238 @@
+════ extern
+-- IR
+def extern : obj :=
+  let x_1 : obj := localTest._closed_3;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+   from test6: []
+   from test7: []
+   from externTest: []
+   from test5: []
+   from test8: []
+
+════ externTest
+-- IR
+def externTest (x_1 : obj) : tobj :=
+  let x_2 : obj := extern;
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : tobj := localTest._closed_5;
+  let x_5 : u8 := Int.decEq x_3 x_4;
+  case x_5 : u8 of
+  Bool.false →
+    dec x_4;
+    ret x_3
+  Bool.true →
+    dec x_3;
+    ret x_4
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ fn
+-- IR
+def fn (x_1 : ◾) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := fn._closed_0;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+   from localTest._closed_6: [erased, ?]
+   from localTest._closed_1: [erased, ctor PUnit.unit]
+
+════ localTest
+-- IR
+def localTest (x_1 : obj) : tobj :=
+  let x_2 : obj := localTest._closed_3;
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : tobj := localTest._closed_5;
+  let x_5 : u8 := Int.decEq x_3 x_4;
+  dec x_4;
+  case x_5 : u8 of
+  Bool.false →
+    ret x_3
+  Bool.true →
+    dec x_3;
+    let x_6 : tobj := localTest._closed_6;
+    ret x_6
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test1
+-- IR
+def test1 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  let x_2 : u8 := test1._closed_1;
+  case x_2 : u8 of
+  Bool.false →
+    ret x_1
+  Bool.true →
+    dec x_1;
+    let x_3 : tobj := localTest._closed_6;
+    ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test2
+-- IR
+def test2 : tobj :=
+  let x_1 : tobj := test2._closed_0;
+  let x_2 : u8 := test2._closed_1;
+  case x_2 : u8 of
+  Bool.false →
+    ret x_1
+  Bool.true →
+    dec x_1;
+    let x_3 : tobj := localTest._closed_6;
+    ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test3
+-- IR
+def test3 : tobj :=
+  let x_1 : tobj := test3._closed_0;
+  let x_2 : u8 := test3._closed_1;
+  case x_2 : u8 of
+  Bool.false →
+    ret x_1
+  Bool.true →
+    dec x_1;
+    let x_3 : tobj := localTest._closed_6;
+    ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test4
+-- IR
+def test4 : tobj :=
+  let x_1 : tobj := test4._closed_0;
+  let x_2 : u8 := test4._closed_1;
+  case x_2 : u8 of
+  Bool.false →
+    ret x_1
+  Bool.true →
+    dec x_1;
+    let x_3 : tobj := localTest._closed_6;
+    ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test5
+-- IR
+def test5 : tobj :=
+  let x_1 : obj := extern;
+  let x_2 : tobj := proj[0] x_1;
+  inc x_2;
+  let x_3 : tobj := proj[2] x_1;
+  inc x_3;
+  dec x_1;
+  let x_4 : tobj := Int.add x_2 x_3;
+  dec x_3;
+  dec x_2;
+  let x_5 : tobj := localTest._closed_5;
+  let x_6 : u8 := Int.decEq x_4 x_5;
+  case x_6 : u8 of
+  Bool.false →
+    dec x_5;
+    ret x_4
+  Bool.true →
+    dec x_4;
+    ret x_5
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test6
+-- IR
+def test6 : tobj :=
+  let x_1 : obj := extern;
+  let x_2 : tobj := proj[0] x_1;
+  inc x_2;
+  let x_3 : tobj := proj[2] x_1;
+  inc x_3;
+  dec x_1;
+  let x_4 : tobj := Int.sub x_2 x_3;
+  dec x_3;
+  dec x_2;
+  let x_5 : tobj := localTest._closed_5;
+  let x_6 : u8 := Int.decEq x_4 x_5;
+  case x_6 : u8 of
+  Bool.false →
+    dec x_5;
+    ret x_4
+  Bool.true →
+    dec x_4;
+    ret x_5
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test7
+-- IR
+def test7 : tobj :=
+  let x_1 : obj := extern;
+  let x_2 : tobj := proj[0] x_1;
+  inc x_2;
+  let x_3 : tobj := proj[2] x_1;
+  inc x_3;
+  dec x_1;
+  let x_4 : tobj := Int.mul x_2 x_3;
+  dec x_3;
+  dec x_2;
+  let x_5 : tobj := localTest._closed_5;
+  let x_6 : u8 := Int.decEq x_4 x_5;
+  case x_6 : u8 of
+  Bool.false →
+    dec x_5;
+    ret x_4
+  Bool.true →
+    dec x_4;
+    ret x_5
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test8
+-- IR
+def test8 : tobj :=
+  let x_1 : obj := extern;
+  let x_2 : tobj := proj[0] x_1;
+  inc x_2;
+  let x_3 : tobj := proj[2] x_1;
+  inc x_3;
+  dec x_1;
+  let x_4 : tobj := Int.ediv x_2 x_3;
+  dec x_3;
+  dec x_2;
+  let x_5 : tobj := localTest._closed_5;
+  let x_6 : u8 := Int.decEq x_4 x_5;
+  case x_6 : u8 of
+  Bool.false →
+    dec x_5;
+    ret x_4
+  Bool.true →
+    dec x_4;
+    ret x_5
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+

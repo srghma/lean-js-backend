@@ -1,0 +1,375 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := Int.add x_3 x_1;
+  dec x_3;
+  let x_5 : tobj := Int.add x_4 x_1;
+  dec x_4;
+  let x_6 : tobj := Int.add x_5 x_1;
+  dec x_5;
+  let x_7 : tobj := Int.add x_6 x_1;
+  dec x_6;
+  let x_8 : tobj := test1._closed_2;
+  let x_9 : tobj := Int.add x_7 x_8;
+  dec x_8;
+  dec x_7;
+  let x_10 : tobj := Int.add x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.add x_10 x_11;
+  dec x_11;
+  dec x_10;
+  ret x_12
+════ test1 after
+def test1 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := Int.add x_3 x_1;
+  dec x_3;
+  let x_5 : tobj := Int.add x_4 x_1;
+  dec x_4;
+  let x_6 : tobj := Int.add x_5 x_1;
+  dec x_5;
+  let x_7 : tobj := Int.add x_6 x_1;
+  dec x_6;
+  let x_8 : tobj := test1._closed_2;
+  let x_9 : tobj := Int.add x_7 x_8;
+  dec x_8;
+  dec x_7;
+  let x_10 : tobj := Int.add x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.add x_10 x_11;
+  dec x_11;
+  dec x_10;
+  ret x_12
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := test1._closed_2;
+  let x_5 : tobj := Int.add x_1 x_4;
+  dec x_4;
+  let x_6 : tobj := Int.add x_1 x_5;
+  dec x_5;
+  let x_7 : tobj := Int.add x_1 x_6;
+  dec x_6;
+  let x_8 : tobj := Int.add x_1 x_7;
+  dec x_7;
+  let x_9 : tobj := Int.add x_3 x_8;
+  dec x_8;
+  dec x_3;
+  let x_10 : tobj := Int.add x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.add x_10 x_11;
+  dec x_11;
+  dec x_10;
+  ret x_12
+════ test2 after
+def test2 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := test1._closed_2;
+  let x_5 : tobj := Int.add x_1 x_4;
+  dec x_4;
+  let x_6 : tobj := Int.add x_1 x_5;
+  dec x_5;
+  let x_7 : tobj := Int.add x_1 x_6;
+  dec x_6;
+  let x_8 : tobj := Int.add x_1 x_7;
+  dec x_7;
+  let x_9 : tobj := Int.add x_3 x_8;
+  dec x_8;
+  dec x_3;
+  let x_10 : tobj := Int.add x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.add x_10 x_11;
+  dec x_11;
+  dec x_10;
+  ret x_12
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := test1._closed_2;
+  let x_5 : tobj := Int.add x_1 x_4;
+  dec x_4;
+  let x_6 : tobj := Int.add x_1 x_5;
+  dec x_5;
+  let x_7 : tobj := Int.add x_1 x_6;
+  dec x_6;
+  let x_8 : tobj := Int.add x_1 x_7;
+  dec x_7;
+  let x_9 : tobj := Int.add x_3 x_8;
+  dec x_8;
+  dec x_3;
+  let x_10 : tobj := Int.add x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.add x_10 x_11;
+  dec x_11;
+  dec x_10;
+  let x_13 : tobj := test3._closed_0;
+  let x_14 : tobj := Int.add x_13 x_1;
+  dec x_13;
+  let x_15 : tobj := Int.add x_14 x_1;
+  dec x_14;
+  let x_16 : tobj := Int.add x_15 x_1;
+  dec x_15;
+  let x_17 : tobj := Int.add x_16 x_1;
+  dec x_16;
+  let x_18 : tobj := test3._closed_1;
+  let x_19 : tobj := Int.add x_17 x_18;
+  dec x_18;
+  dec x_17;
+  let x_20 : tobj := Int.add x_12 x_19;
+  dec x_19;
+  dec x_12;
+  let x_21 : tobj := test3._closed_2;
+  let x_22 : tobj := Int.add x_20 x_21;
+  dec x_21;
+  dec x_20;
+  ret x_22
+════ test3 after
+def test3 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := test1._closed_2;
+  let x_5 : tobj := Int.add x_1 x_4;
+  dec x_4;
+  let x_6 : tobj := Int.add x_1 x_5;
+  dec x_5;
+  let x_7 : tobj := Int.add x_1 x_6;
+  dec x_6;
+  let x_8 : tobj := Int.add x_1 x_7;
+  dec x_7;
+  let x_9 : tobj := Int.add x_3 x_8;
+  dec x_8;
+  dec x_3;
+  let x_10 : tobj := Int.add x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.add x_10 x_11;
+  dec x_11;
+  dec x_10;
+  let x_13 : tobj := test3._closed_0;
+  let x_14 : tobj := Int.add x_13 x_1;
+  dec x_13;
+  let x_15 : tobj := Int.add x_14 x_1;
+  dec x_14;
+  let x_16 : tobj := Int.add x_15 x_1;
+  dec x_15;
+  let x_17 : tobj := Int.add x_16 x_1;
+  dec x_16;
+  let x_18 : tobj := test3._closed_1;
+  let x_19 : tobj := Int.add x_17 x_18;
+  dec x_18;
+  dec x_17;
+  let x_20 : tobj := Int.add x_12 x_19;
+  dec x_19;
+  dec x_12;
+  let x_21 : tobj := test3._closed_2;
+  let x_22 : tobj := Int.add x_20 x_21;
+  dec x_21;
+  dec x_20;
+  ret x_22
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := Int.mul x_3 x_1;
+  dec x_3;
+  let x_5 : tobj := Int.mul x_4 x_1;
+  dec x_4;
+  let x_6 : tobj := Int.mul x_5 x_1;
+  dec x_5;
+  let x_7 : tobj := Int.mul x_6 x_1;
+  dec x_6;
+  let x_8 : tobj := test1._closed_2;
+  let x_9 : tobj := Int.mul x_7 x_8;
+  dec x_8;
+  dec x_7;
+  let x_10 : tobj := Int.mul x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.mul x_10 x_11;
+  dec x_11;
+  dec x_10;
+  ret x_12
+════ test4 after
+def test4 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := Int.mul x_3 x_1;
+  dec x_3;
+  let x_5 : tobj := Int.mul x_4 x_1;
+  dec x_4;
+  let x_6 : tobj := Int.mul x_5 x_1;
+  dec x_5;
+  let x_7 : tobj := Int.mul x_6 x_1;
+  dec x_6;
+  let x_8 : tobj := test1._closed_2;
+  let x_9 : tobj := Int.mul x_7 x_8;
+  dec x_8;
+  dec x_7;
+  let x_10 : tobj := Int.mul x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.mul x_10 x_11;
+  dec x_11;
+  dec x_10;
+  ret x_12
+════ test4 parameter plan: (every parameter kept)
+════ test5 before
+def test5 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := test1._closed_2;
+  let x_5 : tobj := Int.mul x_1 x_4;
+  dec x_4;
+  let x_6 : tobj := Int.mul x_1 x_5;
+  dec x_5;
+  let x_7 : tobj := Int.mul x_1 x_6;
+  dec x_6;
+  let x_8 : tobj := Int.mul x_1 x_7;
+  dec x_7;
+  let x_9 : tobj := Int.mul x_3 x_8;
+  dec x_8;
+  dec x_3;
+  let x_10 : tobj := Int.mul x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.mul x_10 x_11;
+  dec x_11;
+  dec x_10;
+  ret x_12
+════ test5 after
+def test5 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := test1._closed_2;
+  let x_5 : tobj := Int.mul x_1 x_4;
+  dec x_4;
+  let x_6 : tobj := Int.mul x_1 x_5;
+  dec x_5;
+  let x_7 : tobj := Int.mul x_1 x_6;
+  dec x_6;
+  let x_8 : tobj := Int.mul x_1 x_7;
+  dec x_7;
+  let x_9 : tobj := Int.mul x_3 x_8;
+  dec x_8;
+  dec x_3;
+  let x_10 : tobj := Int.mul x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.mul x_10 x_11;
+  dec x_11;
+  dec x_10;
+  ret x_12
+════ test5 parameter plan: (every parameter kept)
+════ test6 before
+def test6 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := test1._closed_2;
+  let x_5 : tobj := Int.mul x_1 x_4;
+  dec x_4;
+  let x_6 : tobj := Int.mul x_1 x_5;
+  dec x_5;
+  let x_7 : tobj := Int.mul x_1 x_6;
+  dec x_6;
+  let x_8 : tobj := Int.mul x_1 x_7;
+  dec x_7;
+  let x_9 : tobj := Int.mul x_3 x_8;
+  dec x_8;
+  dec x_3;
+  let x_10 : tobj := Int.mul x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.mul x_10 x_11;
+  dec x_11;
+  dec x_10;
+  let x_13 : tobj := test3._closed_0;
+  let x_14 : tobj := Int.mul x_13 x_1;
+  dec x_13;
+  let x_15 : tobj := Int.mul x_14 x_1;
+  dec x_14;
+  let x_16 : tobj := Int.mul x_15 x_1;
+  dec x_15;
+  let x_17 : tobj := Int.mul x_16 x_1;
+  dec x_16;
+  let x_18 : tobj := test3._closed_1;
+  let x_19 : tobj := Int.mul x_17 x_18;
+  dec x_18;
+  dec x_17;
+  let x_20 : tobj := Int.mul x_12 x_19;
+  dec x_19;
+  dec x_12;
+  let x_21 : tobj := test3._closed_2;
+  let x_22 : tobj := Int.mul x_20 x_21;
+  dec x_21;
+  dec x_20;
+  ret x_22
+════ test6 after
+def test6 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := test1._closed_1;
+  let x_4 : tobj := test1._closed_2;
+  let x_5 : tobj := Int.mul x_1 x_4;
+  dec x_4;
+  let x_6 : tobj := Int.mul x_1 x_5;
+  dec x_5;
+  let x_7 : tobj := Int.mul x_1 x_6;
+  dec x_6;
+  let x_8 : tobj := Int.mul x_1 x_7;
+  dec x_7;
+  let x_9 : tobj := Int.mul x_3 x_8;
+  dec x_8;
+  dec x_3;
+  let x_10 : tobj := Int.mul x_2 x_9;
+  dec x_9;
+  dec x_2;
+  let x_11 : tobj := test1._closed_3;
+  let x_12 : tobj := Int.mul x_10 x_11;
+  dec x_11;
+  dec x_10;
+  let x_13 : tobj := test3._closed_0;
+  let x_14 : tobj := Int.mul x_13 x_1;
+  dec x_13;
+  let x_15 : tobj := Int.mul x_14 x_1;
+  dec x_14;
+  let x_16 : tobj := Int.mul x_15 x_1;
+  dec x_15;
+  let x_17 : tobj := Int.mul x_16 x_1;
+  dec x_16;
+  let x_18 : tobj := test3._closed_1;
+  let x_19 : tobj := Int.mul x_17 x_18;
+  dec x_18;
+  dec x_17;
+  let x_20 : tobj := Int.mul x_12 x_19;
+  dec x_19;
+  dec x_12;
+  let x_21 : tobj := test3._closed_2;
+  let x_22 : tobj := Int.mul x_20 x_21;
+  dec x_21;
+  dec x_20;
+  ret x_22
+════ test6 parameter plan: (every parameter kept)

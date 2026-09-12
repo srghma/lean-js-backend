@@ -1,0 +1,216 @@
+════ split plans
+════ extern1 before
+def extern1 : obj :=
+  let x_1 : obj := extern1._closed_1;
+  ret x_1
+════ extern1 after
+def extern1 : obj :=
+  let x_1 : obj := extern1._closed_1;
+  ret x_1
+════ extern1 parameter plan: (every parameter kept)
+════ extern2 before
+def extern2 : obj :=
+  let x_1 : obj := extern2._closed_5;
+  ret x_1
+════ extern2 after
+def extern2 : obj :=
+  let x_1 : obj := extern2._closed_5;
+  ret x_1
+════ extern2 parameter plan: (every parameter kept)
+════ [anonymous] before
+  (no compiled code)
+════ [anonymous] after
+  (no compiled code)
+════ [anonymous] parameter plan: (every parameter kept)
+════ test1 before
+def test1 (x_1 : obj) : obj :=
+  let x_2 : tagged := ctor_0[PUnit.unit];
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : tagged := 3;
+  let x_5 : obj := test1._closed_4;
+  let x_6 : obj := Array.push ◾ x_5 x_3;
+  let x_7 : tagged := Array.size ◾ x_6;
+  let x_8 : u8 := Nat.decEq x_7 x_4;
+  case x_8 : u8 of
+  Bool.false →
+    dec x_6;
+    let x_9 : obj := test1._closed_5;
+    ret x_9
+  Bool.true →
+    ret x_6
+════ test1 after
+def test1 (x_1 : obj) : obj :=
+  let x_2 : tagged := ctor_0[PUnit.unit];
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : tagged := 3;
+  let x_5 : obj := test1._closed_4;
+  let x_6 : obj := Array.push ◾ x_5 x_3;
+  let x_7 : tagged := Array.size ◾ x_6;
+  let x_8 : u8 := Nat.decEq x_7 x_4;
+  case x_8 : u8 of
+  Bool.false →
+    dec x_6;
+    let x_9 : obj := test1._closed_5;
+    ret x_9
+  Bool.true →
+    ret x_6
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : obj) : obj :=
+  let x_2 : tagged := ctor_0[PUnit.unit];
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : obj := test1._closed_2;
+  let x_5 : obj := test1._closed_4;
+  inc x_3;
+  let x_6 : obj := Array.push ◾ x_5 x_3;
+  let x_7 : obj := test2._closed_4;
+  let x_8 : obj := test2._closed_5;
+  inc x_8;
+  let x_9 : obj := Array.push ◾ x_8 x_3;
+  inc x_6;
+  let x_10 : obj := Array.push ◾ x_4 x_6;
+  let x_11 : obj := Array.push ◾ x_10 x_7;
+  let x_12 : obj := Array.push ◾ x_11 x_9;
+  let x_13 : tobj := test2._closed_6;
+  block_18 (x_14 : tobj) :=
+    let x_15 : u8 := Option.instBEq.beq._at_.test2.spec_0 x_13 x_14;
+    dec x_14;
+    dec x_13;
+    case x_15 : u8 of
+    Bool.false →
+      let x_16 : obj := Array.push ◾ x_8 x_6;
+      let x_17 : obj := Array.append._redArg x_16 x_12;
+      dec x_12;
+      ret x_17
+    Bool.true →
+      dec x_8;
+      dec x_6;
+      ret x_12;
+  let x_19 : tagged := 0;
+  let x_20 : tagged := Array.size ◾ x_12;
+  let x_21 : u8 := Nat.decLt x_19 x_20;
+  case x_21 : u8 of
+  Bool.false →
+    let x_22 : tagged := ctor_0[Option.none];
+    jmp block_18 x_22
+  Bool.true →
+    let x_23 : tobj := Array.getInternal ◾ x_12 x_19 ◾;
+    let x_24 : tagged := Array.size ◾ x_23;
+    dec x_23;
+    let x_25 : obj := ctor_1[Option.some] x_24;
+    jmp block_18 x_25
+════ test2 after
+def test2 (x_1 : obj) : obj :=
+  let x_2 : tagged := ctor_0[PUnit.unit];
+  let x_3 : tobj := app x_1 x_2;
+  let x_4 : obj := test1._closed_2;
+  let x_5 : obj := test1._closed_4;
+  inc x_3;
+  let x_6 : obj := Array.push ◾ x_5 x_3;
+  let x_7 : obj := test2._closed_4;
+  let x_8 : obj := test2._closed_5;
+  inc x_8;
+  let x_9 : obj := Array.push ◾ x_8 x_3;
+  inc x_6;
+  let x_10 : obj := Array.push ◾ x_4 x_6;
+  let x_11 : obj := Array.push ◾ x_10 x_7;
+  let x_12 : obj := Array.push ◾ x_11 x_9;
+  let x_13 : tobj := test2._closed_6;
+  block_18 (x_14 : tobj) :=
+    let x_15 : u8 := Option.instBEq.beq._at_.test2.spec_0 x_13 x_14;
+    dec x_14;
+    dec x_13;
+    case x_15 : u8 of
+    Bool.false →
+      let x_16 : obj := Array.push ◾ x_8 x_6;
+      let x_17 : obj := Array.append._redArg x_16 x_12;
+      dec x_12;
+      ret x_17
+    Bool.true →
+      dec x_8;
+      dec x_6;
+      ret x_12;
+  let x_19 : tagged := 0;
+  let x_20 : tagged := Array.size ◾ x_12;
+  let x_21 : u8 := Nat.decLt x_19 x_20;
+  case x_21 : u8 of
+  Bool.false →
+    let x_22 : tagged := ctor_0[Option.none];
+    jmp block_18 x_22
+  Bool.true →
+    let x_23 : tobj := Array.getInternal ◾ x_12 x_19 ◾;
+    let x_24 : tagged := Array.size ◾ x_23;
+    dec x_23;
+    let x_25 : obj := ctor_1[Option.some] x_24;
+    jmp block_18 x_25
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 : obj :=
+  let x_1 : obj := extern1;
+  let x_2 : u8 := test3._closed_1;
+  case x_2 : u8 of
+  Bool.false →
+    dec x_1;
+    let x_3 : obj := test1._closed_5;
+    ret x_3
+  Bool.true →
+    ret x_1
+════ test3 after
+def test3 : obj :=
+  let x_1 : obj := extern1;
+  let x_2 : u8 := test3._closed_1;
+  case x_2 : u8 of
+  Bool.false →
+    dec x_1;
+    let x_3 : obj := test1._closed_5;
+    ret x_3
+  Bool.true →
+    ret x_1
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 : obj :=
+  let x_1 : tobj := test2._closed_6;
+  let x_2 : obj := extern2;
+  block_6 (x_3 : tobj) :=
+    let x_4 : u8 := Option.instBEq.beq._at_.test2.spec_0 x_1 x_3;
+    dec x_3;
+    dec x_1;
+    case x_4 : u8 of
+    Bool.false →
+      dec x_2;
+      let x_5 : obj := test4._closed_0;
+      ret x_5
+    Bool.true →
+      ret x_2;
+  let x_7 : u8 := test4._closed_2;
+  case x_7 : u8 of
+  Bool.false →
+    let x_8 : tagged := ctor_0[Option.none];
+    jmp block_6 x_8
+  Bool.true →
+    let x_9 : tobj := test4._closed_5;
+    jmp block_6 x_9
+════ test4 after
+def test4 : obj :=
+  let x_1 : tobj := test2._closed_6;
+  let x_2 : obj := extern2;
+  block_6 (x_3 : tobj) :=
+    let x_4 : u8 := Option.instBEq.beq._at_.test2.spec_0 x_1 x_3;
+    dec x_3;
+    dec x_1;
+    case x_4 : u8 of
+    Bool.false →
+      dec x_2;
+      let x_5 : obj := test4._closed_0;
+      ret x_5
+    Bool.true →
+      ret x_2;
+  let x_7 : u8 := test4._closed_2;
+  case x_7 : u8 of
+  Bool.false →
+    let x_8 : tagged := ctor_0[Option.none];
+    jmp block_6 x_8
+  Bool.true →
+    let x_9 : tobj := test4._closed_5;
+    jmp block_6 x_9
+════ test4 parameter plan: (every parameter kept)

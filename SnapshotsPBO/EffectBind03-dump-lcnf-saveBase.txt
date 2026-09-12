@@ -1,0 +1,24 @@
+════ 🎯 test
+def test random : MyEffect Int :=
+  let _x.1 := random # 0;
+  fun _f.2 _y.3 : EST.Out IO.Error lcAny Int :=
+    let _x.4 := _x.1 _y.3;
+    cases _x.4 : EST.Out IO.Error lcAny Int
+    | EST.Out.ok a.5 a.6 =>
+      let _x.7 := _x.1 a.6;
+      cases _x.7 : EST.Out IO.Error lcAny Int
+      | EST.Out.ok a.8 a.9 =>
+        let _x.10 := Int.add a.5 a.8;
+        let _x.11 := @EST.Out.ok _ _ _ _x.10 a.9;
+        return _x.11
+      | EST.Out.error a.12 a.13 =>
+        return _x.7
+    | EST.Out.error a.14 a.15 =>
+      return _x.4;
+  let _x.16 := @MyEffect.mk _ _f.2;
+  return _x.16
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+

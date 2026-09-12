@@ -1,0 +1,64 @@
+════ 🎯 test1
+def test1 a b : Bool :=
+  let _x.1 := String.decEq a b;
+  return _x.1
+
+════ 🎯 test2
+def test2 a b : Bool :=
+  let _x.1 := String.decEq a b;
+  cases _x.1 : Bool
+  | Bool.false =>
+    let _x.2 := Bool.true;
+    return _x.2
+  | Bool.true =>
+    let _x.3 := Bool.false;
+    return _x.3
+
+════ 🎯 test3
+def test3 a b : Bool :=
+  let _x.1 := String.decidableLT a b;
+  return _x.1
+
+════ 🎯 test4
+def test4 a b : Bool :=
+  let _x.1 := String.decidableLT b a;
+  return _x.1
+
+════ 🎯 test5
+def test5 a b : Bool :=
+  let _x.1 := String.decLE a b;
+  return _x.1
+
+════ 🎯 test6
+def test6 a b : Bool :=
+  let _x.1 := String.decLE b a;
+  return _x.1
+
+════ 🎯 test7
+def test7 a b : String :=
+  let _x.1 := String.append a b;
+  return _x.1
+
+════ 📦 String.append
+def String.append s @&t : String :=
+  extern
+
+════ 📦 String.decEq
+def String.decEq @&s₁ @&s₂ : Bool :=
+  extern
+
+════ 📦 String.decLE
+def String.decLE s₁ s₂ : Bool :=
+  let _x.1 := String.decidableLT s₂ s₁;
+  cases _x.1 : Bool
+  | Bool.false =>
+    let _x.2 := Bool.true;
+    return _x.2
+  | Bool.true =>
+    let _x.3 := Bool.false;
+    return _x.3
+
+════ 📦 String.decidableLT
+def String.decidableLT @&s₁ @&s₂ : Bool :=
+  extern
+

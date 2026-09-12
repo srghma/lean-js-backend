@@ -1,0 +1,36 @@
+=== EffectBind09
+places holding an unboxed `Option`: 0
+  a closure: test1._closed_0
+  a closure: test1._closed_1
+  a closure: test1._closed_2
+  a parameter of a closure: test1._lam_0._boxed
+  a parameter of a closure: test1._lam_1._boxed
+  a parameter of a closure: test1._lam_2._boxed
+  a parameter of a declaration the file is for: test1
+  an argument of a primitive: IO.println._at_.test1.spec_0
+  an argument of an unknown function: IO.print._at_.IO.println._at_.test1.spec_0.spec_0
+  an argument of an unknown function: when'
+  an unknown function value: IO.print._at_.IO.println._at_.test1.spec_0.spec_0
+  an unknown function value: when'
+  stored in a constructor: when'
+  the answer of a closure: test1._lam_0._boxed
+  the answer of a closure: test1._lam_1._boxed
+  the answer of a closure: test1._lam_2._boxed
+  the answer of a declaration the file is for: Array.append
+  the answer of a declaration the file is for: Array.append._redArg
+  the answer of a declaration the file is for: Array.appendCore
+  the answer of a declaration the file is for: Array.appendCore._redArg
+  the answer of a declaration the file is for: Float.ofBinaryScientific
+  the answer of a declaration the file is for: Float.ofNat
+  the answer of a declaration the file is for: Float.ofScientific
+  the answer of a declaration the file is for: IO.Error.toString
+  the answer of a declaration the file is for: Int.repr
+  the answer of a declaration the file is for: Nat.repr
+  the answer of a declaration the file is for: Nat.reprFast
+  the answer of a declaration the file is for: [anonymous]
+  the answer of a declaration the file is for: main
+  the answer of a declaration the file is for: test1
+  the answer of a primitive: IO.print._at_.IO.println._at_.test1.spec_0.spec_0
+  the answer of a primitive: IO.println._at_.test1.spec_0
+  the answer of an unknown function: IO.print._at_.IO.println._at_.test1.spec_0.spec_0
+  the answer of an unknown function: when'

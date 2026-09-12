@@ -1,0 +1,272 @@
+=== HalogenVDomST01
+places holding an unboxed `Option`: 0
+  a closure: Std.DHashMap.Internal.AssocList.foldlM._redArg
+  a closure: Std.DHashMap.Internal.computeSize._redArg._closed_0
+  a closure: Std.DHashMap.Internal.computeSize._redArg._closed_1
+  a closure: Std.DHashMap.Internal.computeSize._redArg._closed_2
+  a closure: Std.DHashMap.Internal.computeSize._redArg._closed_3
+  a closure: Std.DHashMap.Internal.computeSize._redArg._closed_4
+  a closure: Std.DHashMap.Internal.computeSize._redArg._closed_5
+  a closure: Std.DHashMap.Internal.computeSize._redArg._closed_6
+  a closure: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg
+  a closure: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg
+  a closure: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg
+  a closure: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg
+  a closure: diffWithIxE._redArg
+  a closure: diffWithKeyAndIxE._redArg
+  a closure: diffWithKeyAndIxE._redArg._closed_0
+  a closure: diffWithKeyAndIxE._redArg._closed_1
+  a closure: instMonadEST._closed_0
+  a closure: instMonadEST._closed_1
+  a closure: instMonadEST._closed_2
+  a closure: instMonadEST._closed_3
+  a closure: instMonadEST._closed_4
+  a closure: instMonadEST._closed_5
+  a closure: instMonadEST._closed_8
+  a constructor that is taken apart: diffWithKeyAndIxE._redArg._lam_0
+  a constructor that is written into: Std.DHashMap.Internal.AssocList.replace._redArg
+  a constructor that is written into: Std.DHashMap.Internal.Raw₀.insert._redArg
+  a constructor that is written into: diffWithIxE._redArg._lam_0
+  a constructor that is written into: diffWithKeyAndIxE._redArg
+  a constructor that is written into: diffWithKeyAndIxE._redArg._lam_0
+  a constructor that is written into: diffWithKeyAndIxE._redArg._lam_1
+  a constructor that is written into: instMonadEST._lam_0
+  a constructor that is written into: instMonadEST._lam_1
+  a constructor that is written into: instMonadEST._lam_3
+  a constructor that is written into: instMonadEST._lam_4
+  a parameter of a closure: EST.bind._boxed
+  a parameter of a closure: Id.instMonad._lam_0
+  a parameter of a closure: Id.instMonad._lam_1._boxed
+  a parameter of a closure: Id.instMonad._lam_2._boxed
+  a parameter of a closure: Id.instMonad._lam_3
+  a parameter of a closure: Id.instMonad._lam_4._boxed
+  a parameter of a closure: Id.instMonad._lam_5._boxed
+  a parameter of a closure: Id.instMonad._lam_6
+  a parameter of a closure: Std.DHashMap.Internal.AssocList.foldlM._redArg._lam_0
+  a parameter of a closure: String.hash._boxed
+  a parameter of a closure: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg._lam_0._boxed
+  a parameter of a closure: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg._lam_0._boxed
+  a parameter of a closure: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg._lam_0
+  a parameter of a closure: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0
+  a parameter of a closure: diffWithIxE._redArg._lam_0._boxed
+  a parameter of a closure: diffWithKeyAndIxE._redArg._lam_0._boxed
+  a parameter of a closure: diffWithKeyAndIxE._redArg._lam_1._boxed
+  a parameter of a closure: diffWithKeyAndIxE._redArg._lam_2._boxed
+  a parameter of a closure: instBEqOfDecidableEq._redArg._lam_0._boxed
+  a parameter of a closure: instDecidableEqString._boxed
+  a parameter of a closure: instMonadEST._lam_0._boxed
+  a parameter of a closure: instMonadEST._lam_1._boxed
+  a parameter of a closure: instMonadEST._lam_2._boxed
+  a parameter of a closure: instMonadEST._lam_3._boxed
+  a parameter of a closure: instMonadEST._lam_4._boxed
+  a parameter of a closure: instMonadEST._lam_5._boxed
+  a parameter of a declaration the file is for: diffWithIxE
+  a parameter of a declaration the file is for: diffWithKeyAndIxE
+  a value whose sharing is tested: EST.bind
+  a value whose sharing is tested: Std.DHashMap.Internal.AssocList.replace._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.Raw₀.insert._redArg
+  a value whose sharing is tested: diffWithIxE._redArg._lam_0
+  a value whose sharing is tested: diffWithKeyAndIxE._redArg
+  a value whose sharing is tested: diffWithKeyAndIxE._redArg._lam_0
+  a value whose sharing is tested: diffWithKeyAndIxE._redArg._lam_1
+  a value whose sharing is tested: instMonadEST._lam_0
+  a value whose sharing is tested: instMonadEST._lam_1
+  a value whose sharing is tested: instMonadEST._lam_3
+  a value whose sharing is tested: instMonadEST._lam_4
+  a value whose sharing is tested: instMonadEST._lam_5
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.Const.get?._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.contains._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.expand._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.insert._redArg
+  an argument of a primitive: String.hash._boxed
+  an argument of a primitive: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg
+  an argument of a primitive: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg._lam_0
+  an argument of a primitive: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg
+  an argument of a primitive: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg._lam_0
+  an argument of a primitive: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg
+  an argument of a primitive: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0
+  an argument of a primitive: diffWithIxE._redArg
+  an argument of a primitive: diffWithIxE._redArg._closed_1
+  an argument of a primitive: diffWithIxE._redArg._lam_0
+  an argument of a primitive: diffWithKeyAndIxE._redArg
+  an argument of a primitive: diffWithKeyAndIxE._redArg._closed_2
+  an argument of a primitive: diffWithKeyAndIxE._redArg._lam_0
+  an argument of a primitive: instDecidableEqString
+  an argument of an unknown function: EST.bind
+  an argument of an unknown function: Id.instMonad._lam_0
+  an argument of an unknown function: Id.instMonad._lam_3
+  an argument of an unknown function: Id.instMonad._lam_5
+  an argument of an unknown function: Id.instMonad._lam_6
+  an argument of an unknown function: Std.DHashMap.Internal.AssocList.contains._redArg
+  an argument of an unknown function: Std.DHashMap.Internal.AssocList.foldlM._redArg
+  an argument of an unknown function: Std.DHashMap.Internal.AssocList.get?._redArg
+  an argument of an unknown function: Std.DHashMap.Internal.AssocList.replace._redArg
+  an argument of an unknown function: Std.DHashMap.Internal.Raw₀.Const.get?._redArg
+  an argument of an unknown function: Std.DHashMap.Internal.Raw₀.contains._redArg
+  an argument of an unknown function: Std.DHashMap.Internal.Raw₀.insert._redArg
+  an argument of an unknown function: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg
+  an argument of an unknown function: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg._lam_0
+  an argument of an unknown function: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg
+  an argument of an unknown function: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg._lam_0
+  an argument of an unknown function: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg
+  an argument of an unknown function: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg._lam_0
+  an argument of an unknown function: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0
+  an argument of an unknown function: diffWithIxE._redArg._lam_0
+  an argument of an unknown function: diffWithKeyAndIxE._redArg._lam_0
+  an argument of an unknown function: diffWithKeyAndIxE._redArg._lam_1
+  an argument of an unknown function: instBEqOfDecidableEq._redArg._lam_0
+  an argument of an unknown function: instMonadEST._lam_0
+  an argument of an unknown function: instMonadEST._lam_3
+  an argument of an unknown function: instMonadEST._lam_4
+  an argument of an unknown function: instMonadEST._lam_5
+  an unknown function value: EST.bind
+  an unknown function value: Id.instMonad._lam_0
+  an unknown function value: Id.instMonad._lam_3
+  an unknown function value: Id.instMonad._lam_5
+  an unknown function value: Id.instMonad._lam_6
+  an unknown function value: Std.DHashMap.Internal.AssocList.contains._redArg
+  an unknown function value: Std.DHashMap.Internal.AssocList.foldlM._redArg
+  an unknown function value: Std.DHashMap.Internal.AssocList.get?._redArg
+  an unknown function value: Std.DHashMap.Internal.AssocList.replace._redArg
+  an unknown function value: Std.DHashMap.Internal.Raw₀.Const.get?._redArg
+  an unknown function value: Std.DHashMap.Internal.Raw₀.contains._redArg
+  an unknown function value: Std.DHashMap.Internal.Raw₀.insert._redArg
+  an unknown function value: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg
+  an unknown function value: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg._lam_0
+  an unknown function value: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg
+  an unknown function value: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg._lam_0
+  an unknown function value: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg
+  an unknown function value: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg._lam_0
+  an unknown function value: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0
+  an unknown function value: diffWithIxE._redArg
+  an unknown function value: diffWithIxE._redArg._lam_0
+  an unknown function value: diffWithKeyAndIxE._redArg
+  an unknown function value: diffWithKeyAndIxE._redArg._lam_0
+  an unknown function value: diffWithKeyAndIxE._redArg._lam_1
+  an unknown function value: diffWithKeyAndIxE._redArg._lam_2
+  an unknown function value: instBEqOfDecidableEq._redArg._lam_0
+  an unknown function value: instMonadEST._lam_0
+  an unknown function value: instMonadEST._lam_1
+  an unknown function value: instMonadEST._lam_3
+  an unknown function value: instMonadEST._lam_4
+  an unknown function value: instMonadEST._lam_5
+  captured by a closure: Std.DHashMap.Internal.AssocList.foldlM._redArg
+  captured by a closure: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg
+  captured by a closure: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg
+  captured by a closure: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg
+  captured by a closure: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg
+  captured by a closure: diffWithIxE._redArg
+  captured by a closure: diffWithKeyAndIxE._redArg
+  captured by a closure: diffWithKeyAndIxE._redArg._closed_1
+  stored in a constructor: EST.bind
+  stored in a constructor: Std.DHashMap.Internal.AssocList.replace._redArg
+  stored in a constructor: Std.DHashMap.Internal.Raw₀.insert._redArg
+  stored in a constructor: Std.DHashMap.Internal.computeSize._redArg._closed_7
+  stored in a constructor: Std.DHashMap.Internal.computeSize._redArg._closed_8
+  stored in a constructor: Std.DHashMap.Internal.computeSize._redArg._closed_9
+  stored in a constructor: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg
+  stored in a constructor: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0
+  stored in a constructor: diffWithIxE._redArg
+  stored in a constructor: diffWithIxE._redArg._lam_0
+  stored in a constructor: diffWithKeyAndIxE._redArg
+  stored in a constructor: diffWithKeyAndIxE._redArg._closed_3
+  stored in a constructor: diffWithKeyAndIxE._redArg._lam_0
+  stored in a constructor: diffWithKeyAndIxE._redArg._lam_1
+  stored in a constructor: instMonadEST._closed_6
+  stored in a constructor: instMonadEST._closed_7
+  stored in a constructor: instMonadEST._closed_9
+  stored in a constructor: instMonadEST._lam_0
+  stored in a constructor: instMonadEST._lam_1
+  stored in a constructor: instMonadEST._lam_2
+  stored in a constructor: instMonadEST._lam_3
+  stored in a constructor: instMonadEST._lam_4
+  stored in a constructor: instMonadEST._lam_5
+  the answer of a closure: EST.bind._boxed
+  the answer of a closure: Id.instMonad._lam_0
+  the answer of a closure: Id.instMonad._lam_1._boxed
+  the answer of a closure: Id.instMonad._lam_2._boxed
+  the answer of a closure: Id.instMonad._lam_3
+  the answer of a closure: Id.instMonad._lam_4._boxed
+  the answer of a closure: Id.instMonad._lam_5._boxed
+  the answer of a closure: Id.instMonad._lam_6
+  the answer of a closure: Std.DHashMap.Internal.AssocList.foldlM._redArg._lam_0
+  the answer of a closure: String.hash._boxed
+  the answer of a closure: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg._lam_0._boxed
+  the answer of a closure: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg._lam_0._boxed
+  the answer of a closure: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg._lam_0
+  the answer of a closure: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0
+  the answer of a closure: diffWithIxE._redArg._lam_0._boxed
+  the answer of a closure: diffWithKeyAndIxE._redArg._lam_0._boxed
+  the answer of a closure: diffWithKeyAndIxE._redArg._lam_1._boxed
+  the answer of a closure: diffWithKeyAndIxE._redArg._lam_2._boxed
+  the answer of a closure: instBEqOfDecidableEq._redArg._lam_0._boxed
+  the answer of a closure: instDecidableEqString._boxed
+  the answer of a closure: instMonadEST._lam_0._boxed
+  the answer of a closure: instMonadEST._lam_1._boxed
+  the answer of a closure: instMonadEST._lam_2._boxed
+  the answer of a closure: instMonadEST._lam_3._boxed
+  the answer of a closure: instMonadEST._lam_4._boxed
+  the answer of a closure: instMonadEST._lam_5._boxed
+  the answer of a declaration the file is for: Array.append
+  the answer of a declaration the file is for: Array.append._redArg
+  the answer of a declaration the file is for: Array.appendCore
+  the answer of a declaration the file is for: Array.appendCore._redArg
+  the answer of a declaration the file is for: Float.ofBinaryScientific
+  the answer of a declaration the file is for: Float.ofNat
+  the answer of a declaration the file is for: Float.ofScientific
+  the answer of a declaration the file is for: IO.Error.toString
+  the answer of a declaration the file is for: Int.repr
+  the answer of a declaration the file is for: Nat.repr
+  the answer of a declaration the file is for: Nat.reprFast
+  the answer of a declaration the file is for: diffWithIxE
+  the answer of a declaration the file is for: diffWithKeyAndIxE
+  the answer of a declaration the file is for: main
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.Const.get?._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.contains._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.expand._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.insert._redArg
+  the answer of a primitive: String.hash._boxed
+  the answer of a primitive: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg
+  the answer of a primitive: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg._lam_0
+  the answer of a primitive: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg
+  the answer of a primitive: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg._lam_0
+  the answer of a primitive: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg
+  the answer of a primitive: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0
+  the answer of a primitive: diffWithIxE._redArg
+  the answer of a primitive: diffWithIxE._redArg._closed_1
+  the answer of a primitive: diffWithIxE._redArg._lam_0
+  the answer of a primitive: diffWithKeyAndIxE._redArg
+  the answer of a primitive: diffWithKeyAndIxE._redArg._closed_2
+  the answer of a primitive: diffWithKeyAndIxE._redArg._lam_0
+  the answer of a primitive: instDecidableEqString
+  the answer of an unknown function: EST.bind
+  the answer of an unknown function: Id.instMonad._lam_0
+  the answer of an unknown function: Id.instMonad._lam_3
+  the answer of an unknown function: Id.instMonad._lam_5
+  the answer of an unknown function: Id.instMonad._lam_6
+  the answer of an unknown function: Std.DHashMap.Internal.AssocList.contains._redArg
+  the answer of an unknown function: Std.DHashMap.Internal.AssocList.foldlM._redArg
+  the answer of an unknown function: Std.DHashMap.Internal.AssocList.get?._redArg
+  the answer of an unknown function: Std.DHashMap.Internal.AssocList.replace._redArg
+  the answer of an unknown function: Std.DHashMap.Internal.Raw₀.Const.get?._redArg
+  the answer of an unknown function: Std.DHashMap.Internal.Raw₀.contains._redArg
+  the answer of an unknown function: Std.DHashMap.Internal.Raw₀.insert._redArg
+  the answer of an unknown function: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg
+  the answer of an unknown function: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg._lam_0
+  the answer of an unknown function: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg
+  the answer of an unknown function: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg._lam_0
+  the answer of an unknown function: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg
+  the answer of an unknown function: _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg._lam_0
+  the answer of an unknown function: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0
+  the answer of an unknown function: diffWithIxE._redArg
+  the answer of an unknown function: diffWithIxE._redArg._lam_0
+  the answer of an unknown function: diffWithKeyAndIxE._redArg
+  the answer of an unknown function: diffWithKeyAndIxE._redArg._lam_0
+  the answer of an unknown function: diffWithKeyAndIxE._redArg._lam_1
+  the answer of an unknown function: diffWithKeyAndIxE._redArg._lam_2
+  the answer of an unknown function: instBEqOfDecidableEq._redArg._lam_0
+  the answer of an unknown function: instMonadEST._lam_0
+  the answer of an unknown function: instMonadEST._lam_1
+  the answer of an unknown function: instMonadEST._lam_3
+  the answer of an unknown function: instMonadEST._lam_4
+  the answer of an unknown function: instMonadEST._lam_5

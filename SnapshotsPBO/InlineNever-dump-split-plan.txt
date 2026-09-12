@@ -1,0 +1,19 @@
+════ split plans
+════ foo before
+def foo : obj :=
+  let x_1 : obj := foo._closed_0;
+  ret x_1
+════ foo after
+def foo : obj :=
+  let x_1 : obj := foo._closed_0;
+  ret x_1
+════ foo parameter plan: (every parameter kept)
+════ test before
+def test : obj :=
+  let x_1 : obj := foo;
+  ret x_1
+════ test after
+def test : obj :=
+  let x_1 : obj := foo;
+  ret x_1
+════ test parameter plan: (every parameter kept)

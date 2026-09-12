@@ -1,0 +1,60 @@
+════ test1
+-- IR
+def test1 (x_1 : @& obj) : obj :=
+  case x_1 : obj of
+  Variant.foo →
+    let x_2 : tobj := proj[0] x_1;
+    let x_3 : tobj := test1._closed_0;
+    let x_4 : u8 := Int.decLt x_2 x_3;
+    dec x_3;
+    case x_4 : u8 of
+    Bool.false →
+      let x_5 : tobj := Int.natAbs x_2;
+      let x_6 : obj := Nat.reprFast x_5;
+      ret x_6
+    Bool.true →
+      let x_7 : tobj := Int.natAbs x_2;
+      let x_8 : tagged := 1;
+      let x_9 : tobj := Nat.sub x_7 x_8;
+      dec x_7;
+      let x_10 : obj := test1._closed_1;
+      let x_11 : tobj := Nat.add x_9 x_8;
+      dec x_9;
+      let x_12 : obj := Nat.reprFast x_11;
+      let x_13 : obj := String.Internal.append x_10 x_12;
+      dec x_12;
+      ret x_13
+  Variant.bar →
+    let x_14 : u8 := sproj[0, 0] x_1;
+    case x_14 : u8 of
+    Bool.false →
+      let x_15 : obj := test1._closed_2;
+      ret x_15
+    Bool.true →
+      let x_16 : obj := test1._closed_3;
+      ret x_16
+  Variant.baz →
+    let x_17 : obj := proj[0] x_1;
+    inc x_17;
+    ret x_17
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test2
+❌ ⚠️ Name 'test2' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test3
+❌ ⚠️ Name 'test3' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+

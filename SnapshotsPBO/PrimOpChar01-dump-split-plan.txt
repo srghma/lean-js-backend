@@ -1,0 +1,35 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : u32) : tobj :=
+  let x_2 : tobj := UInt32.toNat x_1;
+  ret x_2
+════ test1 after
+def test1 (x_1 : u32) : tobj :=
+  let x_2 : tobj := UInt32.toNat x_1;
+  ret x_2
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+  (no compiled code)
+════ test2 after
+  (no compiled code)
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+  (no compiled code)
+════ test3 after
+  (no compiled code)
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+  (no compiled code)
+════ test4 after
+  (no compiled code)
+════ test4 parameter plan: (every parameter kept)
+════ test5 before
+  (no compiled code)
+════ test5 after
+  (no compiled code)
+════ test5 parameter plan: (every parameter kept)
+════ test6 before
+  (no compiled code)
+════ test6 after
+  (no compiled code)
+════ test6 parameter plan: (every parameter kept)

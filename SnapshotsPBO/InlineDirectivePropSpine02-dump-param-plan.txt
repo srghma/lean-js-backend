@@ -1,0 +1,77 @@
+════ f
+❌ ⚠️ Name 'f' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ g
+❌ ⚠️ Name 'g' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test1
+-- IR
+def test1 : tagged :=
+  let x_1 : tagged := ctor_0[PUnit.unit];
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test2
+-- IR
+def test2 : tagged :=
+  let x_1 : tagged := ctor_0[PUnit.unit];
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ testImpl
+-- IR
+def testImpl (x_1 : tagged) : tagged :=
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ wat1
+❌ ⚠️ Name 'wat1' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ wat2
+❌ ⚠️ Name 'wat2' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ watUnit
+❌ ⚠️ Name 'watUnit' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ watUnit1
+❌ ⚠️ Name 'watUnit1' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+

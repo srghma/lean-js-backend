@@ -1,0 +1,76 @@
+════ 🎯 test1
+def test1 x y : String :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := Int.instDecidableEq x _x.2;
+  cases _x.3 : String
+  | Decidable.isFalse h_1 =>
+    let _x.4 := 4;
+    let _x.5 := Int.ofNat _x.4;
+    let _x.6 := Int.instDecidableEq y _x.5;
+    cases _x.6 : String
+    | Decidable.isFalse h_1 =>
+      let _x.7 := 2;
+      let _x.8 := Int.ofNat _x.7;
+      let _x.9 := Int.instDecidableEq y _x.8;
+      cases _x.9 : String
+      | Decidable.isFalse h_2 =>
+        let _x.10 := "_._";
+        return _x.10
+      | Decidable.isTrue h_2 =>
+        let _x.11 := "_.2";
+        return _x.11
+    | Decidable.isTrue h_1 =>
+      let _x.12 := "_.4";
+      return _x.12
+  | Decidable.isTrue h_1 =>
+    let _x.13 := Int.instDecidableEq y _x.2;
+    cases _x.13 : String
+    | Decidable.isFalse h_1 =>
+      let _x.14 := 2;
+      let _x.15 := Int.ofNat _x.14;
+      let _x.16 := Int.instDecidableEq y _x.15;
+      cases _x.16 : String
+      | Decidable.isFalse h_2 =>
+        let _x.17 := 3;
+        let _x.18 := Int.ofNat _x.17;
+        let _x.19 := Int.instDecidableEq y _x.18;
+        cases _x.19 : String
+        | Decidable.isFalse h_3 =>
+          let _x.20 := 4;
+          let _x.21 := Int.ofNat _x.20;
+          let _x.22 := Int.instDecidableEq y _x.21;
+          cases _x.22 : String
+          | Decidable.isFalse h_4 =>
+            let _x.23 := 5;
+            let _x.24 := Int.ofNat _x.23;
+            let _x.25 := Int.instDecidableEq y _x.24;
+            cases _x.25 : String
+            | Decidable.isFalse h_5 =>
+              let _x.26 := "_._";
+              return _x.26
+            | Decidable.isTrue h_5 =>
+              let _x.27 := "1.5";
+              return _x.27
+          | Decidable.isTrue h_4 =>
+            let _x.28 := "_.4";
+            return _x.28
+        | Decidable.isTrue h_3 =>
+          let _x.29 := "1.3";
+          return _x.29
+      | Decidable.isTrue h_2 =>
+        let _x.30 := "1.2";
+        return _x.30
+    | Decidable.isTrue h_1 =>
+      let _x.31 := "1.1";
+      return _x.31
+
+════ 📦 Int.decEq
+def Int.decEq @&a @&b : Decidable lcErased :=
+  extern
+
+════ 📦 Int.instDecidableEq
+def Int.instDecidableEq @&a @&b : Decidable lcErased :=
+  let _x.1 := Int.decEq a b;
+  return _x.1
+

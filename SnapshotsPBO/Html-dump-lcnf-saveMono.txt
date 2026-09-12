@@ -1,0 +1,60 @@
+════ 🎯 Html
+-- LCNF (saveMono): not stored
+
+════ 🎯 Elem
+-- LCNF (saveMono): not stored
+
+════ 🎯 Text
+-- LCNF (saveMono): not stored
+
+════ 🎯 article1
+-- LCNF (saveMono): not stored
+
+════ 🎯 h11
+-- LCNF (saveMono): not stored
+
+════ 🎯 h21
+-- LCNF (saveMono): not stored
+
+════ 🎯 p1
+-- LCNF (saveMono): not stored
+
+════ 🎯 section1
+-- LCNF (saveMono): not stored
+
+════ 🎯 test
+def test user : Html :=
+  let _x.1 := "section";
+  let _x.2 := "h1";
+  let _x.3 := "Posts for ";
+  let _x.4 := String.append _x.3 user;
+  let _x.5 := Html.text _x.4;
+  let _x.6 := List.nil ◾;
+  let _x.7 := List.cons ◾ _x.5 _x.6;
+  let _x.8 := Html.elem _x.2 _x.7;
+  let _x.9 := "article";
+  let _x.10 := "h2";
+  let _x.11 := "The first post";
+  let _x.12 := Html.text _x.11;
+  let _x.13 := List.cons ◾ _x.12 _x.6;
+  let _x.14 := Html.elem _x.10 _x.13;
+  let _x.15 := "p";
+  let _x.16 := "This is the first post.";
+  let _x.17 := Html.text _x.16;
+  let _x.18 := "Not much else to say.";
+  let _x.19 := Html.text _x.18;
+  let _x.20 := List.cons ◾ _x.19 _x.6;
+  let _x.21 := List.cons ◾ _x.17 _x.20;
+  let _x.22 := Html.elem _x.15 _x.21;
+  let _x.23 := List.cons ◾ _x.22 _x.6;
+  let _x.24 := List.cons ◾ _x.14 _x.23;
+  let _x.25 := Html.elem _x.9 _x.24;
+  let _x.26 := List.cons ◾ _x.25 _x.6;
+  let _x.27 := List.cons ◾ _x.8 _x.26;
+  let _x.28 := Html.elem _x.1 _x.27;
+  return _x.28
+
+════ 📦 String.append
+def String.append s @&t : String :=
+  extern
+

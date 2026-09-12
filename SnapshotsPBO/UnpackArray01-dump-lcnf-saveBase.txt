@@ -1,0 +1,39 @@
+════ 🎯 test
+def test fn1 fn2 : String :=
+  let _x.1 := String.instInhabited;
+  let _x.2 := "foo";
+  let _x.3 := "bar";
+  let _x.4 := "baz";
+  let _x.5 := PUnit.unit;
+  let _x.6 := fn2 _x.5;
+  let _x.7 := 4;
+  let _x.8 := @Array.mkEmpty _ _x.7;
+  let _x.9 := @Array.push _ _x.8 _x.2;
+  let _x.10 := @Array.push _ _x.9 _x.3;
+  let _x.11 := @Array.push _ _x.10 _x.4;
+  let array := @Array.push _ _x.11 _x.6;
+  let _x.12 := 0;
+  let _x.13 := @Array.get!Internal _ _x.1 array _x.12;
+  let _x.14 := 2;
+  let _x.15 := @Array.get!Internal _ _x.1 array _x.14;
+  let _x.16 := fn1 _x.13 _x.15;
+  return _x.16
+
+════ 📦 Array.get!Internal
+def Array.get!Internal α inst._@.Init.Prelude.3471936409._hygCtx._hyg.1 @&a @&i : α :=
+  extern
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array α :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array α :=
+  extern
+
+════ 📦 String.instInhabited
+def String.instInhabited : Inhabited String :=
+  let _x.1 := "";
+  let _x.2 := @Inhabited.mk _ _x.1;
+  return _x.2
+

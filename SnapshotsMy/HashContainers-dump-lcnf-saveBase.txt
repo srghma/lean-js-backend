@@ -1,0 +1,997 @@
+════ 🎯 test1
+def test1 xs : Nat :=
+  let _x.1 := instHashableString;
+  let _x.2 := instDecidableEqString;
+  let _x.3 := @instBEqOfDecidableEq _ _x.2;
+  let _x.4 := 0;
+  let _x.5 := 16;
+  let _x.6 := @Std.DHashMap.Internal.AssocList.nil _ _;
+  let _x.7 := @Array.replicate _ _x.5 _x.6;
+  let _x.8 := @Std.DHashMap.Raw.mk _ _ _x.4 _x.7;
+  let _x.9 := @Std.DHashMap.mk _ _ _x.3 _x.1 _x.8 ◾;
+  let m := @Std.HashMap.mk _ _ _x.3 _x.1 _x.9;
+  let _x.10 := List.forIn'.loop._at_.test1.spec_2 _x.3 _x.1 xs xs m ◾;
+  let _x.11 := _x.10 # 0;
+  let _x.12 := _x.11 # 0;
+  let _x.13 := _x.12 # 0;
+  return _x.13
+
+════ 🎯 test2
+def test2 xs : Option Nat :=
+  let _x.1 := instHashableNat;
+  let _x.2 := instDecidableEqNat;
+  let _x.3 := @instBEqOfDecidableEq _ _x.2;
+  let _x.4 := 0;
+  let _x.5 := 16;
+  let _x.6 := @Std.DHashMap.Internal.AssocList.nil _ _;
+  let _x.7 := @Array.replicate _ _x.5 _x.6;
+  let _x.8 := @Std.DHashMap.Raw.mk _ _ _x.4 _x.7;
+  let _x.9 := @Std.DHashMap.mk _ _ _x.3 _x.1 _x.8 ◾;
+  let m := @Std.HashMap.mk _ _ _x.3 _x.1 _x.9;
+  let _x.10 := List.forIn'.loop._at_.test2.spec_1 _x.3 _x.1 xs xs m ◾;
+  let _x.11 := 3;
+  let _x.12 := _x.10 # 0;
+  let _x.13 := _x.12 # 0;
+  let _x.14 := @Subtype.mk _ ◾ _x.13 ◾;
+  let _x.15 := Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2 _ _x.14 _x.11;
+  return _x.15
+
+════ 🎯 test3
+def test3 xs : Nat :=
+  let _x.1 := instHashableString;
+  let _x.2 := instDecidableEqString;
+  let _x.3 := @instBEqOfDecidableEq _ _x.2;
+  let _x.4 := 0;
+  let _x.5 := 16;
+  let _x.6 := @Std.DHashMap.Internal.AssocList.nil _ _;
+  let _x.7 := @Array.replicate _ _x.5 _x.6;
+  let _x.8 := @Std.DHashMap.Raw.mk _ _ _x.4 _x.7;
+  let _x.9 := @Std.DHashMap.mk _ _ _x.3 _x.1 _x.8 ◾;
+  let _x.10 := @Std.HashMap.mk _ _ _x.3 _x.1 _x.9;
+  let s := @Std.HashSet.mk _ _x.3 _x.1 _x.10;
+  let _x.11 := List.forIn'.loop._at_.test3.spec_1 _x.3 _x.1 xs xs s ◾;
+  let _x.12 := _x.11 # 0;
+  let _x.13 := _x.12 # 0;
+  let _x.14 := _x.13 # 0;
+  let _x.15 := _x.14 # 0;
+  let _x.16 := "a";
+  let _x.17 := @Subtype.mk _ ◾ _x.14 ◾;
+  let _x.18 := Std.DHashMap.Internal.Raw₀.contains._at_.test3.spec_2 _ _x.17 _x.16;
+  cases _x.18 : Nat
+  | Bool.false =>
+    return _x.15
+  | Bool.true =>
+    let _x.19 := 1;
+    let _x.20 := Nat.add _x.15 _x.19;
+    return _x.20
+
+════ 🎯 test4
+def test4 xs : Nat :=
+  let _x.1 := instHashableString;
+  let _x.2 := instDecidableEqString;
+  let _x.3 := @instBEqOfDecidableEq _ _x.2;
+  let _x.4 := 0;
+  let _x.5 := 16;
+  let _x.6 := @Std.DHashMap.Internal.AssocList.nil _ _;
+  let _x.7 := @Array.replicate _ _x.5 _x.6;
+  let _x.8 := @Std.DHashMap.Raw.mk _ _ _x.4 _x.7;
+  let _x.9 := @Std.DHashMap.mk _ _ _x.3 _x.1 _x.8 ◾;
+  let m := @Std.HashMap.mk _ _ _x.3 _x.1 _x.9;
+  let _x.10 := List.forIn'.loop._at_.test4.spec_0 _x.3 _x.1 xs xs m ◾;
+  let _x.11 := @Std.DHashMap.Internal.AssocList.nil _ _;
+  let _x.12 := @Array.replicate _ _x.5 _x.11;
+  let _x.13 := @Std.DHashMap.Raw.mk _ _ _x.4 _x.12;
+  let _x.14 := @Std.DHashMap.mk _ _ _x.3 _x.1 _x.13 ◾;
+  let _x.15 := @Std.HashMap.mk _ _ _x.3 _x.1 _x.14;
+  let _x.16 := @Std.HashSet.mk _ _x.3 _x.1 _x.15;
+  let _x.17 := List.forIn'.loop._at_.test4.spec_1 _x.3 _x.1 xs xs _x.16 ◾;
+  let _x.18 := _x.10 # 0;
+  let _x.19 := _x.18 # 0;
+  let _x.20 := _x.19 # 0;
+  let _x.21 := _x.17 # 0;
+  let _x.22 := _x.21 # 0;
+  let _x.23 := _x.22 # 0;
+  let _x.24 := _x.23 # 0;
+  let _x.25 := Nat.add _x.20 _x.24;
+  return _x.25
+
+════ 🎯 test5
+def test5 xs : Nat :=
+  let _x.1 := instHashableString;
+  let _x.2 := instDecidableEqString;
+  let _x.3 := @instBEqOfDecidableEq _ _x.2;
+  let _x.4 := 0;
+  let _x.5 := 16;
+  let _x.6 := @Std.DHashMap.Internal.AssocList.nil _ _;
+  let _x.7 := @Array.replicate _ _x.5 _x.6;
+  let _x.8 := @Std.DHashMap.Raw.mk _ _ _x.4 _x.7;
+  let _x.9 := @Std.DHashMap.mk _ _ _x.3 _x.1 _x.8 ◾;
+  let m := @Std.HashMap.mk _ _ _x.3 _x.1 _x.9;
+  let _x.10 := List.forIn'.loop._at_.test4.spec_0 _x.3 _x.1 xs xs m ◾;
+  let _x.11 := "a";
+  let _x.12 := _x.10 # 0;
+  let _x.13 := _x.12 # 0;
+  let _x.14 := @Subtype.mk _ ◾ _x.13 ◾;
+  let _x.15 := Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0 _ _x.14 _x.11;
+  let _x.16 := _x.15 # 0;
+  let _x.17 := "b";
+  let _x.18 := Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0 _ _x.14 _x.17;
+  let _x.19 := _x.18 # 0;
+  let _x.20 := _x.16 # 0;
+  let _x.21 := 100;
+  let _x.22 := Nat.mul _x.20 _x.21;
+  let _x.23 := _x.19 # 0;
+  let _x.24 := Nat.add _x.22 _x.23;
+  return _x.24
+
+════ 🎯 test6
+def test6 xs : List String :=
+  jp _jp.1 _y.2 : List String :=
+    let _x.3 := @List.nil _;
+    let _x.4 := List.mapTR.loop._at_.test6.spec_0 _y.2 _x.3;
+    return _x.4;
+  let _x.5 := instHashableString;
+  let _x.6 := instDecidableEqString;
+  let _x.7 := @instBEqOfDecidableEq _ _x.6;
+  let _x.8 := 0;
+  let _x.9 := 16;
+  let _x.10 := @Std.DHashMap.Internal.AssocList.nil _ _;
+  let _x.11 := @Array.replicate _ _x.9 _x.10;
+  let _x.12 := @Std.DHashMap.Raw.mk _ _ _x.8 _x.11;
+  let _x.13 := @Std.DHashMap.mk _ _ _x.7 _x.5 _x.12 ◾;
+  let m := @Std.HashMap.mk _ _ _x.7 _x.5 _x.13;
+  let _x.14 := List.forIn'.loop._at_.test4.spec_0 _x.7 _x.5 xs xs m ◾;
+  let _x.15 := _x.14 # 0;
+  let _x.16 := _x.15 # 0;
+  let _x.17 := @List.nil _;
+  let _x.18 := _x.16 # 1;
+  let _x.19 := @Array.size _ _x.18;
+  let _x.20 := Nat.decLt _x.8 _x.19;
+  cases _x.20 : List String
+  | Decidable.isFalse x.21 =>
+    goto _jp.1 _x.17
+  | Decidable.isTrue x.22 =>
+    let _x.23 := USize.ofNat _x.19;
+    let _x.24 := 0;
+    let _x.25 := Array.foldrMUnsafe.fold._at_.test6.spec_2.2 _x.18 _x.23 _x.24 _x.17;
+    goto _jp.1 _x.25
+
+════ 🎯 test7
+def test7 xs k : Nat :=
+  let _x.1 := instHashableString;
+  let _x.2 := instDecidableEqString;
+  let _x.3 := @instBEqOfDecidableEq _ _x.2;
+  let _x.4 := 0;
+  let _x.5 := 16;
+  let _x.6 := @Std.DHashMap.Internal.AssocList.nil _ _;
+  let _x.7 := @Array.replicate _ _x.5 _x.6;
+  let _x.8 := @Std.DHashMap.Raw.mk _ _ _x.4 _x.7;
+  let _x.9 := @Std.DHashMap.mk _ _ _x.3 _x.1 _x.8 ◾;
+  let m := @Std.HashMap.mk _ _ _x.3 _x.1 _x.9;
+  let _x.10 := List.forIn'.loop._at_.test7.spec_0 _x.3 _x.1 xs xs m ◾;
+  let _x.11 := _x.10 # 0;
+  let _x.12 := _x.11 # 0;
+  let _x.13 := @Subtype.mk _ ◾ _x.12 ◾;
+  let _x.14 := Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0 _ _x.13 k _x.4;
+  return _x.14
+
+════ 📦 instBEqOfDecidableEq
+def instBEqOfDecidableEq α inst.1 : BEq α :=
+  fun _f.2 a b : Bool :=
+    let _x.3 := inst.1 a b;
+    let _x.4 := Decidable.decide ◾ _x.3;
+    return _x.4;
+  let _x.5 := @BEq.mk _ _f.2;
+  return _x.5
+
+════ 📦 instDecidableEqNat
+def instDecidableEqNat @&n @&m : Decidable lcErased :=
+  let _x.1 := Nat.decEq n m;
+  return _x.1
+
+════ 📦 instDecidableEqString
+def instDecidableEqString @&s₁ @&s₂ : Decidable lcErased :=
+  let _x.1 := String.decEq s₁ s₂;
+  return _x.1
+
+════ 📦 instDecidableEqUSize
+def instDecidableEqUSize a b : Decidable lcErased :=
+  let _x.1 := USize.decEq a b;
+  return _x.1
+
+════ 📦 instHashableNat
+def instHashableNat : Hashable Nat :=
+  fun _f.1 n : UInt64 :=
+    let _x.2 := UInt64.ofNat n;
+    return _x.2;
+  let _x.3 := @Hashable.mk _ _f.1;
+  return _x.3
+
+════ 📦 instHashableString
+def instHashableString : Hashable String :=
+  let _x.1 := String.hash;
+  let _x.2 := @Hashable.mk _ _x.1;
+  return _x.2
+
+════ 📦 Array.getInternal
+def Array.getInternal α @&a @&i h : α :=
+  extern
+
+════ 📦 Array.replicate
+def Array.replicate α n v : Array α :=
+  extern
+
+════ 📦 Array.set
+def Array.set α xs @&i v h : Array α :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : α :=
+  extern
+
+════ 📦 Array.uset
+def Array.uset α xs i v h : Array α :=
+  extern
+
+════ 📦 Decidable.decide
+def Decidable.decide p h : Bool :=
+  cases h : Bool
+  | Decidable.isFalse x.1 =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Decidable.isTrue x.3 =>
+    let _x.4 := Bool.true;
+    return _x.4
+
+════ 📦 List.reverse
+def List.reverse α as : List α :=
+  let _x.1 := @List.nil _;
+  let _x.2 := @List.reverseAux _ as _x.1;
+  return _x.2
+
+════ 📦 List.reverseAux
+def List.reverseAux α x.1 x.2 : List α :=
+  cases x.1 : List α
+  | List.nil =>
+    return x.2
+  | List.cons head.3 tail.4 =>
+    let _x.5 := @List.cons _ head.3 x.2;
+    let _x.6 := @List.reverseAux _ tail.4 _x.5;
+    return _x.6
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.decLe
+def Nat.decLe @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.div
+def Nat.div @&x @&y : Nat :=
+  extern
+
+════ 📦 Nat.mul
+def Nat.mul @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 String.append
+def String.append s @&t : String :=
+  extern
+
+════ 📦 String.decEq
+def String.decEq @&s₁ @&s₂ : Decidable lcErased :=
+  extern
+
+════ 📦 String.hash
+def String.hash @&s : UInt64 :=
+  extern
+
+════ 📦 String.length
+def String.length @&b : Nat :=
+  extern
+
+════ 📦 UInt64.ofNat
+def UInt64.ofNat @&n : UInt64 :=
+  extern
+
+════ 📦 UInt64.shiftRight
+def UInt64.shiftRight a b : UInt64 :=
+  extern
+
+════ 📦 UInt64.toUSize
+def UInt64.toUSize a : USize :=
+  extern
+
+════ 📦 UInt64.xor
+def UInt64.xor a b : UInt64 :=
+  extern
+
+════ 📦 USize.decEq
+def USize.decEq a b : Decidable lcErased :=
+  extern
+
+════ 📦 USize.land
+def USize.land a b : USize :=
+  extern
+
+════ 📦 USize.ofNat
+def USize.ofNat @&n : USize :=
+  extern
+
+════ 📦 USize.sub
+def USize.sub a b : USize :=
+  extern
+
+════ 📦 List.forIn'.loop._at_.test1.spec_2
+def List.forIn'.loop._at_.test1.spec_2 _x.1 _x.2 as x.3 x.4 x.5 : Std.HashMap String Nat :=
+  cases x.3 : Std.HashMap String Nat
+  | List.nil =>
+    return x.4
+  | List.cons head.6 tail.7 =>
+    let _x.8 := 0;
+    let _x.9 := x.4 # 0;
+    let _x.10 := _x.9 # 0;
+    let _x.11 := @Subtype.mk _ ◾ _x.10 ◾;
+    let _x.12 := Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0 _ _x.11 head.6 _x.8;
+    let _x.13 := 1;
+    let _x.14 := Nat.add _x.12 _x.13;
+    let _x.15 := Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1 _ _x.11 head.6 _x.14;
+    let _x.16 := _x.15 # 0;
+    let _x.17 := @Std.DHashMap.mk _ _ _x.1 _x.2 _x.16 ◾;
+    let _x.18 := @Std.HashMap.mk _ _ _x.1 _x.2 _x.17;
+    let _x.19 := List.forIn'.loop._at_.test1.spec_2 _x.1 _x.2 as tail.7 _x.18 ◾;
+    return _x.19
+
+════ 📦 List.forIn'.loop._at_.test2.spec_1
+def List.forIn'.loop._at_.test2.spec_1 _x.1 _x.2 as x.3 x.4 x.5 : Std.HashMap Nat Nat :=
+  cases x.3 : Std.HashMap Nat Nat
+  | List.nil =>
+    return x.4
+  | List.cons head.6 tail.7 =>
+    let _x.8 := Nat.mul head.6 head.6;
+    let _x.9 := x.4 # 0;
+    let _x.10 := _x.9 # 0;
+    let _x.11 := @Subtype.mk _ ◾ _x.10 ◾;
+    let _x.12 := Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0 _ _x.11 head.6 _x.8;
+    let _x.13 := _x.12 # 0;
+    let _x.14 := @Std.DHashMap.mk _ _ _x.1 _x.2 _x.13 ◾;
+    let _x.15 := @Std.HashMap.mk _ _ _x.1 _x.2 _x.14;
+    let _x.16 := List.forIn'.loop._at_.test2.spec_1 _x.1 _x.2 as tail.7 _x.15 ◾;
+    return _x.16
+
+════ 📦 List.forIn'.loop._at_.test3.spec_1
+def List.forIn'.loop._at_.test3.spec_1 _x.1 _x.2 as x.3 x.4 x.5 : Std.HashSet String :=
+  cases x.3 : Std.HashSet String
+  | List.nil =>
+    return x.4
+  | List.cons head.6 tail.7 =>
+    let _x.8 := x.4 # 0;
+    let _x.9 := PUnit.unit;
+    let _x.10 := _x.8 # 0;
+    let _x.11 := _x.10 # 0;
+    let _x.12 := @Subtype.mk _ ◾ _x.11 ◾;
+    let _x.13 := Std.DHashMap.Internal.Raw₀.insertIfNew._at_.test3.spec_0 _ _x.12 head.6 _x.9;
+    let _x.14 := _x.13 # 0;
+    let _x.15 := @Std.DHashMap.mk _ _ _x.1 _x.2 _x.14 ◾;
+    let _x.16 := @Std.HashMap.mk _ _ _x.1 _x.2 _x.15;
+    let _x.17 := @Std.HashSet.mk _ _x.1 _x.2 _x.16;
+    let _x.18 := List.forIn'.loop._at_.test3.spec_1 _x.1 _x.2 as tail.7 _x.17 ◾;
+    return _x.18
+
+════ 📦 List.forIn'.loop._at_.test4.spec_0
+def List.forIn'.loop._at_.test4.spec_0 _x.1 _x.2 as x.3 x.4 x.5 : Std.HashMap String Nat :=
+  cases x.3 : Std.HashMap String Nat
+  | List.nil =>
+    return x.4
+  | List.cons head.6 tail.7 =>
+    let _x.8 := 1;
+    let _x.9 := x.4 # 0;
+    let _x.10 := _x.9 # 0;
+    let _x.11 := @Subtype.mk _ ◾ _x.10 ◾;
+    let _x.12 := Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1 _ _x.11 head.6 _x.8;
+    let _x.13 := _x.12 # 0;
+    let _x.14 := @Std.DHashMap.mk _ _ _x.1 _x.2 _x.13 ◾;
+    let _x.15 := @Std.HashMap.mk _ _ _x.1 _x.2 _x.14;
+    let _x.16 := List.forIn'.loop._at_.test4.spec_0 _x.1 _x.2 as tail.7 _x.15 ◾;
+    return _x.16
+
+════ 📦 List.forIn'.loop._at_.test4.spec_1
+def List.forIn'.loop._at_.test4.spec_1 _x.1 _x.2 as x.3 x.4 x.5 : Std.HashSet String :=
+  cases x.3 : Std.HashSet String
+  | List.nil =>
+    return x.4
+  | List.cons head.6 tail.7 =>
+    let _x.8 := "!";
+    let _x.9 := String.append head.6 _x.8;
+    let _x.10 := x.4 # 0;
+    let _x.11 := PUnit.unit;
+    let _x.12 := _x.10 # 0;
+    let _x.13 := _x.12 # 0;
+    let _x.14 := @Subtype.mk _ ◾ _x.13 ◾;
+    let _x.15 := Std.DHashMap.Internal.Raw₀.insertIfNew._at_.test3.spec_0 _ _x.14 _x.9 _x.11;
+    let _x.16 := _x.15 # 0;
+    let _x.17 := @Std.DHashMap.mk _ _ _x.1 _x.2 _x.16 ◾;
+    let _x.18 := @Std.HashMap.mk _ _ _x.1 _x.2 _x.17;
+    let _x.19 := @Std.HashSet.mk _ _x.1 _x.2 _x.18;
+    let _x.20 := List.forIn'.loop._at_.test4.spec_1 _x.1 _x.2 as tail.7 _x.19 ◾;
+    return _x.20
+
+════ 📦 List.forIn'.loop._at_.test7.spec_0
+def List.forIn'.loop._at_.test7.spec_0 _x.1 _x.2 as x.3 x.4 x.5 : Std.HashMap String Nat :=
+  cases x.3 : Std.HashMap String Nat
+  | List.nil =>
+    return x.4
+  | List.cons head.6 tail.7 =>
+    let _x.8 := String.length head.6;
+    let _x.9 := x.4 # 0;
+    let _x.10 := _x.9 # 0;
+    let _x.11 := @Subtype.mk _ ◾ _x.10 ◾;
+    let _x.12 := Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1 _ _x.11 head.6 _x.8;
+    let _x.13 := _x.12 # 0;
+    let _x.14 := @Std.DHashMap.mk _ _ _x.1 _x.2 _x.13 ◾;
+    let _x.15 := @Std.HashMap.mk _ _ _x.1 _x.2 _x.14;
+    let _x.16 := List.forIn'.loop._at_.test7.spec_0 _x.1 _x.2 as tail.7 _x.15 ◾;
+    return _x.16
+
+════ 📦 List.mapTR.loop._at_.test6.spec_0
+def List.mapTR.loop._at_.test6.spec_0 x.1 x.2 : List String :=
+  cases x.1 : List String
+  | List.nil =>
+    let _x.3 := @List.reverse _ x.2;
+    return _x.3
+  | List.cons head.4 tail.5 =>
+    let _x.6 := head.4 # 0;
+    let _x.7 := @List.cons _ _x.6 x.2;
+    let _x.8 := List.mapTR.loop._at_.test6.spec_0 tail.5 _x.7;
+    return _x.8
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test6.spec_2
+def _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test6.spec_2 as i stop b : List (Prod String Nat) :=
+  let _x.1 := instDecidableEqUSize i stop;
+  let _x.2 := Decidable.decide ◾ _x.1;
+  cases _x.2 : List (Prod String Nat)
+  | Bool.false =>
+    let _x.3 := 1;
+    let _x.4 := USize.sub i _x.3;
+    let _x.5 := @Array.uget _ as _x.4 ◾;
+    let _x.6 := Std.DHashMap.Internal.AssocList.foldrM._at_.test6.spec_1 b _x.5;
+    let _x.7 := Array.foldrMUnsafe.fold._at_.test6.spec_2.2 as _x.4 stop _x.6;
+    return _x.7
+  | Bool.true =>
+    return b
+
+════ 📦 Std.DHashMap.Internal.AssocList.foldrM._at_.test6.spec_1
+def Std.DHashMap.Internal.AssocList.foldrM._at_.test6.spec_1 x.1 x.2 : List (Prod String Nat) :=
+  cases x.2 : List (Prod String Nat)
+  | Std.DHashMap.Internal.AssocList.nil =>
+    return x.1
+  | Std.DHashMap.Internal.AssocList.cons key.3 value.4 tail.5 =>
+    let _x.6 := Std.DHashMap.Internal.AssocList.foldrM._at_.test6.spec_1 x.1 tail.5;
+    let _x.7 := @Prod.mk _ _ key.3 value.4;
+    let _x.8 := @List.cons _ _x.7 _x.6;
+    return _x.8
+
+════ 📦 Std.DHashMap.Internal.Raw₀.contains._at_.test3.spec_2
+def Std.DHashMap.Internal.Raw₀.contains._at_.test3.spec_2 β m a : Bool :=
+  cases m : Bool
+  | Subtype.mk val.1 property.2 =>
+    cases val.1 : Bool
+    | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+      let _x.5 := @Array.size _ buckets.4;
+      let _x.6 := String.hash a;
+      let _x.7 := 32;
+      let _x.8 := UInt64.shiftRight _x.6 _x.7;
+      let fold := UInt64.xor _x.6 _x.8;
+      let _x.9 := 16;
+      let _x.10 := UInt64.shiftRight fold _x.9;
+      let _x.11 := UInt64.xor fold _x.10;
+      let _x.12 := UInt64.toUSize _x.11;
+      let _x.13 := USize.ofNat _x.5;
+      let _x.14 := 1;
+      let _x.15 := USize.sub _x.13 _x.14;
+      let _x.16 := USize.land _x.12 _x.15;
+      let _x.17 := @Array.uget _ buckets.4 _x.16 ◾;
+      let _x.18 := Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_2 _ a _x.17;
+      return _x.18
+
+════ 📦 Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0
+def Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0 β m a : Subtype lcErased :=
+  cases m : Subtype lcErased
+  | Subtype.mk val.1 property.2 =>
+    cases val.1 : Subtype lcErased
+    | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+      let _x.5 := @Array.size _ buckets.4;
+      let _x.6 := String.hash a;
+      let _x.7 := 32;
+      let _x.8 := UInt64.shiftRight _x.6 _x.7;
+      let fold := UInt64.xor _x.6 _x.8;
+      let _x.9 := 16;
+      let _x.10 := UInt64.shiftRight fold _x.9;
+      let _x.11 := UInt64.xor fold _x.10;
+      let _x.12 := UInt64.toUSize _x.11;
+      let _x.13 := USize.ofNat _x.5;
+      let _x.14 := 1;
+      let _x.15 := USize.sub _x.13 _x.14;
+      let _x.16 := USize.land _x.12 _x.15;
+      let bkt := @Array.uget _ buckets.4 _x.16 ◾;
+      let _x.17 := Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_2 _ a bkt;
+      cases _x.17 : Subtype lcErased
+      | Bool.false =>
+        let _x.18 := @Subtype.mk _ ◾ val.1 ◾;
+        return _x.18
+      | Bool.true =>
+        let _x.19 := @Std.DHashMap.Internal.AssocList.nil _ _;
+        let buckets' := @Array.uset _ buckets.4 _x.16 _x.19 ◾;
+        let _x.20 := 1;
+        let _x.21 := Nat.sub size.3 _x.20;
+        let _x.22 := Std.DHashMap.Internal.AssocList.erase._at_.Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0.spec_0 _ a bkt;
+        let _x.23 := @Array.uset _ buckets' _x.16 _x.22 ◾;
+        let _x.24 := @Std.DHashMap.Raw.mk _ _ _x.21 _x.23;
+        let _x.25 := @Subtype.mk _ ◾ _x.24 ◾;
+        return _x.25
+
+════ 📦 Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1
+def Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1 β m a b : Subtype lcErased :=
+  cases m : Subtype lcErased
+  | Subtype.mk val.1 property.2 =>
+    cases val.1 : Subtype lcErased
+    | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+      let _x.5 := @Array.size _ buckets.4;
+      let _x.6 := String.hash a;
+      let _x.7 := 32;
+      let _x.8 := UInt64.shiftRight _x.6 _x.7;
+      let fold := UInt64.xor _x.6 _x.8;
+      let _x.9 := 16;
+      let _x.10 := UInt64.shiftRight fold _x.9;
+      let _x.11 := UInt64.xor fold _x.10;
+      let _x.12 := UInt64.toUSize _x.11;
+      let _x.13 := USize.ofNat _x.5;
+      let _x.14 := 1;
+      let _x.15 := USize.sub _x.13 _x.14;
+      let _x.16 := USize.land _x.12 _x.15;
+      let bkt := @Array.uget _ buckets.4 _x.16 ◾;
+      let _x.17 := Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_2 _ a bkt;
+      cases _x.17 : Subtype lcErased
+      | Bool.false =>
+        let _x.18 := 1;
+        let size' := Nat.add size.3 _x.18;
+        let _x.19 := @Std.DHashMap.Internal.AssocList.cons _ _ a b bkt;
+        let buckets' := @Array.uset _ buckets.4 _x.16 _x.19 ◾;
+        let _x.20 := 4;
+        let _x.21 := Nat.mul size' _x.20;
+        let _x.22 := 3;
+        let _x.23 := Nat.div _x.21 _x.22;
+        let _x.24 := @Array.size _ buckets';
+        let _x.25 := Nat.decLe _x.23 _x.24;
+        cases _x.25 : Subtype lcErased
+        | Decidable.isFalse x.26 =>
+          let _x.27 := @Subtype.mk _ ◾ buckets' ◾;
+          let _x.28 := Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3 _ _x.27;
+          cases _x.28 : Subtype lcErased
+          | Subtype.mk val.29 property.30 =>
+            let _x.31 := @Std.DHashMap.Raw.mk _ _ size' val.29;
+            let _x.32 := @Subtype.mk _ ◾ _x.31 ◾;
+            return _x.32
+        | Decidable.isTrue x.33 =>
+          let _x.34 := @Std.DHashMap.Raw.mk _ _ size' buckets';
+          let _x.35 := @Subtype.mk _ ◾ _x.34 ◾;
+          return _x.35
+      | Bool.true =>
+        let _x.36 := @Std.DHashMap.Internal.AssocList.nil _ _;
+        let buckets' := @Array.uset _ buckets.4 _x.16 _x.36 ◾;
+        let _x.37 := Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_4 _ a b bkt;
+        let _x.38 := @Array.uset _ buckets' _x.16 _x.37 ◾;
+        let _x.39 := @Std.DHashMap.Raw.mk _ _ size.3 _x.38;
+        let _x.40 := @Subtype.mk _ ◾ _x.39 ◾;
+        return _x.40
+
+════ 📦 Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0
+def Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0 β m a b : Subtype lcErased :=
+  cases m : Subtype lcErased
+  | Subtype.mk val.1 property.2 =>
+    cases val.1 : Subtype lcErased
+    | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+      let _x.5 := @Array.size _ buckets.4;
+      let _x.6 := UInt64.ofNat a;
+      let _x.7 := 32;
+      let _x.8 := UInt64.shiftRight _x.6 _x.7;
+      let fold := UInt64.xor _x.6 _x.8;
+      let _x.9 := 16;
+      let _x.10 := UInt64.shiftRight fold _x.9;
+      let _x.11 := UInt64.xor fold _x.10;
+      let _x.12 := UInt64.toUSize _x.11;
+      let _x.13 := USize.ofNat _x.5;
+      let _x.14 := 1;
+      let _x.15 := USize.sub _x.13 _x.14;
+      let _x.16 := USize.land _x.12 _x.15;
+      let bkt := @Array.uget _ buckets.4 _x.16 ◾;
+      let _x.17 := Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_0 _ a bkt;
+      cases _x.17 : Subtype lcErased
+      | Bool.false =>
+        let _x.18 := 1;
+        let size' := Nat.add size.3 _x.18;
+        let _x.19 := @Std.DHashMap.Internal.AssocList.cons _ _ a b bkt;
+        let buckets' := @Array.uset _ buckets.4 _x.16 _x.19 ◾;
+        let _x.20 := 4;
+        let _x.21 := Nat.mul size' _x.20;
+        let _x.22 := 3;
+        let _x.23 := Nat.div _x.21 _x.22;
+        let _x.24 := @Array.size _ buckets';
+        let _x.25 := Nat.decLe _x.23 _x.24;
+        cases _x.25 : Subtype lcErased
+        | Decidable.isFalse x.26 =>
+          let _x.27 := @Subtype.mk _ ◾ buckets' ◾;
+          let _x.28 := Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1 _ _x.27;
+          cases _x.28 : Subtype lcErased
+          | Subtype.mk val.29 property.30 =>
+            let _x.31 := @Std.DHashMap.Raw.mk _ _ size' val.29;
+            let _x.32 := @Subtype.mk _ ◾ _x.31 ◾;
+            return _x.32
+        | Decidable.isTrue x.33 =>
+          let _x.34 := @Std.DHashMap.Raw.mk _ _ size' buckets';
+          let _x.35 := @Subtype.mk _ ◾ _x.34 ◾;
+          return _x.35
+      | Bool.true =>
+        let _x.36 := @Std.DHashMap.Internal.AssocList.nil _ _;
+        let buckets' := @Array.uset _ buckets.4 _x.16 _x.36 ◾;
+        let _x.37 := Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_2 _ a b bkt;
+        let _x.38 := @Array.uset _ buckets' _x.16 _x.37 ◾;
+        let _x.39 := @Std.DHashMap.Raw.mk _ _ size.3 _x.38;
+        let _x.40 := @Subtype.mk _ ◾ _x.39 ◾;
+        return _x.40
+
+════ 📦 Std.DHashMap.Internal.Raw₀.insertIfNew._at_.test3.spec_0
+def Std.DHashMap.Internal.Raw₀.insertIfNew._at_.test3.spec_0 β m a b : Subtype lcErased :=
+  cases m : Subtype lcErased
+  | Subtype.mk val.1 property.2 =>
+    cases val.1 : Subtype lcErased
+    | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+      let _x.5 := @Array.size _ buckets.4;
+      let _x.6 := String.hash a;
+      let _x.7 := 32;
+      let _x.8 := UInt64.shiftRight _x.6 _x.7;
+      let fold := UInt64.xor _x.6 _x.8;
+      let _x.9 := 16;
+      let _x.10 := UInt64.shiftRight fold _x.9;
+      let _x.11 := UInt64.xor fold _x.10;
+      let _x.12 := UInt64.toUSize _x.11;
+      let _x.13 := USize.ofNat _x.5;
+      let _x.14 := 1;
+      let _x.15 := USize.sub _x.13 _x.14;
+      let _x.16 := USize.land _x.12 _x.15;
+      let bkt := @Array.uget _ buckets.4 _x.16 ◾;
+      let _x.17 := Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_2 _ a bkt;
+      cases _x.17 : Subtype lcErased
+      | Bool.false =>
+        let _x.18 := 1;
+        let size' := Nat.add size.3 _x.18;
+        let _x.19 := @Std.DHashMap.Internal.AssocList.cons _ _ a b bkt;
+        let buckets' := @Array.uset _ buckets.4 _x.16 _x.19 ◾;
+        let _x.20 := 4;
+        let _x.21 := Nat.mul size' _x.20;
+        let _x.22 := 3;
+        let _x.23 := Nat.div _x.21 _x.22;
+        let _x.24 := @Array.size _ buckets';
+        let _x.25 := Nat.decLe _x.23 _x.24;
+        cases _x.25 : Subtype lcErased
+        | Decidable.isFalse x.26 =>
+          let _x.27 := @Subtype.mk _ ◾ buckets' ◾;
+          let _x.28 := Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3 _ _x.27;
+          cases _x.28 : Subtype lcErased
+          | Subtype.mk val.29 property.30 =>
+            let _x.31 := @Std.DHashMap.Raw.mk _ _ size' val.29;
+            let _x.32 := @Subtype.mk _ ◾ _x.31 ◾;
+            return _x.32
+        | Decidable.isTrue x.33 =>
+          let _x.34 := @Std.DHashMap.Raw.mk _ _ size' buckets';
+          let _x.35 := @Subtype.mk _ ◾ _x.34 ◾;
+          return _x.35
+      | Bool.true =>
+        let _x.36 := @Subtype.mk _ ◾ val.1 ◾;
+        return _x.36
+
+════ 📦 Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2
+def Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2 β m a : Option β :=
+  cases m : Option β
+  | Subtype.mk val.1 property.2 =>
+    cases val.1 : Option β
+    | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+      let _x.5 := @Array.size _ buckets.4;
+      let _x.6 := UInt64.ofNat a;
+      let _x.7 := 32;
+      let _x.8 := UInt64.shiftRight _x.6 _x.7;
+      let fold := UInt64.xor _x.6 _x.8;
+      let _x.9 := 16;
+      let _x.10 := UInt64.shiftRight fold _x.9;
+      let _x.11 := UInt64.xor fold _x.10;
+      let _x.12 := UInt64.toUSize _x.11;
+      let _x.13 := USize.ofNat _x.5;
+      let _x.14 := 1;
+      let _x.15 := USize.sub _x.13 _x.14;
+      let _x.16 := USize.land _x.12 _x.15;
+      let _x.17 := @Array.uget _ buckets.4 _x.16 ◾;
+      let _x.18 := Std.DHashMap.Internal.AssocList.get?._at_.Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2.spec_5 _ a _x.17;
+      return _x.18
+
+════ 📦 Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0
+def Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0 β m a fallback : β :=
+  cases m : β
+  | Subtype.mk val.1 property.2 =>
+    cases val.1 : β
+    | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+      let _x.5 := @Array.size _ buckets.4;
+      let _x.6 := String.hash a;
+      let _x.7 := 32;
+      let _x.8 := UInt64.shiftRight _x.6 _x.7;
+      let fold := UInt64.xor _x.6 _x.8;
+      let _x.9 := 16;
+      let _x.10 := UInt64.shiftRight fold _x.9;
+      let _x.11 := UInt64.xor fold _x.10;
+      let _x.12 := UInt64.toUSize _x.11;
+      let _x.13 := USize.ofNat _x.5;
+      let _x.14 := 1;
+      let _x.15 := USize.sub _x.13 _x.14;
+      let _x.16 := USize.land _x.12 _x.15;
+      let _x.17 := @Array.uget _ buckets.4 _x.16 ◾;
+      let _x.18 := Std.DHashMap.Internal.AssocList.getD._at_.Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0.spec_0 _ a fallback _x.17;
+      return _x.18
+
+════ 📦 Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_2
+def Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_2 β a x.1 : Bool :=
+  cases x.1 : Bool
+  | Std.DHashMap.Internal.AssocList.nil =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Std.DHashMap.Internal.AssocList.cons key.3 value.4 tail.5 =>
+    let _x.6 := instDecidableEqString key.3 a;
+    let _x.7 := Decidable.decide ◾ _x.6;
+    cases _x.7 : Bool
+    | Bool.false =>
+      let _x.8 := Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_2 _ a tail.5;
+      return _x.8
+    | Bool.true =>
+      return _x.7
+
+════ 📦 Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_0
+def Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_0 β a x.1 : Bool :=
+  cases x.1 : Bool
+  | Std.DHashMap.Internal.AssocList.nil =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Std.DHashMap.Internal.AssocList.cons key.3 value.4 tail.5 =>
+    let _x.6 := instDecidableEqNat key.3 a;
+    let _x.7 := Decidable.decide ◾ _x.6;
+    cases _x.7 : Bool
+    | Bool.false =>
+      let _x.8 := Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_0 _ a tail.5;
+      return _x.8
+    | Bool.true =>
+      return _x.7
+
+════ 📦 Std.DHashMap.Internal.AssocList.erase._at_.Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0.spec_0
+def Std.DHashMap.Internal.AssocList.erase._at_.Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0.spec_0 β a x.1 : Std.DHashMap.Internal.AssocList
+  String β :=
+  cases x.1 : Std.DHashMap.Internal.AssocList String β
+  | Std.DHashMap.Internal.AssocList.nil =>
+    return x.1
+  | Std.DHashMap.Internal.AssocList.cons key.2 value.3 tail.4 =>
+    let _x.5 := instDecidableEqString key.2 a;
+    let _x.6 := Decidable.decide ◾ _x.5;
+    cases _x.6 : Std.DHashMap.Internal.AssocList String β
+    | Bool.false =>
+      let _x.7 := Std.DHashMap.Internal.AssocList.erase._at_.Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0.spec_0 _ a tail.4;
+      let _x.8 := @Std.DHashMap.Internal.AssocList.cons _ _ key.2 value.3 _x.7;
+      return _x.8
+    | Bool.true =>
+      return tail.4
+
+════ 📦 Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_4
+def Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_4 β a b x.1 : Std.DHashMap.Internal.AssocList
+  String β :=
+  cases x.1 : Std.DHashMap.Internal.AssocList String β
+  | Std.DHashMap.Internal.AssocList.nil =>
+    return x.1
+  | Std.DHashMap.Internal.AssocList.cons key.2 value.3 tail.4 =>
+    let _x.5 := instDecidableEqString key.2 a;
+    let _x.6 := Decidable.decide ◾ _x.5;
+    cases _x.6 : Std.DHashMap.Internal.AssocList String β
+    | Bool.false =>
+      let _x.7 := Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_4 _ a b tail.4;
+      let _x.8 := @Std.DHashMap.Internal.AssocList.cons _ _ key.2 value.3 _x.7;
+      return _x.8
+    | Bool.true =>
+      let _x.9 := @Std.DHashMap.Internal.AssocList.cons _ _ a b tail.4;
+      return _x.9
+
+════ 📦 Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_2
+def Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_2 β a b x.1 : Std.DHashMap.Internal.AssocList
+  Nat β :=
+  cases x.1 : Std.DHashMap.Internal.AssocList Nat β
+  | Std.DHashMap.Internal.AssocList.nil =>
+    return x.1
+  | Std.DHashMap.Internal.AssocList.cons key.2 value.3 tail.4 =>
+    let _x.5 := instDecidableEqNat key.2 a;
+    let _x.6 := Decidable.decide ◾ _x.5;
+    cases _x.6 : Std.DHashMap.Internal.AssocList Nat β
+    | Bool.false =>
+      let _x.7 := Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_2 _ a b tail.4;
+      let _x.8 := @Std.DHashMap.Internal.AssocList.cons _ _ key.2 value.3 _x.7;
+      return _x.8
+    | Bool.true =>
+      let _x.9 := @Std.DHashMap.Internal.AssocList.cons _ _ a b tail.4;
+      return _x.9
+
+════ 📦 Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3
+def Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3 β data : Subtype
+  lcErased :=
+  cases data : Subtype lcErased
+  | Subtype.mk val.1 property.2 =>
+    let _x.3 := @Array.size _ val.1;
+    let _x.4 := 2;
+    let nbuckets := Nat.mul _x.3 _x.4;
+    let _x.5 := 0;
+    let _x.6 := @Std.DHashMap.Internal.AssocList.nil _ _;
+    let _x.7 := @Array.replicate _ nbuckets _x.6;
+    let _x.8 := @Subtype.mk _ ◾ _x.7 ◾;
+    let _x.9 := Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.2 _ _x.5 val.1 _x.8;
+    return _x.9
+
+════ 📦 Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1
+def Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1 β data : Subtype
+  lcErased :=
+  cases data : Subtype lcErased
+  | Subtype.mk val.1 property.2 =>
+    let _x.3 := @Array.size _ val.1;
+    let _x.4 := 2;
+    let nbuckets := Nat.mul _x.3 _x.4;
+    let _x.5 := 0;
+    let _x.6 := @Std.DHashMap.Internal.AssocList.nil _ _;
+    let _x.7 := @Array.replicate _ nbuckets _x.6;
+    let _x.8 := @Subtype.mk _ ◾ _x.7 ◾;
+    let _x.9 := Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.2 _ _x.5 val.1 _x.8;
+    return _x.9
+
+════ 📦 Std.DHashMap.Internal.AssocList.get?._at_.Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2.spec_5
+def Std.DHashMap.Internal.AssocList.get?._at_.Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2.spec_5 β a x.1 : Option
+  β :=
+  cases x.1 : Option β
+  | Std.DHashMap.Internal.AssocList.nil =>
+    let _x.2 := @Option.none _;
+    return _x.2
+  | Std.DHashMap.Internal.AssocList.cons key.3 value.4 tail.5 =>
+    let _x.6 := instDecidableEqNat key.3 a;
+    let _x.7 := Decidable.decide ◾ _x.6;
+    cases _x.7 : Option β
+    | Bool.false =>
+      let _x.8 := Std.DHashMap.Internal.AssocList.get?._at_.Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2.spec_5 _ a tail.5;
+      return _x.8
+    | Bool.true =>
+      let _x.9 := @Option.some _ value.4;
+      return _x.9
+
+════ 📦 Std.DHashMap.Internal.AssocList.getD._at_.Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0.spec_0
+def Std.DHashMap.Internal.AssocList.getD._at_.Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0.spec_0 β a fallback x.1 : β :=
+  cases x.1 : β
+  | Std.DHashMap.Internal.AssocList.nil =>
+    return fallback
+  | Std.DHashMap.Internal.AssocList.cons key.2 value.3 tail.4 =>
+    let _x.5 := instDecidableEqString key.2 a;
+    let _x.6 := Decidable.decide ◾ _x.5;
+    cases _x.6 : β
+    | Bool.false =>
+      let _x.7 := Std.DHashMap.Internal.AssocList.getD._at_.Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0.spec_0 _ a fallback tail.4;
+      return _x.7
+    | Bool.true =>
+      return value.3
+
+════ 📦 _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4
+def _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4 β i source target : Subtype
+  lcErased :=
+  let _x.1 := @Array.size _ source;
+  let _x.2 := Nat.decLt i _x.1;
+  cases _x.2 : Subtype lcErased
+  | Decidable.isFalse h =>
+    return target
+  | Decidable.isTrue h =>
+    let es := @Array.getInternal _ source i ◾;
+    let _x.3 := @Std.DHashMap.Internal.AssocList.nil _ _;
+    let source := @Array.set _ source i _x.3 ◾;
+    let target := Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.spec_6 β target es;
+    let _x.4 := 1;
+    let _x.5 := Nat.add i _x.4;
+    let _x.6 := Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.2 _ _x.5 source target;
+    return _x.6
+
+════ 📦 _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2
+def _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2 β i source target : Subtype
+  lcErased :=
+  let _x.1 := @Array.size _ source;
+  let _x.2 := Nat.decLt i _x.1;
+  cases _x.2 : Subtype lcErased
+  | Decidable.isFalse h =>
+    return target
+  | Decidable.isTrue h =>
+    let es := @Array.getInternal _ source i ◾;
+    let _x.3 := @Std.DHashMap.Internal.AssocList.nil _ _;
+    let source := @Array.set _ source i _x.3 ◾;
+    let target := Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.spec_5 β target es;
+    let _x.4 := 1;
+    let _x.5 := Nat.add i _x.4;
+    let _x.6 := Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.2 _ _x.5 source target;
+    return _x.6
+
+════ 📦 Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.spec_6
+def Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.spec_6 β x.1 x.2 : Subtype
+  lcErased :=
+  cases x.2 : Subtype lcErased
+  | Std.DHashMap.Internal.AssocList.nil =>
+    return x.1
+  | Std.DHashMap.Internal.AssocList.cons key.3 value.4 tail.5 =>
+    cases x.1 : Subtype lcErased
+    | Subtype.mk val.6 property.7 =>
+      let _x.8 := @Array.size _ val.6;
+      let _x.9 := String.hash key.3;
+      let _x.10 := 32;
+      let _x.11 := UInt64.shiftRight _x.9 _x.10;
+      let fold := UInt64.xor _x.9 _x.11;
+      let _x.12 := 16;
+      let _x.13 := UInt64.shiftRight fold _x.12;
+      let _x.14 := UInt64.xor fold _x.13;
+      let _x.15 := UInt64.toUSize _x.14;
+      let _x.16 := USize.ofNat _x.8;
+      let _x.17 := 1;
+      let _x.18 := USize.sub _x.16 _x.17;
+      let _x.19 := USize.land _x.15 _x.18;
+      let _x.20 := @Array.uget _ val.6 _x.19 ◾;
+      let _x.21 := @Std.DHashMap.Internal.AssocList.cons _ _ key.3 value.4 _x.20;
+      let _x.22 := @Array.uset _ val.6 _x.19 _x.21 ◾;
+      let _x.23 := @Subtype.mk _ ◾ _x.22 ◾;
+      let _x.24 := Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.spec_6 β _x.23 tail.5;
+      return _x.24
+
+════ 📦 Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.spec_5
+def Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.spec_5 β x.1 x.2 : Subtype
+  lcErased :=
+  cases x.2 : Subtype lcErased
+  | Std.DHashMap.Internal.AssocList.nil =>
+    return x.1
+  | Std.DHashMap.Internal.AssocList.cons key.3 value.4 tail.5 =>
+    cases x.1 : Subtype lcErased
+    | Subtype.mk val.6 property.7 =>
+      let _x.8 := @Array.size _ val.6;
+      let _x.9 := UInt64.ofNat key.3;
+      let _x.10 := 32;
+      let _x.11 := UInt64.shiftRight _x.9 _x.10;
+      let fold := UInt64.xor _x.9 _x.11;
+      let _x.12 := 16;
+      let _x.13 := UInt64.shiftRight fold _x.12;
+      let _x.14 := UInt64.xor fold _x.13;
+      let _x.15 := UInt64.toUSize _x.14;
+      let _x.16 := USize.ofNat _x.8;
+      let _x.17 := 1;
+      let _x.18 := USize.sub _x.16 _x.17;
+      let _x.19 := USize.land _x.15 _x.18;
+      let _x.20 := @Array.uget _ val.6 _x.19 ◾;
+      let _x.21 := @Std.DHashMap.Internal.AssocList.cons _ _ key.3 value.4 _x.20;
+      let _x.22 := @Array.uset _ val.6 _x.19 _x.21 ◾;
+      let _x.23 := @Subtype.mk _ ◾ _x.22 ◾;
+      let _x.24 := Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.spec_5 β _x.23 tail.5;
+      return _x.24
+

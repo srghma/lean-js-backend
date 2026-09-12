@@ -1,0 +1,112 @@
+════ 🎯 sum
+-- LCNF (saveMono): not stored
+
+════ 🎯 test
+def test x y : Int :=
+  let _x.1 := test._lam_0 x x y;
+  let _x.2 := test._lam_0 x y x;
+  let _x.3 := Int.add _x.1 _x.2;
+  return _x.3
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array lcAny :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array lcAny :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : lcAny :=
+  extern
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 Nat.decLe
+def Nat.decLe @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Bool :=
+  extern
+
+════ 📦 USize.add
+def USize.add a b : USize :=
+  extern
+
+════ 📦 USize.decEq
+def USize.decEq a b : Bool :=
+  extern
+
+════ 📦 USize.ofNat
+def USize.ofNat @&n : USize :=
+  extern
+
+════ 📦 test._lam_0
+def test._lam_0 x a b : Int :=
+  let _x.1 := 0;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 19;
+  let _x.4 := Array.mkEmpty ◾ _x.3;
+  let _x.5 := Array.push ◾ _x.4 x;
+  let _x.6 := Array.push ◾ _x.5 a;
+  let _x.7 := Array.push ◾ _x.6 b;
+  let _x.8 := Array.push ◾ _x.7 a;
+  let _x.9 := Array.push ◾ _x.8 b;
+  let _x.10 := Array.push ◾ _x.9 a;
+  let _x.11 := Array.push ◾ _x.10 b;
+  let _x.12 := Array.push ◾ _x.11 a;
+  let _x.13 := Array.push ◾ _x.12 b;
+  let _x.14 := Array.push ◾ _x.13 a;
+  let _x.15 := Array.push ◾ _x.14 b;
+  let _x.16 := Array.push ◾ _x.15 a;
+  let _x.17 := Array.push ◾ _x.16 b;
+  let _x.18 := Array.push ◾ _x.17 a;
+  let _x.19 := Array.push ◾ _x.18 b;
+  let _x.20 := Array.push ◾ _x.19 a;
+  let _x.21 := Array.push ◾ _x.20 b;
+  let _x.22 := Array.push ◾ _x.21 a;
+  let _x.23 := Array.push ◾ _x.22 b;
+  let _x.24 := Array.size ◾ _x.23;
+  let _x.25 := Nat.decLt _x.1 _x.24;
+  cases _x.25 : Int
+  | Bool.false =>
+    return _x.2
+  | Bool.true =>
+    let _x.26 := Nat.decLe _x.24 _x.24;
+    cases _x.26 : Int
+    | Bool.false =>
+      cases _x.25 : Int
+      | Bool.false =>
+        return _x.2
+      | Bool.true =>
+        let _x.27 := 0;
+        let _x.28 := USize.ofNat _x.24;
+        let _x.29 := Array.foldlMUnsafe.fold._at_.test.spec_0.2 _x.23 _x.27 _x.28 _x.2;
+        return _x.29
+    | Bool.true =>
+      let _x.30 := 0;
+      let _x.31 := USize.ofNat _x.24;
+      let _x.32 := Array.foldlMUnsafe.fold._at_.test.spec_0.2 _x.23 _x.30 _x.31 _x.2;
+      return _x.32
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test.spec_0
+def _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test.spec_0 as i stop b : Int :=
+  let _x.1 := USize.decEq i stop;
+  cases _x.1 : Int
+  | Bool.false =>
+    let _x.2 := Array.uget ◾ as i ◾;
+    let _x.3 := Int.add b _x.2;
+    let _x.4 := 1;
+    let _x.5 := USize.add i _x.4;
+    let _x.6 := Array.foldlMUnsafe.fold._at_.test.spec_0.2 as _x.5 stop _x.3;
+    return _x.6
+  | Bool.true =>
+    return b
+

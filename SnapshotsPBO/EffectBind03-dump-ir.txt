@@ -1,0 +1,76 @@
+════ 🎯 test
+-- IR (what the backend reads)
+def test (x_1 : obj) : obj :=
+  let x_2 : obj := pap test._lam_0._boxed x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int.add
+-- IR (what the backend reads)
+extern Int.add (x_1 : @& tobj) (x_2 : @& tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_add"
+decl.hashKeyType?: none
+
+════ 📦 test._lam_0
+-- IR (what the backend reads)
+def test._lam_0 (x_1 : obj) (x_2 : void) : obj :=
+  inc x_1;
+  let x_3 : obj := app x_1 ◾;
+  case x_3 : obj of
+  EST.Out.ok →
+    let x_4 : tobj := proj[0] x_3;
+    inc x_4;
+    dec x_3;
+    let x_5 : obj := app x_1 ◾;
+    case x_5 : obj of
+    EST.Out.ok →
+      let x_6 : u8 := isShared x_5;
+      case x_6 : u8 of
+      Bool.false →
+        let x_7 : tobj := proj[0] x_5;
+        let x_8 : tobj := Int.add x_4 x_7;
+        dec x_7;
+        dec x_4;
+        set x_5[0] := x_8;
+        ret x_5
+      Bool.true →
+        let x_9 : tobj := proj[0] x_5;
+        inc x_9;
+        dec x_5;
+        let x_10 : tobj := Int.add x_4 x_9;
+        dec x_9;
+        dec x_4;
+        let x_11 : obj := ctor_0[EST.Out.ok] x_10;
+        ret x_11
+    EST.Out.error →
+      dec x_4;
+      ret x_5
+  EST.Out.error →
+    dec x_1;
+    ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._lam_0._boxed
+-- IR (what the backend reads)
+def test._lam_0._boxed (x_1 : obj) (x_2 : tagged) : obj :=
+  let x_3 : obj := test._lam_0 x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.EffectBind03]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (4): [`test, `Int.add, `test._lam_0, `test._lam_0._boxed]
+ctors (4): [`Bool.false, `Bool.true, `EST.Out.error, `EST.Out.ok]
+inducts (2): [`Bool, `EST.Out]

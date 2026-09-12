@@ -1,0 +1,228 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : float) (x_2 : float) : float :=
+  let x_3 : float := Float.add x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test10
+-- IR (what the backend reads)
+def test10 (x_1 : float) (x_2 : float) : float :=
+  let x_3 : float := Float.div x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test11
+-- IR (what the backend reads)
+def test11 (x_1 : float) : float :=
+  let x_2 : float := Float.neg x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test12
+-- IR (what the backend reads)
+def test12 (x_1 : float) (x_2 : float) (x_3 : float) : float :=
+  let x_4 : float := Float.sub x_2 x_3;
+  let x_5 : float := Float.sub x_1 x_4;
+  ret x_5
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test13
+-- IR (what the backend reads)
+def test13 (x_1 : float) (x_2 : float) (x_3 : float) : float :=
+  let x_4 : float := Float.div x_2 x_3;
+  let x_5 : float := Float.div x_1 x_4;
+  ret x_5
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 (x_1 : float) (x_2 : float) : float :=
+  let x_3 : float := Float.sub x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test3
+-- IR (what the backend reads)
+def test3 (x_1 : float) (x_2 : float) : u8 :=
+  let x_3 : u8 := Float.beq x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test4
+-- IR (what the backend reads)
+def test4 (x_1 : float) (x_2 : float) : u8 :=
+  let x_3 : u8 := Float.beq x_1 x_2;
+  case x_3 : u8 of
+  Bool.false →
+    let x_4 : u8 := 1;
+    ret x_4
+  Bool.true →
+    let x_5 : u8 := 0;
+    ret x_5
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test5
+-- IR (what the backend reads)
+def test5 (x_1 : float) (x_2 : float) : u8 :=
+  let x_3 : u8 := Float.decLt x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test6
+-- IR (what the backend reads)
+def test6 (x_1 : float) (x_2 : float) : u8 :=
+  let x_3 : u8 := Float.decLt x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test7
+-- IR (what the backend reads)
+def test7 (x_1 : float) (x_2 : float) : u8 :=
+  let x_3 : u8 := Float.decLe x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test8
+-- IR (what the backend reads)
+def test8 (x_1 : float) (x_2 : float) : u8 :=
+  let x_3 : u8 := Float.decLe x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test9
+-- IR (what the backend reads)
+def test9 (x_1 : float) (x_2 : float) : float :=
+  let x_3 : float := Float.mul x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Float.add
+-- IR (what the backend reads)
+extern Float.add (x_1 : float) (x_2 : float) : float
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_add"
+decl.hashKeyType?: none
+
+════ 📦 Float.beq
+-- IR (what the backend reads)
+extern Float.beq (x_1 : float) (x_2 : float) : u8
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: some "lean_float_beq"
+decl.hashKeyType?: none
+
+════ 📦 Float.decLe
+-- IR (what the backend reads)
+extern Float.decLe (x_1 : float) (x_2 : float) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_decLe"
+decl.hashKeyType?: none
+
+════ 📦 Float.decLt
+-- IR (what the backend reads)
+extern Float.decLt (x_1 : float) (x_2 : float) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_decLt"
+decl.hashKeyType?: none
+
+════ 📦 Float.div
+-- IR (what the backend reads)
+extern Float.div (x_1 : float) (x_2 : float) : float
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_div"
+decl.hashKeyType?: none
+
+════ 📦 Float.mul
+-- IR (what the backend reads)
+extern Float.mul (x_1 : float) (x_2 : float) : float
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_mul"
+decl.hashKeyType?: none
+
+════ 📦 Float.neg
+-- IR (what the backend reads)
+extern Float.neg (x_1 : float) : float
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_negate"
+decl.hashKeyType?: none
+
+════ 📦 Float.sub
+-- IR (what the backend reads)
+extern Float.sub (x_1 : float) (x_2 : float) : float
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_float_sub"
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.PrimOpNumber01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (21): [`test1,
+ `test10,
+ `test11,
+ `test12,
+ `test13,
+ `test2,
+ `test3,
+ `test4,
+ `test5,
+ `test6,
+ `test7,
+ `test8,
+ `test9,
+ `Float.add,
+ `Float.beq,
+ `Float.decLe,
+ `Float.decLt,
+ `Float.div,
+ `Float.mul,
+ `Float.neg,
+ `Float.sub]
+ctors (2): [`Bool.false, `Bool.true]
+inducts (1): [`Bool]

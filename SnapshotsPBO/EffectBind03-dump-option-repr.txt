@@ -1,0 +1,27 @@
+=== EffectBind03
+places holding an unboxed `Option`: 0
+  a closure: test
+  a constructor that is written into: test._lam_0
+  a parameter of a closure: test._lam_0._boxed
+  a parameter of a declaration the file is for: test
+  a value whose sharing is tested: test._lam_0
+  an argument of a primitive: test._lam_0
+  an unknown function value: test._lam_0
+  captured by a closure: test
+  stored in a constructor: test._lam_0
+  the answer of a closure: test._lam_0._boxed
+  the answer of a declaration the file is for: Array.append
+  the answer of a declaration the file is for: Array.append._redArg
+  the answer of a declaration the file is for: Array.appendCore
+  the answer of a declaration the file is for: Array.appendCore._redArg
+  the answer of a declaration the file is for: Float.ofBinaryScientific
+  the answer of a declaration the file is for: Float.ofNat
+  the answer of a declaration the file is for: Float.ofScientific
+  the answer of a declaration the file is for: IO.Error.toString
+  the answer of a declaration the file is for: Int.repr
+  the answer of a declaration the file is for: Nat.repr
+  the answer of a declaration the file is for: Nat.reprFast
+  the answer of a declaration the file is for: main
+  the answer of a declaration the file is for: test
+  the answer of a primitive: test._lam_0
+  the answer of an unknown function: test._lam_0

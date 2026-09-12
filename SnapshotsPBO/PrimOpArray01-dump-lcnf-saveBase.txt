@@ -1,0 +1,32 @@
+════ 🎯 test1
+def test1 α a : Int :=
+  let _x.1 := @Array.size _ a;
+  let _x.2 := Int.ofNat _x.1;
+  return _x.2
+
+════ 🎯 test2
+def test2 α inst.1 a : α :=
+  let _x.2 := 2;
+  let _x.3 := @Array.get!Internal _ inst.1 a _x.2;
+  return _x.3
+
+════ 🎯 test3
+def test3 α a : Int :=
+  let _x.1 := @Array.size _ a;
+  let _x.2 := Int.ofNat _x.1;
+  return _x.2
+
+════ 🎯 test4
+def test4 α inst.1 a : α :=
+  let _x.2 := 2;
+  let _x.3 := @Array.get!Internal _ inst.1 a _x.2;
+  return _x.3
+
+════ 📦 Array.get!Internal
+def Array.get!Internal α inst._@.Init.Prelude.3471936409._hygCtx._hyg.1 @&a @&i : α :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+

@@ -1,0 +1,260 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : obj) : obj :=
+  let x_2 : usize := Array.usize ◾ x_1;
+  let x_3 : usize := 0;
+  let x_4 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test1.spec_0 x_2 x_3 x_1;
+  let x_5 : tagged := 0;
+  let x_6 : tagged := Array.size ◾ x_4;
+  let x_7 : obj := test1._closed_0;
+  let x_8 : u8 := Nat.decLt x_5 x_6;
+  case x_8 : u8 of
+  Bool.false →
+    dec x_4;
+    ret x_7
+  Bool.true →
+    let x_9 : u8 := Nat.decLe x_6 x_6;
+    case x_9 : u8 of
+    Bool.false →
+      case x_8 : u8 of
+      Bool.false →
+        dec x_4;
+        ret x_7
+      Bool.true →
+        let x_10 : usize := USize.ofNat x_6;
+        let x_11 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_4 x_3 x_10 x_7;
+        dec x_4;
+        ret x_11
+    Bool.true →
+      let x_12 : usize := USize.ofNat x_6;
+      let x_13 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_4 x_3 x_12 x_7;
+      dec x_4;
+      ret x_13
+════ test1 after
+def test1 (x_1 : obj) : obj :=
+  let x_2 : usize := Array.usize ◾ x_1;
+  let x_3 : usize := 0;
+  let x_4 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test1.spec_0 x_2 x_3 x_1;
+  let x_5 : tagged := 0;
+  let x_6 : tagged := Array.size ◾ x_4;
+  let x_7 : obj := test1._closed_0;
+  let x_8 : u8 := Nat.decLt x_5 x_6;
+  case x_8 : u8 of
+  Bool.false →
+    dec x_4;
+    ret x_7
+  Bool.true →
+    let x_9 : u8 := Nat.decLe x_6 x_6;
+    case x_9 : u8 of
+    Bool.false →
+      case x_8 : u8 of
+      Bool.false →
+        dec x_4;
+        ret x_7
+      Bool.true →
+        let x_10 : usize := USize.ofNat x_6;
+        let x_11 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_4 x_3 x_10 x_7;
+        dec x_4;
+        ret x_11
+    Bool.true →
+      let x_12 : usize := USize.ofNat x_6;
+      let x_13 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_4 x_3 x_12 x_7;
+      dec x_4;
+      ret x_13
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : obj) (x_2 : obj) (x_3 : obj) : obj :=
+  let x_4 : usize := Array.usize ◾ x_1;
+  let x_5 : usize := 0;
+  let x_6 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test2.spec_0 x_2 x_4 x_5 x_1;
+  let x_7 : tagged := 0;
+  let x_8 : tagged := Array.size ◾ x_6;
+  let x_9 : obj := test1._closed_0;
+  let x_10 : u8 := Nat.decLt x_7 x_8;
+  case x_10 : u8 of
+  Bool.false →
+    dec x_6;
+    dec x_3;
+    ret x_9
+  Bool.true →
+    let x_11 : u8 := Nat.decLe x_8 x_8;
+    case x_11 : u8 of
+    Bool.false →
+      case x_10 : u8 of
+      Bool.false →
+        dec x_6;
+        dec x_3;
+        ret x_9
+      Bool.true →
+        let x_12 : usize := USize.ofNat x_8;
+        let x_13 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test2.spec_1 x_3 x_6 x_5 x_12 x_9;
+        dec x_6;
+        ret x_13
+    Bool.true →
+      let x_14 : usize := USize.ofNat x_8;
+      let x_15 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test2.spec_1 x_3 x_6 x_5 x_14 x_9;
+      dec x_6;
+      ret x_15
+════ test2 after
+def test2 (x_1 : obj) (x_2 : obj) (x_3 : obj) : obj :=
+  let x_4 : usize := Array.usize ◾ x_1;
+  let x_5 : usize := 0;
+  let x_6 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test2.spec_0 x_2 x_4 x_5 x_1;
+  let x_7 : tagged := 0;
+  let x_8 : tagged := Array.size ◾ x_6;
+  let x_9 : obj := test1._closed_0;
+  let x_10 : u8 := Nat.decLt x_7 x_8;
+  case x_10 : u8 of
+  Bool.false →
+    dec x_6;
+    dec x_3;
+    ret x_9
+  Bool.true →
+    let x_11 : u8 := Nat.decLe x_8 x_8;
+    case x_11 : u8 of
+    Bool.false →
+      case x_10 : u8 of
+      Bool.false →
+        dec x_6;
+        dec x_3;
+        ret x_9
+      Bool.true →
+        let x_12 : usize := USize.ofNat x_8;
+        let x_13 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test2.spec_1 x_3 x_6 x_5 x_12 x_9;
+        dec x_6;
+        ret x_13
+    Bool.true →
+      let x_14 : usize := USize.ofNat x_8;
+      let x_15 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test2.spec_1 x_3 x_6 x_5 x_14 x_9;
+      dec x_6;
+      ret x_15
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : obj) : obj :=
+  let x_2 : usize := Array.usize ◾ x_1;
+  let x_3 : usize := 0;
+  let x_4 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test1.spec_0 x_2 x_3 x_1;
+  let x_5 : tagged := 0;
+  let x_6 : tagged := Array.size ◾ x_4;
+  let x_7 : obj := test1._closed_0;
+  let x_8 : u8 := Nat.decLt x_5 x_6;
+  case x_8 : u8 of
+  Bool.false →
+    let x_9 : obj := ctor_0[Prod.mk] x_4 x_7;
+    ret x_9
+  Bool.true →
+    let x_10 : u8 := Nat.decLe x_6 x_6;
+    case x_10 : u8 of
+    Bool.false →
+      case x_8 : u8 of
+      Bool.false →
+        let x_11 : obj := ctor_0[Prod.mk] x_4 x_7;
+        ret x_11
+      Bool.true →
+        let x_12 : usize := USize.ofNat x_6;
+        let x_13 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_4 x_3 x_12 x_7;
+        let x_14 : obj := ctor_0[Prod.mk] x_4 x_13;
+        ret x_14
+    Bool.true →
+      let x_15 : usize := USize.ofNat x_6;
+      let x_16 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_4 x_3 x_15 x_7;
+      let x_17 : obj := ctor_0[Prod.mk] x_4 x_16;
+      ret x_17
+════ test3 after
+def test3 (x_1 : obj) : obj :=
+  let x_2 : usize := Array.usize ◾ x_1;
+  let x_3 : usize := 0;
+  let x_4 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test1.spec_0 x_2 x_3 x_1;
+  let x_5 : tagged := 0;
+  let x_6 : tagged := Array.size ◾ x_4;
+  let x_7 : obj := test1._closed_0;
+  let x_8 : u8 := Nat.decLt x_5 x_6;
+  case x_8 : u8 of
+  Bool.false →
+    let x_9 : obj := ctor_0[Prod.mk] x_4 x_7;
+    ret x_9
+  Bool.true →
+    let x_10 : u8 := Nat.decLe x_6 x_6;
+    case x_10 : u8 of
+    Bool.false →
+      case x_8 : u8 of
+      Bool.false →
+        let x_11 : obj := ctor_0[Prod.mk] x_4 x_7;
+        ret x_11
+      Bool.true →
+        let x_12 : usize := USize.ofNat x_6;
+        let x_13 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_4 x_3 x_12 x_7;
+        let x_14 : obj := ctor_0[Prod.mk] x_4 x_13;
+        ret x_14
+    Bool.true →
+      let x_15 : usize := USize.ofNat x_6;
+      let x_16 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_4 x_3 x_15 x_7;
+      let x_17 : obj := ctor_0[Prod.mk] x_4 x_16;
+      ret x_17
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 (x_1 : obj) : obj :=
+  let x_2 : usize := Array.usize ◾ x_1;
+  let x_3 : usize := 0;
+  let x_4 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test4.spec_0 x_2 x_3 x_1;
+  ret x_4
+════ test4 after
+def test4 (x_1 : obj) : obj :=
+  let x_2 : usize := Array.usize ◾ x_1;
+  let x_3 : usize := 0;
+  let x_4 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test4.spec_0 x_2 x_3 x_1;
+  ret x_4
+════ test4 parameter plan: (every parameter kept)
+════ test5 before
+def test5 (x_1 : @& obj) : obj :=
+  let x_2 : tagged := 0;
+  let x_3 : tagged := Array.size ◾ x_1;
+  let x_4 : obj := test1._closed_0;
+  let x_5 : u8 := Nat.decLt x_2 x_3;
+  case x_5 : u8 of
+  Bool.false →
+    ret x_4
+  Bool.true →
+    let x_6 : u8 := Nat.decLe x_3 x_3;
+    case x_6 : u8 of
+    Bool.false →
+      case x_5 : u8 of
+      Bool.false →
+        ret x_4
+      Bool.true →
+        let x_7 : usize := 0;
+        let x_8 : usize := USize.ofNat x_3;
+        let x_9 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_1 x_7 x_8 x_4;
+        ret x_9
+    Bool.true →
+      let x_10 : usize := 0;
+      let x_11 : usize := USize.ofNat x_3;
+      let x_12 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_1 x_10 x_11 x_4;
+      ret x_12
+════ test5 after
+def test5 (x_1 : @& obj) : obj :=
+  let x_2 : tagged := 0;
+  let x_3 : tagged := Array.size ◾ x_1;
+  let x_4 : obj := test1._closed_0;
+  let x_5 : u8 := Nat.decLt x_2 x_3;
+  case x_5 : u8 of
+  Bool.false →
+    ret x_4
+  Bool.true →
+    let x_6 : u8 := Nat.decLe x_3 x_3;
+    case x_6 : u8 of
+    Bool.false →
+      case x_5 : u8 of
+      Bool.false →
+        ret x_4
+      Bool.true →
+        let x_7 : usize := 0;
+        let x_8 : usize := USize.ofNat x_3;
+        let x_9 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_1 x_7 x_8 x_4;
+        ret x_9
+    Bool.true →
+      let x_10 : usize := 0;
+      let x_11 : usize := USize.ofNat x_3;
+      let x_12 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test1.spec_1 x_1 x_10 x_11 x_4;
+      ret x_12
+════ test5 parameter plan: (every parameter kept)

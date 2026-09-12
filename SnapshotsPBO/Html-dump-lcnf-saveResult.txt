@@ -1,0 +1,123 @@
+════ 🎯 Html
+-- LCNF (result): not stored
+
+════ 🎯 Elem
+-- LCNF (result): not stored
+
+════ 🎯 Text
+-- LCNF (result): not stored
+
+════ 🎯 article1
+-- LCNF (result): not stored
+
+════ 🎯 h11
+-- LCNF (result): not stored
+
+════ 🎯 h21
+-- LCNF (result): not stored
+
+════ 🎯 p1
+-- LCNF (result): not stored
+
+════ 🎯 section1
+-- LCNF (result): not stored
+
+════ 🎯 test
+def test user : Html :=
+  let _x.1 := test._closed_0;
+  let _x.2 := test._closed_1;
+  let _x.3 := test._closed_2;
+  let _x.4 := String.append _x.3 user;
+  let _x.5 := Html.text _x.4;
+  let _x.6 := List.nil ◾;
+  let _x.7 := List.cons ◾ _x.5 _x.6;
+  let _x.8 := Html.elem _x.2 _x.7;
+  let _x.9 := test._closed_3;
+  let _x.10 := test._closed_4;
+  let _x.11 := test._closed_5;
+  let _x.12 := test._closed_6;
+  let _x.13 := List.cons ◾ _x.12 _x.6;
+  let _x.14 := Html.elem _x.10 _x.13;
+  let _x.15 := test._closed_9;
+  let _x.16 := test._closed_10;
+  let _x.17 := test._closed_11;
+  let _x.18 := test._closed_12;
+  let _x.19 := test._closed_13;
+  let _x.20 := List.cons ◾ _x.19 _x.6;
+  let _x.21 := List.cons ◾ _x.17 _x.20;
+  let _x.22 := Html.elem _x.15 _x.21;
+  let _x.23 := List.cons ◾ _x.22 _x.6;
+  let _x.24 := List.cons ◾ _x.14 _x.23;
+  let _x.25 := Html.elem _x.9 _x.24;
+  let _x.26 := List.cons ◾ _x.25 _x.6;
+  let _x.27 := List.cons ◾ _x.8 _x.26;
+  let _x.28 := Html.elem _x.1 _x.27;
+  return _x.28
+
+════ 📦 String.append
+def String.append s @&t : String :=
+  extern
+
+════ 📦 test._closed_0
+def test._closed_0 : String :=
+  let _x.1 := "section";
+  return _x.1
+
+════ 📦 test._closed_1
+def test._closed_1 : String :=
+  let _x.1 := "h1";
+  return _x.1
+
+════ 📦 test._closed_10
+def test._closed_10 : String :=
+  let _x.1 := "This is the first post.";
+  return _x.1
+
+════ 📦 test._closed_11
+def test._closed_11 : Html :=
+  let _x.1 := test._closed_10;
+  let _x.2 := Html.text _x.1;
+  return _x.2
+
+════ 📦 test._closed_12
+def test._closed_12 : String :=
+  let _x.1 := "Not much else to say.";
+  return _x.1
+
+════ 📦 test._closed_13
+def test._closed_13 : Html :=
+  let _x.1 := test._closed_12;
+  let _x.2 := Html.text _x.1;
+  return _x.2
+
+════ 📦 test._closed_2
+def test._closed_2 : String :=
+  let _x.1 := "Posts for ";
+  return _x.1
+
+════ 📦 test._closed_3
+def test._closed_3 : String :=
+  let _x.1 := "article";
+  return _x.1
+
+════ 📦 test._closed_4
+def test._closed_4 : String :=
+  let _x.1 := "h2";
+  return _x.1
+
+════ 📦 test._closed_5
+def test._closed_5 : String :=
+  let _x.1 := "The first post";
+  return _x.1
+
+════ 📦 test._closed_6
+def test._closed_6 : Html :=
+  let _x.1 := test._closed_5;
+  let _x.2 := Html.text _x.1;
+  return _x.2
+
+════ 📦 test._closed_9
+def test._closed_9 : String :=
+  let _x.1 := "p";
+  return _x.1
+

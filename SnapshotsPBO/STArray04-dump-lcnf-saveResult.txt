@@ -1,0 +1,82 @@
+════ 🎯 test1
+def test1 α β f as a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := test1._redArg f as a.1;
+  return _x.2
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array lcAny :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array lcAny :=
+  extern
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : lcAny :=
+  extern
+
+════ 📦 Array.usize
+def Array.usize α @&xs : USize :=
+  extern
+
+════ 📦 USize.add
+def USize.add a b : USize :=
+  extern
+
+════ 📦 USize.decLt
+def USize.decLt a b : Bool :=
+  extern
+
+════ 📦 test1._redArg
+def test1._redArg f as a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 0;
+  let _x.3 := Array.mkEmpty ◾ _x.2;
+  let _x.4 := @ST.Prim.mkRef ◾ ◾ _x.3 a.1;
+  cases _x.4 : EST.Out IO.Error lcAny PUnit
+  | ST.Out.mk val.5 state.6 =>
+    let _x.7 := PUnit.unit;
+    let sz := Array.usize ◾ as;
+    let _x.8 := 0;
+    let _x.9 := Array.forIn'Unsafe.loop._at_.test1.spec_0._redArg.2 val.5 f _x.7 as sz _x.8 _x.7 state.6;
+    cases _x.9 : EST.Out IO.Error lcAny PUnit
+    | EST.Out.ok a.10 a.11 =>
+      let _x.12 := @EST.Out.ok ◾ ◾ ◾ _x.7 a.11;
+      return _x.12
+    | EST.Out.error a.13 a.14 =>
+      return _x.9
+
+════ 📦 ST.Prim.mkRef
+def ST.Prim.mkRef σ α a a._@._internal._hyg.1 : ST.Out lcAny lcAny :=
+  extern
+
+════ 📦 ST.Prim.Ref.get
+def ST.Prim.Ref.get σ α @&r a._@._internal._hyg.1 : ST.Out lcAny lcAny :=
+  extern
+
+════ 📦 ST.Prim.Ref.set
+def ST.Prim.Ref.set σ α @&r a a._@._internal._hyg.1 : ST.Out lcAny PUnit :=
+  extern
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test1.spec_0._redArg
+def _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test1.spec_0._redArg val.1 f _x.2 as sz i b _y.3 : EST.Out
+  IO.Error lcAny PUnit :=
+  let _x.4 := USize.decLt i sz;
+  cases _x.4 : EST.Out IO.Error lcAny PUnit
+  | Bool.false =>
+    let _x.5 := @EST.Out.ok ◾ ◾ ◾ b _y.3;
+    return _x.5
+  | Bool.true =>
+    let _x.6 := @ST.Prim.Ref.get ◾ ◾ val.1 _y.3;
+    cases _x.6 : EST.Out IO.Error lcAny PUnit
+    | ST.Out.mk val.7 state.8 =>
+      let a := Array.uget ◾ as i ◾;
+      let _x.9 := f a;
+      let _x.10 := Array.push ◾ val.7 _x.9;
+      let _x.11 := @ST.Prim.Ref.set ◾ ◾ val.1 _x.10 state.8;
+      cases _x.11 : EST.Out IO.Error lcAny PUnit
+      | ST.Out.mk val.12 state.13 =>
+        let _x.14 := 1;
+        let _x.15 := USize.add i _x.14;
+        let _x.16 := Array.forIn'Unsafe.loop._at_.test1.spec_0._redArg.2 val.1 f _x.2 as sz _x.15 _x.2 state.13;
+        return _x.16
+

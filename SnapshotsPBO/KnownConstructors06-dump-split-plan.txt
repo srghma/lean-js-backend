@@ -1,0 +1,36 @@
+════ split plans
+════ Test before
+  (no compiled code)
+════ Test after
+  (no compiled code)
+════ Test parameter plan: (every parameter kept)
+════ Bar before
+  (no compiled code)
+════ Bar after
+  (no compiled code)
+════ Bar parameter plan: (every parameter kept)
+════ Baz before
+  (no compiled code)
+════ Baz after
+  (no compiled code)
+════ Baz parameter plan: (every parameter kept)
+════ Foo before
+  (no compiled code)
+════ Foo after
+  (no compiled code)
+════ Foo parameter plan: (every parameter kept)
+════ Qux before
+  (no compiled code)
+════ Qux after
+  (no compiled code)
+════ Qux parameter plan: (every parameter kept)
+════ genericTest before
+  (no compiled code)
+════ genericTest after
+  (no compiled code)
+════ genericTest parameter plan: (every parameter kept)
+════ showTest before
+  (no compiled code)
+════ showTest after
+  (no compiled code)
+════ showTest parameter plan: (every parameter kept)

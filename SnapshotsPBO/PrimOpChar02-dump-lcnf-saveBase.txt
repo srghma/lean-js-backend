@@ -1,0 +1,136 @@
+════ 🎯 charValues
+def charValues op : Array Bool :=
+  let _x.1 := 97;
+  let _x.2 := op _x.1 _x.1;
+  let _x.3 := 98;
+  let _x.4 := op _x.1 _x.3;
+  let _x.5 := op _x.3 _x.1;
+  let _x.6 := 3;
+  let _x.7 := @Array.mkEmpty _ _x.6;
+  let _x.8 := @Array.push _ _x.7 _x.2;
+  let _x.9 := @Array.push _ _x.8 _x.4;
+  let _x.10 := @Array.push _ _x.9 _x.5;
+  return _x.10
+
+════ 🎯 test1
+def test1 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := instDecidableEqChar a b;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := charValues _f.1;
+  return _x.4
+
+════ 🎯 test2
+def test2 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := instDecidableEqChar a b;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    cases _x.3 : Bool
+    | Bool.false =>
+      let _x.4 := Bool.true;
+      return _x.4
+    | Bool.true =>
+      let _x.5 := Bool.false;
+      return _x.5;
+  let _x.6 := charValues _f.1;
+  return _x.6
+
+════ 🎯 test3
+def test3 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Char.instDecidableLt a b;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := charValues _f.1;
+  return _x.4
+
+════ 🎯 test4
+def test4 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Char.instDecidableLt b a;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := charValues _f.1;
+  return _x.4
+
+════ 🎯 test5
+def test5 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Char.instDecidableLe a b;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := charValues _f.1;
+  return _x.4
+
+════ 🎯 test6
+def test6 : Array Bool :=
+  fun _f.1 a b : Bool :=
+    let _x.2 := Char.instDecidableLe b a;
+    let _x.3 := Decidable.decide ◾ _x.2;
+    return _x.3;
+  let _x.4 := charValues _f.1;
+  return _x.4
+
+════ 📦 instDecidableEqChar
+def instDecidableEqChar c d : Decidable lcErased :=
+  let _x.1 := c # 0;
+  let _x.2 := d # 0;
+  let _x.3 := instDecidableEqUInt32 _x.1 _x.2;
+  cases _x.3 : Decidable lcErased
+  | Decidable.isFalse h.4 =>
+    let _x.5 := @Decidable.isFalse ◾ ◾;
+    return _x.5
+  | Decidable.isTrue h.6 =>
+    let _x.7 := @Decidable.isTrue ◾ ◾;
+    return _x.7
+
+════ 📦 instDecidableEqUInt32
+def instDecidableEqUInt32 a b : Decidable lcErased :=
+  let _x.1 := UInt32.decEq a b;
+  return _x.1
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array α :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array α :=
+  extern
+
+════ 📦 Char.instDecidableLe
+def Char.instDecidableLe a b : Decidable lcErased :=
+  let _x.1 := a # 0;
+  let _x.2 := b # 0;
+  let _x.3 := UInt32.decLe _x.1 _x.2;
+  return _x.3
+
+════ 📦 Char.instDecidableLt
+def Char.instDecidableLt a b : Decidable lcErased :=
+  let _x.1 := a # 0;
+  let _x.2 := b # 0;
+  let _x.3 := UInt32.decLt _x.1 _x.2;
+  return _x.3
+
+════ 📦 Decidable.decide
+def Decidable.decide p h : Bool :=
+  cases h : Bool
+  | Decidable.isFalse x.1 =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Decidable.isTrue x.3 =>
+    let _x.4 := Bool.true;
+    return _x.4
+
+════ 📦 UInt32.decEq
+def UInt32.decEq a b : Decidable lcErased :=
+  extern
+
+════ 📦 UInt32.decLe
+def UInt32.decLe a b : Decidable lcErased :=
+  extern
+
+════ 📦 UInt32.decLt
+def UInt32.decLt a b : Decidable lcErased :=
+  extern
+

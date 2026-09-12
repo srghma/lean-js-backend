@@ -1,0 +1,38 @@
+════ 🎯 extern1
+def extern1 : RecA :=
+  let _x.1 := Bool.true;
+  let _x.2 := RecC.mk _x.1;
+  let _x.3 := RecB.mk _x.2;
+  let _x.4 := PUnit.unit;
+  let _x.5 := @fn _ _x.4;
+  let _x.6 := RecA.mk _x.3 _x.5;
+  return _x.6
+
+════ 🎯 fn
+def fn α _r : Int :=
+  let _x.1 := 0;
+  let _x.2 := Int.ofNat _x.1;
+  return _x.2
+
+════ 🎯 test1
+def test1 : Int :=
+  let _x.1 := 42;
+  let _x.2 := Int.ofNat _x.1;
+  return _x.2
+
+════ 🎯 test2
+def test2 : Int :=
+  let _x.1 := extern1;
+  let _x.2 := _x.1 # 0;
+  let _x.3 := _x.2 # 0;
+  let _x.4 := _x.3 # 0;
+  cases _x.4 : Int
+  | Bool.false =>
+    let _x.5 := 99;
+    let _x.6 := Int.ofNat _x.5;
+    return _x.6
+  | Bool.true =>
+    let _x.7 := 42;
+    let _x.8 := Int.ofNat _x.7;
+    return _x.8
+

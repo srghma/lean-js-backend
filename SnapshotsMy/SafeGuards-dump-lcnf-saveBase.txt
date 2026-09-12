@@ -1,0 +1,83 @@
+════ 🎯 test1
+def test1 a : Nat :=
+  let _x.1 := @Array.size _ a;
+  let _x.2 := 1;
+  let _x.3 := Nat.shiftRight _x.1 _x.2;
+  return _x.3
+
+════ 🎯 test2
+def test2 a b : Nat :=
+  let _x.1 := @Array.size _ a;
+  let _x.2 := @Array.size _ b;
+  let _x.3 := Nat.add _x.1 _x.2;
+  let _x.4 := 3;
+  let _x.5 := Nat.mul _x.3 _x.4;
+  return _x.5
+
+════ 🎯 test3
+def test3 a : Nat :=
+  let n := @Array.size _ a;
+  let _x.1 := 1;
+  let _x.2 := Nat.shiftRight n _x.1;
+  return _x.2
+
+════ 🎯 test4
+def test4 s : Nat :=
+  let _x.1 := String.length s;
+  let _x.2 := 3;
+  let _x.3 := Nat.div _x.1 _x.2;
+  return _x.3
+
+════ 🎯 test5
+def test5 n : Nat :=
+  let _x.1 := 1;
+  let _x.2 := Nat.shiftRight n _x.1;
+  return _x.2
+
+════ 🎯 test6
+def test6 a : Nat :=
+  let _x.1 := @Array.size _ a;
+  let _x.2 := 7;
+  let _x.3 := Nat.land _x.1 _x.2;
+  return _x.3
+
+════ 🎯 test7
+def test7 s i : Nat :=
+  let _x.1 := String.length s;
+  let _x.2 := Nat.sub _x.1 i;
+  let _x.3 := 1;
+  let _x.4 := Nat.shiftRight _x.2 _x.3;
+  return _x.4
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.div
+def Nat.div @&x @&y : Nat :=
+  extern
+
+════ 📦 Nat.land
+def Nat.land @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.mul
+def Nat.mul @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.shiftRight
+def Nat.shiftRight @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 String.length
+def String.length @&b : Nat :=
+  extern
+

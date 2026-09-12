@@ -1,0 +1,11 @@
+════ test
+-- IR
+def test (x_1 : void) : obj :=
+  let x_2 : tobj := test._closed_2;
+  let x_3 : obj := ctor_0[EST.Out.ok] x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

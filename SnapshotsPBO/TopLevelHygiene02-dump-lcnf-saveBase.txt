@@ -1,0 +1,11 @@
+════ 🎯 test2
+def test2 α β f a : β :=
+  let _x.1 := f a;
+  return _x.1
+
+════ 🎯 wat
+def wat : Int :=
+  let _x.1 := 42;
+  let _x.2 := Int.ofNat _x.1;
+  return _x.2
+

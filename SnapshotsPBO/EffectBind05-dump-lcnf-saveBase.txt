@@ -1,0 +1,12 @@
+════ 🎯 test1
+def test1 k a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := PUnit.unit;
+  let _x.3 := k _x.2 a.1;
+  return _x.3
+
+════ 🎯 test2
+def test2 α k a.1 : α :=
+  let _x.2 := PUnit.unit;
+  let _x.3 := k _x.2 a.1;
+  return _x.3
+

@@ -1,0 +1,341 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : @& obj) : obj :=
+  let x_2 : tobj := proj[0] x_1;
+  let x_3 : tobj := proj[1] x_1;
+  let x_4 : tobj := proj[2] x_1;
+  let x_5 : tobj := test1._closed_0;
+  let x_6 : u8 := Int.decEq x_2 x_5;
+  case x_6 : u8 of
+  Bool.false →
+    let x_7 : tobj := test1._closed_1;
+    let x_8 : u8 := Int.decEq x_2 x_7;
+    case x_8 : u8 of
+    Bool.false →
+      dec x_7;
+      let x_9 : u8 := Int.decEq x_3 x_5;
+      case x_9 : u8 of
+      Bool.false →
+        let x_10 : u8 := Int.decEq x_4 x_5;
+        dec x_5;
+        case x_10 : u8 of
+        Bool.false →
+          let x_11 : obj := test1._closed_2;
+          ret x_11
+        Bool.true →
+          let x_12 : obj := test1._closed_3;
+          ret x_12
+      Bool.true →
+        dec x_5;
+        let x_13 : obj := test1._closed_4;
+        ret x_13
+    Bool.true →
+      let x_14 : u8 := Int.decEq x_3 x_5;
+      case x_14 : u8 of
+      Bool.false →
+        let x_15 : u8 := Int.decEq x_3 x_7;
+        dec x_7;
+        case x_15 : u8 of
+        Bool.false →
+          let x_16 : u8 := Int.decEq x_4 x_5;
+          dec x_5;
+          case x_16 : u8 of
+          Bool.false →
+            let x_17 : obj := test1._closed_2;
+            ret x_17
+          Bool.true →
+            let x_18 : obj := test1._closed_3;
+            ret x_18
+        Bool.true →
+          let x_19 : u8 := Int.decEq x_4 x_5;
+          dec x_5;
+          case x_19 : u8 of
+          Bool.false →
+            let x_20 : obj := test1._closed_5;
+            ret x_20
+          Bool.true →
+            let x_21 : obj := test1._closed_3;
+            ret x_21
+      Bool.true →
+        dec x_7;
+        dec x_5;
+        let x_22 : obj := test1._closed_4;
+        ret x_22
+  Bool.true →
+    dec x_5;
+    let x_23 : obj := test1._closed_6;
+    ret x_23
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+❌ ⚠️ Name 'test2' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 test3
+-- IR (what the backend reads)
+def test3 (x_1 : @& obj) : tobj :=
+  let x_2 : tobj := proj[0] x_1;
+  let x_3 : tobj := proj[1] x_1;
+  let x_4 : tobj := test3._closed_0;
+  let x_5 : u8 := Int.decLt x_4 x_2;
+  dec x_4;
+  case x_5 : u8 of
+  Bool.false →
+    let x_6 : tobj := test1._closed_0;
+    let x_7 : u8 := Int.decLt x_6 x_3;
+    dec x_6;
+    case x_7 : u8 of
+    Bool.false →
+      let x_8 : tobj := Test2.test2._closed_1;
+      ret x_8
+    Bool.true →
+      inc x_3;
+      ret x_3
+  Bool.true →
+    inc x_2;
+    ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test4
+-- IR (what the backend reads)
+def test4 (x_1 : @& obj) : tobj :=
+  let x_2 : tobj := proj[0] x_1;
+  let x_3 : tobj := proj[1] x_1;
+  let x_4 : tobj := test3._closed_0;
+  let x_5 : u8 := Int.decLt x_4 x_2;
+  dec x_4;
+  case x_5 : u8 of
+  Bool.false →
+    let x_6 : tobj := test1._closed_0;
+    let x_7 : u8 := Int.decLt x_6 x_3;
+    dec x_6;
+    case x_7 : u8 of
+    Bool.false →
+      let x_8 : tobj := Test2.test2._closed_1;
+      ret x_8
+    Bool.true →
+      inc x_3;
+      ret x_3
+  Bool.true →
+    inc x_2;
+    ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test5
+-- IR (what the backend reads)
+def test5 (x_1 : @& obj) : tobj :=
+  let x_2 : tobj := proj[0] x_1;
+  let x_3 : tobj := proj[1] x_1;
+  let x_4 : tobj := test3._closed_0;
+  let x_5 : u8 := Int.decLt x_4 x_2;
+  case x_5 : u8 of
+  Bool.false →
+    let x_6 : u8 := Int.decLt x_4 x_3;
+    case x_6 : u8 of
+    Bool.false →
+      ret x_4
+    Bool.true →
+      dec x_4;
+      inc x_3;
+      ret x_3
+  Bool.true →
+    dec x_4;
+    inc x_2;
+    ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test6
+-- IR (what the backend reads)
+def test6 (x_1 : @& obj) : tobj :=
+  let x_2 : tobj := proj[0] x_1;
+  let x_3 : tobj := proj[1] x_1;
+  let x_4 : tobj := test3._closed_0;
+  let x_5 : u8 := Int.decLt x_4 x_2;
+  case x_5 : u8 of
+  Bool.false →
+    let x_6 : u8 := Int.decLt x_4 x_3;
+    case x_6 : u8 of
+    Bool.false →
+      ret x_4
+    Bool.true →
+      dec x_4;
+      inc x_3;
+      ret x_3
+  Bool.true →
+    dec x_4;
+    inc x_2;
+    ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int.decEq
+-- IR (what the backend reads)
+extern Int.decEq (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_dec_eq"
+decl.hashKeyType?: none
+
+════ 📦 Int.decLt
+-- IR (what the backend reads)
+extern Int.decLt (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_dec_lt"
+decl.hashKeyType?: none
+
+════ 📦 Int.negSucc
+-- IR (what the backend reads)
+extern Int.negSucc (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int_neg_succ_of_nat"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 1
+ctor.numFields: 1
+
+════ 📦 Int.ofNat
+-- IR (what the backend reads)
+extern Int.ofNat (x_0 : tobj) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_to_int"
+decl.hashKeyType?: none
+ctor.induct: Int
+ctor.cidx: 0
+ctor.numFields: 1
+
+════ 📦 test1._closed_0
+-- IR (what the backend reads)
+def test1._closed_0 : tobj :=
+  let x_1 : tagged := 1;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_1
+-- IR (what the backend reads)
+def test1._closed_1 : tobj :=
+  let x_1 : tagged := 2;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_2
+-- IR (what the backend reads)
+def test1._closed_2 : obj :=
+  let x_1 : obj := "catch";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_3
+-- IR (what the backend reads)
+def test1._closed_3 : obj :=
+  let x_1 : obj := "2";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_4
+-- IR (what the backend reads)
+def test1._closed_4 : obj :=
+  let x_1 : obj := "1";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_5
+-- IR (what the backend reads)
+def test1._closed_5 : obj :=
+  let x_1 : obj := "3";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_6
+-- IR (what the backend reads)
+def test1._closed_6 : obj :=
+  let x_1 : obj := "0";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_0
+-- IR (what the backend reads)
+def test3._closed_0 : tobj :=
+  let x_1 : tagged := 0;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Test2.test2._closed_1
+-- IR (what the backend reads)
+def Test2.test2._closed_1 : tobj :=
+  let x_1 : tagged := 3;
+  let x_2 : tobj := Int.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.CaseRecord]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (18): [`test1,
+ `test3,
+ `test4,
+ `test5,
+ `test6,
+ `Int.decEq,
+ `Int.decLt,
+ `Int.negSucc,
+ `Int.ofNat,
+ `test1._closed_0,
+ `test1._closed_1,
+ `test1._closed_2,
+ `test1._closed_3,
+ `test1._closed_4,
+ `test1._closed_5,
+ `test1._closed_6,
+ `test3._closed_0,
+ `Test2.test2._closed_1]
+ctors (4): [`Bool.false, `Bool.true, `Int.negSucc, `Int.ofNat]
+inducts (2): [`Bool, `Int]

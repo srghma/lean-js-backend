@@ -1,0 +1,21 @@
+════ test1
+-- IR
+def test1 (x_1 : obj) (x_2 : void) : obj :=
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : obj := app x_1 x_3 ◾;
+  ret x_4
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : ◾) (x_2 : tobj) (x_3 : tagged) : tobj :=
+  let x_4 : tobj := test2._redArg x_2 x_3;
+  ret x_4
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+

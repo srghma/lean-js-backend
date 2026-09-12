@@ -1,0 +1,740 @@
+════ 🎯 dropPrefix1
+def dropPrefix1 s : Option String :=
+  let _x.1 := dropPrefix1._closed_0;
+  let _x.2 := String.utf8ByteSize s;
+  let _x.3 := dropPrefix1._closed_1;
+  let _x.4 := Nat.decLe _x.3 _x.2;
+  cases _x.4 : Option String
+  | Bool.false =>
+    let _x.5 := Option.none ◾;
+    return _x.5
+  | Bool.true =>
+    let _x.6 := 0;
+    let _x.7 := String.Slice.Pattern.Internal.memcmpStr s _x.1 _x.6 _x.6 _x.3 ◾ ◾;
+    cases _x.7 : Option String
+    | Bool.false =>
+      let _x.8 := Option.none ◾;
+      return _x.8
+    | Bool.true =>
+      let _x.9 := 1;
+      let _x.10 := String.Slice.mk s _x.6 _x.2 ◾;
+      let _x.11 := @String.Slice.Pos.nextn _x.10 _x.6 _x.9;
+      let _x.12 := String.Slice.mk s _x.11 _x.2 ◾;
+      let _x.13 := String.Slice.toString _x.12;
+      let _x.14 := Option.some ◾ _x.13;
+      return _x.14
+
+════ 🎯 filterF
+def filterF α p fold : {r : lcErased} → (lcAny → lcAny → lcAny) → lcAny → lcAny :=
+  let _f.1 := filterF._redArg._lam_1 p fold;
+  return _f.1
+
+════ 🎯 filterMapF
+def filterMapF α β f fold : {r : lcErased} → (lcAny → lcAny → lcAny) → lcAny → lcAny :=
+  let _f.1 := filterMapF._redArg._lam_1 f fold;
+  return _f.1
+
+════ 🎯 fromArray
+def fromArray α arr : {r : lcErased} → (lcAny → lcAny → lcAny) → lcAny → lcAny :=
+  let _f.1 := fromArray._redArg._lam_1 arr;
+  return _f.1
+
+════ 🎯 mapF
+def mapF α β f fold : {r : lcErased} → (lcAny → lcAny → lcAny) → lcAny → lcAny :=
+  let _f.1 := mapF._redArg._lam_1 f fold;
+  return _f.1
+
+════ 🎯 overArray
+def overArray α β f arr : Array lcAny :=
+  let _f.1 := fromArray._redArg._lam_1 arr;
+  let _f.2 := toArray._redArg._closed_0;
+  let _x.3 := List.nil ◾;
+  let _x.4 := f _f.1 ◾ _f.2 _x.3;
+  let _x.5 := Array.mk ◾ _x.4;
+  return _x.5
+
+════ 🎯 test
+def test arr : Array String :=
+  let _x.1 := List.nil ◾;
+  let _x.2 := Array.size ◾ arr;
+  let _x.3 := 0;
+  let _x.4 := Nat.decLt _x.3 _x.2;
+  cases _x.4 : Array String
+  | Bool.false =>
+    let _x.5 := Array.mk ◾ _x.1;
+    return _x.5
+  | Bool.true =>
+    let _x.6 := USize.ofNat _x.2;
+    let _x.7 := 0;
+    let _x.8 := Array.foldrMUnsafe.fold._at_.test.spec_0.2 arr _x.6 _x.7 _x.1;
+    let _x.9 := Array.mk ◾ _x.8;
+    return _x.9
+
+════ 🎯 toArray
+def toArray α fold : Array lcAny :=
+  let _f.1 := toArray._redArg._closed_0;
+  let _x.2 := List.nil ◾;
+  let _x.3 := fold ◾ _f.1 _x.2;
+  let _x.4 := Array.mk ◾ _x.3;
+  return _x.4
+
+════ 📦 Array.getInternal
+def Array.getInternal α @&a @&i h : lcAny :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : lcAny :=
+  extern
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 Int.decLt
+def Int.decLt @&a @&b : Bool :=
+  extern
+
+════ 📦 Int.natAbs
+def Int.natAbs @&m : Nat :=
+  extern
+
+════ 📦 List.range
+def List.range n : List Nat :=
+  let _x.1 := List.nil ◾;
+  let _x.2 := List.range.loop n _x.1;
+  return _x.2
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.decLe
+def Nat.decLe @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.digitChar
+def Nat.digitChar n : UInt32 :=
+  let _x.1 := 0;
+  let _x.2 := Nat.decEq n _x.1;
+  cases _x.2 : UInt32
+  | Bool.false =>
+    let _x.3 := 1;
+    let _x.4 := Nat.decEq n _x.3;
+    cases _x.4 : UInt32
+    | Bool.false =>
+      let _x.5 := 2;
+      let _x.6 := Nat.decEq n _x.5;
+      cases _x.6 : UInt32
+      | Bool.false =>
+        let _x.7 := 3;
+        let _x.8 := Nat.decEq n _x.7;
+        cases _x.8 : UInt32
+        | Bool.false =>
+          let _x.9 := 4;
+          let _x.10 := Nat.decEq n _x.9;
+          cases _x.10 : UInt32
+          | Bool.false =>
+            let _x.11 := 5;
+            let _x.12 := Nat.decEq n _x.11;
+            cases _x.12 : UInt32
+            | Bool.false =>
+              let _x.13 := 6;
+              let _x.14 := Nat.decEq n _x.13;
+              cases _x.14 : UInt32
+              | Bool.false =>
+                let _x.15 := 7;
+                let _x.16 := Nat.decEq n _x.15;
+                cases _x.16 : UInt32
+                | Bool.false =>
+                  let _x.17 := 8;
+                  let _x.18 := Nat.decEq n _x.17;
+                  cases _x.18 : UInt32
+                  | Bool.false =>
+                    let _x.19 := 9;
+                    let _x.20 := Nat.decEq n _x.19;
+                    cases _x.20 : UInt32
+                    | Bool.false =>
+                      let _x.21 := 10;
+                      let _x.22 := Nat.decEq n _x.21;
+                      cases _x.22 : UInt32
+                      | Bool.false =>
+                        let _x.23 := 11;
+                        let _x.24 := Nat.decEq n _x.23;
+                        cases _x.24 : UInt32
+                        | Bool.false =>
+                          let _x.25 := 12;
+                          let _x.26 := Nat.decEq n _x.25;
+                          cases _x.26 : UInt32
+                          | Bool.false =>
+                            let _x.27 := 13;
+                            let _x.28 := Nat.decEq n _x.27;
+                            cases _x.28 : UInt32
+                            | Bool.false =>
+                              let _x.29 := 14;
+                              let _x.30 := Nat.decEq n _x.29;
+                              cases _x.30 : UInt32
+                              | Bool.false =>
+                                let _x.31 := 15;
+                                let _x.32 := Nat.decEq n _x.31;
+                                cases _x.32 : UInt32
+                                | Bool.false =>
+                                  let _x.33 := 42;
+                                  return _x.33
+                                | Bool.true =>
+                                  let _x.34 := 102;
+                                  return _x.34
+                              | Bool.true =>
+                                let _x.35 := 101;
+                                return _x.35
+                            | Bool.true =>
+                              let _x.36 := 100;
+                              return _x.36
+                          | Bool.true =>
+                            let _x.37 := 99;
+                            return _x.37
+                        | Bool.true =>
+                          let _x.38 := 98;
+                          return _x.38
+                      | Bool.true =>
+                        let _x.39 := 97;
+                        return _x.39
+                    | Bool.true =>
+                      let _x.40 := 57;
+                      return _x.40
+                  | Bool.true =>
+                    let _x.41 := 56;
+                    return _x.41
+                | Bool.true =>
+                  let _x.42 := 55;
+                  return _x.42
+              | Bool.true =>
+                let _x.43 := 54;
+                return _x.43
+            | Bool.true =>
+              let _x.44 := 53;
+              return _x.44
+          | Bool.true =>
+            let _x.45 := 52;
+            return _x.45
+        | Bool.true =>
+          let _x.46 := 51;
+          return _x.46
+      | Bool.true =>
+        let _x.47 := 50;
+        return _x.47
+    | Bool.true =>
+      let _x.48 := 49;
+      return _x.48
+  | Bool.true =>
+    let _x.49 := 48;
+    return _x.49
+
+════ 📦 Nat.div
+def Nat.div @&x @&y : Nat :=
+  extern
+
+════ 📦 Nat.mod
+def Nat.mod @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.pow
+def Nat.pow @&m @&a._@._internal._hyg.1 : Nat :=
+  extern
+
+════ 📦 Nat.reprFast
+def Nat.reprFast n : String :=
+  let _x.1 := Nat.reprArray.2;
+  let _x.2 := Array.size ◾ _x.1;
+  let _x.3 := Nat.decLt n _x.2;
+  cases _x.3 : String
+  | Bool.false =>
+    let _x.4 := 2;
+    let _x.5 := System.Platform.numBits;
+    let _x.6 := Nat.pow _x.4 _x.5;
+    let _x.7 := Nat.decLt n _x.6;
+    cases _x.7 : String
+    | Bool.false =>
+      let _x.8 := 10;
+      let _x.9 := Nat.toDigits _x.8 n;
+      let _x.10 := String.ofList _x.9;
+      return _x.10
+    | Bool.true =>
+      let _x.11 := USize.ofNatLT n ◾;
+      let _x.12 := USize.repr _x.11;
+      return _x.12
+  | Bool.true =>
+    let _x.13 := Array.getInternal ◾ _x.1 n ◾;
+    return _x.13
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.toDigits
+def Nat.toDigits base n : List UInt32 :=
+  let _x.1 := 1;
+  let _x.2 := Nat.add n _x.1;
+  let _x.3 := List.nil ◾;
+  let _x.4 := Nat.toDigitsCore base _x.2 n _x.3;
+  return _x.4
+
+════ 📦 Nat.toDigitsCore
+def Nat.toDigitsCore base x.1 x.2 x.3 : List UInt32 :=
+  let zero := 0;
+  let isZero := Nat.decEq x.1 zero;
+  cases isZero : List UInt32
+  | Bool.true =>
+    return x.3
+  | Bool.false =>
+    let _x.4 := Nat.mod x.2 base;
+    let d := Nat.digitChar _x.4;
+    let n' := Nat.div x.2 base;
+    let _x.5 := Nat.decEq n' zero;
+    cases _x.5 : List UInt32
+    | Bool.false =>
+      let one := 1;
+      let n.6 := Nat.sub x.1 one;
+      let _x.7 := List.cons ◾ d x.3;
+      let _x.8 := Nat.toDigitsCore base n.6 n' _x.7;
+      return _x.8
+    | Bool.true =>
+      let _x.9 := List.cons ◾ d x.3;
+      return _x.9
+
+════ 📦 String.append
+def String.append s @&t : String :=
+  extern
+
+════ 📦 String.decEq
+def String.decEq @&s₁ @&s₂ : Bool :=
+  extern
+
+════ 📦 String.extract
+def String.extract @&s @&b @&e : String :=
+  extern
+
+════ 📦 String.ofList
+def String.ofList data : String :=
+  extern
+
+════ 📦 String.utf8ByteSize
+def String.utf8ByteSize @&s : Nat :=
+  extern
+
+════ 📦 USize.decEq
+def USize.decEq a b : Bool :=
+  extern
+
+════ 📦 USize.ofNat
+def USize.ofNat @&n : USize :=
+  extern
+
+════ 📦 USize.ofNatLT
+def USize.ofNatLT @&n h : USize :=
+  extern
+
+════ 📦 USize.repr
+def USize.repr @&n : String :=
+  extern
+
+════ 📦 USize.sub
+def USize.sub a b : USize :=
+  extern
+
+════ 📦 dropPrefix1._closed_0
+def dropPrefix1._closed_0 : String :=
+  let _x.1 := "1";
+  return _x.1
+
+════ 📦 dropPrefix1._closed_1
+def dropPrefix1._closed_1 : Nat :=
+  let _x.1 := dropPrefix1._closed_0;
+  let _x.2 := String.utf8ByteSize _x.1;
+  return _x.2
+
+════ 📦 _private.Init.Data.Repr.0.Nat.reprArray
+def _private.Init.Data.Repr.0.Nat.reprArray : Array String :=
+  let _x.1 := 128;
+  let _x.2 := List.range _x.1;
+  let _x.3 := List.nil ◾;
+  let _x.4 := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 _x.2 _x.3;
+  let _x.5 := Array.mk ◾ _x.4;
+  return _x.5
+
+════ 📦 Id.instMonad._lam_0
+def Id.instMonad._lam_0 α.1 β.2 f x : lcAny :=
+  let _x.3 := f x;
+  return _x.3
+
+════ 📦 Id.instMonad._lam_1
+def Id.instMonad._lam_1 α.1 β.2 _y.3 _y.4 : lcAny :=
+  return _y.3
+
+════ 📦 Id.instMonad._lam_2
+def Id.instMonad._lam_2 α.1 x : lcAny :=
+  return x
+
+════ 📦 Id.instMonad._lam_3
+def Id.instMonad._lam_3 α.1 β.2 f x : lcAny :=
+  let _x.3 := PUnit.unit;
+  let _x.4 := x _x.3;
+  let _x.5 := f _x.4;
+  return _x.5
+
+════ 📦 Id.instMonad._lam_4
+def Id.instMonad._lam_4 α.1 β.2 x y : lcAny :=
+  return x
+
+════ 📦 Id.instMonad._lam_5
+def Id.instMonad._lam_5 α.1 β.2 x y : lcAny :=
+  let _x.3 := PUnit.unit;
+  let _x.4 := y _x.3;
+  return _x.4
+
+════ 📦 Id.instMonad._lam_6
+def Id.instMonad._lam_6 α.1 β.2 x f : lcAny :=
+  let _x.3 := f x;
+  return _x.3
+
+════ 📦 List.range.loop
+def List.range.loop x.1 x.2 : List Nat :=
+  let zero := 0;
+  let isZero := Nat.decEq x.1 zero;
+  cases isZero : List Nat
+  | Bool.true =>
+    return x.2
+  | Bool.false =>
+    let one := 1;
+    let n.3 := Nat.sub x.1 one;
+    let _x.4 := List.cons ◾ n.3 x.2;
+    let _x.5 := List.range.loop n.3 _x.4;
+    return _x.5
+
+════ 📦 List.reverse._redArg
+def List.reverse._redArg as : List lcAny :=
+  let _x.1 := List.nil ◾;
+  let _x.2 := List.reverseAux._redArg as _x.1;
+  return _x.2
+
+════ 📦 List.reverseAux._redArg
+def List.reverseAux._redArg x.1 x.2 : List lcAny :=
+  cases x.1 : List lcAny
+  | List.nil =>
+    return x.2
+  | List.cons head.3 tail.4 =>
+    let _x.5 := List.cons ◾ head.3 x.2;
+    let _x.6 := List.reverseAux._redArg tail.4 _x.5;
+    return _x.6
+
+════ 📦 String.Internal.append
+def String.Internal.append a._@._internal._hyg.1 @&a._@._internal._hyg.2 : String :=
+  extern
+
+════ 📦 String.Pos.next
+def String.Pos.next @&s @&pos h : Nat :=
+  extern
+
+════ 📦 String.Slice.toString
+def String.Slice.toString s : String :=
+  cases s : String
+  | String.Slice.mk str startInclusive endExclusive startInclusive_le_endExclusive =>
+    let _x.1 := @String.extract str startInclusive endExclusive;
+    return _x.1
+
+════ 📦 System.Platform.getNumBits
+def System.Platform.getNumBits a._@._internal._hyg.1 : Nat :=
+  extern
+
+════ 📦 System.Platform.numBits
+def System.Platform.numBits : Nat :=
+  let _x.1 := PUnit.unit;
+  let _x.2 := System.Platform.getNumBits _x.1;
+  return _x.2
+
+════ 📦 filterF._redArg._lam_0
+def filterF._redArg._lam_0 p cons a acc : lcAny :=
+  let _x.1 := p a;
+  cases _x.1 : lcAny
+  | Bool.false =>
+    return acc
+  | Bool.true =>
+    let _x.2 := cons a acc;
+    return _x.2
+
+════ 📦 filterF._redArg._lam_1
+def filterF._redArg._lam_1 p fold r.1 cons nil : lcAny :=
+  let _f.2 := filterF._redArg._lam_0 p cons;
+  let _x.3 := fold ◾ _f.2 nil;
+  return _x.3
+
+════ 📦 filterMapF._redArg._lam_0
+def filterMapF._redArg._lam_0 f cons a acc : lcAny :=
+  let _x.1 := f a;
+  cases _x.1 : lcAny
+  | Option.none =>
+    return acc
+  | Option.some val.2 =>
+    let _x.3 := cons val.2 acc;
+    return _x.3
+
+════ 📦 filterMapF._redArg._lam_1
+def filterMapF._redArg._lam_1 f fold r.1 cons nil : lcAny :=
+  let _f.2 := filterMapF._redArg._lam_0 f cons;
+  let _x.3 := fold ◾ _f.2 nil;
+  return _x.3
+
+════ 📦 fromArray._redArg._lam_0
+def fromArray._redArg._lam_0 cons x1.1 x2.2 : lcAny :=
+  let _x.3 := cons x1.1 x2.2;
+  return _x.3
+
+════ 📦 fromArray._redArg._lam_1
+def fromArray._redArg._lam_1 arr r.1 cons nil : lcAny :=
+  let _x.2 := Array.size ◾ arr;
+  let _x.3 := 0;
+  let _f.4 := fromArray._redArg._lam_1._closed_0;
+  let _f.5 := fromArray._redArg._lam_1._closed_1;
+  let _f.6 := fromArray._redArg._lam_1._closed_2;
+  let _f.7 := fromArray._redArg._lam_1._closed_3;
+  let _f.8 := fromArray._redArg._lam_1._closed_4;
+  let _f.9 := fromArray._redArg._lam_1._closed_5;
+  let _f.10 := fromArray._redArg._lam_1._closed_6;
+  let _x.11 := Functor.mk ◾ _f.4 _f.5;
+  let _x.12 := Applicative.mk ◾ _x.11 _f.6 _f.7 _f.8 _f.9;
+  let _x.13 := Monad.mk ◾ _x.12 _f.10;
+  let _x.14 := Nat.decLt _x.3 _x.2;
+  cases _x.14 : lcAny
+  | Bool.false =>
+    return nil
+  | Bool.true =>
+    let _f.15 := fromArray._redArg._lam_0 cons;
+    let _x.16 := USize.ofNat _x.2;
+    let _x.17 := 0;
+    let _x.18 := Array.foldrMUnsafe.fold._redArg.2 _x.13 _f.15 arr _x.16 _x.17 nil;
+    return _x.18
+
+════ 📦 mapF._redArg._lam_0
+def mapF._redArg._lam_0 f cons a acc : lcAny :=
+  let _x.1 := f a;
+  let _x.2 := cons _x.1 acc;
+  return _x.2
+
+════ 📦 mapF._redArg._lam_1
+def mapF._redArg._lam_1 f fold r.1 cons nil : lcAny :=
+  let _f.2 := mapF._redArg._lam_0 f cons;
+  let _x.3 := fold ◾ _f.2 nil;
+  return _x.3
+
+════ 📦 toArray._redArg._closed_0
+def toArray._redArg._closed_0 : lcAny → List lcAny → List lcAny :=
+  let _f.1 := toArray._redArg._lam_0;
+  return _f.1
+
+════ 📦 toArray._redArg._lam_0
+def toArray._redArg._lam_0 head tail : List lcAny :=
+  let _x.1 := List.cons ◾ head tail;
+  return _x.1
+
+════ 📦 List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+def List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 x.1 x.2 : List String :=
+  cases x.1 : List String
+  | List.nil =>
+    let _x.3 := List.reverse._redArg x.2;
+    return _x.3
+  | List.cons head.4 tail.5 =>
+    let _x.6 := USize.ofNat head.4;
+    let _x.7 := USize.repr _x.6;
+    let _x.8 := List.cons ◾ _x.7 x.2;
+    let _x.9 := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 tail.5 _x.8;
+    return _x.9
+
+════ 📦 String.Slice.Pos.nextn
+def String.Slice.Pos.nextn s p n : Nat :=
+  cases s : Nat
+  | String.Slice.mk str startInclusive endExclusive startInclusive_le_endExclusive =>
+    let zero := 0;
+    let isZero := Nat.decEq n zero;
+    cases isZero : Nat
+    | Bool.true =>
+      return p
+    | Bool.false =>
+      let _x.1 := Nat.sub endExclusive startInclusive;
+      let _x.2 := Nat.decEq p _x.1;
+      let one := 1;
+      let n.3 := Nat.sub n one;
+      jp _jp.4 : Nat :=
+        let _x.5 := Nat.add startInclusive p;
+        let _x.6 := @String.Pos.next str _x.5 ◾;
+        let _x.7 := Nat.sub _x.6 startInclusive;
+        let _x.8 := @String.Slice.Pos.nextn s _x.7 n.3;
+        return _x.8;
+      cases _x.2 : Nat
+      | Bool.false =>
+        goto _jp.4
+      | Bool.true =>
+        cases isZero : Nat
+        | Bool.false =>
+          return p
+        | Bool.true =>
+          goto _jp.4
+
+════ 📦 fromArray._redArg._lam_1._closed_0
+def fromArray._redArg._lam_1._closed_0 : lcErased → lcErased → (lcAny → lcAny) → lcAny → lcAny :=
+  let _f.1 := Id.instMonad._lam_0;
+  return _f.1
+
+════ 📦 fromArray._redArg._lam_1._closed_1
+def fromArray._redArg._lam_1._closed_1 : lcErased → lcErased → lcAny → lcAny → lcAny :=
+  let _f.1 := Id.instMonad._lam_1;
+  return _f.1
+
+════ 📦 fromArray._redArg._lam_1._closed_2
+def fromArray._redArg._lam_1._closed_2 : lcErased → lcAny → lcAny :=
+  let _f.1 := Id.instMonad._lam_2;
+  return _f.1
+
+════ 📦 fromArray._redArg._lam_1._closed_3
+def fromArray._redArg._lam_1._closed_3 : lcErased → lcErased → (lcAny → lcAny) → (PUnit → lcAny) → lcAny :=
+  let _f.1 := Id.instMonad._lam_3;
+  return _f.1
+
+════ 📦 fromArray._redArg._lam_1._closed_4
+def fromArray._redArg._lam_1._closed_4 : lcErased → lcErased → lcAny → (PUnit → lcAny) → lcAny :=
+  let _f.1 := Id.instMonad._lam_4;
+  return _f.1
+
+════ 📦 fromArray._redArg._lam_1._closed_5
+def fromArray._redArg._lam_1._closed_5 : lcErased → lcErased → lcAny → (PUnit → lcAny) → lcAny :=
+  let _f.1 := Id.instMonad._lam_5;
+  return _f.1
+
+════ 📦 fromArray._redArg._lam_1._closed_6
+def fromArray._redArg._lam_1._closed_6 : lcErased → lcErased → lcAny → (lcAny → lcAny) → lcAny :=
+  let _f.1 := Id.instMonad._lam_6;
+  return _f.1
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._redArg
+def _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._redArg inst.1 f as i stop b : lcAny :=
+  let _x.2 := USize.decEq i stop;
+  cases _x.2 : lcAny
+  | Bool.false =>
+    cases inst.1 : lcAny
+    | Monad.mk toApplicative toBind =>
+      let _x.3 := 1;
+      let _x.4 := USize.sub i _x.3;
+      let _f.5 := Array.foldrMUnsafe.fold._redArg._lam_0.2 inst.1 f as _x.4 stop;
+      let _x.6 := Array.uget ◾ as _x.4 ◾;
+      let _x.7 := f _x.6 b;
+      let _x.8 := toBind ◾ ◾ _x.7 _f.5;
+      return _x.8
+  | Bool.true =>
+    cases inst.1 : lcAny
+    | Monad.mk toApplicative toBind =>
+      cases toApplicative : lcAny
+      | Applicative.mk toFunctor toPure toSeq toSeqLeft toSeqRight =>
+        let _x.9 := toPure ◾ b;
+        return _x.9
+
+════ 📦 String.Slice.Pattern.Internal.memcmpStr
+def String.Slice.Pattern.Internal.memcmpStr @&lhs @&rhs @&lstart @&rstart @&len h1 h2 : Bool :=
+  extern
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._redArg._lam_0
+def _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._redArg._lam_0 inst.1 f as _x.2 stop __do_lift.3 : lcAny :=
+  let _x.4 := Array.foldrMUnsafe.fold._redArg.2 inst.1 f as _x.2 stop __do_lift.3;
+  return _x.4
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0
+def _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0 as i stop b : List String :=
+  let _x.1 := USize.decEq i stop;
+  cases _x.1 : List String
+  | Bool.false =>
+    let _x.2 := 1;
+    let _x.3 := USize.sub i _x.2;
+    let _x.4 := Array.uget ◾ as _x.3 ◾;
+    let _x.5 := 1;
+    let _x.6 := Int.ofNat _x.5;
+    let _x.7 := Int.add _x.4 _x.6;
+    let natZero := 0;
+    let intZero := Int.ofNat natZero;
+    let isNeg := Int.decLt _x.7 intZero;
+    cases isNeg : List String
+    | Bool.false =>
+      let a.8 := Int.natAbs _x.7;
+      let _x.9 := Nat.reprFast a.8;
+      let _x.10 := Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0.2 _x.9 b;
+      let _x.11 := Array.foldrMUnsafe.fold._at_.test.spec_0.2 as _x.3 stop _x.10;
+      return _x.11
+    | Bool.true =>
+      let abs := Int.natAbs _x.7;
+      let a.12 := Nat.sub abs _x.5;
+      let _x.13 := Array.foldrMUnsafe.fold._at_.test.spec_0._closed_2.2;
+      let _x.14 := Nat.add a.12 _x.5;
+      let _x.15 := Nat.reprFast _x.14;
+      let _x.16 := String.Internal.append _x.13 _x.15;
+      let _x.17 := Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0.2 _x.16 b;
+      let _x.18 := Array.foldrMUnsafe.fold._at_.test.spec_0.2 as _x.3 stop _x.17;
+      return _x.18
+  | Bool.true =>
+    return b
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0._closed_2
+def _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0._closed_2 : String :=
+  let _x.1 := "-";
+  return _x.1
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0
+def _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0 a acc : List String :=
+  let _x.1 := dropPrefix1._closed_0;
+  let _x.2 := String.utf8ByteSize a;
+  let _x.3 := dropPrefix1._closed_1;
+  let _x.4 := Nat.decLe _x.3 _x.2;
+  cases _x.4 : List String
+  | Bool.false =>
+    return acc
+  | Bool.true =>
+    let _x.5 := 0;
+    let _x.6 := String.Slice.Pattern.Internal.memcmpStr a _x.1 _x.5 _x.5 _x.3 ◾ ◾;
+    cases _x.6 : List String
+    | Bool.false =>
+      return acc
+    | Bool.true =>
+      let _x.7 := 1;
+      let _x.8 := String.Slice.mk a _x.5 _x.2 ◾;
+      let _x.9 := @String.Slice.Pos.nextn _x.8 _x.5 _x.7;
+      let _x.10 := String.Slice.mk a _x.9 _x.2 ◾;
+      let _x.11 := String.Slice.toString _x.10;
+      let _x.12 := Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0._closed_0.2;
+      let _x.13 := String.append _x.12 _x.11;
+      let _x.14 := Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0._closed_1.2;
+      let _x.15 := String.decEq _x.13 _x.14;
+      cases _x.15 : List String
+      | Bool.false =>
+        let _x.16 := String.append _x.13 _x.1;
+        let _x.17 := List.cons ◾ _x.16 acc;
+        return _x.17
+      | Bool.true =>
+        return acc
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0._closed_0
+def _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0._closed_0 : String :=
+  let _x.1 := "2";
+  return _x.1
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0._closed_1
+def _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test.spec_0._lam_0._closed_1 : String :=
+  let _x.1 := "wat";
+  return _x.1
+

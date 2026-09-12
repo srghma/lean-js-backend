@@ -1,0 +1,1 @@
+DefaultRulesFunction01: throws

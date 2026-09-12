@@ -1,0 +1,106 @@
+════ test1
+-- IR
+def test1 (x_1 : @& tobj) (x_2 : tobj) (x_3 : obj) : obj :=
+  case x_1 : tobj of
+  Option.none →
+    let x_4 : obj := test1._closed_0;
+    let x_5 : obj := String.append x_3 x_4;
+    dec x_4;
+    let x_6 : obj := Nat.reprFast x_2;
+    let x_7 : obj := String.append x_5 x_6;
+    dec x_6;
+    let x_8 : obj := test1._closed_1;
+    let x_9 : obj := String.append x_7 x_8;
+    dec x_8;
+    ret x_9
+  Option.some →
+    let x_10 : tobj := proj[0] x_1;
+    let x_11 : obj := test1._closed_0;
+    let x_12 : obj := String.append x_3 x_11;
+    dec x_11;
+    let x_13 : obj := Nat.reprFast x_2;
+    let x_14 : obj := String.append x_12 x_13;
+    dec x_13;
+    let x_15 : obj := test1._closed_2;
+    let x_16 : obj := String.append x_14 x_15;
+    dec x_15;
+    let x_17 : obj := String.append x_16 x_10;
+    ret x_17
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : @& tobj) (x_2 : @& tobj) : obj :=
+  case x_1 : tobj of
+  List.nil →
+    let x_3 : obj := test2._closed_0;
+    let x_4 : tobj := Nat.mul x_2 x_2;
+    let x_5 : tagged := 1;
+    let x_6 : tobj := Nat.add x_4 x_5;
+    dec x_4;
+    let x_7 : obj := Nat.reprFast x_6;
+    let x_8 : obj := String.append x_3 x_7;
+    dec x_7;
+    let x_9 : obj := test2._closed_1;
+    let x_10 : obj := String.append x_8 x_9;
+    dec x_9;
+    ret x_10
+  List.cons →
+    let x_11 : tobj := proj[0] x_1;
+    let x_12 : obj := test2._closed_0;
+    let x_13 : tobj := Nat.mul x_2 x_2;
+    let x_14 : tagged := 1;
+    let x_15 : tobj := Nat.add x_13 x_14;
+    dec x_13;
+    let x_16 : obj := Nat.reprFast x_15;
+    let x_17 : obj := String.append x_12 x_16;
+    dec x_16;
+    let x_18 : obj := test2._closed_2;
+    let x_19 : obj := String.append x_17 x_18;
+    dec x_18;
+    let x_20 : obj := String.append x_19 x_11;
+    let x_21 : obj := test2._closed_1;
+    let x_22 : obj := String.append x_20 x_21;
+    dec x_21;
+    ret x_22
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test3
+-- IR
+def test3 (x_1 : @& obj) : u32 :=
+  let x_2 : tagged := 0;
+  let x_3 : u32 := String.Pos.Raw.get x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test4
+-- IR
+def test4 (x_1 : obj) (x_2 : u32) : obj :=
+  let x_3 : tagged := 0;
+  let x_4 : obj := String.Pos.Raw.set x_1 x_3 x_2;
+  ret x_4
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test5
+-- IR
+def test5 (x_1 : @& obj) : u8 :=
+  let x_2 : tagged := 0;
+  let x_3 : u8 := String.Pos.Raw.atEnd x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

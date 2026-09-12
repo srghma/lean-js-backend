@@ -1,0 +1,110 @@
+════ test1
+-- IR
+def test1 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) (x_4 : void) : obj :=
+  let x_5 : tagged := 1;
+  let x_6 : tobj := Nat.add x_2 x_5;
+  let x_7 : tobj := Nat.add x_3 x_5;
+  inc x_6;
+  let x_8 : obj := ctor_0[Std.Legacy.Range.mk] x_6 x_7 x_5;
+  let x_9 : tagged := ctor_0[PUnit.unit];
+  let x_10 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0._redArg x_1 x_9 x_8 x_9 x_6 ◾;
+  dec x_8;
+  let x_11 : u8 := isShared x_10;
+  case x_11 : u8 of
+  Bool.false →
+    let x_12 : tobj := proj[0] x_10;
+    dec x_12;
+    set x_10[0] := x_9;
+    ret x_10
+  Bool.true →
+    dec x_10;
+    let x_13 : obj := ctor_0[EST.Out.ok] x_9;
+    ret x_13
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top, top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) (x_4 : void) : obj :=
+  let x_5 : tagged := 1;
+  let x_6 : tobj := Nat.add x_2 x_5;
+  let x_7 : tobj := Nat.add x_3 x_5;
+  inc x_6;
+  let x_8 : obj := ctor_0[Std.Legacy.Range.mk] x_6 x_7 x_5;
+  let x_9 : tagged := ctor_0[PUnit.unit];
+  inc x_6;
+  let x_10 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg x_1 x_9 x_8 x_9 x_6 ◾;
+  dec x_10;
+  inc x_6;
+  let x_11 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0._redArg x_1 x_9 x_8 x_9 x_6 ◾;
+  dec x_11;
+  let x_12 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_1._redArg x_1 x_5 x_9 x_8 x_9 x_6 ◾;
+  dec x_8;
+  let x_13 : u8 := isShared x_12;
+  case x_13 : u8 of
+  Bool.false →
+    let x_14 : tobj := proj[0] x_12;
+    dec x_14;
+    set x_12[0] := x_9;
+    ret x_12
+  Bool.true →
+    dec x_12;
+    let x_15 : obj := ctor_0[EST.Out.ok] x_9;
+    ret x_15
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top, top]
+-- callers:
+
+════ test3
+-- IR
+def test3 (x_1 : @& tobj) (x_2 : tobj) (x_3 : tobj) (x_4 : void) : obj :=
+  let x_5 : tagged := 1;
+  inc x_2;
+  let x_6 : obj := ctor_0[Std.Legacy.Range.mk] x_2 x_3 x_5;
+  let x_7 : tagged := ctor_0[PUnit.unit];
+  let x_8 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test3.spec_0._redArg x_7 x_1 x_6 x_7 x_2 ◾;
+  dec x_6;
+  let x_9 : u8 := isShared x_8;
+  case x_9 : u8 of
+  Bool.false →
+    let x_10 : tobj := proj[0] x_8;
+    dec x_10;
+    set x_8[0] := x_7;
+    ret x_8
+  Bool.true →
+    dec x_8;
+    let x_11 : obj := ctor_0[EST.Out.ok] x_7;
+    ret x_11
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top, top]
+-- callers:
+
+════ test4
+-- IR
+def test4 (x_1 : @& tobj) (x_2 : tobj) (x_3 : tobj) (x_4 : void) : obj :=
+  let x_5 : tagged := 1;
+  inc x_2;
+  let x_6 : obj := ctor_0[Std.Legacy.Range.mk] x_2 x_3 x_5;
+  let x_7 : tagged := ctor_0[PUnit.unit];
+  let x_8 : obj := _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test4.spec_0._redArg x_1 x_5 x_7 x_6 x_7 x_2 ◾;
+  dec x_6;
+  let x_9 : u8 := isShared x_8;
+  case x_9 : u8 of
+  Bool.false →
+    let x_10 : tobj := proj[0] x_8;
+    dec x_10;
+    set x_8[0] := x_7;
+    ret x_8
+  Bool.true →
+    dec x_8;
+    let x_11 : obj := ctor_0[EST.Out.ok] x_7;
+    ret x_11
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top, top]
+-- callers:
+

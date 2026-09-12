@@ -1,0 +1,21 @@
+════ 🎯 test
+def test n : Nat :=
+  let _x.1 := 0;
+  let _x.2 := Nat.decEq n _x.1;
+  cases _x.2 : Nat
+  | Bool.false =>
+    let _x.3 := 1;
+    let _x.4 := Nat.sub n _x.3;
+    let _x.5 := test _x.4;
+    return _x.5
+  | Bool.true =>
+    return n
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+

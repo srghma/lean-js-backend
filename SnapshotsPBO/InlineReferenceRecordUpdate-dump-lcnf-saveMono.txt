@@ -1,0 +1,56 @@
+════ 🎯 extern
+-- LCNF (saveMono): not stored
+
+════ 🎯 [anonymous]
+-- LCNF (saveMono): not stored
+
+════ 🎯 test1
+def test1 fn : Int :=
+  let _x.1 := PUnit.unit;
+  let rec1 := fn _x.1;
+  cases rec1 : Int
+  | Rec.mk a b c =>
+    return c
+
+════ 🎯 test2
+def test2 : Int :=
+  let _x.1 := extern1;
+  cases _x.1 : Int
+  | Rec.mk a b c =>
+    let _x.2 := 42;
+    let _x.3 := Int.ofNat _x.2;
+    let _x.4 := Int.decEq a _x.3;
+    cases _x.4 : Int
+    | Bool.false =>
+      let _x.5 := 0;
+      let _x.6 := Int.ofNat _x.5;
+      return _x.6
+    | Bool.true =>
+      return c
+
+════ 📦 extern1
+def extern1 : Rec :=
+  let _x.1 := PUnit.unit;
+  let _x.2 := fn_prime _x.1;
+  cases _x.2 : Rec
+  | Rec.mk a b c =>
+    let _x.3 := 42;
+    let _x.4 := Int.ofNat _x.3;
+    let _x.5 := Rec.mk _x.4 b c;
+    return _x.5
+
+════ 📦 fn_prime
+def fn_prime x.1 : Rec :=
+  let _x.2 := 1;
+  let _x.3 := Int.ofNat _x.2;
+  let _x.4 := 2;
+  let _x.5 := Int.ofNat _x.4;
+  let _x.6 := 3;
+  let _x.7 := Int.ofNat _x.6;
+  let _x.8 := Rec.mk _x.3 _x.5 _x.7;
+  return _x.8
+
+════ 📦 Int.decEq
+def Int.decEq @&a @&b : Bool :=
+  extern
+

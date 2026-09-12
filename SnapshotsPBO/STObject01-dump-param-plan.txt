@@ -1,0 +1,54 @@
+════ test1
+-- IR
+def test1 : tobj :=
+  let x_1 : tagged := ctor_0[List.nil];
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test2
+❌ ⚠️ Name 'test2' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test3
+-- IR
+def test3 : tobj :=
+  let x_1 : tobj := test3._closed_8;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test4
+❌ ⚠️ Name 'test4' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test5
+-- IR
+def test5 : tobj :=
+  let x_1 : tobj := test5._closed_1;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test6
+❌ ⚠️ Name 'test6' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+

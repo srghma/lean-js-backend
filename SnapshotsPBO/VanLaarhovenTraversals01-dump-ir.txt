@@ -1,0 +1,264 @@
+════ 🎯 Fun
+-- IR: not stored
+-- JsOleanData
+induct.isEnum: false
+induct.ctors: [`Fun.Abs, `Fun.App]
+
+════ 🎯 Abs
+❌ ⚠️ Name 'Abs' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 App
+❌ ⚠️ Name 'App' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 rewriteBottomUp
+-- IR (what the backend reads)
+def rewriteBottomUp (x_1 : obj) (x_2 : obj) : obj :=
+  let x_3 : obj := pap rewriteBottomUp._lam_0 x_1;
+  let x_4 : obj := rewriteBottomUpM._at_.rewriteBottomUp.spec_0 x_3 x_2;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 rewriteBottomUpM
+-- IR (what the backend reads)
+def rewriteBottomUpM (x_1 : ◾) (x_2 : obj) (x_3 : tobj) (x_4 : obj) : tobj :=
+  let x_5 : tobj := rewriteBottomUpM._redArg x_2 x_3 x_4;
+  ret x_5
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 traverseFun1
+-- IR (what the backend reads)
+def traverseFun1 (x_1 : ◾) (x_2 : obj) (x_3 : tobj) (x_4 : obj) : tobj :=
+  let x_5 : tobj := traverseFun1._redArg x_2 x_3 x_4;
+  ret x_5
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 rewriteBottomUp._lam_0
+-- IR (what the backend reads)
+def rewriteBottomUp._lam_0 (x_1 : obj) (x_2 : obj) : obj :=
+  let x_3 : obj := app x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 rewriteBottomUpM._redArg
+-- IR (what the backend reads)
+def rewriteBottomUpM._redArg (x_1 : obj) (x_2 : tobj) (x_3 : obj) : tobj :=
+  let x_4 : obj := proj[0] x_1;
+  inc x_4;
+  let x_5 : tobj := proj[1] x_1;
+  inc x_5;
+  inc x_2;
+  let x_6 : obj := pap rewriteBottomUpM._redArg._lam_0 x_2;
+  let x_7 : obj := pap rewriteBottomUpM._redArg x_1 x_2;
+  let x_8 : tobj := traverseFun1._redArg x_4 x_7 x_3;
+  let x_9 : tobj := app x_5 ◾ ◾ x_8 x_6;
+  ret x_9
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 traverseFun1._redArg
+-- IR (what the backend reads)
+def traverseFun1._redArg (x_1 : obj) (x_2 : tobj) (x_3 : obj) : tobj :=
+  case x_3 : obj of
+  Fun.Abs →
+    let x_4 : obj := proj[0] x_1;
+    inc x_4;
+    dec x_1;
+    let x_5 : obj := proj[0] x_3;
+    inc x_5;
+    let x_6 : obj := proj[1] x_3;
+    inc x_6;
+    dec x_3;
+    let x_7 : tobj := proj[0] x_4;
+    inc x_7;
+    dec x_4;
+    let x_8 : obj := pap traverseFun1._redArg._lam_0 x_5;
+    let x_9 : tobj := app x_2 x_6;
+    let x_10 : tobj := app x_7 ◾ ◾ x_8 x_9;
+    ret x_10
+  Fun.App →
+    let x_11 : obj := proj[0] x_1;
+    inc x_11;
+    let x_12 : tobj := proj[2] x_1;
+    inc x_12;
+    dec x_1;
+    let x_13 : obj := proj[0] x_3;
+    inc x_13;
+    let x_14 : obj := proj[1] x_3;
+    inc x_14;
+    dec x_3;
+    let x_15 : tobj := proj[0] x_11;
+    inc x_15;
+    dec x_11;
+    let x_16 : obj := traverseFun1._redArg._closed_0;
+    inc x_2;
+    let x_17 : obj := pap traverseFun1._redArg._lam_2 x_2 x_14;
+    let x_18 : tobj := app x_2 x_13;
+    let x_19 : tobj := app x_15 ◾ ◾ x_16 x_18;
+    let x_20 : tobj := app x_12 ◾ ◾ x_19 x_17;
+    ret x_20
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 rewriteBottomUpM._redArg._lam_0
+-- IR (what the backend reads)
+def rewriteBottomUpM._redArg._lam_0 (x_1 : tobj) (x_2 : obj) : tobj :=
+  let x_3 : tobj := app x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 traverseFun1._redArg._closed_0
+-- IR (what the backend reads)
+def traverseFun1._redArg._closed_0 : obj :=
+  let x_1 : obj := pap traverseFun1._redArg._lam_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 traverseFun1._redArg._lam_0
+-- IR (what the backend reads)
+def traverseFun1._redArg._lam_0 (x_1 : obj) (x_2 : obj) : obj :=
+  let x_3 : obj := ctor_0[Fun.Abs] x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 traverseFun1._redArg._lam_1
+-- IR (what the backend reads)
+def traverseFun1._redArg._lam_1 (x_1 : obj) (x_2 : obj) : obj :=
+  let x_3 : obj := ctor_1[Fun.App] x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 traverseFun1._redArg._lam_2
+-- IR (what the backend reads)
+def traverseFun1._redArg._lam_2 (x_1 : tobj) (x_2 : obj) (x_3 : tagged) : tobj :=
+  let x_4 : tobj := app x_1 x_2;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 rewriteBottomUpM._at_.rewriteBottomUp.spec_0
+-- IR (what the backend reads)
+def rewriteBottomUpM._at_.rewriteBottomUp.spec_0 (x_1 : obj) (x_2 : obj) : obj :=
+  inc x_1;
+  let x_3 : obj := pap rewriteBottomUpM._at_.rewriteBottomUp.spec_0._lam_0 x_1;
+  let x_4 : obj := traverseFun1._at_.rewriteBottomUpM._at_.rewriteBottomUp.spec_0.spec_0 x_3 x_2;
+  let x_5 : obj := app x_1 x_4;
+  ret x_5
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 rewriteBottomUpM._at_.rewriteBottomUp.spec_0._lam_0
+-- IR (what the backend reads)
+def rewriteBottomUpM._at_.rewriteBottomUp.spec_0._lam_0 (x_1 : obj) (x_2 : obj) : obj :=
+  let x_3 : obj := rewriteBottomUpM._at_.rewriteBottomUp.spec_0 x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 traverseFun1._at_.rewriteBottomUpM._at_.rewriteBottomUp.spec_0.spec_0
+-- IR (what the backend reads)
+def traverseFun1._at_.rewriteBottomUpM._at_.rewriteBottomUp.spec_0.spec_0 (x_1 : obj) (x_2 : obj) : obj :=
+  case x_2 : obj of
+  Fun.Abs →
+    let x_3 : u8 := isShared x_2;
+    case x_3 : u8 of
+    Bool.false →
+      let x_4 : obj := proj[1] x_2;
+      let x_5 : obj := app x_1 x_4;
+      set x_2[1] := x_5;
+      ret x_2
+    Bool.true →
+      let x_6 : obj := proj[0] x_2;
+      let x_7 : obj := proj[1] x_2;
+      inc x_7;
+      inc x_6;
+      dec x_2;
+      let x_8 : obj := app x_1 x_7;
+      let x_9 : obj := ctor_0[Fun.Abs] x_6 x_8;
+      ret x_9
+  Fun.App →
+    let x_10 : u8 := isShared x_2;
+    case x_10 : u8 of
+    Bool.false →
+      let x_11 : obj := proj[0] x_2;
+      let x_12 : obj := proj[1] x_2;
+      inc x_1;
+      let x_13 : obj := app x_1 x_11;
+      let x_14 : obj := app x_1 x_12;
+      set x_2[1] := x_14;
+      set x_2[0] := x_13;
+      ret x_2
+    Bool.true →
+      let x_15 : obj := proj[0] x_2;
+      let x_16 : obj := proj[1] x_2;
+      inc x_16;
+      inc x_15;
+      dec x_2;
+      inc x_1;
+      let x_17 : obj := app x_1 x_15;
+      let x_18 : obj := app x_1 x_16;
+      let x_19 : obj := ctor_1[Fun.App] x_17 x_18;
+      ret x_19
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.VanLaarhovenTraversals01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (14): [`rewriteBottomUp,
+ `rewriteBottomUpM,
+ `traverseFun1,
+ `rewriteBottomUp._lam_0,
+ `rewriteBottomUpM._redArg,
+ `traverseFun1._redArg,
+ `rewriteBottomUpM._redArg._lam_0,
+ `traverseFun1._redArg._closed_0,
+ `traverseFun1._redArg._lam_0,
+ `traverseFun1._redArg._lam_1,
+ `traverseFun1._redArg._lam_2,
+ `rewriteBottomUpM._at_.rewriteBottomUp.spec_0,
+ `rewriteBottomUpM._at_.rewriteBottomUp.spec_0._lam_0,
+ `traverseFun1._at_.rewriteBottomUpM._at_.rewriteBottomUp.spec_0.spec_0]
+ctors (4): [`Bool.false, `Bool.true, `Fun.Abs, `Fun.App]
+inducts (2): [`Bool, `Fun]

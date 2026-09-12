@@ -1,0 +1,28 @@
+════ 🎯 test1
+def test1 : Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  return _x.2
+
+════ 🎯 test2
+def test2 : Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 2;
+  let _x.4 := Int.ofNat _x.3;
+  let _x.5 := Int.add _x.2 _x.4;
+  return _x.5
+
+════ 🎯 test3
+def test3 : Int :=
+  let _x.1 := 1;
+  let n := Int.ofNat _x.1;
+  let _x.2 := 2;
+  let m := Int.ofNat _x.2;
+  let _x.3 := Int.add n m;
+  return _x.3
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+

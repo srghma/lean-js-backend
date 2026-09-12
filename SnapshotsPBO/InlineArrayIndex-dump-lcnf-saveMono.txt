@@ -1,0 +1,65 @@
+════ 🎯 assertEqual
+-- LCNF (saveMono): not stored
+
+════ 🎯 main
+-- LCNF (saveMono): not stored
+
+════ 🎯 testArrayIndex
+def testArrayIndex α arr ix : Option lcAny :=
+  let _x.1 := testArrayIndex._redArg arr ix;
+  return _x.1
+
+════ 📦 Array.getInternal
+def Array.getInternal α @&a @&i h : lcAny :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Int.decLt
+def Int.decLt @&a @&b : Bool :=
+  extern
+
+════ 📦 Int.natAbs
+def Int.natAbs @&m : Nat :=
+  extern
+
+════ 📦 Int.toNat
+def Int.toNat x.1 : Nat :=
+  let natZero := 0;
+  let intZero := Int.ofNat natZero;
+  let isNeg := Int.decLt x.1 intZero;
+  cases isNeg : Nat
+  | Bool.false =>
+    let a.2 := Int.natAbs x.1;
+    return a.2
+  | Bool.true =>
+    return natZero
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Bool :=
+  extern
+
+════ 📦 testArrayIndex._redArg
+def testArrayIndex._redArg arr ix : Option lcAny :=
+  let _x.1 := 0;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := Int.decLt ix _x.2;
+  cases _x.3 : Option lcAny
+  | Bool.false =>
+    let _x.4 := Int.toNat ix;
+    let _x.5 := Array.size ◾ arr;
+    let _x.6 := Nat.decLt _x.4 _x.5;
+    cases _x.6 : Option lcAny
+    | Bool.false =>
+      let _x.7 := Option.none ◾;
+      return _x.7
+    | Bool.true =>
+      let _x.8 := Array.getInternal ◾ arr _x.4 ◾;
+      let _x.9 := Option.some ◾ _x.8;
+      return _x.9
+  | Bool.true =>
+    let _x.10 := Option.none ◾;
+    return _x.10
+

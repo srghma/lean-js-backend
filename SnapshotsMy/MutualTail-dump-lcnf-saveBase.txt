@@ -1,0 +1,94 @@
+════ 🎯 test1
+def test1 x.1 : Bool :=
+  cases x.1 : Bool
+  | Nat.zero =>
+    let _x.2 := Bool.true;
+    return _x.2
+  | Nat.succ n.3 =>
+    let _x.4 := test2 n.3;
+    return _x.4
+
+════ 🎯 test2
+def test2 x.1 : Bool :=
+  cases x.1 : Bool
+  | Nat.zero =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Nat.succ n.3 =>
+    let _x.4 := test1 n.3;
+    return _x.4
+
+════ 🎯 test3
+def test3 n acc : Nat :=
+  let _x.1 := 0;
+  let _x.2 := instDecidableEqNat n _x.1;
+  let _x.3 := Decidable.decide ◾ _x.2;
+  cases _x.3 : Nat
+  | Bool.false =>
+    let _x.4 := 1;
+    let _x.5 := Nat.sub n _x.4;
+    let _x.6 := Nat.add acc _x.4;
+    let _x.7 := 2;
+    let _x.8 := test4 _x.5 _x.6 _x.7;
+    return _x.8
+  | Bool.true =>
+    return acc
+
+════ 🎯 test4
+def test4 n acc k : Nat :=
+  let _x.1 := 0;
+  let _x.2 := instDecidableEqNat n _x.1;
+  let _x.3 := Decidable.decide ◾ _x.2;
+  cases _x.3 : Nat
+  | Bool.false =>
+    let _x.4 := 1;
+    let _x.5 := Nat.sub n _x.4;
+    let _x.6 := Nat.add acc k;
+    let _x.7 := test5 _x.5 _x.6;
+    return _x.7
+  | Bool.true =>
+    return acc
+
+════ 🎯 test5
+def test5 n acc : Nat :=
+  let _x.1 := 0;
+  let _x.2 := instDecidableEqNat n _x.1;
+  let _x.3 := Decidable.decide ◾ _x.2;
+  cases _x.3 : Nat
+  | Bool.false =>
+    let _x.4 := 1;
+    let _x.5 := Nat.sub n _x.4;
+    let _x.6 := 3;
+    let _x.7 := Nat.add acc _x.6;
+    let _x.8 := test3 _x.5 _x.7;
+    return _x.8
+  | Bool.true =>
+    return acc
+
+════ 📦 instDecidableEqNat
+def instDecidableEqNat @&n @&m : Decidable lcErased :=
+  let _x.1 := Nat.decEq n m;
+  return _x.1
+
+════ 📦 Decidable.decide
+def Decidable.decide p h : Bool :=
+  cases h : Bool
+  | Decidable.isFalse x.1 =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Decidable.isTrue x.3 =>
+    let _x.4 := Bool.true;
+    return _x.4
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+

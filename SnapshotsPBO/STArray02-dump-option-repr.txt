@@ -1,0 +1,81 @@
+=== STArray02
+places holding an unboxed `Option`: 0
+  a parameter of a declaration the file is for: Array.append._redArg
+  a parameter of a declaration the file is for: test1
+  a parameter of a declaration the file is for: test2
+  an argument of a primitive: Array.append._redArg
+  an argument of a primitive: _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg
+  an argument of a primitive: test1._closed_0
+  an argument of a primitive: test1._closed_1
+  an argument of a primitive: test1._closed_10
+  an argument of a primitive: test1._closed_11
+  an argument of a primitive: test1._closed_12
+  an argument of a primitive: test1._closed_13
+  an argument of a primitive: test1._closed_14
+  an argument of a primitive: test1._closed_15
+  an argument of a primitive: test1._closed_16
+  an argument of a primitive: test1._closed_17
+  an argument of a primitive: test1._closed_18
+  an argument of a primitive: test1._closed_19
+  an argument of a primitive: test1._closed_2
+  an argument of a primitive: test1._closed_20
+  an argument of a primitive: test1._closed_21
+  an argument of a primitive: test1._closed_22
+  an argument of a primitive: test1._closed_23
+  an argument of a primitive: test1._closed_24
+  an argument of a primitive: test1._closed_3
+  an argument of a primitive: test1._closed_4
+  an argument of a primitive: test1._closed_5
+  an argument of a primitive: test1._closed_6
+  an argument of a primitive: test1._closed_7
+  an argument of a primitive: test1._closed_9
+  an argument of a primitive: test2._closed_0
+  an argument of a primitive: test2._closed_1
+  an argument of a primitive: test2._closed_3
+  an argument of a primitive: test2._closed_4
+  an argument of a primitive: test2._closed_5
+  the answer of a declaration the file is for: Array.append
+  the answer of a declaration the file is for: Array.append._redArg
+  the answer of a declaration the file is for: Array.appendCore
+  the answer of a declaration the file is for: Array.appendCore._redArg
+  the answer of a declaration the file is for: Float.ofBinaryScientific
+  the answer of a declaration the file is for: Float.ofNat
+  the answer of a declaration the file is for: Float.ofScientific
+  the answer of a declaration the file is for: IO.Error.toString
+  the answer of a declaration the file is for: Int.repr
+  the answer of a declaration the file is for: Nat.repr
+  the answer of a declaration the file is for: Nat.reprFast
+  the answer of a declaration the file is for: main
+  the answer of a declaration the file is for: test1
+  the answer of a declaration the file is for: test2
+  the answer of a primitive: Array.append._redArg
+  the answer of a primitive: _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg
+  the answer of a primitive: test1._closed_0
+  the answer of a primitive: test1._closed_1
+  the answer of a primitive: test1._closed_10
+  the answer of a primitive: test1._closed_11
+  the answer of a primitive: test1._closed_12
+  the answer of a primitive: test1._closed_13
+  the answer of a primitive: test1._closed_14
+  the answer of a primitive: test1._closed_15
+  the answer of a primitive: test1._closed_16
+  the answer of a primitive: test1._closed_17
+  the answer of a primitive: test1._closed_18
+  the answer of a primitive: test1._closed_19
+  the answer of a primitive: test1._closed_2
+  the answer of a primitive: test1._closed_20
+  the answer of a primitive: test1._closed_21
+  the answer of a primitive: test1._closed_22
+  the answer of a primitive: test1._closed_23
+  the answer of a primitive: test1._closed_24
+  the answer of a primitive: test1._closed_3
+  the answer of a primitive: test1._closed_4
+  the answer of a primitive: test1._closed_5
+  the answer of a primitive: test1._closed_6
+  the answer of a primitive: test1._closed_7
+  the answer of a primitive: test1._closed_9
+  the answer of a primitive: test2._closed_0
+  the answer of a primitive: test2._closed_1
+  the answer of a primitive: test2._closed_3
+  the answer of a primitive: test2._closed_4
+  the answer of a primitive: test2._closed_5

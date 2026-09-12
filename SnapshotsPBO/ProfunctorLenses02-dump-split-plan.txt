@@ -1,0 +1,37 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left._redArg x_1;
+  ret x_2
+════ test1 after
+def test1 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left._redArg x_1;
+  ret x_2
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left._redArg x_1;
+  ret x_2
+════ test2 after
+def test2 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left._redArg x_1;
+  ret x_2
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left_right._redArg x_1;
+  ret x_2
+════ test3 after
+def test3 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left_right._redArg x_1;
+  ret x_2
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left_right._redArg x_1;
+  ret x_2
+════ test4 after
+def test4 (x_1 : obj) : tobj :=
+  let x_2 : tobj := preview_left_right._redArg x_1;
+  ret x_2
+════ test4 parameter plan: (every parameter kept)

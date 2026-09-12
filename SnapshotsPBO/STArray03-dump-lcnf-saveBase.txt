@@ -1,0 +1,88 @@
+════ 🎯 test1
+def test1 α β f as : Array β :=
+  let _x.1 := 0;
+  let bs := @Array.mkEmpty _ _x.1;
+  let sz := @Array.usize _ as;
+  let _x.2 := 0;
+  let _x.3 := Array.forIn'Unsafe.loop._at_.test1.spec_0.2 α β f as sz _x.2 bs;
+  return _x.3
+
+════ 🎯 test2
+def test2 α β f as : Array β :=
+  let _x.1 := 0;
+  let bs := @Array.mkEmpty _ _x.1;
+  let sz := @Array.usize _ as;
+  let _x.2 := 0;
+  let _x.3 := Array.forIn'Unsafe.loop._at_.test2.spec_1.2 α β f as sz _x.2 bs;
+  return _x.3
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array α :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array α :=
+  extern
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : α :=
+  extern
+
+════ 📦 Array.usize
+def Array.usize α @&xs : USize :=
+  extern
+
+════ 📦 USize.add
+def USize.add a b : USize :=
+  extern
+
+════ 📦 USize.decLt
+def USize.decLt a b : Decidable lcErased :=
+  extern
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test1.spec_0
+def _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test1.spec_0 α β f as sz i b : Array β :=
+  let _x.1 := USize.decLt i sz;
+  cases _x.1 : Array β
+  | Decidable.isFalse x.2 =>
+    return b
+  | Decidable.isTrue x.3 =>
+    let a := @Array.uget _ as i ◾;
+    let _x.4 := f a;
+    let _x.5 := @Array.push _ b _x.4;
+    let _x.6 := 1;
+    let _x.7 := USize.add i _x.6;
+    let _x.8 := Array.forIn'Unsafe.loop._at_.test1.spec_0.2 α β f as sz _x.7 _x.5;
+    return _x.8
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test2.spec_0
+def _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test2.spec_0 β as sz i b : Array β :=
+  let _x.1 := USize.decLt i sz;
+  cases _x.1 : Array β
+  | Decidable.isFalse x.2 =>
+    return b
+  | Decidable.isTrue x.3 =>
+    let a := @Array.uget _ as i ◾;
+    let _x.4 := @Array.push _ b a;
+    let _x.5 := 1;
+    let _x.6 := USize.add i _x.5;
+    let _x.7 := Array.forIn'Unsafe.loop._at_.test2.spec_0.2 β as sz _x.6 _x.4;
+    return _x.7
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test2.spec_1
+def _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test2.spec_1 α β f as sz i b : Array β :=
+  let _x.1 := USize.decLt i sz;
+  cases _x.1 : Array β
+  | Decidable.isFalse x.2 =>
+    return b
+  | Decidable.isTrue x.3 =>
+    let a := @Array.uget _ as i ◾;
+    let _x.4 := f a;
+    let sz := @Array.usize _ _x.4;
+    let _x.5 := 0;
+    let _x.6 := Array.forIn'Unsafe.loop._at_.test2.spec_0.2 β _x.4 sz _x.5 b;
+    let _x.7 := 1;
+    let _x.8 := USize.add i _x.7;
+    let _x.9 := Array.forIn'Unsafe.loop._at_.test2.spec_1.2 α β f as sz _x.8 _x.6;
+    return _x.9
+

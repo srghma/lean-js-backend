@@ -1,0 +1,49 @@
+════ test
+-- IR
+def test (x_1 : obj) : obj :=
+  block_6 (x_2 : obj) :=
+    let x_3 : usize := Array.usize ◾ x_2;
+    let x_4 : usize := 0;
+    let x_5 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test.spec_0 x_3 x_4 x_2;
+    ret x_5;
+  let x_7 : usize := Array.usize ◾ x_1;
+  let x_8 : usize := 0;
+  let x_9 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test.spec_1 x_7 x_8 x_1;
+  let x_10 : usize := Array.usize ◾ x_9;
+  let x_11 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test.spec_2 x_10 x_8 x_9;
+  let x_12 : tagged := 0;
+  let x_13 : tagged := Array.size ◾ x_11;
+  let x_14 : obj := Array.filterMapM._at_.test.spec_3 x_11 x_12 x_13;
+  dec x_11;
+  let x_15 : usize := Array.usize ◾ x_14;
+  let x_16 : obj := _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test.spec_4 x_15 x_8 x_14;
+  let x_17 : tagged := Array.size ◾ x_16;
+  let x_18 : obj := Array.filterMapM._at_.test.spec_3._closed_0;
+  let x_19 : u8 := Nat.decLt x_12 x_17;
+  case x_19 : u8 of
+  Bool.false →
+    dec x_16;
+    jmp block_6 x_18
+  Bool.true →
+    let x_20 : u8 := Nat.decLe x_17 x_17;
+    case x_20 : u8 of
+    Bool.false →
+      case x_19 : u8 of
+      Bool.false →
+        dec x_16;
+        jmp block_6 x_18
+      Bool.true →
+        let x_21 : usize := USize.ofNat x_17;
+        let x_22 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test.spec_5 x_16 x_8 x_21 x_18;
+        dec x_16;
+        jmp block_6 x_22
+    Bool.true →
+      let x_23 : usize := USize.ofNat x_17;
+      let x_24 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.test.spec_5 x_16 x_8 x_23 x_18;
+      dec x_16;
+      jmp block_6 x_24
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

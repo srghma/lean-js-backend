@@ -1,0 +1,77 @@
+════ 🎯 test1
+def test1 f a.1 : Int :=
+  fun _f.2 x : Int :=
+    let _x.3 := 1;
+    let _x.4 := Int.ofNat _x.3;
+    let _x.5 := Int.add x _x.4;
+    return _x.5;
+  let _x.6 := PUnit.unit;
+  let _x.7 := f _x.6;
+  let _x.8 := @maybe _ _ _x.7 _f.2 a.1;
+  return _x.8
+
+════ 🎯 test2
+def test2 α β f g a.1 : β :=
+  let _x.2 := PUnit.unit;
+  let _x.3 := f _x.2;
+  let _x.4 := 1;
+  let _x.5 := Int.ofNat _x.4;
+  let _x.6 := g _x.5;
+  let _x.7 := @maybe _ _ _x.3 _x.6 a.1;
+  return _x.7
+
+════ 🎯 test3
+def test3 f a.1 : Int :=
+  fun _f.2 x : Int :=
+    let _x.3 := 1;
+    let _x.4 := Int.ofNat _x.3;
+    let _x.5 := Int.add x _x.4;
+    return _x.5;
+  let _x.6 := @maybe' _ _ f _f.2 a.1;
+  return _x.6
+
+════ 🎯 test4
+def test4 α β f g a.1 : β :=
+  let _x.2 := 1;
+  let _x.3 := Int.ofNat _x.2;
+  let _x.4 := g _x.3;
+  let _x.5 := @maybe' _ _ f _x.4 a.1;
+  return _x.5
+
+════ 🎯 test5
+def test5 α a g a.1 : Int :=
+  fun _f.2 x.3 : Int :=
+    let _x.4 := 1;
+    let _x.5 := Int.ofNat _x.4;
+    let _x.6 := Int.add a _x.5;
+    return _x.6;
+  let _x.7 := 1;
+  let _x.8 := Int.ofNat _x.7;
+  let _x.9 := g _x.8;
+  let _x.10 := @maybe' _ _ _f.2 _x.9 a.1;
+  return _x.10
+
+════ 📦 maybe
+def maybe α β d f x.1 : β :=
+  cases x.1 : β
+  | Option.none =>
+    return d
+  | Option.some val.2 =>
+    let _x.3 := f val.2;
+    return _x.3
+
+════ 📦 maybe'
+def maybe' α β d f x.1 : β :=
+  cases x.1 : β
+  | Option.none =>
+    let _x.2 := PUnit.unit;
+    let _x.3 := d _x.2;
+    return _x.3
+  | Option.some val.4 =>
+    let _x.5 := f val.4;
+    return _x.5
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+

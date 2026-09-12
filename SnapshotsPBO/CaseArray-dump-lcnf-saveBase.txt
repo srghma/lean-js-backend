@@ -1,0 +1,65 @@
+════ 🎯 test1
+def test1 x.1 : String :=
+  let _x.2 := @Array.size _ x.1;
+  let _x.3 := 0;
+  let _x.4 := instDecidableEqNat _x.2 _x.3;
+  cases _x.4 : String
+  | Decidable.isFalse h_1 =>
+    let _x.5 := 1;
+    let _x.6 := instDecidableEqNat _x.2 _x.5;
+    cases _x.6 : String
+    | Decidable.isFalse h_2 =>
+      let _x.7 := 2;
+      let _x.8 := instDecidableEqNat _x.2 _x.7;
+      cases _x.8 : String
+      | Decidable.isFalse h_3 =>
+        let _x.9 := 3;
+        let _x.10 := instDecidableEqNat _x.2 _x.9;
+        cases _x.10 : String
+        | Decidable.isFalse h_4 =>
+          let _x.11 := "catch";
+          return _x.11
+        | Decidable.isTrue h_4 =>
+          let _x.12 := "3";
+          return _x.12
+      | Decidable.isTrue h_3 =>
+        let _x.13 := @Array.getInternal _ x.1 _x.5 ◾;
+        let _x.14 := instDecidableEqNat _x.13 _x.7;
+        cases _x.14 : String
+        | Decidable.isFalse h_1 =>
+          let _x.15 := "catch";
+          return _x.15
+        | Decidable.isTrue h_1 =>
+          let _x.16 := "2";
+          return _x.16
+    | Decidable.isTrue h_2 =>
+      let _x.17 := @Array.getInternal _ x.1 _x.3 ◾;
+      let _x.18 := instDecidableEqNat _x.17 _x.5;
+      cases _x.18 : String
+      | Decidable.isFalse h_1 =>
+        let _x.19 := "any1";
+        return _x.19
+      | Decidable.isTrue h_1 =>
+        let _x.20 := "1";
+        return _x.20
+  | Decidable.isTrue h_1 =>
+    let _x.21 := "0";
+    return _x.21
+
+════ 📦 instDecidableEqNat
+def instDecidableEqNat @&n @&m : Decidable lcErased :=
+  let _x.1 := Nat.decEq n m;
+  return _x.1
+
+════ 📦 Array.getInternal
+def Array.getInternal α @&a @&i h : α :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Decidable lcErased :=
+  extern
+

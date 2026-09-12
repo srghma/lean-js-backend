@@ -1,0 +1,269 @@
+════ 🎯 extern
+def extern : Rec :=
+  let _x.1 := 99;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := SubRec2.mk _x.2;
+  let _x.4 := SubRec1.mk _x.3;
+  let _x.5 := PUnit.unit;
+  let _x.6 := @fn _ _x.5;
+  let _x.7 := 11;
+  let _x.8 := Int.ofNat _x.7;
+  let _x.9 := Rec.mk _x.4 _x.6 _x.8;
+  return _x.9
+
+════ 🎯 externTest
+def externTest f : Int :=
+  let _x.1 := extern;
+  let res := f _x.1;
+  let _x.2 := 2147483648;
+  let _x.3 := Int.ofNat _x.2;
+  let _x.4 := Int.neg _x.3;
+  let _x.5 := Int.instDecidableEq res _x.4;
+  let _x.6 := Decidable.decide ◾ _x.5;
+  cases _x.6 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    return _x.4
+
+════ 🎯 fn
+def fn α x.1 : Int :=
+  let _x.2 := 0;
+  let _x.3 := Int.ofNat _x.2;
+  return _x.3
+
+════ 🎯 localTest
+def localTest f : Int :=
+  let _x.1 := 99;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := SubRec2.mk _x.2;
+  let _x.4 := SubRec1.mk _x.3;
+  let _x.5 := PUnit.unit;
+  let _x.6 := @fn _ _x.5;
+  let _x.7 := 11;
+  let _x.8 := Int.ofNat _x.7;
+  let r := Rec.mk _x.4 _x.6 _x.8;
+  let res := f r;
+  let _x.9 := 2147483648;
+  let _x.10 := Int.ofNat _x.9;
+  let _x.11 := Int.neg _x.10;
+  let _x.12 := Int.instDecidableEq res _x.11;
+  let _x.13 := Decidable.decide ◾ _x.12;
+  cases _x.13 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    let _x.14 := @fn _ r;
+    return _x.14
+
+════ 🎯 test1
+def test1 : Int :=
+  let _x.1 := 99;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 11;
+  let _x.4 := Int.ofNat _x.3;
+  let res := Int.add _x.2 _x.4;
+  let _x.5 := 2147483648;
+  let _x.6 := Int.ofNat _x.5;
+  let _x.7 := Int.neg _x.6;
+  let _x.8 := Int.instDecidableEq res _x.7;
+  let _x.9 := Decidable.decide ◾ _x.8;
+  cases _x.9 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    let _x.10 := SubRec2.mk _x.2;
+    let _x.11 := SubRec1.mk _x.10;
+    let _x.12 := PUnit.unit;
+    let _x.13 := @fn _ _x.12;
+    let r := Rec.mk _x.11 _x.13 _x.4;
+    let _x.14 := @fn _ r;
+    return _x.14
+
+════ 🎯 test2
+def test2 : Int :=
+  let _x.1 := 99;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 11;
+  let _x.4 := Int.ofNat _x.3;
+  let res := Int.sub _x.2 _x.4;
+  let _x.5 := 2147483648;
+  let _x.6 := Int.ofNat _x.5;
+  let _x.7 := Int.neg _x.6;
+  let _x.8 := Int.instDecidableEq res _x.7;
+  let _x.9 := Decidable.decide ◾ _x.8;
+  cases _x.9 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    let _x.10 := SubRec2.mk _x.2;
+    let _x.11 := SubRec1.mk _x.10;
+    let _x.12 := PUnit.unit;
+    let _x.13 := @fn _ _x.12;
+    let r := Rec.mk _x.11 _x.13 _x.4;
+    let _x.14 := @fn _ r;
+    return _x.14
+
+════ 🎯 test3
+def test3 : Int :=
+  let _x.1 := 99;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 11;
+  let _x.4 := Int.ofNat _x.3;
+  let res := Int.mul _x.2 _x.4;
+  let _x.5 := 2147483648;
+  let _x.6 := Int.ofNat _x.5;
+  let _x.7 := Int.neg _x.6;
+  let _x.8 := Int.instDecidableEq res _x.7;
+  let _x.9 := Decidable.decide ◾ _x.8;
+  cases _x.9 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    let _x.10 := SubRec2.mk _x.2;
+    let _x.11 := SubRec1.mk _x.10;
+    let _x.12 := PUnit.unit;
+    let _x.13 := @fn _ _x.12;
+    let r := Rec.mk _x.11 _x.13 _x.4;
+    let _x.14 := @fn _ r;
+    return _x.14
+
+════ 🎯 test4
+def test4 : Int :=
+  let _x.1 := 99;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := 11;
+  let _x.4 := Int.ofNat _x.3;
+  let res := Int.ediv _x.2 _x.4;
+  let _x.5 := 2147483648;
+  let _x.6 := Int.ofNat _x.5;
+  let _x.7 := Int.neg _x.6;
+  let _x.8 := Int.instDecidableEq res _x.7;
+  let _x.9 := Decidable.decide ◾ _x.8;
+  cases _x.9 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    let _x.10 := SubRec2.mk _x.2;
+    let _x.11 := SubRec1.mk _x.10;
+    let _x.12 := PUnit.unit;
+    let _x.13 := @fn _ _x.12;
+    let r := Rec.mk _x.11 _x.13 _x.4;
+    let _x.14 := @fn _ r;
+    return _x.14
+
+════ 🎯 test5
+def test5 : Int :=
+  let _x.1 := extern;
+  let _x.2 := _x.1 # 0;
+  let _x.3 := _x.2 # 0;
+  let _x.4 := _x.3 # 0;
+  let _x.5 := _x.1 # 2;
+  let res := Int.add _x.4 _x.5;
+  let _x.6 := 2147483648;
+  let _x.7 := Int.ofNat _x.6;
+  let _x.8 := Int.neg _x.7;
+  let _x.9 := Int.instDecidableEq res _x.8;
+  let _x.10 := Decidable.decide ◾ _x.9;
+  cases _x.10 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    return _x.8
+
+════ 🎯 test6
+def test6 : Int :=
+  let _x.1 := extern;
+  let _x.2 := _x.1 # 0;
+  let _x.3 := _x.2 # 0;
+  let _x.4 := _x.3 # 0;
+  let _x.5 := _x.1 # 2;
+  let res := Int.sub _x.4 _x.5;
+  let _x.6 := 2147483648;
+  let _x.7 := Int.ofNat _x.6;
+  let _x.8 := Int.neg _x.7;
+  let _x.9 := Int.instDecidableEq res _x.8;
+  let _x.10 := Decidable.decide ◾ _x.9;
+  cases _x.10 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    return _x.8
+
+════ 🎯 test7
+def test7 : Int :=
+  let _x.1 := extern;
+  let _x.2 := _x.1 # 0;
+  let _x.3 := _x.2 # 0;
+  let _x.4 := _x.3 # 0;
+  let _x.5 := _x.1 # 2;
+  let res := Int.mul _x.4 _x.5;
+  let _x.6 := 2147483648;
+  let _x.7 := Int.ofNat _x.6;
+  let _x.8 := Int.neg _x.7;
+  let _x.9 := Int.instDecidableEq res _x.8;
+  let _x.10 := Decidable.decide ◾ _x.9;
+  cases _x.10 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    return _x.8
+
+════ 🎯 test8
+def test8 : Int :=
+  let _x.1 := extern;
+  let _x.2 := _x.1 # 0;
+  let _x.3 := _x.2 # 0;
+  let _x.4 := _x.3 # 0;
+  let _x.5 := _x.1 # 2;
+  let res := Int.ediv _x.4 _x.5;
+  let _x.6 := 2147483648;
+  let _x.7 := Int.ofNat _x.6;
+  let _x.8 := Int.neg _x.7;
+  let _x.9 := Int.instDecidableEq res _x.8;
+  let _x.10 := Decidable.decide ◾ _x.9;
+  cases _x.10 : Int
+  | Bool.false =>
+    return res
+  | Bool.true =>
+    return _x.8
+
+════ 📦 Decidable.decide
+def Decidable.decide p h : Bool :=
+  cases h : Bool
+  | Decidable.isFalse x.1 =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Decidable.isTrue x.3 =>
+    let _x.4 := Bool.true;
+    return _x.4
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 Int.decEq
+def Int.decEq @&a @&b : Decidable lcErased :=
+  extern
+
+════ 📦 Int.ediv
+def Int.ediv @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Int :=
+  extern
+
+════ 📦 Int.instDecidableEq
+def Int.instDecidableEq @&a @&b : Decidable lcErased :=
+  let _x.1 := Int.decEq a b;
+  return _x.1
+
+════ 📦 Int.mul
+def Int.mul @&m @&n : Int :=
+  extern
+
+════ 📦 Int.neg
+def Int.neg @&n : Int :=
+  extern
+
+════ 📦 Int.sub
+def Int.sub @&m @&n : Int :=
+  extern
+

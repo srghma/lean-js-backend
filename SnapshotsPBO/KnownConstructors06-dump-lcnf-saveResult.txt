@@ -1,0 +1,21 @@
+════ 🎯 Test
+-- LCNF (result): not stored
+
+════ 🎯 Bar
+-- LCNF (result): not stored
+
+════ 🎯 Baz
+-- LCNF (result): not stored
+
+════ 🎯 Foo
+-- LCNF (result): not stored
+
+════ 🎯 Qux
+-- LCNF (result): not stored
+
+════ 🎯 genericTest
+-- LCNF (result): not stored
+
+════ 🎯 showTest
+-- LCNF (result): not stored
+

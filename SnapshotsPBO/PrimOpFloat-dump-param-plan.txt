@@ -1,0 +1,70 @@
+════ test1
+-- IR
+def test1 (x_1 : float) (x_2 : float) : float :=
+  let x_3 : float := Float.add x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : float) (x_2 : float) : float :=
+  let x_3 : float := Float.sub x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test3
+-- IR
+def test3 (x_1 : float) (x_2 : float) : float :=
+  let x_3 : float := Float.mul x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test4
+-- IR
+def test4 (x_1 : float) (x_2 : float) : float :=
+  let x_3 : float := Float.div x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test5
+-- IR
+def test5 (x_1 : float) : float :=
+  let x_2 : float := Float.neg x_1;
+  ret x_2
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test6
+-- IR
+def test6 (x_1 : float) (x_2 : float) : u8 :=
+  let x_3 : u8 := Float.decLt x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+
+════ test7
+-- IR
+def test7 (x_1 : float) (x_2 : float) : u8 :=
+  let x_3 : u8 := Float.decLe x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+

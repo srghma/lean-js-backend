@@ -1,0 +1,15 @@
+════ split plans
+════ divNoInline before
+def divNoInline (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := Int.ediv x_1 x_2;
+  ret x_3
+════ divNoInline after
+def divNoInline (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := Int.ediv x_1 x_2;
+  ret x_3
+════ divNoInline parameter plan: (every parameter kept)
+════ main before
+  (no compiled code)
+════ main after
+  (no compiled code)
+════ main parameter plan: (every parameter kept)

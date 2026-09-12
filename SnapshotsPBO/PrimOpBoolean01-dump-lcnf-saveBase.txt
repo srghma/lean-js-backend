@@ -1,0 +1,132 @@
+════ 🎯 test1
+def test1 a b : Bool :=
+  cases a : Bool
+  | Bool.false =>
+    return a
+  | Bool.true =>
+    return b
+
+════ 🎯 test2
+def test2 a b : Bool :=
+  cases a : Bool
+  | Bool.false =>
+    return b
+  | Bool.true =>
+    return a
+
+════ 🎯 test3
+def test3 a b : Bool :=
+  cases a : Bool
+  | Bool.false =>
+    cases b : Bool
+    | Bool.false =>
+      let _x.1 := Bool.true;
+      return _x.1
+    | Bool.true =>
+      return a
+  | Bool.true =>
+    return b
+
+════ 🎯 test4
+def test4 a b : Bool :=
+  jp _jp.1 _y.2 : Bool :=
+    let _x.3 := Decidable.decide ◾ _y.2;
+    cases _x.3 : Bool
+    | Bool.false =>
+      let _x.4 := Bool.true;
+      return _x.4
+    | Bool.true =>
+      let _x.5 := Bool.false;
+      return _x.5;
+  cases a : Bool
+  | Bool.false =>
+    cases b : Bool
+    | Bool.false =>
+      let _x.6 := @Decidable.isTrue ◾ ◾;
+      goto _jp.1 _x.6
+    | Bool.true =>
+      let _x.7 := @Decidable.isFalse ◾ ◾;
+      goto _jp.1 _x.7
+  | Bool.true =>
+    cases b : Bool
+    | Bool.false =>
+      let _x.8 := @Decidable.isFalse ◾ ◾;
+      goto _jp.1 _x.8
+    | Bool.true =>
+      let _x.9 := @Decidable.isTrue ◾ ◾;
+      goto _jp.1 _x.9
+
+════ 🎯 test5
+def test5 a b : Bool :=
+  let _x.1 := Bool.instDecidableLt a b;
+  let _x.2 := Decidable.decide ◾ _x.1;
+  return _x.2
+
+════ 🎯 test6
+def test6 a b : Bool :=
+  let _x.1 := Bool.instDecidableLt b a;
+  let _x.2 := Decidable.decide ◾ _x.1;
+  return _x.2
+
+════ 🎯 test7
+def test7 a b : Bool :=
+  let _x.1 := Bool.instDecidableLe a b;
+  let _x.2 := Decidable.decide ◾ _x.1;
+  return _x.2
+
+════ 🎯 test8
+def test8 a b : Bool :=
+  let _x.1 := Bool.instDecidableLe b a;
+  let _x.2 := Decidable.decide ◾ _x.1;
+  return _x.2
+
+════ 🎯 test9
+def test9 a : Bool :=
+  cases a : Bool
+  | Bool.false =>
+    let _x.1 := Bool.true;
+    return _x.1
+  | Bool.true =>
+    let _x.2 := Bool.false;
+    return _x.2
+
+════ 📦 Bool.instDecidableLe
+def Bool.instDecidableLe x y : Decidable lcErased :=
+  cases x : Decidable lcErased
+  | Bool.false =>
+    let _x.1 := @Decidable.isTrue ◾ ◾;
+    return _x.1
+  | Bool.true =>
+    cases y : Decidable lcErased
+    | Bool.false =>
+      let _x.2 := @Decidable.isFalse ◾ ◾;
+      return _x.2
+    | Bool.true =>
+      let _x.3 := @Decidable.isTrue ◾ ◾;
+      return _x.3
+
+════ 📦 Bool.instDecidableLt
+def Bool.instDecidableLt x y : Decidable lcErased :=
+  cases x : Decidable lcErased
+  | Bool.false =>
+    cases y : Decidable lcErased
+    | Bool.false =>
+      let _x.1 := @Decidable.isFalse ◾ ◾;
+      return _x.1
+    | Bool.true =>
+      let _x.2 := @Decidable.isTrue ◾ ◾;
+      return _x.2
+  | Bool.true =>
+    let _x.3 := @Decidable.isFalse ◾ ◾;
+    return _x.3
+
+════ 📦 Decidable.decide
+def Decidable.decide p h : Bool :=
+  cases h : Bool
+  | Decidable.isFalse x.1 =>
+    let _x.2 := Bool.false;
+    return _x.2
+  | Decidable.isTrue x.3 =>
+    let _x.4 := Bool.true;
+    return _x.4
+

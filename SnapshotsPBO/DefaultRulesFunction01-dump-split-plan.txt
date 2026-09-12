@@ -1,0 +1,67 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : tobj) (x_2 : tobj) (x_3 : tagged) : tagged :=
+  let x_4 : tagged := 1;
+  let x_5 : obj := test1._closed_0;
+  let x_6 : tagged := app x_2 ◾ ◾ ◾ x_5 x_3;
+  let x_7 : tagged := app x_1 ◾ ◾ ◾ x_4 x_6;
+  ret x_7
+════ test1 after
+def test1 (x_1 : tobj) (x_2 : tobj) (x_3 : tagged) : tagged :=
+  let x_4 : tagged := 1;
+  let x_5 : obj := test1._closed_0;
+  let x_6 : tagged := app x_2 ◾ ◾ ◾ x_5 x_3;
+  let x_7 : tagged := app x_1 ◾ ◾ ◾ x_4 x_6;
+  ret x_7
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : tobj) (x_2 : tobj) (x_3 : tagged) : tagged :=
+  let x_4 : tagged := 1;
+  let x_5 : obj := test1._closed_0;
+  let x_6 : tagged := app x_2 ◾ ◾ ◾ x_5 x_3;
+  let x_7 : tagged := app x_1 ◾ ◾ ◾ x_4 x_6;
+  ret x_7
+════ test2 after
+def test2 (x_1 : tobj) (x_2 : tobj) (x_3 : tagged) : tagged :=
+  let x_4 : tagged := 1;
+  let x_5 : obj := test1._closed_0;
+  let x_6 : tagged := app x_2 ◾ ◾ ◾ x_5 x_3;
+  let x_7 : tagged := app x_1 ◾ ◾ ◾ x_4 x_6;
+  ret x_7
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : tobj) (x_2 : tobj) (x_3 : tagged) : tagged :=
+  let x_4 : tagged := test3._redArg x_1 x_2;
+  ret x_4
+════ test3 after
+def test3 (x_1 : tobj) (x_2 : tobj) (x_3 : tagged) : tagged :=
+  let x_4 : tagged := test3._redArg x_1 x_2;
+  ret x_4
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 (x_1 : tobj) (x_2 : ◾) (x_3 : ◾) (x_4 : ◾) (x_5 : tobj) (x_6 : tobj) : tobj :=
+  let x_7 : tobj := app x_1 ◾ ◾ ◾ x_5 x_6;
+  ret x_7
+════ test4 after
+def test4 (x_1 : tobj) (x_2 : ◾) (x_3 : ◾) (x_4 : ◾) (x_5 : tobj) (x_6 : tobj) : tobj :=
+  let x_7 : tobj := app x_1 ◾ ◾ ◾ x_5 x_6;
+  ret x_7
+════ test4 parameter plan: (every parameter kept)
+════ test5 before
+def test5 (x_1 : ◾) (x_2 : ◾) (x_3 : @& tobj) (x_4 : @& tobj) : tobj :=
+  inc x_3;
+  ret x_3
+════ test5 after
+def test5 (x_1 : ◾) (x_2 : ◾) (x_3 : @& tobj) (x_4 : @& tobj) : tobj :=
+  inc x_3;
+  ret x_3
+════ test5 parameter plan: (every parameter kept)
+════ test6 before
+def test6 (x_1 : ◾) (x_2 : @& tobj) : tobj :=
+  inc x_2;
+  ret x_2
+════ test6 after
+def test6 (x_1 : ◾) (x_2 : @& tobj) : tobj :=
+  inc x_2;
+  ret x_2
+════ test6 parameter plan: (every parameter kept)

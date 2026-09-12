@@ -1,0 +1,57 @@
+════ 🎯 counter
+def counter : lcAny :=
+  extern
+
+════ 🎯 test1
+def test1 : Int :=
+  let _x.1 := test1.unsafe_1;
+  return _x.1
+
+════ 🎯 test2
+def test2 random : Int :=
+  let _x.1 := test2.unsafe_1 random;
+  return _x.1
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 test1.unsafe_1
+def test1.unsafe_1 : Int :=
+  let _x.1 := 1;
+  let _x.2 := Int.ofNat _x.1;
+  let _f.3 := test1.unsafe_1._lam_0 _x.2;
+  let _x.4 := unsafeBaseIO._redArg _f.3;
+  return _x.4
+
+════ 📦 test2.unsafe_1
+def test2.unsafe_1 random : Int :=
+  let _f.1 := test2.unsafe_1._lam_0 random;
+  let _x.2 := unsafeBaseIO._redArg _f.1;
+  return _x.2
+
+════ 📦 unsafeBaseIO._redArg
+def unsafeBaseIO._redArg fn : lcAny :=
+  let _x.1 := PUnit.unit;
+  let _x.2 := fn _x.1;
+  cases _x.2 : lcAny
+  | ST.Out.mk val.3 state.4 =>
+    return val.3
+
+════ 📦 test1.unsafe_1._lam_0
+def test1.unsafe_1._lam_0 _x.1 _y.2 : ST.Out lcAny Int :=
+  let _x.3 := @ST.Out.mk ◾ ◾ _x.1 _y.2;
+  return _x.3
+
+════ 📦 test2.unsafe_1._lam_0
+def test2.unsafe_1._lam_0 random _y.1 : ST.Out lcAny Int :=
+  let _x.2 := random _y.1;
+  cases _x.2 : ST.Out lcAny Int
+  | ST.Out.mk val.3 state.4 =>
+    let _x.5 := random state.4;
+    cases _x.5 : ST.Out lcAny Int
+    | ST.Out.mk val.6 state.7 =>
+      let _x.8 := Int.add val.3 val.6;
+      let _x.9 := @ST.Out.mk ◾ ◾ _x.8 state.7;
+      return _x.9
+

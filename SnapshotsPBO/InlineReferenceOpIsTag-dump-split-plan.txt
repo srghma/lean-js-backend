@@ -1,0 +1,222 @@
+════ split plans
+════ List before
+  (no compiled code)
+════ List after
+  (no compiled code)
+════ List parameter plan: (every parameter kept)
+════ Cons before
+  (no compiled code)
+════ Cons after
+  (no compiled code)
+════ Cons parameter plan: (every parameter kept)
+════ Nil before
+  (no compiled code)
+════ Nil after
+  (no compiled code)
+════ Nil parameter plan: (every parameter kept)
+════ extern1 before
+def extern1 : tobj :=
+  let x_1 : tobj := extern1._closed_0;
+  ret x_1
+════ extern1 after
+def extern1 : tobj :=
+  let x_1 : tobj := extern1._closed_0;
+  ret x_1
+════ extern1 parameter plan: (every parameter kept)
+════ extern2 before
+def extern2 : tobj :=
+  let x_1 : tobj := extern1._closed_0;
+  ret x_1
+════ extern2 after
+def extern2 : tobj :=
+  let x_1 : tobj := extern1._closed_0;
+  ret x_1
+════ extern2 parameter plan: (every parameter kept)
+════ extern3 before
+def extern3 : obj :=
+  let x_1 : obj := extern3._closed_0;
+  ret x_1
+════ extern3 after
+def extern3 : obj :=
+  let x_1 : obj := extern3._closed_0;
+  ret x_1
+════ extern3 parameter plan: (every parameter kept)
+════ [anonymous] before
+  (no compiled code)
+════ [anonymous] after
+  (no compiled code)
+════ [anonymous] parameter plan: (every parameter kept)
+════ test1 before
+def test1 (x_1 : obj) : tobj :=
+  let x_2 : tobj := instReprMyList.repr._redArg._closed_6;
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : tobj := app x_1 x_3;
+  let x_5 : obj := ctor_0[MyList.Cons] x_2 x_4;
+  let x_6 : tobj := test1._closed_0;
+  let x_7 : obj := ctor_0[MyList.Cons] x_6 x_5;
+  ret x_7
+════ test1 after
+def test1 (x_1 : obj) : tobj :=
+  let x_2 : tobj := instReprMyList.repr._redArg._closed_6;
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : tobj := app x_1 x_3;
+  let x_5 : obj := ctor_0[MyList.Cons] x_2 x_4;
+  let x_6 : tobj := test1._closed_0;
+  let x_7 : obj := ctor_0[MyList.Cons] x_6 x_5;
+  ret x_7
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : obj) : tobj :=
+  let x_2 : tobj := instReprMyList.repr._redArg._closed_6;
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : tobj := app x_1 x_3;
+  let x_5 : obj := ctor_0[MyList.Cons] x_2 x_4;
+  let x_6 : tobj := test1._closed_0;
+  let x_7 : obj := ctor_0[MyList.Cons] x_6 x_5;
+  ret x_7
+════ test2 after
+def test2 (x_1 : obj) : tobj :=
+  let x_2 : tobj := instReprMyList.repr._redArg._closed_6;
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : tobj := app x_1 x_3;
+  let x_5 : obj := ctor_0[MyList.Cons] x_2 x_4;
+  let x_6 : tobj := test1._closed_0;
+  let x_7 : obj := ctor_0[MyList.Cons] x_6 x_5;
+  ret x_7
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : obj) : tobj :=
+  let x_2 : tobj := instReprMyList.repr._redArg._closed_6;
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : tobj := app x_1 x_3;
+  let x_5 : obj := ctor_0[MyList.Cons] x_2 x_4;
+  let x_6 : tobj := test1._closed_0;
+  let x_7 : obj := ctor_0[MyList.Cons] x_6 x_5;
+  ret x_7
+════ test3 after
+def test3 (x_1 : obj) : tobj :=
+  let x_2 : tobj := instReprMyList.repr._redArg._closed_6;
+  let x_3 : tagged := ctor_0[PUnit.unit];
+  let x_4 : tobj := app x_1 x_3;
+  let x_5 : obj := ctor_0[MyList.Cons] x_2 x_4;
+  let x_6 : tobj := test1._closed_0;
+  let x_7 : obj := ctor_0[MyList.Cons] x_6 x_5;
+  ret x_7
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 : tobj :=
+  let x_1 : tobj := extern1;
+  case x_1 : tobj of
+  MyList.Cons →
+    dec x_1;
+    let x_2 : tobj := test4._closed_0;
+    ret x_2
+  default →
+    dec x_1;
+    let x_3 : tagged := ctor_1[MyList.Nil];
+    ret x_3
+════ test4 after
+def test4 : tobj :=
+  let x_1 : tobj := extern1;
+  case x_1 : tobj of
+  MyList.Cons →
+    dec x_1;
+    let x_2 : tobj := test4._closed_0;
+    ret x_2
+  default →
+    dec x_1;
+    let x_3 : tagged := ctor_1[MyList.Nil];
+    ret x_3
+════ test4 parameter plan: (every parameter kept)
+════ test5 before
+def test5 : tobj :=
+  let x_1 : tobj := extern2;
+  case x_1 : tobj of
+  MyList.Cons →
+    dec x_1;
+    let x_2 : tobj := test5._closed_0;
+    ret x_2
+  default →
+    dec x_1;
+    let x_3 : tagged := ctor_1[MyList.Nil];
+    ret x_3
+════ test5 after
+def test5 : tobj :=
+  let x_1 : tobj := extern2;
+  case x_1 : tobj of
+  MyList.Cons →
+    dec x_1;
+    let x_2 : tobj := test5._closed_0;
+    ret x_2
+  default →
+    dec x_1;
+    let x_3 : tagged := ctor_1[MyList.Nil];
+    ret x_3
+════ test5 parameter plan: (every parameter kept)
+════ test6 before
+def test6 : tobj :=
+  let x_1 : obj := extern3;
+  let x_2 : u8 := isShared x_1;
+  case x_2 : u8 of
+  Bool.false →
+    let x_3 : tobj := proj[0] x_1;
+    let x_4 : tobj := proj[1] x_1;
+    dec x_4;
+    let x_5 : tagged := ctor_1[MyList.Nil];
+    case x_3 : tobj of
+    MyList.Cons →
+      let x_6 : tobj := test1._closed_0;
+      set x_1[1] := x_3;
+      set x_1[0] := x_6;
+      ret x_1
+    default →
+      del x_1;
+      dec x_3;
+      ret x_5
+  Bool.true →
+    let x_7 : tobj := proj[0] x_1;
+    inc x_7;
+    dec x_1;
+    let x_8 : tagged := ctor_1[MyList.Nil];
+    case x_7 : tobj of
+    MyList.Cons →
+      let x_9 : tobj := test1._closed_0;
+      let x_10 : obj := ctor_0[MyList.Cons] x_9 x_7;
+      ret x_10
+    default →
+      dec x_7;
+      ret x_8
+════ test6 after
+def test6 : tobj :=
+  let x_1 : obj := extern3;
+  let x_2 : u8 := isShared x_1;
+  case x_2 : u8 of
+  Bool.false →
+    let x_3 : tobj := proj[0] x_1;
+    let x_4 : tobj := proj[1] x_1;
+    dec x_4;
+    let x_5 : tagged := ctor_1[MyList.Nil];
+    case x_3 : tobj of
+    MyList.Cons →
+      let x_6 : tobj := test1._closed_0;
+      set x_1[1] := x_3;
+      set x_1[0] := x_6;
+      ret x_1
+    default →
+      del x_1;
+      dec x_3;
+      ret x_5
+  Bool.true →
+    let x_7 : tobj := proj[0] x_1;
+    inc x_7;
+    dec x_1;
+    let x_8 : tagged := ctor_1[MyList.Nil];
+    case x_7 : tobj of
+    MyList.Cons →
+      let x_9 : tobj := test1._closed_0;
+      let x_10 : obj := ctor_0[MyList.Cons] x_9 x_7;
+      ret x_10
+    default →
+      dec x_7;
+      ret x_8
+════ test6 parameter plan: (every parameter kept)

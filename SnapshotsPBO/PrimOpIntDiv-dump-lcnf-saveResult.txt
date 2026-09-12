@@ -1,0 +1,12 @@
+════ 🎯 divNoInline
+def divNoInline a b : Int :=
+  let _x.1 := Int.ediv a b;
+  return _x.1
+
+════ 🎯 main
+-- LCNF (result): not stored
+
+════ 📦 Int.ediv
+def Int.ediv @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Int :=
+  extern
+

@@ -1,0 +1,20 @@
+════ 🎯 test
+def test random a.1 : EST.Out IO.Error lcAny Int :=
+  let _x.2 := random a.1;
+  cases _x.2 : EST.Out IO.Error lcAny Int
+  | EST.Out.ok a.3 a.4 =>
+    let _x.5 := random a.4;
+    cases _x.5 : EST.Out IO.Error lcAny Int
+    | EST.Out.ok a.6 a.7 =>
+      let _x.8 := Int.add a.3 a.6;
+      let _x.9 := @EST.Out.ok _ _ _ _x.8 a.7;
+      return _x.9
+    | EST.Out.error a.10 a.11 =>
+      return _x.5
+  | EST.Out.error a.12 a.13 =>
+    return _x.2
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+

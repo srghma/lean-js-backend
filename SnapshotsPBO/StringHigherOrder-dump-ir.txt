@@ -1,0 +1,355 @@
+════ 🎯 stringValues
+-- IR (what the backend reads)
+def stringValues (x_1 : ◾) (x_2 : tobj) : tobj :=
+  let x_3 : tobj := stringValues._redArg x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 : tobj :=
+  let x_1 : tobj := test1._closed_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 : tobj :=
+  let x_1 : tobj := test2._closed_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test3
+-- IR (what the backend reads)
+def test3 : tobj :=
+  let x_1 : tobj := test3._closed_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test4
+-- IR (what the backend reads)
+def test4 : tobj :=
+  let x_1 : tobj := test4._closed_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test7
+-- IR (what the backend reads)
+def test7 : tobj :=
+  let x_1 : tobj := test7._closed_1;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 String.append
+-- IR (what the backend reads)
+extern String.append (x_1 : obj) (x_2 : @& obj) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_append"
+decl.hashKeyType?: none
+
+════ 📦 String.decEq
+-- IR (what the backend reads)
+extern String.decEq (x_1 : @& obj) (x_2 : @& obj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_dec_eq"
+decl.hashKeyType?: none
+
+════ 📦 String.decidableLT
+-- IR (what the backend reads)
+extern String.decidableLT (x_1 : @& obj) (x_2 : @& obj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_dec_lt"
+decl.hashKeyType?: none
+
+════ 📦 stringValues._redArg
+-- IR (what the backend reads)
+def stringValues._redArg (x_1 : tobj) : tobj :=
+  let x_2 : obj := stringValues._redArg._closed_0;
+  inc x_1;
+  inc[2] x_2;
+  let x_3 : tobj := app x_1 x_2 x_2;
+  let x_4 : obj := stringValues._redArg._closed_1;
+  inc x_1;
+  inc x_4;
+  inc x_2;
+  let x_5 : tobj := app x_1 x_2 x_4;
+  let x_6 : tobj := app x_1 x_4 x_2;
+  let x_7 : tagged := ctor_0[List.nil];
+  let x_8 : obj := ctor_1[List.cons] x_6 x_7;
+  let x_9 : obj := ctor_1[List.cons] x_5 x_8;
+  let x_10 : obj := ctor_1[List.cons] x_3 x_9;
+  ret x_10
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_0
+-- IR (what the backend reads)
+def test1._closed_0 : obj :=
+  let x_1 : obj := pap String.decEq._boxed;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_1
+-- IR (what the backend reads)
+def test1._closed_1 : tobj :=
+  let x_1 : obj := test1._closed_0;
+  let x_2 : tobj := stringValues._redArg x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2._closed_0
+-- IR (what the backend reads)
+def test2._closed_0 : obj :=
+  let x_1 : obj := pap test2._lam_0._boxed;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2._closed_1
+-- IR (what the backend reads)
+def test2._closed_1 : tobj :=
+  let x_1 : obj := test2._closed_0;
+  let x_2 : tobj := stringValues._redArg x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2._lam_0
+-- IR (what the backend reads)
+def test2._lam_0 (x_1 : @& obj) (x_2 : @& obj) : u8 :=
+  let x_3 : u8 := String.decEq x_1 x_2;
+  case x_3 : u8 of
+  Bool.false →
+    let x_4 : u8 := 1;
+    ret x_4
+  Bool.true →
+    let x_5 : u8 := 0;
+    ret x_5
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_0
+-- IR (what the backend reads)
+def test3._closed_0 : obj :=
+  let x_1 : obj := pap String.decidableLT._boxed;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_1
+-- IR (what the backend reads)
+def test3._closed_1 : tobj :=
+  let x_1 : obj := test3._closed_0;
+  let x_2 : tobj := stringValues._redArg x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test4._closed_0
+-- IR (what the backend reads)
+def test4._closed_0 : obj :=
+  let x_1 : obj := pap test4._lam_0._boxed;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test4._closed_1
+-- IR (what the backend reads)
+def test4._closed_1 : tobj :=
+  let x_1 : obj := test4._closed_0;
+  let x_2 : tobj := stringValues._redArg x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test4._lam_0
+-- IR (what the backend reads)
+def test4._lam_0 (x_1 : @& obj) (x_2 : @& obj) : u8 :=
+  let x_3 : u8 := String.decidableLT x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test7._closed_0
+-- IR (what the backend reads)
+def test7._closed_0 : obj :=
+  let x_1 : obj := pap String.append._boxed;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test7._closed_1
+-- IR (what the backend reads)
+def test7._closed_1 : tobj :=
+  let x_1 : obj := test7._closed_0;
+  let x_2 : tobj := stringValues._redArg x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 String.append._boxed
+-- IR (what the backend reads)
+def String.append._boxed (x_1 : obj) (x_2 : obj) : obj :=
+  let x_3 : obj := String.append x_1 x_2;
+  dec x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 String.decEq._boxed
+-- IR (what the backend reads)
+def String.decEq._boxed (x_1 : obj) (x_2 : obj) : tagged :=
+  let x_3 : u8 := String.decEq x_1 x_2;
+  dec x_2;
+  dec x_1;
+  let x_4 : tagged := box x_3;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 String.decidableLT._boxed
+-- IR (what the backend reads)
+def String.decidableLT._boxed (x_1 : obj) (x_2 : obj) : tagged :=
+  let x_3 : u8 := String.decidableLT x_1 x_2;
+  dec x_2;
+  dec x_1;
+  let x_4 : tagged := box x_3;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 stringValues._redArg._closed_0
+-- IR (what the backend reads)
+def stringValues._redArg._closed_0 : obj :=
+  let x_1 : obj := "a";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 stringValues._redArg._closed_1
+-- IR (what the backend reads)
+def stringValues._redArg._closed_1 : obj :=
+  let x_1 : obj := "b";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2._lam_0._boxed
+-- IR (what the backend reads)
+def test2._lam_0._boxed (x_1 : obj) (x_2 : obj) : tagged :=
+  let x_3 : u8 := test2._lam_0 x_1 x_2;
+  dec x_2;
+  dec x_1;
+  let x_4 : tagged := box x_3;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test4._lam_0._boxed
+-- IR (what the backend reads)
+def test4._lam_0._boxed (x_1 : obj) (x_2 : obj) : tagged :=
+  let x_3 : u8 := test4._lam_0 x_1 x_2;
+  dec x_2;
+  dec x_1;
+  let x_4 : tagged := box x_3;
+  ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.StringHigherOrder]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (29): [`stringValues,
+ `test1,
+ `test2,
+ `test3,
+ `test4,
+ `test7,
+ `String.append,
+ `String.decEq,
+ `String.decidableLT,
+ `stringValues._redArg,
+ `test1._closed_0,
+ `test1._closed_1,
+ `test2._closed_0,
+ `test2._closed_1,
+ `test2._lam_0,
+ `test3._closed_0,
+ `test3._closed_1,
+ `test4._closed_0,
+ `test4._closed_1,
+ `test4._lam_0,
+ `test7._closed_0,
+ `test7._closed_1,
+ `String.append._boxed,
+ `String.decEq._boxed,
+ `String.decidableLT._boxed,
+ `stringValues._redArg._closed_0,
+ `stringValues._redArg._closed_1,
+ `test2._lam_0._boxed,
+ `test4._lam_0._boxed]
+ctors (4): [`Bool.false, `Bool.true, `List.cons, `List.nil]
+inducts (2): [`Bool, `List]

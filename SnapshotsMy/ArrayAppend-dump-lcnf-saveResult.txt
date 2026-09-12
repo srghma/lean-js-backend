@@ -1,0 +1,162 @@
+════ 🎯 test1
+def test1 xss : Array Nat :=
+  let _x.1 := 0;
+  let acc := Array.mkEmpty ◾ _x.1;
+  let _x.2 := List.forIn'.loop._at_.test1.spec_0._redArg xss acc;
+  return _x.2
+
+════ 🎯 test2
+def test2 a b : Array Nat :=
+  let _x.1 := Array.append._redArg a b;
+  return _x.1
+
+════ 🎯 test3
+def test3 b : Prod (Array Nat) (Array Nat) :=
+  let _x.1 := 3;
+  let _x.2 := 0;
+  let a := Array.replicate ◾ _x.1 _x.2;
+  let _x.3 := Array.append._redArg a b;
+  let _x.4 := Prod.mk ◾ ◾ a _x.3;
+  return _x.4
+
+════ 🎯 test4
+def test4 b : Array Nat :=
+  let _x.1 := 1;
+  let _x.2 := 2;
+  let _x.3 := Array.mkEmpty ◾ _x.2;
+  let _x.4 := Array.push ◾ _x.3 _x.1;
+  let _x.5 := Array.push ◾ _x.4 _x.2;
+  let _x.6 := Array.append._redArg _x.5 b;
+  return _x.6
+
+════ 🎯 test5
+def test5 n : Array Nat :=
+  let acc := Array.emptyWithCapacity ◾ n;
+  let _x.1 := 0;
+  let _x.2 := 1;
+  let _x.3 := Std.Legacy.Range.mk _x.1 n _x.2 ◾;
+  let _x.4 := Std.Legacy.Range.forIn'.loop._at_.test5.spec_0._redArg.2 _x.3 acc _x.1;
+  return _x.4
+
+════ 📦 Array.emptyWithCapacity
+def Array.emptyWithCapacity α @&c : Array lcAny :=
+  extern
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array lcAny :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array lcAny :=
+  extern
+
+════ 📦 Array.replicate
+def Array.replicate α n v : Array lcAny :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : lcAny :=
+  extern
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decLe
+def Nat.decLe @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.mul
+def Nat.mul @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 USize.add
+def USize.add a b : USize :=
+  extern
+
+════ 📦 USize.decEq
+def USize.decEq a b : Bool :=
+  extern
+
+════ 📦 USize.ofNat
+def USize.ofNat @&n : USize :=
+  extern
+
+════ 📦 Array.append._redArg
+def Array.append._redArg as bs : Array lcAny :=
+  let _x.1 := 0;
+  let _x.2 := Array.size ◾ bs;
+  let _x.3 := Nat.decLt _x.1 _x.2;
+  cases _x.3 : Array lcAny
+  | Bool.false =>
+    return as
+  | Bool.true =>
+    let _x.4 := Nat.decLe _x.2 _x.2;
+    cases _x.4 : Array lcAny
+    | Bool.false =>
+      cases _x.3 : Array lcAny
+      | Bool.false =>
+        return as
+      | Bool.true =>
+        let _x.5 := 0;
+        let _x.6 := USize.ofNat _x.2;
+        let _x.7 := Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg.2 bs _x.5 _x.6 as;
+        return _x.7
+    | Bool.true =>
+      let _x.8 := 0;
+      let _x.9 := USize.ofNat _x.2;
+      let _x.10 := Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg.2 bs _x.8 _x.9 as;
+      return _x.10
+
+════ 📦 List.forIn'.loop._at_.test1.spec_0._redArg
+def List.forIn'.loop._at_.test1.spec_0._redArg x.1 x.2 : Array Nat :=
+  cases x.1 : Array Nat
+  | List.nil =>
+    return x.2
+  | List.cons head.3 tail.4 =>
+    let _x.5 := Array.append._redArg x.2 head.3;
+    let _x.6 := List.forIn'.loop._at_.test1.spec_0._redArg tail.4 _x.5;
+    return _x.6
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg
+def _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg as i stop b : Array
+  lcAny :=
+  let _x.1 := USize.decEq i stop;
+  cases _x.1 : Array lcAny
+  | Bool.false =>
+    let _x.2 := Array.uget ◾ as i ◾;
+    let _x.3 := Array.push ◾ b _x.2;
+    let _x.4 := 1;
+    let _x.5 := USize.add i _x.4;
+    let _x.6 := Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg.2 as _x.5 stop _x.3;
+    return _x.6
+  | Bool.true =>
+    return b
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test5.spec_0._redArg
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test5.spec_0._redArg range b i : Array Nat :=
+  cases range : Array Nat
+  | Std.Legacy.Range.mk start stop step step_pos =>
+    let _x.1 := Nat.decLt i stop;
+    cases _x.1 : Array Nat
+    | Bool.false =>
+      return b
+    | Bool.true =>
+      let _x.2 := Nat.mul i i;
+      let _x.3 := 2;
+      let _x.4 := Array.mkEmpty ◾ _x.3;
+      let _x.5 := Array.push ◾ _x.4 i;
+      let _x.6 := Array.push ◾ _x.5 _x.2;
+      let _x.7 := Array.append._redArg b _x.6;
+      let _x.8 := Nat.add i step;
+      let _x.9 := Std.Legacy.Range.forIn'.loop._at_.test5.spec_0._redArg.2 range _x.7 _x.8;
+      return _x.9
+

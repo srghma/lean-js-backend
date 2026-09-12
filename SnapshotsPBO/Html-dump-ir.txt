@@ -1,0 +1,335 @@
+════ 🎯 Html
+-- IR: not stored
+-- JsOleanData
+induct.isEnum: false
+induct.ctors: [`Html.elem, `Html.text]
+
+════ 🎯 Elem
+❌ ⚠️ Name 'Elem' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 Text
+❌ ⚠️ Name 'Text' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 article1
+❌ ⚠️ Name 'article1' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 h11
+❌ ⚠️ Name 'h11' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 h21
+❌ ⚠️ Name 'h21' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 p1
+❌ ⚠️ Name 'p1' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 section1
+❌ ⚠️ Name 'section1' is not present in environment!
+-- IR: not stored
+-- JsOleanData
+not stored in JsOleanData
+
+════ 🎯 test
+-- IR (what the backend reads)
+def test (x_1 : @& obj) : obj :=
+  let x_2 : obj := test._closed_0;
+  let x_3 : obj := test._closed_1;
+  let x_4 : obj := test._closed_2;
+  let x_5 : obj := String.append x_4 x_1;
+  let x_6 : obj := ctor_1[Html.text] x_5;
+  let x_7 : tagged := ctor_0[List.nil];
+  let x_8 : obj := ctor_1[List.cons] x_6 x_7;
+  let x_9 : obj := ctor_0[Html.elem] x_3 x_8;
+  let x_10 : tobj := test._closed_20;
+  let x_11 : obj := ctor_1[List.cons] x_9 x_10;
+  let x_12 : obj := ctor_0[Html.elem] x_2 x_11;
+  ret x_12
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 String.append
+-- IR (what the backend reads)
+extern String.append (x_1 : obj) (x_2 : @& obj) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_append"
+decl.hashKeyType?: none
+
+════ 📦 test._closed_0
+-- IR (what the backend reads)
+def test._closed_0 : obj :=
+  let x_1 : obj := "section";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_1
+-- IR (what the backend reads)
+def test._closed_1 : obj :=
+  let x_1 : obj := "h1";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_10
+-- IR (what the backend reads)
+def test._closed_10 : obj :=
+  let x_1 : obj := "This is the first post.";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_11
+-- IR (what the backend reads)
+def test._closed_11 : obj :=
+  let x_1 : obj := test._closed_10;
+  let x_2 : obj := ctor_1[Html.text] x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_12
+-- IR (what the backend reads)
+def test._closed_12 : obj :=
+  let x_1 : obj := "Not much else to say.";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_13
+-- IR (what the backend reads)
+def test._closed_13 : obj :=
+  let x_1 : obj := test._closed_12;
+  let x_2 : obj := ctor_1[Html.text] x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_14
+-- IR (what the backend reads)
+def test._closed_14 : tobj :=
+  let x_1 : tagged := ctor_0[List.nil];
+  let x_2 : obj := test._closed_13;
+  let x_3 : obj := ctor_1[List.cons] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_15
+-- IR (what the backend reads)
+def test._closed_15 : tobj :=
+  let x_1 : tobj := test._closed_14;
+  let x_2 : obj := test._closed_11;
+  let x_3 : obj := ctor_1[List.cons] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_16
+-- IR (what the backend reads)
+def test._closed_16 : obj :=
+  let x_1 : tobj := test._closed_15;
+  let x_2 : obj := test._closed_9;
+  let x_3 : obj := ctor_0[Html.elem] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_17
+-- IR (what the backend reads)
+def test._closed_17 : tobj :=
+  let x_1 : tagged := ctor_0[List.nil];
+  let x_2 : obj := test._closed_16;
+  let x_3 : obj := ctor_1[List.cons] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_18
+-- IR (what the backend reads)
+def test._closed_18 : tobj :=
+  let x_1 : tobj := test._closed_17;
+  let x_2 : obj := test._closed_8;
+  let x_3 : obj := ctor_1[List.cons] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_19
+-- IR (what the backend reads)
+def test._closed_19 : obj :=
+  let x_1 : tobj := test._closed_18;
+  let x_2 : obj := test._closed_3;
+  let x_3 : obj := ctor_0[Html.elem] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_2
+-- IR (what the backend reads)
+def test._closed_2 : obj :=
+  let x_1 : obj := "Posts for ";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_20
+-- IR (what the backend reads)
+def test._closed_20 : tobj :=
+  let x_1 : tagged := ctor_0[List.nil];
+  let x_2 : obj := test._closed_19;
+  let x_3 : obj := ctor_1[List.cons] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_3
+-- IR (what the backend reads)
+def test._closed_3 : obj :=
+  let x_1 : obj := "article";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_4
+-- IR (what the backend reads)
+def test._closed_4 : obj :=
+  let x_1 : obj := "h2";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_5
+-- IR (what the backend reads)
+def test._closed_5 : obj :=
+  let x_1 : obj := "The first post";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_6
+-- IR (what the backend reads)
+def test._closed_6 : obj :=
+  let x_1 : obj := test._closed_5;
+  let x_2 : obj := ctor_1[Html.text] x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_7
+-- IR (what the backend reads)
+def test._closed_7 : tobj :=
+  let x_1 : tagged := ctor_0[List.nil];
+  let x_2 : obj := test._closed_6;
+  let x_3 : obj := ctor_1[List.cons] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_8
+-- IR (what the backend reads)
+def test._closed_8 : obj :=
+  let x_1 : tobj := test._closed_7;
+  let x_2 : obj := test._closed_4;
+  let x_3 : obj := ctor_0[Html.elem] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test._closed_9
+-- IR (what the backend reads)
+def test._closed_9 : obj :=
+  let x_1 : obj := "p";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.Html]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (23): [`test,
+ `String.append,
+ `test._closed_0,
+ `test._closed_1,
+ `test._closed_10,
+ `test._closed_11,
+ `test._closed_12,
+ `test._closed_13,
+ `test._closed_14,
+ `test._closed_15,
+ `test._closed_16,
+ `test._closed_17,
+ `test._closed_18,
+ `test._closed_19,
+ `test._closed_2,
+ `test._closed_20,
+ `test._closed_3,
+ `test._closed_4,
+ `test._closed_5,
+ `test._closed_6,
+ `test._closed_7,
+ `test._closed_8,
+ `test._closed_9]
+ctors (4): [`Html.elem, `Html.text, `List.cons, `List.nil]
+inducts (2): [`Html, `List]

@@ -1,0 +1,120 @@
+════ split plans
+════ mkAdd before
+def mkAdd (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) : tobj :=
+  let x_4 : tobj := Nat.add x_2 x_3;
+  let x_5 : tobj := Nat.add x_4 x_1;
+  dec x_4;
+  ret x_5
+════ mkAdd after
+def mkAdd (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) : tobj :=
+  let x_4 : tobj := Nat.add x_2 x_3;
+  let x_5 : tobj := Nat.add x_4 x_1;
+  dec x_4;
+  ret x_5
+════ mkAdd parameter plan: (every parameter kept)
+════ mkMul before
+def mkMul (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) : tobj :=
+  let x_4 : tobj := Nat.mul x_2 x_3;
+  let x_5 : tobj := Nat.mul x_4 x_1;
+  dec x_4;
+  ret x_5
+════ mkMul after
+def mkMul (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) : tobj :=
+  let x_4 : tobj := Nat.mul x_2 x_3;
+  let x_5 : tobj := Nat.mul x_4 x_1;
+  dec x_4;
+  ret x_5
+════ mkMul parameter plan: (every parameter kept)
+════ mkSum3 before
+def mkSum3 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) (x_4 : @& tobj) : tobj :=
+  let x_5 : tobj := Nat.add x_2 x_3;
+  let x_6 : tobj := Nat.add x_5 x_4;
+  dec x_5;
+  let x_7 : tobj := Nat.add x_6 x_1;
+  dec x_6;
+  ret x_7
+════ mkSum3 after
+def mkSum3 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) (x_4 : @& tobj) : tobj :=
+  let x_5 : tobj := Nat.add x_2 x_3;
+  let x_6 : tobj := Nat.add x_5 x_4;
+  dec x_5;
+  let x_7 : tobj := Nat.add x_6 x_1;
+  dec x_6;
+  ret x_7
+════ mkSum3 parameter plan: (every parameter kept)
+════ test1 before
+def test1 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) : tobj :=
+  let x_4 : tobj := Nat.add x_2 x_3;
+  let x_5 : tobj := Nat.add x_4 x_1;
+  dec x_4;
+  let x_6 : tobj := Nat.add x_3 x_2;
+  let x_7 : tobj := Nat.add x_6 x_1;
+  dec x_6;
+  let x_8 : tobj := Nat.add x_5 x_7;
+  dec x_7;
+  dec x_5;
+  ret x_8
+════ test1 after
+def test1 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) : tobj :=
+  let x_4 : tobj := Nat.add x_2 x_3;
+  let x_5 : tobj := Nat.add x_4 x_1;
+  dec x_4;
+  let x_6 : tobj := Nat.add x_3 x_2;
+  let x_7 : tobj := Nat.add x_6 x_1;
+  dec x_6;
+  let x_8 : tobj := Nat.add x_5 x_7;
+  dec x_7;
+  dec x_5;
+  ret x_8
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) : tobj :=
+  let x_4 : tobj := mkMul x_1 x_2 x_3;
+  let x_5 : tobj := mkMul x_1 x_3 x_2;
+  let x_6 : tobj := Nat.add x_4 x_5;
+  dec x_5;
+  dec x_4;
+  ret x_6
+════ test2 after
+def test2 (x_1 : @& tobj) (x_2 : @& tobj) (x_3 : @& tobj) : tobj :=
+  let x_4 : tobj := mkMul x_1 x_2 x_3;
+  let x_5 : tobj := mkMul x_1 x_3 x_2;
+  let x_6 : tobj := Nat.add x_4 x_5;
+  dec x_5;
+  dec x_4;
+  ret x_6
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : tobj) (x_2 : tobj) (x_3 : tobj) : tobj :=
+  let x_4 : obj := pap mkSum3._boxed x_1;
+  let x_5 : tobj := _private.LeanJsCliSnapshots.AppArity.0.applyThree x_4 x_2 x_3;
+  ret x_5
+════ test3 after
+def test3 (x_1 : tobj) (x_2 : tobj) (x_3 : tobj) : tobj :=
+  let x_4 : obj := pap mkSum3._boxed x_1;
+  let x_5 : tobj := _private.LeanJsCliSnapshots.AppArity.0.applyThree x_4 x_2 x_3;
+  ret x_5
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 (x_1 : obj) (x_2 : tobj) (x_3 : tobj) : tobj :=
+  inc x_1;
+  inc x_3;
+  inc x_2;
+  let x_4 : tobj := app x_1 x_2 x_3;
+  let x_5 : tobj := app x_1 x_3 x_2;
+  let x_6 : tobj := Nat.add x_4 x_5;
+  dec x_5;
+  dec x_4;
+  ret x_6
+════ test4 after
+def test4 (x_1 : obj) (x_2 : tobj) (x_3 : tobj) : tobj :=
+  inc x_1;
+  inc x_3;
+  inc x_2;
+  let x_4 : tobj := app x_1 x_2 x_3;
+  let x_5 : tobj := app x_1 x_3 x_2;
+  let x_6 : tobj := Nat.add x_4 x_5;
+  dec x_5;
+  dec x_4;
+  ret x_6
+════ test4 parameter plan: (every parameter kept)

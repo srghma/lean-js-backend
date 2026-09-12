@@ -1,0 +1,14 @@
+════ 🎯 test
+def test a.1 : EST.Out IO.Error lcAny Int :=
+  let _x.2 := 12;
+  let _x.3 := Int.ofNat _x.2;
+  let _x.4 := 1;
+  let _x.5 := Int.ofNat _x.4;
+  let _x.6 := Int.add _x.3 _x.5;
+  let _x.7 := @EST.Out.ok ◾ ◾ ◾ _x.6 a.1;
+  return _x.7
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+

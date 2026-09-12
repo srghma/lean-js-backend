@@ -1,0 +1,24 @@
+════ 🎯 test1
+def test1 c : Nat :=
+  let _x.1 := UInt32.toNat c;
+  return _x.1
+
+════ 🎯 test2
+-- LCNF (saveMono): not stored
+
+════ 🎯 test3
+-- LCNF (saveMono): not stored
+
+════ 🎯 test4
+-- LCNF (saveMono): not stored
+
+════ 🎯 test5
+-- LCNF (saveMono): not stored
+
+════ 🎯 test6
+-- LCNF (saveMono): not stored
+
+════ 📦 UInt32.toNat
+def UInt32.toNat n : Nat :=
+  extern
+

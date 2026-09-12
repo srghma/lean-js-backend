@@ -1,0 +1,86 @@
+════ 🎯 test
+def test eff a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := eff a.1;
+  cases _x.2 : EST.Out IO.Error lcAny PUnit
+  | EST.Out.ok a.3 a.4 =>
+    cases a.3 : EST.Out IO.Error lcAny PUnit
+    | Option.none =>
+      let _x.5 := PUnit.unit;
+      let _x.6 := @EST.Out.ok ◾ ◾ ◾ _x.5 a.4;
+      return _x.6
+    | Option.some val.7 =>
+      let _x.8 := PUnit.unit;
+      let sz := Array.usize ◾ val.7;
+      let _x.9 := 0;
+      let _x.10 := Array.forIn'Unsafe.loop._at_.test.spec_1.2 _x.8 val.7 sz _x.9 _x.8 a.4;
+      cases _x.10 : EST.Out IO.Error lcAny PUnit
+      | EST.Out.ok a.11 a.12 =>
+        let _x.13 := @EST.Out.ok ◾ ◾ ◾ _x.8 a.12;
+        return _x.13
+      | EST.Out.error a.14 a.15 =>
+        return _x.10
+  | EST.Out.error a.16 a.17 =>
+    let _x.18 := @EST.Out.error ◾ ◾ ◾ a.16 a.17;
+    return _x.18
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : lcAny :=
+  extern
+
+════ 📦 Array.usize
+def Array.usize α @&xs : USize :=
+  extern
+
+════ 📦 IO.getStdout
+def IO.getStdout a._@._internal._hyg.1 : ST.Out lcAny IO.FS.Stream :=
+  extern
+
+════ 📦 String.push
+def String.push a._@._internal._hyg.1 a._@._internal._hyg.2 : String :=
+  extern
+
+════ 📦 USize.add
+def USize.add a b : USize :=
+  extern
+
+════ 📦 USize.decLt
+def USize.decLt a b : Bool :=
+  extern
+
+════ 📦 IO.println._at_.test.spec_0
+def IO.println._at_.test.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 10;
+  let _x.3 := String.push s _x.2;
+  let _x.4 := IO.print._at_.IO.println._at_.test.spec_0.spec_0 _x.3 a.1;
+  return _x.4
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test.spec_1
+def _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test.spec_1 _x.1 as sz i b _y.2 : EST.Out IO.Error
+  lcAny PUnit :=
+  let _x.3 := USize.decLt i sz;
+  cases _x.3 : EST.Out IO.Error lcAny PUnit
+  | Bool.false =>
+    let _x.4 := @EST.Out.ok ◾ ◾ ◾ b _y.2;
+    return _x.4
+  | Bool.true =>
+    let a := Array.uget ◾ as i ◾;
+    let _x.5 := IO.println._at_.test.spec_0 a _y.2;
+    cases _x.5 : EST.Out IO.Error lcAny PUnit
+    | EST.Out.ok a.6 a.7 =>
+      let _x.8 := 1;
+      let _x.9 := USize.add i _x.8;
+      let _x.10 := Array.forIn'Unsafe.loop._at_.test.spec_1.2 _x.1 as sz _x.9 _x.1 a.7;
+      return _x.10
+    | EST.Out.error a.11 a.12 =>
+      return _x.5
+
+════ 📦 IO.print._at_.IO.println._at_.test.spec_0.spec_0
+def IO.print._at_.IO.println._at_.test.spec_0.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := IO.getStdout a.1;
+  cases _x.2 : EST.Out IO.Error lcAny PUnit
+  | ST.Out.mk val.3 state.4 =>
+    cases val.3 : EST.Out IO.Error lcAny PUnit
+    | IO.FS.Stream.mk flush read write getLine putStr isTty =>
+      let _x.5 := putStr s state.4;
+      return _x.5
+

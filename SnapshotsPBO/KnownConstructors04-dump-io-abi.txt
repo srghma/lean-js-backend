@@ -1,0 +1,1 @@
+KnownConstructors04: throws

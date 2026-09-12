@@ -1,0 +1,16 @@
+════ 🎯 test1
+def test1 a b : UInt32 :=
+  let _x.1 := UInt32.shiftRight a b;
+  let _x.2 := UInt32.shiftRight _x.1 b;
+  return _x.2
+
+════ 🎯 test2
+def test2 a b : UInt32 :=
+  let _x.1 := UInt32.shiftRight b b;
+  let _x.2 := UInt32.shiftRight a _x.1;
+  return _x.2
+
+════ 📦 UInt32.shiftRight
+def UInt32.shiftRight a b : UInt32 :=
+  extern
+

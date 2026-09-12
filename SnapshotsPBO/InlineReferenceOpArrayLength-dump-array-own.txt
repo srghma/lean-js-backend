@@ -1,0 +1,17 @@
+=== InlineReferenceOpArrayLength
+declarations looked at: 39
+copies of a shared array: inserted
+updates done in place: 17
+  1 in place: _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg
+  1 in place: extern1._closed_1
+  1 in place: extern2._closed_0
+  1 in place: extern2._closed_1
+  1 in place: extern2._closed_3
+  1 in place: extern2._closed_4
+  1 in place: extern2._closed_5
+  1 in place: test1
+  1 in place: test1._closed_3
+  1 in place: test1._closed_4
+  5 in place: test2
+  1 in place: test2._closed_3
+  1 in place: test2._closed_4

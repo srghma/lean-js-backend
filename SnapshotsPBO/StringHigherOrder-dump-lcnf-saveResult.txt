@@ -1,0 +1,141 @@
+════ 🎯 stringValues
+def stringValues α op : List lcAny :=
+  let _x.1 := stringValues._redArg op;
+  return _x.1
+
+════ 🎯 test1
+def test1 : List Bool :=
+  let _f.1 := test1._closed_0;
+  let _x.2 := test1._closed_1;
+  return _x.2
+
+════ 🎯 test2
+def test2 : List Bool :=
+  let _f.1 := test2._closed_0;
+  let _x.2 := test2._closed_1;
+  return _x.2
+
+════ 🎯 test3
+def test3 : List Bool :=
+  let _f.1 := test3._closed_0;
+  let _x.2 := test3._closed_1;
+  return _x.2
+
+════ 🎯 test4
+def test4 : List Bool :=
+  let _f.1 := test4._closed_0;
+  let _x.2 := test4._closed_1;
+  return _x.2
+
+════ 🎯 test7
+def test7 : List String :=
+  let _f.1 := test7._closed_0;
+  let _x.2 := test7._closed_1;
+  return _x.2
+
+════ 📦 String.append
+def String.append s @&t : String :=
+  extern
+
+════ 📦 String.decEq
+def String.decEq @&s₁ @&s₂ : Bool :=
+  extern
+
+════ 📦 String.decidableLT
+def String.decidableLT @&s₁ @&s₂ : Bool :=
+  extern
+
+════ 📦 stringValues._redArg
+def stringValues._redArg op : List lcAny :=
+  let _x.1 := stringValues._redArg._closed_0;
+  let _x.2 := op _x.1 _x.1;
+  let _x.3 := stringValues._redArg._closed_1;
+  let _x.4 := op _x.1 _x.3;
+  let _x.5 := op _x.3 _x.1;
+  let _x.6 := List.nil ◾;
+  let _x.7 := List.cons ◾ _x.5 _x.6;
+  let _x.8 := List.cons ◾ _x.4 _x.7;
+  let _x.9 := List.cons ◾ _x.2 _x.8;
+  return _x.9
+
+════ 📦 test1._closed_0
+def test1._closed_0 : String → String → Bool :=
+  let _f.1 := String.decEq;
+  return _f.1
+
+════ 📦 test1._closed_1
+def test1._closed_1 : List Bool :=
+  let _f.1 := test1._closed_0;
+  let _x.2 := stringValues._redArg _f.1;
+  return _x.2
+
+════ 📦 test2._closed_0
+def test2._closed_0 : String → String → Bool :=
+  let _f.1 := test2._lam_0;
+  return _f.1
+
+════ 📦 test2._closed_1
+def test2._closed_1 : List Bool :=
+  let _f.1 := test2._closed_0;
+  let _x.2 := stringValues._redArg _f.1;
+  return _x.2
+
+════ 📦 test2._lam_0
+def test2._lam_0 x1.1 x2.2 : Bool :=
+  let _x.3 := String.decEq x1.1 x2.2;
+  cases _x.3 : Bool
+  | Bool.false =>
+    let _x.4 := Bool.true;
+    return _x.4
+  | Bool.true =>
+    let _x.5 := Bool.false;
+    return _x.5
+
+════ 📦 test3._closed_0
+def test3._closed_0 : String → String → Bool :=
+  let _f.1 := String.decidableLT;
+  return _f.1
+
+════ 📦 test3._closed_1
+def test3._closed_1 : List Bool :=
+  let _f.1 := test3._closed_0;
+  let _x.2 := stringValues._redArg _f.1;
+  return _x.2
+
+════ 📦 test4._closed_0
+def test4._closed_0 : String → String → Bool :=
+  let _f.1 := test4._lam_0;
+  return _f.1
+
+════ 📦 test4._closed_1
+def test4._closed_1 : List Bool :=
+  let _f.1 := test4._closed_0;
+  let _x.2 := stringValues._redArg _f.1;
+  return _x.2
+
+════ 📦 test4._lam_0
+def test4._lam_0 a b : Bool :=
+  let _x.1 := String.decidableLT b a;
+  return _x.1
+
+════ 📦 test7._closed_0
+def test7._closed_0 : String → String → String :=
+  let _f.1 := String.append;
+  return _f.1
+
+════ 📦 test7._closed_1
+def test7._closed_1 : List String :=
+  let _f.1 := test7._closed_0;
+  let _x.2 := stringValues._redArg _f.1;
+  return _x.2
+
+════ 📦 stringValues._redArg._closed_0
+def stringValues._redArg._closed_0 : String :=
+  let _x.1 := "a";
+  return _x.1
+
+════ 📦 stringValues._redArg._closed_1
+def stringValues._redArg._closed_1 : String :=
+  let _x.1 := "b";
+  return _x.1
+

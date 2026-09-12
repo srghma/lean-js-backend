@@ -1,0 +1,43 @@
+════ 🎯 test
+def test f a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 0;
+  let _x.3 := Int.ofNat _x.2;
+  let _x.4 := @ST.Prim.mkRef _ _ _x.3 a.1;
+  cases _x.4 : EST.Out IO.Error lcAny PUnit
+  | ST.Out.mk val.5 state.6 =>
+    let _x.7 := f val.5;
+    let _x.8 := @ST.Prim.Ref.get _ _ _x.7 state.6;
+    cases _x.8 : EST.Out IO.Error lcAny PUnit
+    | ST.Out.mk val.9 state.10 =>
+      let _x.11 := 1;
+      let _x.12 := Int.ofNat _x.11;
+      let _x.13 := Int.add val.9 _x.12;
+      let _x.14 := @ST.Prim.Ref.set _ _ _x.7 _x.13 state.10;
+      cases _x.14 : EST.Out IO.Error lcAny PUnit
+      | ST.Out.mk val.15 state.16 =>
+        let _x.17 := @ST.Prim.Ref.get _ _ val.5 state.16;
+        cases _x.17 : EST.Out IO.Error lcAny PUnit
+        | ST.Out.mk val.18 state.19 =>
+          let _x.20 := Int.add val.18 _x.12;
+          let _x.21 := @ST.Prim.Ref.set _ _ val.5 _x.20 state.19;
+          cases _x.21 : EST.Out IO.Error lcAny PUnit
+          | ST.Out.mk val.22 state.23 =>
+            let _x.24 := @EST.Out.ok _ _ _ val.22 state.23;
+            return _x.24
+
+════ 📦 Int.add
+def Int.add @&m @&n : Int :=
+  extern
+
+════ 📦 ST.Prim.mkRef
+def ST.Prim.mkRef σ α a a._@._internal._hyg.1 : ST.Out σ (ST.Ref σ α) :=
+  extern
+
+════ 📦 ST.Prim.Ref.get
+def ST.Prim.Ref.get σ α @&r a._@._internal._hyg.1 : ST.Out σ α :=
+  extern
+
+════ 📦 ST.Prim.Ref.set
+def ST.Prim.Ref.set σ α @&r a a._@._internal._hyg.1 : ST.Out σ PUnit :=
+  extern
+

@@ -1,0 +1,11 @@
+════ span
+-- IR
+def span (x_1 : obj) (x_2 : @& obj) : tobj :=
+  let x_3 : tagged := 0;
+  let x_4 : tobj := span.go x_1 x_2 x_3;
+  ret x_4
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+

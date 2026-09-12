@@ -1,0 +1,52 @@
+════ 🎯 TestEnum
+-- LCNF (result): not stored
+
+════ 🎯 instBEqTestEnum
+def instBEqTestEnum : TestEnum → TestEnum → Bool :=
+  let _x.1 := instBEqTestEnum._closed_0;
+  return _x.1
+
+════ 🎯 test1
+def test1 a : Bool :=
+  let _x.1 := TestEnum.baz;
+  let _x.2 := instBEqTestEnum.beq _x.1 a;
+  return _x.2
+
+════ 🎯 test2
+def test2 a : Bool :=
+  let _x.1 := TestEnum.baz;
+  let _x.2 := instBEqTestEnum.beq a _x.1;
+  return _x.2
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Bool :=
+  extern
+
+════ 📦 TestEnum.ctorIdx
+def TestEnum.ctorIdx x : Nat :=
+  cases x : Nat
+  | TestEnum.foo =>
+    let _x.1 := 0;
+    return _x.1
+  | TestEnum.bar =>
+    let _x.2 := 1;
+    return _x.2
+  | TestEnum.baz =>
+    let _x.3 := 2;
+    return _x.3
+  | TestEnum.qux =>
+    let _x.4 := 3;
+    return _x.4
+
+════ 📦 instBEqTestEnum._closed_0
+def instBEqTestEnum._closed_0 : TestEnum → TestEnum → Bool :=
+  let _x.1 := instBEqTestEnum.beq;
+  return _x.1
+
+════ 📦 instBEqTestEnum.beq
+def instBEqTestEnum.beq x.1 y.2 : Bool :=
+  let _x.3 := TestEnum.ctorIdx x.1;
+  let _x.4 := TestEnum.ctorIdx y.2;
+  let _x.5 := Nat.decEq _x.3 _x.4;
+  return _x.5
+

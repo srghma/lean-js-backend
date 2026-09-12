@@ -1,0 +1,21 @@
+════ 🎯 ExprF
+-- LCNF (saveBase): not stored
+
+════ 🎯 Add
+-- LCNF (saveBase): not stored
+
+════ 🎯 Lit
+-- LCNF (saveBase): not stored
+
+════ 🎯 Mul
+-- LCNF (saveBase): not stored
+
+════ 🎯 functorExprF
+-- LCNF (saveBase): not stored
+
+════ 🎯 test1
+-- LCNF (saveBase): not stored
+
+════ 🎯 test2
+-- LCNF (saveBase): not stored
+

@@ -1,0 +1,44 @@
+════ test1
+-- IR
+def test1 : tobj :=
+  let x_1 : tobj := test1._closed_1;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test2
+-- IR
+def test2 : tobj :=
+  let x_1 : tobj := test2._closed_1;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test3
+-- IR
+def test3 : tobj :=
+  let x_1 : tobj := test3._closed_0;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test4
+-- IR
+def test4 (x_1 : @& tobj) : tobj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : tobj := Int.add x_2 x_1;
+  let x_4 : tobj := Int.add x_3 x_2;
+  dec x_2;
+  dec x_3;
+  ret x_4
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

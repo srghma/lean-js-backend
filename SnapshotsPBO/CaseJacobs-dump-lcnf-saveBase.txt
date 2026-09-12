@@ -1,0 +1,123 @@
+════ 🎯 Expr
+-- LCNF (saveBase): not stored
+
+════ 🎯 instToStringExpr
+def instToStringExpr : ToString Expr :=
+  fun _f.1 a : String :=
+    let _x.2 := renderExpr a;
+    return _x.2;
+  let _x.3 := @ToString.mk _ _f.1;
+  return _x.3
+
+════ 🎯 test1
+def test1 x.1 : String :=
+  jp _jp.2 x : String :=
+    let _x.3 := "e7: ";
+    let _x.4 := renderExpr x;
+    let _x.5 := String.append _x.3 _x.4;
+    return _x.5;
+  jp _jp.6 x : String :=
+    let _x.7 := "e4: ";
+    let _x.8 := renderExpr x;
+    let _x.9 := String.append _x.7 _x.8;
+    return _x.9;
+  cases x.1 : String
+  | Expr.add a.10 b.11 =>
+    cases a.10 : String
+    | Expr.zero =>
+      cases b.11 : String
+      | Expr.zero =>
+        let _x.12 := "e1";
+        return _x.12
+      | _ =>
+        goto _jp.2 x.1
+    | Expr.succ a.13 =>
+      let _x.14 := "e3: ";
+      let _x.15 := renderExpr a.13;
+      let _x.16 := String.append _x.14 _x.15;
+      let _x.17 := " ";
+      let _x.18 := String.append _x.16 _x.17;
+      let _x.19 := renderExpr b.11;
+      let _x.20 := String.append _x.18 _x.19;
+      return _x.20
+    | _ =>
+      cases b.11 : String
+      | Expr.zero =>
+        let _x.21 := "e6: ";
+        let _x.22 := renderExpr a.10;
+        let _x.23 := String.append _x.21 _x.22;
+        return _x.23
+      | _ =>
+        goto _jp.2 x.1
+  | Expr.mul a.24 b.25 =>
+    cases a.24 : String
+    | Expr.zero =>
+      let _x.26 := "e2: ";
+      let _x.27 := renderExpr b.25;
+      let _x.28 := String.append _x.26 _x.27;
+      return _x.28
+    | Expr.add a.29 b.30 =>
+      cases b.25 : String
+      | Expr.zero =>
+        goto _jp.6 a.24
+      | _ =>
+        let _x.31 := "e5: ";
+        let _x.32 := renderExpr a.29;
+        let _x.33 := String.append _x.31 _x.32;
+        let _x.34 := " ";
+        let _x.35 := String.append _x.33 _x.34;
+        let _x.36 := renderExpr b.30;
+        let _x.37 := String.append _x.35 _x.36;
+        let _x.38 := String.append _x.37 _x.34;
+        let _x.39 := renderExpr b.25;
+        let _x.40 := String.append _x.38 _x.39;
+        return _x.40
+    | _ =>
+      cases b.25 : String
+      | Expr.zero =>
+        goto _jp.6 a.24
+      | _ =>
+        goto _jp.2 x.1
+  | _ =>
+    goto _jp.2 x.1
+
+════ 📦 renderExpr
+def renderExpr x.1 : String :=
+  cases x.1 : String
+  | Expr.add a.2 b.3 =>
+    let _x.4 := "Add(";
+    let _x.5 := renderExpr a.2;
+    let _x.6 := String.append _x.4 _x.5;
+    let _x.7 := " ";
+    let _x.8 := String.append _x.6 _x.7;
+    let _x.9 := renderExpr b.3;
+    let _x.10 := String.append _x.8 _x.9;
+    let _x.11 := ")";
+    let _x.12 := String.append _x.10 _x.11;
+    return _x.12
+  | Expr.mul a.13 b.14 =>
+    let _x.15 := "Mul(";
+    let _x.16 := renderExpr a.13;
+    let _x.17 := String.append _x.15 _x.16;
+    let _x.18 := " ";
+    let _x.19 := String.append _x.17 _x.18;
+    let _x.20 := renderExpr b.14;
+    let _x.21 := String.append _x.19 _x.20;
+    let _x.22 := ")";
+    let _x.23 := String.append _x.21 _x.22;
+    return _x.23
+  | Expr.succ a.24 =>
+    let _x.25 := "Succ(";
+    let _x.26 := renderExpr a.24;
+    let _x.27 := String.append _x.25 _x.26;
+    let _x.28 := ")";
+    let _x.29 := String.append _x.27 _x.28;
+    return _x.29
+  | Expr.zero =>
+    let _x.30 := "Zero";
+    return _x.30
+
+════ 📦 String.append
+def String.append s @&t : String :=
+  extern
+

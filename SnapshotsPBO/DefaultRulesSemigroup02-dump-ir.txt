@@ -1,0 +1,340 @@
+════ 🎯 appendR
+-- IR (what the backend reads)
+def appendR (x_1 : obj) (x_2 : obj) : obj :=
+  let x_3 : obj := proj[0] x_1;
+  inc x_3;
+  let x_4 : obj := proj[1] x_1;
+  inc x_4;
+  dec x_1;
+  let x_5 : u8 := isShared x_2;
+  case x_5 : u8 of
+  Bool.false →
+    let x_6 : obj := proj[0] x_2;
+    let x_7 : obj := proj[1] x_2;
+    let x_8 : obj := String.append x_3 x_6;
+    dec x_6;
+    let x_9 : obj := Array.append._redArg x_4 x_7;
+    dec x_7;
+    set x_2[1] := x_9;
+    set x_2[0] := x_8;
+    ret x_2
+  Bool.true →
+    let x_10 : obj := proj[0] x_2;
+    let x_11 : obj := proj[1] x_2;
+    inc x_11;
+    inc x_10;
+    dec x_2;
+    let x_12 : obj := String.append x_3 x_10;
+    dec x_10;
+    let x_13 : obj := Array.append._redArg x_4 x_11;
+    dec x_11;
+    let x_14 : obj := ctor_0[R.mk] x_12 x_13;
+    ret x_14
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : obj) (x_2 : obj) : obj :=
+  let x_3 : obj := appendR x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 (x_1 : obj) (x_2 : obj) : obj :=
+  let x_3 : obj := appendR x_1 x_2;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test3
+-- IR (what the backend reads)
+def test3 (x_1 : obj) : obj :=
+  let x_2 : obj := test3._closed_3;
+  let x_3 : obj := appendR x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test4
+-- IR (what the backend reads)
+def test4 : obj :=
+  let x_1 : obj := test4._closed_4;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Array.mkEmpty
+-- IR (what the backend reads)
+extern Array.mkEmpty (x_1 : ◾) (x_2 : @& tobj) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_mk_empty_array_with_capacity"
+decl.hashKeyType?: none
+
+════ 📦 Array.push
+-- IR (what the backend reads)
+extern Array.push (x_1 : ◾) (x_2 : obj) (x_3 : tobj) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_push"
+decl.hashKeyType?: none
+
+════ 📦 Array.size
+-- IR (what the backend reads)
+extern Array.size (x_1 : ◾) (x_2 : @& obj) : tagged
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_get_size"
+decl.hashKeyType?: none
+
+════ 📦 Array.uget
+-- IR (what the backend reads)
+extern Array.uget (x_1 : ◾) (x_2 : @& obj) (x_3 : usize) (x_4 : ◾) : tobj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_array_uget"
+decl.hashKeyType?: none
+
+════ 📦 Nat.decLe
+-- IR (what the backend reads)
+extern Nat.decLe (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_dec_le"
+decl.hashKeyType?: none
+
+════ 📦 Nat.decLt
+-- IR (what the backend reads)
+extern Nat.decLt (x_1 : @& tobj) (x_2 : @& tobj) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_nat_dec_lt"
+decl.hashKeyType?: none
+
+════ 📦 String.append
+-- IR (what the backend reads)
+extern String.append (x_1 : obj) (x_2 : @& obj) : obj
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_string_append"
+decl.hashKeyType?: none
+
+════ 📦 USize.add
+-- IR (what the backend reads)
+extern USize.add (x_1 : usize) (x_2 : usize) : usize
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_usize_add"
+decl.hashKeyType?: none
+
+════ 📦 USize.decEq
+-- IR (what the backend reads)
+extern USize.decEq (x_1 : usize) (x_2 : usize) : u8
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_usize_dec_eq"
+decl.hashKeyType?: none
+
+════ 📦 USize.ofNat
+-- IR (what the backend reads)
+extern USize.ofNat (x_1 : @& tobj) : usize
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_usize_of_nat"
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_0
+-- IR (what the backend reads)
+def test3._closed_0 : obj :=
+  let x_1 : obj := "hello";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_1
+-- IR (what the backend reads)
+def test3._closed_1 : obj :=
+  let x_1 : tagged := 1;
+  let x_2 : obj := Array.mkEmpty ◾ x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_2
+-- IR (what the backend reads)
+def test3._closed_2 : obj :=
+  let x_1 : obj := test3._closed_0;
+  let x_2 : obj := test3._closed_1;
+  let x_3 : obj := Array.push ◾ x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_3
+-- IR (what the backend reads)
+def test3._closed_3 : obj :=
+  let x_1 : obj := test3._closed_2;
+  let x_2 : obj := test3._closed_0;
+  let x_3 : obj := ctor_0[R.mk] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test4._closed_0
+-- IR (what the backend reads)
+def test4._closed_0 : obj :=
+  let x_1 : obj := ", World!";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test4._closed_1
+-- IR (what the backend reads)
+def test4._closed_1 : obj :=
+  let x_1 : obj := "World!";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test4._closed_2
+-- IR (what the backend reads)
+def test4._closed_2 : obj :=
+  let x_1 : obj := test4._closed_1;
+  let x_2 : obj := test3._closed_1;
+  let x_3 : obj := Array.push ◾ x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test4._closed_3
+-- IR (what the backend reads)
+def test4._closed_3 : obj :=
+  let x_1 : obj := test4._closed_2;
+  let x_2 : obj := test4._closed_0;
+  let x_3 : obj := ctor_0[R.mk] x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test4._closed_4
+-- IR (what the backend reads)
+def test4._closed_4 : obj :=
+  let x_1 : obj := test4._closed_3;
+  let x_2 : obj := test3._closed_3;
+  let x_3 : obj := appendR x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Array.append._redArg
+-- IR (what the backend reads)
+def Array.append._redArg (x_1 : obj) (x_2 : @& obj) : obj :=
+  let x_3 : tagged := 0;
+  let x_4 : tagged := Array.size ◾ x_2;
+  let x_5 : u8 := Nat.decLt x_3 x_4;
+  case x_5 : u8 of
+  Bool.false →
+    ret x_1
+  Bool.true →
+    let x_6 : u8 := Nat.decLe x_4 x_4;
+    case x_6 : u8 of
+    Bool.false →
+      case x_5 : u8 of
+      Bool.false →
+        ret x_1
+      Bool.true →
+        let x_7 : usize := 0;
+        let x_8 : usize := USize.ofNat x_4;
+        let x_9 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg x_2 x_7 x_8 x_1;
+        ret x_9
+    Bool.true →
+      let x_10 : usize := 0;
+      let x_11 : usize := USize.ofNat x_4;
+      let x_12 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg x_2 x_10 x_11 x_1;
+      ret x_12
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg
+-- IR (what the backend reads)
+def _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg (x_1 : @& obj) (x_2 : usize) (x_3 : usize) (x_4 : obj) : obj :=
+  let x_5 : u8 := USize.decEq x_2 x_3;
+  case x_5 : u8 of
+  Bool.false →
+    let x_6 : tobj := Array.uget ◾ x_1 x_2 ◾;
+    let x_7 : obj := Array.push ◾ x_4 x_6;
+    let x_8 : usize := 1;
+    let x_9 : usize := USize.add x_2 x_8;
+    let x_10 : obj := _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg x_1 x_9 x_3 x_7;
+    ret x_10
+  Bool.true →
+    ret x_4
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.DefaultRulesSemigroup02]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (26): [`appendR,
+ `test1,
+ `test2,
+ `test3,
+ `test4,
+ `Array.mkEmpty,
+ `Array.push,
+ `Array.size,
+ `Array.uget,
+ `Nat.decLe,
+ `Nat.decLt,
+ `String.append,
+ `USize.add,
+ `USize.decEq,
+ `USize.ofNat,
+ `test3._closed_0,
+ `test3._closed_1,
+ `test3._closed_2,
+ `test3._closed_3,
+ `test4._closed_0,
+ `test4._closed_1,
+ `test4._closed_2,
+ `test4._closed_3,
+ `test4._closed_4,
+ `Array.append._redArg,
+ Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkStr (Lean.Name.mkNum `_private.Init.Data.Array.Basic 0) "Array") "foldlMUnsafe") "fold") "_at_") "Array") "append") "spec_0") "_redArg"]
+ctors (3): [`Bool.false, `Bool.true, `R.mk]
+inducts (2): [`Bool, `R]

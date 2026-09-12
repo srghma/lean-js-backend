@@ -1,0 +1,48 @@
+════ 🎯 test1
+def test1 a b : Bool :=
+  let _x.1 := UInt32.decEq a b;
+  return _x.1
+
+════ 🎯 test2
+def test2 a b : Bool :=
+  let _x.1 := UInt32.decEq a b;
+  cases _x.1 : Bool
+  | Bool.false =>
+    let _x.2 := Bool.true;
+    return _x.2
+  | Bool.true =>
+    let _x.3 := Bool.false;
+    return _x.3
+
+════ 🎯 test3
+def test3 a b : Bool :=
+  let _x.1 := UInt32.decLt a b;
+  return _x.1
+
+════ 🎯 test4
+def test4 a b : Bool :=
+  let _x.1 := UInt32.decLt b a;
+  return _x.1
+
+════ 🎯 test5
+def test5 a b : Bool :=
+  let _x.1 := UInt32.decLe a b;
+  return _x.1
+
+════ 🎯 test6
+def test6 a b : Bool :=
+  let _x.1 := UInt32.decLe b a;
+  return _x.1
+
+════ 📦 UInt32.decEq
+def UInt32.decEq a b : Bool :=
+  extern
+
+════ 📦 UInt32.decLe
+def UInt32.decLe a b : Bool :=
+  extern
+
+════ 📦 UInt32.decLt
+def UInt32.decLt a b : Bool :=
+  extern
+

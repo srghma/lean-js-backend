@@ -1,0 +1,20 @@
+════ split plans
+════ test before
+def test (x_1 : u8) : obj :=
+  case x_1 : u8 of
+  Bool.false →
+    let x_2 : obj := test._closed_4;
+    ret x_2
+  Bool.true →
+    let x_3 : obj := test._closed_6;
+    ret x_3
+════ test after
+def test (x_1 : u8) : obj :=
+  case x_1 : u8 of
+  Bool.false →
+    let x_2 : obj := test._closed_4;
+    ret x_2
+  Bool.true →
+    let x_3 : obj := test._closed_6;
+    ret x_3
+════ test parameter plan: (every parameter kept)

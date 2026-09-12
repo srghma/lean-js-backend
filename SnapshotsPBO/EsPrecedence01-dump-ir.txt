@@ -1,0 +1,17 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 (x_1 : obj) (x_2 : tagged) (x_3 : tagged) : u8 :=
+  let x_4 : tagged := app x_1 x_2;
+  let x_5 : u8 := unbox x_4;
+  ret x_5
+-- JsOleanData
+decl.resultIsBool: true
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.EsPrecedence01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (1): [`test1]
+ctors (0): []
+inducts (0): []

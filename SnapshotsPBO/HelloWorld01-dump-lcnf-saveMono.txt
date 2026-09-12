@@ -1,0 +1,31 @@
+════ 🎯 test
+def test a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := "Hello, World!";
+  let _x.3 := IO.println._at_.test.spec_0 _x.2 a.1;
+  return _x.3
+
+════ 📦 IO.getStdout
+def IO.getStdout a._@._internal._hyg.1 : ST.Out lcAny IO.FS.Stream :=
+  extern
+
+════ 📦 String.push
+def String.push a._@._internal._hyg.1 a._@._internal._hyg.2 : String :=
+  extern
+
+════ 📦 IO.println._at_.test.spec_0
+def IO.println._at_.test.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 10;
+  let _x.3 := String.push s _x.2;
+  let _x.4 := IO.print._at_.IO.println._at_.test.spec_0.spec_0 _x.3 a.1;
+  return _x.4
+
+════ 📦 IO.print._at_.IO.println._at_.test.spec_0.spec_0
+def IO.print._at_.IO.println._at_.test.spec_0.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := IO.getStdout a.1;
+  cases _x.2 : EST.Out IO.Error lcAny PUnit
+  | ST.Out.mk val.3 state.4 =>
+    cases val.3 : EST.Out IO.Error lcAny PUnit
+    | IO.FS.Stream.mk flush read write getLine putStr isTty =>
+      let _x.5 := putStr s state.4;
+      return _x.5
+

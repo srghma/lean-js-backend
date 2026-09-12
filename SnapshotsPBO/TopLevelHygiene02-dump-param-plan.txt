@@ -1,0 +1,20 @@
+════ test2
+-- IR
+def test2 (x_1 : ◾) (x_2 : ◾) (x_3 : tobj) (x_4 : tobj) : tobj :=
+  let x_5 : tobj := app x_3 x_4;
+  ret x_5
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top, top]
+-- callers:
+
+════ wat
+-- IR
+def wat : tobj :=
+  let x_1 : tobj := wat._closed_0;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+

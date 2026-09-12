@@ -1,0 +1,10 @@
+════ 🎯 foo
+def foo : String :=
+  let _x.1 := "foo";
+  return _x.1
+
+════ 🎯 test
+def test : String :=
+  let _x.1 := foo;
+  return _x.1
+

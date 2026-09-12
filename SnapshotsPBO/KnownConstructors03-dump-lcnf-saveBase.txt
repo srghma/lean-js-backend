@@ -1,0 +1,17 @@
+════ 🎯 test
+def test x : String :=
+  let _x.1 := 42;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := Int.decLt _x.2 x;
+  cases _x.3 : String
+  | Decidable.isFalse x.4 =>
+    let _x.5 := "";
+    return _x.5
+  | Decidable.isTrue x.6 =>
+    let _x.7 := "Hello, World!";
+    return _x.7
+
+════ 📦 Int.decLt
+def Int.decLt @&a @&b : Decidable lcErased :=
+  extern
+

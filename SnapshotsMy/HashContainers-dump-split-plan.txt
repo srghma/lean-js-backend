@@ -1,0 +1,224 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_1;
+  let x_3 : obj := List.forIn'.loop._at_.test1.spec_2._redArg x_1 x_2;
+  let x_4 : tobj := proj[0] x_3;
+  inc x_4;
+  dec x_3;
+  ret x_4
+════ test1 after
+def test1 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_1;
+  let x_3 : obj := List.forIn'.loop._at_.test1.spec_2._redArg x_1 x_2;
+  let x_4 : tobj := proj[0] x_3;
+  inc x_4;
+  dec x_3;
+  ret x_4
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test2._closed_1;
+  let x_3 : obj := List.forIn'.loop._at_.test2.spec_1._redArg x_1 x_2;
+  let x_4 : tagged := 3;
+  let x_5 : tobj := Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2._redArg x_3 x_4;
+  dec x_3;
+  ret x_5
+════ test2 after
+def test2 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test2._closed_1;
+  let x_3 : obj := List.forIn'.loop._at_.test2.spec_1._redArg x_1 x_2;
+  let x_4 : tagged := 3;
+  let x_5 : tobj := Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2._redArg x_3 x_4;
+  dec x_3;
+  ret x_5
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_1;
+  let x_3 : obj := List.forIn'.loop._at_.test3.spec_1._redArg x_1 x_2;
+  let x_4 : tobj := proj[0] x_3;
+  inc x_4;
+  let x_5 : obj := test3._closed_0;
+  let x_6 : u8 := Std.DHashMap.Internal.Raw₀.contains._at_.test3.spec_2._redArg x_3 x_5;
+  dec x_5;
+  dec x_3;
+  case x_6 : u8 of
+  Bool.false →
+    ret x_4
+  Bool.true →
+    let x_7 : tagged := 1;
+    let x_8 : tobj := Nat.add x_4 x_7;
+    dec x_4;
+    ret x_8
+════ test3 after
+def test3 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_1;
+  let x_3 : obj := List.forIn'.loop._at_.test3.spec_1._redArg x_1 x_2;
+  let x_4 : tobj := proj[0] x_3;
+  inc x_4;
+  let x_5 : obj := test3._closed_0;
+  let x_6 : u8 := Std.DHashMap.Internal.Raw₀.contains._at_.test3.spec_2._redArg x_3 x_5;
+  dec x_5;
+  dec x_3;
+  case x_6 : u8 of
+  Bool.false →
+    ret x_4
+  Bool.true →
+    let x_7 : tagged := 1;
+    let x_8 : tobj := Nat.add x_4 x_7;
+    dec x_4;
+    ret x_8
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_1;
+  inc x_2;
+  inc x_1;
+  let x_3 : obj := List.forIn'.loop._at_.test4.spec_0._redArg x_1 x_2;
+  let x_4 : tobj := proj[0] x_3;
+  inc x_4;
+  dec x_3;
+  let x_5 : obj := List.forIn'.loop._at_.test4.spec_1._redArg x_1 x_2;
+  let x_6 : tobj := proj[0] x_5;
+  inc x_6;
+  dec x_5;
+  let x_7 : tobj := Nat.add x_4 x_6;
+  dec x_6;
+  dec x_4;
+  ret x_7
+════ test4 after
+def test4 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_1;
+  inc x_2;
+  inc x_1;
+  let x_3 : obj := List.forIn'.loop._at_.test4.spec_0._redArg x_1 x_2;
+  let x_4 : tobj := proj[0] x_3;
+  inc x_4;
+  dec x_3;
+  let x_5 : obj := List.forIn'.loop._at_.test4.spec_1._redArg x_1 x_2;
+  let x_6 : tobj := proj[0] x_5;
+  inc x_6;
+  dec x_5;
+  let x_7 : tobj := Nat.add x_4 x_6;
+  dec x_6;
+  dec x_4;
+  ret x_7
+════ test4 parameter plan: (every parameter kept)
+════ test5 before
+def test5 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_1;
+  let x_3 : obj := List.forIn'.loop._at_.test4.spec_0._redArg x_1 x_2;
+  let x_4 : obj := test3._closed_0;
+  inc x_3;
+  let x_5 : obj := Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0._redArg x_3 x_4;
+  dec x_4;
+  let x_6 : tobj := proj[0] x_5;
+  inc x_6;
+  dec x_5;
+  let x_7 : obj := test5._closed_0;
+  let x_8 : obj := Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0._redArg x_3 x_7;
+  dec x_7;
+  let x_9 : tobj := proj[0] x_8;
+  inc x_9;
+  dec x_8;
+  let x_10 : tagged := 100;
+  let x_11 : tobj := Nat.mul x_6 x_10;
+  dec x_6;
+  let x_12 : tobj := Nat.add x_11 x_9;
+  dec x_9;
+  dec x_11;
+  ret x_12
+════ test5 after
+def test5 (x_1 : tobj) : tobj :=
+  let x_2 : obj := test1._closed_1;
+  let x_3 : obj := List.forIn'.loop._at_.test4.spec_0._redArg x_1 x_2;
+  let x_4 : obj := test3._closed_0;
+  inc x_3;
+  let x_5 : obj := Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0._redArg x_3 x_4;
+  dec x_4;
+  let x_6 : tobj := proj[0] x_5;
+  inc x_6;
+  dec x_5;
+  let x_7 : obj := test5._closed_0;
+  let x_8 : obj := Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0._redArg x_3 x_7;
+  dec x_7;
+  let x_9 : tobj := proj[0] x_8;
+  inc x_9;
+  dec x_8;
+  let x_10 : tagged := 100;
+  let x_11 : tobj := Nat.mul x_6 x_10;
+  dec x_6;
+  let x_12 : tobj := Nat.add x_11 x_9;
+  dec x_9;
+  dec x_11;
+  ret x_12
+════ test5 parameter plan: (every parameter kept)
+════ test6 before
+def test6 (x_1 : tobj) : tobj :=
+  block_5 (x_2 : tobj) :=
+    let x_3 : tagged := ctor_0[List.nil];
+    let x_4 : tobj := List.mapTR.loop._at_.test6.spec_0 x_2 x_3;
+    ret x_4;
+  let x_6 : tagged := 0;
+  let x_7 : obj := test1._closed_1;
+  let x_8 : obj := List.forIn'.loop._at_.test4.spec_0._redArg x_1 x_7;
+  let x_9 : obj := proj[1] x_8;
+  inc x_9;
+  dec x_8;
+  let x_10 : tagged := ctor_0[List.nil];
+  let x_11 : tagged := Array.size ◾ x_9;
+  let x_12 : u8 := Nat.decLt x_6 x_11;
+  case x_12 : u8 of
+  Bool.false →
+    dec x_9;
+    jmp block_5 x_10
+  Bool.true →
+    let x_13 : usize := USize.ofNat x_11;
+    let x_14 : usize := 0;
+    let x_15 : tobj := _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test6.spec_2 x_9 x_13 x_14 x_10;
+    dec x_9;
+    jmp block_5 x_15
+════ test6 after
+def test6 (x_1 : tobj) : tobj :=
+  block_5 (x_2 : tobj) :=
+    let x_3 : tagged := ctor_0[List.nil];
+    let x_4 : tobj := List.mapTR.loop._at_.test6.spec_0 x_2 x_3;
+    ret x_4;
+  let x_6 : tagged := 0;
+  let x_7 : obj := test1._closed_1;
+  let x_8 : obj := List.forIn'.loop._at_.test4.spec_0._redArg x_1 x_7;
+  let x_9 : obj := proj[1] x_8;
+  inc x_9;
+  dec x_8;
+  let x_10 : tagged := ctor_0[List.nil];
+  let x_11 : tagged := Array.size ◾ x_9;
+  let x_12 : u8 := Nat.decLt x_6 x_11;
+  case x_12 : u8 of
+  Bool.false →
+    dec x_9;
+    jmp block_5 x_10
+  Bool.true →
+    let x_13 : usize := USize.ofNat x_11;
+    let x_14 : usize := 0;
+    let x_15 : tobj := _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test6.spec_2 x_9 x_13 x_14 x_10;
+    dec x_9;
+    jmp block_5 x_15
+════ test6 parameter plan: (every parameter kept)
+════ test7 before
+def test7 (x_1 : tobj) (x_2 : @& obj) : tobj :=
+  let x_3 : tagged := 0;
+  let x_4 : obj := test1._closed_1;
+  let x_5 : obj := List.forIn'.loop._at_.test7.spec_0._redArg x_1 x_4;
+  let x_6 : tobj := Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0._redArg x_5 x_2 x_3;
+  dec x_5;
+  ret x_6
+════ test7 after
+def test7 (x_1 : tobj) (x_2 : @& obj) : tobj :=
+  let x_3 : tagged := 0;
+  let x_4 : obj := test1._closed_1;
+  let x_5 : obj := List.forIn'.loop._at_.test7.spec_0._redArg x_1 x_4;
+  let x_6 : tobj := Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0._redArg x_5 x_2 x_3;
+  dec x_5;
+  ret x_6
+════ test7 parameter plan: (every parameter kept)

@@ -1,0 +1,614 @@
+════ 🎯 errors
+def errors : List IO.Error :=
+  let _x.1 := "something went wrong";
+  let _x.2 := IO.Error.userError _x.1;
+  let _x.3 := 7;
+  let _x.4 := "Bad thing";
+  let _x.5 := IO.Error.otherError _x.3 _x.4;
+  let _x.6 := "data.txt";
+  let _x.7 := 2;
+  let _x.8 := "open failed";
+  let _x.9 := IO.Error.noFileOrDirectory _x.6 _x.7 _x.8;
+  let _x.10 := "read";
+  let _x.11 := Option.some ◾ _x.10;
+  let _x.12 := 22;
+  let _x.13 := "Not a number";
+  let _x.14 := IO.Error.invalidArgument _x.11 _x.12 _x.13;
+  let _x.15 := IO.Error.unexpectedEof;
+  let _x.16 := List.nil ◾;
+  let _x.17 := List.cons ◾ _x.15 _x.16;
+  let _x.18 := List.cons ◾ _x.14 _x.17;
+  let _x.19 := List.cons ◾ _x.9 _x.18;
+  let _x.20 := List.cons ◾ _x.5 _x.19;
+  let _x.21 := List.cons ◾ _x.2 _x.20;
+  return _x.21
+
+════ 🎯 main
+def main a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := errors;
+  let _x.3 := PUnit.unit;
+  let _x.4 := List.forIn'.loop._at_.main.spec_1._redArg _x.3 _x.2 _x.3 a.1;
+  cases _x.4 : EST.Out IO.Error lcAny PUnit
+  | EST.Out.ok a.5 a.6 =>
+    let _x.7 := "boom ";
+    let _x.8 := 2;
+    let _x.9 := Nat.reprFast _x.8;
+    let _x.10 := String.append _x.7 _x.9;
+    let _x.11 := IO.Error.userError _x.10;
+    let _x.12 := @EST.Out.error ◾ ◾ ◾ _x.11 a.6;
+    return _x.12
+  | EST.Out.error a.13 a.14 =>
+    return _x.4
+
+════ 📦 Array.getInternal
+def Array.getInternal α @&a @&i h : lcAny :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 IO.getStdout
+def IO.getStdout a._@._internal._hyg.1 : ST.Out lcAny IO.FS.Stream :=
+  extern
+
+════ 📦 List.range
+def List.range n : List Nat :=
+  let _x.1 := List.nil ◾;
+  let _x.2 := List.range.loop n _x.1;
+  return _x.2
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.digitChar
+def Nat.digitChar n : UInt32 :=
+  let _x.1 := 0;
+  let _x.2 := Nat.decEq n _x.1;
+  cases _x.2 : UInt32
+  | Bool.false =>
+    let _x.3 := 1;
+    let _x.4 := Nat.decEq n _x.3;
+    cases _x.4 : UInt32
+    | Bool.false =>
+      let _x.5 := 2;
+      let _x.6 := Nat.decEq n _x.5;
+      cases _x.6 : UInt32
+      | Bool.false =>
+        let _x.7 := 3;
+        let _x.8 := Nat.decEq n _x.7;
+        cases _x.8 : UInt32
+        | Bool.false =>
+          let _x.9 := 4;
+          let _x.10 := Nat.decEq n _x.9;
+          cases _x.10 : UInt32
+          | Bool.false =>
+            let _x.11 := 5;
+            let _x.12 := Nat.decEq n _x.11;
+            cases _x.12 : UInt32
+            | Bool.false =>
+              let _x.13 := 6;
+              let _x.14 := Nat.decEq n _x.13;
+              cases _x.14 : UInt32
+              | Bool.false =>
+                let _x.15 := 7;
+                let _x.16 := Nat.decEq n _x.15;
+                cases _x.16 : UInt32
+                | Bool.false =>
+                  let _x.17 := 8;
+                  let _x.18 := Nat.decEq n _x.17;
+                  cases _x.18 : UInt32
+                  | Bool.false =>
+                    let _x.19 := 9;
+                    let _x.20 := Nat.decEq n _x.19;
+                    cases _x.20 : UInt32
+                    | Bool.false =>
+                      let _x.21 := 10;
+                      let _x.22 := Nat.decEq n _x.21;
+                      cases _x.22 : UInt32
+                      | Bool.false =>
+                        let _x.23 := 11;
+                        let _x.24 := Nat.decEq n _x.23;
+                        cases _x.24 : UInt32
+                        | Bool.false =>
+                          let _x.25 := 12;
+                          let _x.26 := Nat.decEq n _x.25;
+                          cases _x.26 : UInt32
+                          | Bool.false =>
+                            let _x.27 := 13;
+                            let _x.28 := Nat.decEq n _x.27;
+                            cases _x.28 : UInt32
+                            | Bool.false =>
+                              let _x.29 := 14;
+                              let _x.30 := Nat.decEq n _x.29;
+                              cases _x.30 : UInt32
+                              | Bool.false =>
+                                let _x.31 := 15;
+                                let _x.32 := Nat.decEq n _x.31;
+                                cases _x.32 : UInt32
+                                | Bool.false =>
+                                  let _x.33 := 42;
+                                  return _x.33
+                                | Bool.true =>
+                                  let _x.34 := 102;
+                                  return _x.34
+                              | Bool.true =>
+                                let _x.35 := 101;
+                                return _x.35
+                            | Bool.true =>
+                              let _x.36 := 100;
+                              return _x.36
+                          | Bool.true =>
+                            let _x.37 := 99;
+                            return _x.37
+                        | Bool.true =>
+                          let _x.38 := 98;
+                          return _x.38
+                      | Bool.true =>
+                        let _x.39 := 97;
+                        return _x.39
+                    | Bool.true =>
+                      let _x.40 := 57;
+                      return _x.40
+                  | Bool.true =>
+                    let _x.41 := 56;
+                    return _x.41
+                | Bool.true =>
+                  let _x.42 := 55;
+                  return _x.42
+              | Bool.true =>
+                let _x.43 := 54;
+                return _x.43
+            | Bool.true =>
+              let _x.44 := 53;
+              return _x.44
+          | Bool.true =>
+            let _x.45 := 52;
+            return _x.45
+        | Bool.true =>
+          let _x.46 := 51;
+          return _x.46
+      | Bool.true =>
+        let _x.47 := 50;
+        return _x.47
+    | Bool.true =>
+      let _x.48 := 49;
+      return _x.48
+  | Bool.true =>
+    let _x.49 := 48;
+    return _x.49
+
+════ 📦 Nat.div
+def Nat.div @&x @&y : Nat :=
+  extern
+
+════ 📦 Nat.mod
+def Nat.mod @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.pow
+def Nat.pow @&m @&a._@._internal._hyg.1 : Nat :=
+  extern
+
+════ 📦 Nat.reprFast
+def Nat.reprFast n : String :=
+  let _x.1 := Nat.reprArray.2;
+  let _x.2 := Array.size ◾ _x.1;
+  let _x.3 := Nat.decLt n _x.2;
+  cases _x.3 : String
+  | Bool.false =>
+    let _x.4 := 2;
+    let _x.5 := System.Platform.numBits;
+    let _x.6 := Nat.pow _x.4 _x.5;
+    let _x.7 := Nat.decLt n _x.6;
+    cases _x.7 : String
+    | Bool.false =>
+      let _x.8 := 10;
+      let _x.9 := Nat.toDigits _x.8 n;
+      let _x.10 := String.ofList _x.9;
+      return _x.10
+    | Bool.true =>
+      let _x.11 := USize.ofNatLT n ◾;
+      let _x.12 := USize.repr _x.11;
+      return _x.12
+  | Bool.true =>
+    let _x.13 := Array.getInternal ◾ _x.1 n ◾;
+    return _x.13
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.toDigits
+def Nat.toDigits base n : List UInt32 :=
+  let _x.1 := 1;
+  let _x.2 := Nat.add n _x.1;
+  let _x.3 := List.nil ◾;
+  let _x.4 := Nat.toDigitsCore base _x.2 n _x.3;
+  return _x.4
+
+════ 📦 Nat.toDigitsCore
+def Nat.toDigitsCore base x.1 x.2 x.3 : List UInt32 :=
+  let zero := 0;
+  let isZero := Nat.decEq x.1 zero;
+  cases isZero : List UInt32
+  | Bool.true =>
+    return x.3
+  | Bool.false =>
+    let _x.4 := Nat.mod x.2 base;
+    let d := Nat.digitChar _x.4;
+    let n' := Nat.div x.2 base;
+    let _x.5 := Nat.decEq n' zero;
+    cases _x.5 : List UInt32
+    | Bool.false =>
+      let one := 1;
+      let n.6 := Nat.sub x.1 one;
+      let _x.7 := List.cons ◾ d x.3;
+      let _x.8 := Nat.toDigitsCore base n.6 n' _x.7;
+      return _x.8
+    | Bool.true =>
+      let _x.9 := List.cons ◾ d x.3;
+      return _x.9
+
+════ 📦 String.append
+def String.append s @&t : String :=
+  extern
+
+════ 📦 String.ofList
+def String.ofList data : String :=
+  extern
+
+════ 📦 String.push
+def String.push a._@._internal._hyg.1 a._@._internal._hyg.2 : String :=
+  extern
+
+════ 📦 UInt32.add
+def UInt32.add a b : UInt32 :=
+  extern
+
+════ 📦 UInt32.decLe
+def UInt32.decLe a b : Bool :=
+  extern
+
+════ 📦 UInt32.toNat
+def UInt32.toNat n : Nat :=
+  extern
+
+════ 📦 USize.ofNat
+def USize.ofNat @&n : USize :=
+  extern
+
+════ 📦 USize.ofNatLT
+def USize.ofNatLT @&n h : USize :=
+  extern
+
+════ 📦 USize.repr
+def USize.repr @&n : String :=
+  extern
+
+════ 📦 _private.Init.Data.Repr.0.Nat.reprArray
+def _private.Init.Data.Repr.0.Nat.reprArray : Array String :=
+  let _x.1 := 128;
+  let _x.2 := List.range _x.1;
+  let _x.3 := List.nil ◾;
+  let _x.4 := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 _x.2 _x.3;
+  let _x.5 := Array.mk ◾ _x.4;
+  return _x.5
+
+════ 📦 IO.Error.fopenErrorToString
+def IO.Error.fopenErrorToString gist fn code x.1 : String :=
+  cases x.1 : String
+  | Option.none =>
+    let _x.2 := IO.Error.downCaseFirst.2 gist;
+    let _x.3 := " (error code: ";
+    let _x.4 := String.append _x.2 _x.3;
+    let _x.5 := UInt32.toNat code;
+    let _x.6 := Nat.reprFast _x.5;
+    let _x.7 := String.append _x.4 _x.6;
+    let _x.8 := ")\n  file: ";
+    let _x.9 := String.append _x.7 _x.8;
+    let _x.10 := String.append _x.9 fn;
+    return _x.10
+  | Option.some val.11 =>
+    let _x.12 := IO.Error.downCaseFirst.2 gist;
+    let _x.13 := " (error code: ";
+    let _x.14 := String.append _x.12 _x.13;
+    let _x.15 := UInt32.toNat code;
+    let _x.16 := Nat.reprFast _x.15;
+    let _x.17 := String.append _x.14 _x.16;
+    let _x.18 := ", ";
+    let _x.19 := String.append _x.17 _x.18;
+    let _x.20 := IO.Error.downCaseFirst.2 val.11;
+    let _x.21 := String.append _x.19 _x.20;
+    let _x.22 := ")\n  file: ";
+    let _x.23 := String.append _x.21 _x.22;
+    let _x.24 := String.append _x.23 fn;
+    return _x.24
+
+════ 📦 IO.Error.otherErrorToString
+def IO.Error.otherErrorToString gist code x.1 : String :=
+  cases x.1 : String
+  | Option.none =>
+    let _x.2 := IO.Error.downCaseFirst.2 gist;
+    let _x.3 := " (error code: ";
+    let _x.4 := String.append _x.2 _x.3;
+    let _x.5 := UInt32.toNat code;
+    let _x.6 := Nat.reprFast _x.5;
+    let _x.7 := String.append _x.4 _x.6;
+    let _x.8 := ")";
+    let _x.9 := String.append _x.7 _x.8;
+    return _x.9
+  | Option.some val.10 =>
+    let _x.11 := IO.Error.downCaseFirst.2 gist;
+    let _x.12 := " (error code: ";
+    let _x.13 := String.append _x.11 _x.12;
+    let _x.14 := UInt32.toNat code;
+    let _x.15 := Nat.reprFast _x.14;
+    let _x.16 := String.append _x.13 _x.15;
+    let _x.17 := ", ";
+    let _x.18 := String.append _x.16 _x.17;
+    let _x.19 := IO.Error.downCaseFirst.2 val.10;
+    let _x.20 := String.append _x.18 _x.19;
+    let _x.21 := ")";
+    let _x.22 := String.append _x.20 _x.21;
+    return _x.22
+
+════ 📦 IO.Error.toString
+def IO.Error.toString x.1 : String :=
+  jp _jp.2 code details : String :=
+    let _x.3 := Option.none ◾;
+    let _x.4 := IO.Error.otherErrorToString details code _x.3;
+    return _x.4;
+  cases x.1 : String
+  | IO.Error.alreadyExists filename.5 osCode.6 details.7 =>
+    cases filename.5 : String
+    | Option.none =>
+      let _x.8 := "already exists";
+      let _x.9 := Option.some ◾ details.7;
+      let _x.10 := IO.Error.otherErrorToString _x.8 osCode.6 _x.9;
+      return _x.10
+    | Option.some val.11 =>
+      let _x.12 := "already exists";
+      let _x.13 := Option.some ◾ details.7;
+      let _x.14 := IO.Error.fopenErrorToString _x.12 val.11 osCode.6 _x.13;
+      return _x.14
+  | IO.Error.otherError osCode.15 details.16 =>
+    goto _jp.2 osCode.15 details.16
+  | IO.Error.resourceBusy osCode.17 details.18 =>
+    let _x.19 := "resource busy";
+    let _x.20 := Option.some ◾ details.18;
+    let _x.21 := IO.Error.otherErrorToString _x.19 osCode.17 _x.20;
+    return _x.21
+  | IO.Error.resourceVanished osCode.22 details.23 =>
+    let _x.24 := "resource vanished";
+    let _x.25 := Option.some ◾ details.23;
+    let _x.26 := IO.Error.otherErrorToString _x.24 osCode.22 _x.25;
+    return _x.26
+  | IO.Error.unsupportedOperation osCode.27 details.28 =>
+    let _x.29 := "unsupported operation";
+    let _x.30 := Option.some ◾ details.28;
+    let _x.31 := IO.Error.otherErrorToString _x.29 osCode.27 _x.30;
+    return _x.31
+  | IO.Error.hardwareFault osCode.32 details.33 =>
+    let _x.34 := "hardware fault";
+    let _x.35 := Option.none ◾;
+    let _x.36 := IO.Error.otherErrorToString _x.34 osCode.32 _x.35;
+    return _x.36
+  | IO.Error.unsatisfiedConstraints osCode.37 details.38 =>
+    let _x.39 := "directory not empty";
+    let _x.40 := Option.none ◾;
+    let _x.41 := IO.Error.otherErrorToString _x.39 osCode.37 _x.40;
+    return _x.41
+  | IO.Error.illegalOperation osCode.42 details.43 =>
+    let _x.44 := "illegal operation";
+    let _x.45 := Option.some ◾ details.43;
+    let _x.46 := IO.Error.otherErrorToString _x.44 osCode.42 _x.45;
+    return _x.46
+  | IO.Error.protocolError osCode.47 details.48 =>
+    let _x.49 := "protocol error";
+    let _x.50 := Option.some ◾ details.48;
+    let _x.51 := IO.Error.otherErrorToString _x.49 osCode.47 _x.50;
+    return _x.51
+  | IO.Error.timeExpired osCode.52 details.53 =>
+    let _x.54 := "time expired";
+    let _x.55 := Option.some ◾ details.53;
+    let _x.56 := IO.Error.otherErrorToString _x.54 osCode.52 _x.55;
+    return _x.56
+  | IO.Error.interrupted filename.57 osCode.58 details.59 =>
+    let _x.60 := "interrupted system call";
+    let _x.61 := Option.some ◾ details.59;
+    let _x.62 := IO.Error.fopenErrorToString _x.60 filename.57 osCode.58 _x.61;
+    return _x.62
+  | IO.Error.noFileOrDirectory filename.63 osCode.64 details.65 =>
+    let _x.66 := "no such file or directory";
+    let _x.67 := Option.none ◾;
+    let _x.68 := IO.Error.fopenErrorToString _x.66 filename.63 osCode.64 _x.67;
+    return _x.68
+  | IO.Error.invalidArgument filename.69 osCode.70 details.71 =>
+    cases filename.69 : String
+    | Option.none =>
+      let _x.72 := "invalid argument";
+      let _x.73 := Option.some ◾ details.71;
+      let _x.74 := IO.Error.otherErrorToString _x.72 osCode.70 _x.73;
+      return _x.74
+    | Option.some val.75 =>
+      let _x.76 := "invalid argument";
+      let _x.77 := Option.some ◾ details.71;
+      let _x.78 := IO.Error.fopenErrorToString _x.76 val.75 osCode.70 _x.77;
+      return _x.78
+  | IO.Error.permissionDenied filename.79 osCode.80 details.81 =>
+    cases filename.79 : String
+    | Option.none =>
+      goto _jp.2 osCode.80 details.81
+    | Option.some val.82 =>
+      let _x.83 := Option.none ◾;
+      let _x.84 := IO.Error.fopenErrorToString details.81 val.82 osCode.80 _x.83;
+      return _x.84
+  | IO.Error.resourceExhausted filename.85 osCode.86 details.87 =>
+    cases filename.85 : String
+    | Option.none =>
+      let _x.88 := "resource exhausted";
+      let _x.89 := Option.some ◾ details.87;
+      let _x.90 := IO.Error.otherErrorToString _x.88 osCode.86 _x.89;
+      return _x.90
+    | Option.some val.91 =>
+      let _x.92 := "resource exhausted";
+      let _x.93 := Option.some ◾ details.87;
+      let _x.94 := IO.Error.fopenErrorToString _x.92 val.91 osCode.86 _x.93;
+      return _x.94
+  | IO.Error.inappropriateType filename.95 osCode.96 details.97 =>
+    cases filename.95 : String
+    | Option.none =>
+      let _x.98 := "inappropriate type";
+      let _x.99 := Option.some ◾ details.97;
+      let _x.100 := IO.Error.otherErrorToString _x.98 osCode.96 _x.99;
+      return _x.100
+    | Option.some val.101 =>
+      let _x.102 := "inappropriate type";
+      let _x.103 := Option.some ◾ details.97;
+      let _x.104 := IO.Error.fopenErrorToString _x.102 val.101 osCode.96 _x.103;
+      return _x.104
+  | IO.Error.noSuchThing filename.105 osCode.106 details.107 =>
+    cases filename.105 : String
+    | Option.none =>
+      let _x.108 := "no such thing";
+      let _x.109 := Option.some ◾ details.107;
+      let _x.110 := IO.Error.otherErrorToString _x.108 osCode.106 _x.109;
+      return _x.110
+    | Option.some val.111 =>
+      let _x.112 := "no such thing";
+      let _x.113 := Option.some ◾ details.107;
+      let _x.114 := IO.Error.fopenErrorToString _x.112 val.111 osCode.106 _x.113;
+      return _x.114
+  | IO.Error.unexpectedEof =>
+    let _x.115 := "end of file";
+    return _x.115
+  | IO.Error.userError msg.116 =>
+    return msg.116
+
+════ 📦 List.range.loop
+def List.range.loop x.1 x.2 : List Nat :=
+  let zero := 0;
+  let isZero := Nat.decEq x.1 zero;
+  cases isZero : List Nat
+  | Bool.true =>
+    return x.2
+  | Bool.false =>
+    let one := 1;
+    let n.3 := Nat.sub x.1 one;
+    let _x.4 := List.cons ◾ n.3 x.2;
+    let _x.5 := List.range.loop n.3 _x.4;
+    return _x.5
+
+════ 📦 List.reverse._redArg
+def List.reverse._redArg as : List lcAny :=
+  let _x.1 := List.nil ◾;
+  let _x.2 := List.reverseAux._redArg as _x.1;
+  return _x.2
+
+════ 📦 List.reverseAux._redArg
+def List.reverseAux._redArg x.1 x.2 : List lcAny :=
+  cases x.1 : List lcAny
+  | List.nil =>
+    return x.2
+  | List.cons head.3 tail.4 =>
+    let _x.5 := List.cons ◾ head.3 x.2;
+    let _x.6 := List.reverseAux._redArg tail.4 _x.5;
+    return _x.6
+
+════ 📦 System.Platform.getNumBits
+def System.Platform.getNumBits a._@._internal._hyg.1 : Nat :=
+  extern
+
+════ 📦 System.Platform.numBits
+def System.Platform.numBits : Nat :=
+  let _x.1 := PUnit.unit;
+  let _x.2 := System.Platform.getNumBits _x.1;
+  return _x.2
+
+════ 📦 _private.Init.System.IOError.0.IO.Error.downCaseFirst
+def _private.Init.System.IOError.0.IO.Error.downCaseFirst s : String :=
+  let _x.1 := 0;
+  let _x.2 := String.Pos.Raw.get s _x.1;
+  let _x.3 := 65;
+  let _x.4 := UInt32.decLe _x.3 _x.2;
+  cases _x.4 : String
+  | Bool.false =>
+    let _x.5 := String.Pos.Raw.set s _x.1 _x.2;
+    return _x.5
+  | Bool.true =>
+    let _x.6 := 90;
+    let _x.7 := UInt32.decLe _x.2 _x.6;
+    cases _x.7 : String
+    | Bool.false =>
+      let _x.8 := String.Pos.Raw.set s _x.1 _x.2;
+      return _x.8
+    | Bool.true =>
+      let _x.9 := 32;
+      let _x.10 := UInt32.add _x.2 _x.9;
+      let _x.11 := String.Pos.Raw.set s _x.1 _x.10;
+      return _x.11
+
+════ 📦 List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0
+def List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 x.1 x.2 : List String :=
+  cases x.1 : List String
+  | List.nil =>
+    let _x.3 := List.reverse._redArg x.2;
+    return _x.3
+  | List.cons head.4 tail.5 =>
+    let _x.6 := USize.ofNat head.4;
+    let _x.7 := USize.repr _x.6;
+    let _x.8 := List.cons ◾ _x.7 x.2;
+    let _x.9 := List.mapTR.loop._at_._private.Init.Data.Repr.0.Nat.reprArray.spec_0 tail.5 _x.8;
+    return _x.9
+
+════ 📦 String.Pos.Raw.get
+def String.Pos.Raw.get @&s @&p : UInt32 :=
+  extern
+
+════ 📦 String.Pos.Raw.set
+def String.Pos.Raw.set a._@._internal._hyg.1 @&a._@._internal._hyg.2 a._@._internal._hyg.3 : String :=
+  extern
+
+════ 📦 IO.println._at_.main.spec_0
+def IO.println._at_.main.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 10;
+  let _x.3 := String.push s _x.2;
+  let _x.4 := IO.print._at_.IO.println._at_.main.spec_0.spec_0 _x.3 a.1;
+  return _x.4
+
+════ 📦 List.forIn'.loop._at_.main.spec_1._redArg
+def List.forIn'.loop._at_.main.spec_1._redArg _x.1 x.2 x.3 _y.4 : EST.Out IO.Error lcAny PUnit :=
+  cases x.2 : EST.Out IO.Error lcAny PUnit
+  | List.nil =>
+    let _x.5 := @EST.Out.ok ◾ ◾ ◾ x.3 _y.4;
+    return _x.5
+  | List.cons head.6 tail.7 =>
+    let _x.8 := IO.Error.toString head.6;
+    let _x.9 := IO.println._at_.main.spec_0 _x.8 _y.4;
+    cases _x.9 : EST.Out IO.Error lcAny PUnit
+    | EST.Out.ok a.10 a.11 =>
+      let _x.12 := List.forIn'.loop._at_.main.spec_1._redArg _x.1 tail.7 _x.1 a.11;
+      return _x.12
+    | EST.Out.error a.13 a.14 =>
+      return _x.9
+
+════ 📦 IO.print._at_.IO.println._at_.main.spec_0.spec_0
+def IO.print._at_.IO.println._at_.main.spec_0.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := IO.getStdout a.1;
+  cases _x.2 : EST.Out IO.Error lcAny PUnit
+  | ST.Out.mk val.3 state.4 =>
+    cases val.3 : EST.Out IO.Error lcAny PUnit
+    | IO.FS.Stream.mk flush read write getLine putStr isTty =>
+      let _x.5 := putStr s state.4;
+      return _x.5
+

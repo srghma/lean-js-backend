@@ -1,0 +1,8 @@
+════ 🎯 test
+def test a : Output :=
+  let _x.1 := 42;
+  let _x.2 := Int.ofNat _x.1;
+  let _x.3 := a # 0;
+  let _x.4 := Output.mk _x.2 _x.3;
+  return _x.4
+

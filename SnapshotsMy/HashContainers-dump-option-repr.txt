@@ -1,0 +1,126 @@
+=== HashContainers
+places holding an unboxed `Option`: 0
+  a constructor that is written into: List.mapTR.loop._at_.test6.spec_0
+  a constructor that is written into: List.reverseAux._redArg
+  a constructor that is written into: Std.DHashMap.Internal.AssocList.erase._at_.Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0.spec_0._redArg
+  a constructor that is written into: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.spec_6._redArg
+  a constructor that is written into: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.spec_5._redArg
+  a constructor that is written into: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_4._redArg
+  a constructor that is written into: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_2._redArg
+  a constructor that is written into: Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0._redArg
+  a constructor that is written into: Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1._redArg
+  a constructor that is written into: Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0._redArg
+  a constructor that is written into: Std.DHashMap.Internal.Raw₀.insertIfNew._at_.test3.spec_0._redArg
+  a parameter of a declaration the file is for: test1
+  a parameter of a declaration the file is for: test2
+  a parameter of a declaration the file is for: test3
+  a parameter of a declaration the file is for: test4
+  a parameter of a declaration the file is for: test5
+  a parameter of a declaration the file is for: test6
+  a parameter of a declaration the file is for: test7
+  a value whose sharing is tested: List.mapTR.loop._at_.test6.spec_0
+  a value whose sharing is tested: List.reverseAux._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.AssocList.erase._at_.Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0.spec_0._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.spec_6._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.spec_5._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_4._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_2._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0._redArg
+  a value whose sharing is tested: Std.DHashMap.Internal.Raw₀.insertIfNew._at_.test3.spec_0._redArg
+  an argument of a primitive: List.forIn'.loop._at_.test1.spec_2._redArg
+  an argument of a primitive: List.forIn'.loop._at_.test2.spec_1._redArg
+  an argument of a primitive: List.forIn'.loop._at_.test4.spec_1._redArg
+  an argument of a primitive: List.forIn'.loop._at_.test7.spec_0._redArg
+  an argument of a primitive: Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_2._redArg
+  an argument of a primitive: Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_0._redArg
+  an argument of a primitive: Std.DHashMap.Internal.AssocList.erase._at_.Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0.spec_0._redArg
+  an argument of a primitive: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.spec_6._redArg
+  an argument of a primitive: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.spec_5._redArg
+  an argument of a primitive: Std.DHashMap.Internal.AssocList.get?._at_.Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2.spec_5._redArg
+  an argument of a primitive: Std.DHashMap.Internal.AssocList.getD._at_.Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0.spec_0._redArg
+  an argument of a primitive: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_4._redArg
+  an argument of a primitive: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_2._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.contains._at_.test3.spec_2._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0._redArg
+  an argument of a primitive: Std.DHashMap.Internal.Raw₀.insertIfNew._at_.test3.spec_0._redArg
+  an argument of a primitive: _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test6.spec_2
+  an argument of a primitive: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4._redArg
+  an argument of a primitive: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2._redArg
+  an argument of a primitive: test1._closed_0
+  an argument of a primitive: test2._closed_0
+  an argument of a primitive: test3
+  an argument of a primitive: test4
+  an argument of a primitive: test5
+  an argument of a primitive: test6
+  stored in a constructor: List.mapTR.loop._at_.test6.spec_0
+  stored in a constructor: List.reverseAux._redArg
+  stored in a constructor: Std.DHashMap.Internal.AssocList.erase._at_.Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0.spec_0._redArg
+  stored in a constructor: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.spec_6._redArg
+  stored in a constructor: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.spec_5._redArg
+  stored in a constructor: Std.DHashMap.Internal.AssocList.foldrM._at_.test6.spec_1
+  stored in a constructor: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_4._redArg
+  stored in a constructor: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_2._redArg
+  stored in a constructor: Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0._redArg
+  stored in a constructor: Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1._redArg
+  stored in a constructor: Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0._redArg
+  stored in a constructor: Std.DHashMap.Internal.Raw₀.insertIfNew._at_.test3.spec_0._redArg
+  stored in a constructor: test1._closed_1
+  stored in a constructor: test2._closed_1
+  the answer of a declaration the file is for: Array.append
+  the answer of a declaration the file is for: Array.append._redArg
+  the answer of a declaration the file is for: Array.appendCore
+  the answer of a declaration the file is for: Array.appendCore._redArg
+  the answer of a declaration the file is for: Float.ofBinaryScientific
+  the answer of a declaration the file is for: Float.ofNat
+  the answer of a declaration the file is for: Float.ofScientific
+  the answer of a declaration the file is for: IO.Error.toString
+  the answer of a declaration the file is for: Int.repr
+  the answer of a declaration the file is for: Nat.repr
+  the answer of a declaration the file is for: Nat.reprFast
+  the answer of a declaration the file is for: main
+  the answer of a declaration the file is for: test1
+  the answer of a declaration the file is for: test2
+  the answer of a declaration the file is for: test3
+  the answer of a declaration the file is for: test4
+  the answer of a declaration the file is for: test5
+  the answer of a declaration the file is for: test6
+  the answer of a declaration the file is for: test7
+  the answer of a primitive: List.forIn'.loop._at_.test1.spec_2._redArg
+  the answer of a primitive: List.forIn'.loop._at_.test2.spec_1._redArg
+  the answer of a primitive: List.forIn'.loop._at_.test4.spec_1._redArg
+  the answer of a primitive: List.forIn'.loop._at_.test7.spec_0._redArg
+  the answer of a primitive: Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_2._redArg
+  the answer of a primitive: Std.DHashMap.Internal.AssocList.contains._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_0._redArg
+  the answer of a primitive: Std.DHashMap.Internal.AssocList.erase._at_.Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0.spec_0._redArg
+  the answer of a primitive: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4.spec_6._redArg
+  the answer of a primitive: Std.DHashMap.Internal.AssocList.foldlM._at_._private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2.spec_5._redArg
+  the answer of a primitive: Std.DHashMap.Internal.AssocList.get?._at_.Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2.spec_5._redArg
+  the answer of a primitive: Std.DHashMap.Internal.AssocList.getD._at_.Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0.spec_0._redArg
+  the answer of a primitive: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_4._redArg
+  the answer of a primitive: Std.DHashMap.Internal.AssocList.replace._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_2._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.Const.get?._at_.test2.spec_2._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.Const.getD._at_.test1.spec_0._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.contains._at_.test3.spec_2._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.erase._at_.test5.spec_0._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0._redArg
+  the answer of a primitive: Std.DHashMap.Internal.Raw₀.insertIfNew._at_.test3.spec_0._redArg
+  the answer of a primitive: _private.Init.Data.Array.Basic.0.Array.foldrMUnsafe.fold._at_.test6.spec_2
+  the answer of a primitive: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1.spec_3.spec_4._redArg
+  the answer of a primitive: _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._at_.Std.DHashMap.Internal.Raw₀.expand._at_.Std.DHashMap.Internal.Raw₀.insert._at_.test2.spec_0.spec_1.spec_2._redArg
+  the answer of a primitive: test1._closed_0
+  the answer of a primitive: test2._closed_0
+  the answer of a primitive: test3
+  the answer of a primitive: test4
+  the answer of a primitive: test5
+  the answer of a primitive: test6

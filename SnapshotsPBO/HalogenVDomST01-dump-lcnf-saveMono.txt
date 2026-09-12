@@ -1,0 +1,736 @@
+════ 🎯 diffWithIxE
+def diffWithIxE b c d inst.1 inst.2 a1 a2 f1 f2 f3 a.3 : EST.Out IO.Error lcAny (Array lcAny) :=
+  let _x.4 := diffWithIxE._redArg inst.1 inst.2 a1 a2 f1 f2 f3 a.3;
+  return _x.4
+
+════ 🎯 diffWithKeyAndIxE
+def diffWithKeyAndIxE a b c d inst.1 o1 as fk f1 f2 f3 a.2 : EST.Out IO.Error lcAny (Std.DHashMap.Raw String lcAny) :=
+  let _x.3 := diffWithKeyAndIxE._redArg inst.1 o1 as fk f1 f2 f3 a.2;
+  return _x.3
+
+════ 📦 instDecidableEqString
+def instDecidableEqString @&s₁ @&s₂ : Bool :=
+  let _x.1 := String.decEq s₁ s₂;
+  return _x.1
+
+════ 📦 instMonadEST
+def instMonadEST ε σ : Monad lcAny :=
+  let _f.1 := instMonadEST._lam_0;
+  let _f.2 := instMonadEST._lam_1;
+  let _f.3 := instMonadEST._lam_2;
+  let _f.4 := instMonadEST._lam_3;
+  let _f.5 := instMonadEST._lam_4;
+  let _f.6 := instMonadEST._lam_5;
+  let _x.7 := Functor.mk ◾ _f.1 _f.2;
+  let _x.8 := Applicative.mk ◾ _x.7 _f.3 _f.4 _f.5 _f.6;
+  let _x.9 := @EST.bind ◾ ◾;
+  let _x.10 := Monad.mk ◾ _x.8 _x.9;
+  return _x.10
+
+════ 📦 Array.get!Internal
+def Array.get!Internal α inst._@.Init.Prelude.3471936409._hygCtx._hyg.1 @&a @&i : lcAny :=
+  extern
+
+════ 📦 Array.getInternal
+def Array.getInternal α @&a @&i h : lcAny :=
+  extern
+
+════ 📦 Array.mkEmpty
+def Array.mkEmpty α @&c : Array lcAny :=
+  extern
+
+════ 📦 Array.push
+def Array.push α a v : Array lcAny :=
+  extern
+
+════ 📦 Array.replicate
+def Array.replicate α n v : Array lcAny :=
+  extern
+
+════ 📦 Array.set
+def Array.set α xs @&i v h : Array lcAny :=
+  extern
+
+════ 📦 Array.size
+def Array.size α @&a : Nat :=
+  extern
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : lcAny :=
+  extern
+
+════ 📦 Array.uset
+def Array.uset α xs i v h : Array lcAny :=
+  extern
+
+════ 📦 Array.usize
+def Array.usize α @&xs : USize :=
+  extern
+
+════ 📦 EST.bind
+def EST.bind ε σ α β x f s : EST.Out lcAny lcAny lcAny :=
+  let _x.1 := x s;
+  cases _x.1 : EST.Out lcAny lcAny lcAny
+  | EST.Out.ok a.2 a.3 =>
+    let _x.4 := f a.2 a.3;
+    return _x.4
+  | EST.Out.error a.5 a.6 =>
+    let _x.7 := @EST.Out.error ◾ ◾ ◾ a.5 a.6;
+    return _x.7
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decLe
+def Nat.decLe @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Bool :=
+  extern
+
+════ 📦 Nat.div
+def Nat.div @&x @&y : Nat :=
+  extern
+
+════ 📦 Nat.mul
+def Nat.mul @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 String.decEq
+def String.decEq @&s₁ @&s₂ : Bool :=
+  extern
+
+════ 📦 String.hash
+def String.hash @&s : UInt64 :=
+  extern
+
+════ 📦 UInt64.shiftRight
+def UInt64.shiftRight a b : UInt64 :=
+  extern
+
+════ 📦 UInt64.toUSize
+def UInt64.toUSize a : USize :=
+  extern
+
+════ 📦 UInt64.xor
+def UInt64.xor a b : UInt64 :=
+  extern
+
+════ 📦 USize.add
+def USize.add a b : USize :=
+  extern
+
+════ 📦 USize.decLt
+def USize.decLt a b : Bool :=
+  extern
+
+════ 📦 USize.land
+def USize.land a b : USize :=
+  extern
+
+════ 📦 USize.ofNat
+def USize.ofNat @&n : USize :=
+  extern
+
+════ 📦 USize.sub
+def USize.sub a b : USize :=
+  extern
+
+════ 📦 diffWithIxE._redArg
+def diffWithIxE._redArg inst.1 inst.2 a1 a2 f1 f2 f3 a.3 : EST.Out IO.Error lcAny (Array lcAny) :=
+  let _x.4 := instMonadEST ◾ ◾;
+  let _x.5 := 0;
+  let a3 := Array.mkEmpty ◾ _x.5;
+  let l1 := Array.size ◾ a1;
+  let l2 := Array.size ◾ a2;
+  let _f.6 := diffWithIxE._redArg._lam_0 l1 l2 inst.2 a2 f3 inst.1 a1 f2 f1;
+  jp _jp.7 _y.8 : EST.Out IO.Error lcAny (Array lcAny) :=
+    let _x.9 := 1;
+    let _x.10 := Std.Legacy.Range.mk _x.5 _y.8 _x.9 ◾;
+    let _x.11 := Std.Legacy.Range.forIn'.loop._redArg.2 _x.4 _x.10 _f.6 a3 _x.5 a.3;
+    return _x.11;
+  let _x.12 := Nat.decLt l1 l2;
+  cases _x.12 : EST.Out IO.Error lcAny (Array lcAny)
+  | Bool.false =>
+    goto _jp.7 l1
+  | Bool.true =>
+    goto _jp.7 l2
+
+════ 📦 diffWithKeyAndIxE._redArg
+def diffWithKeyAndIxE._redArg inst.1 o1 as fk f1 f2 f3 a.2 : EST.Out IO.Error lcAny (Std.DHashMap.Raw String lcAny) :=
+  let _x.3 := String.hash;
+  let _x.4 := instMonadEST ◾ ◾;
+  let _x.5 := instDecidableEqString;
+  let _f.6 := instBEqOfDecidableEq._redArg._lam_0 _x.5;
+  let _f.7 := diffWithKeyAndIxE._redArg._lam_0 inst.1 as fk _f.6 _x.3 o1 f3 f1;
+  let _x.8 := 0;
+  let _x.9 := 16;
+  let _x.10 := Std.DHashMap.Internal.AssocList.nil ◾ ◾;
+  let _x.11 := Array.replicate ◾ _x.9 _x.10;
+  let o2 := Std.DHashMap.Raw.mk ◾ ◾ _x.8 _x.11;
+  let _x.12 := Array.size ◾ as;
+  let _x.13 := 1;
+  let _x.14 := Std.Legacy.Range.mk _x.8 _x.12 _x.13 ◾;
+  let _x.15 := Std.Legacy.Range.forIn'.loop._redArg.2 _x.4 _x.14 _f.7 o2 _x.8 a.2;
+  cases _x.15 : EST.Out IO.Error lcAny (Std.DHashMap.Raw String lcAny)
+  | EST.Out.ok a.16 a.17 =>
+    cases o1 : EST.Out IO.Error lcAny (Std.DHashMap.Raw String lcAny)
+    | Std.DHashMap.Raw.mk size buckets =>
+      let _x.18 := PUnit.unit;
+      let _f.19 := diffWithKeyAndIxE._redArg._lam_1 _f.6 _x.3 a.16 f2 _x.18;
+      let _f.20 := diffWithKeyAndIxE._redArg._lam_2 _x.4 _f.19;
+      let sz := Array.usize ◾ buckets;
+      let _x.21 := 0;
+      let _x.22 := Array.forIn'Unsafe.loop._redArg.2 _x.4 buckets _f.20 sz _x.21 _x.18 a.17;
+      cases _x.22 : EST.Out IO.Error lcAny (Std.DHashMap.Raw String lcAny)
+      | EST.Out.ok a.23 a.24 =>
+        let _x.25 := @EST.Out.ok ◾ ◾ ◾ a.16 a.24;
+        return _x.25
+      | EST.Out.error a.26 a.27 =>
+        let _x.28 := @EST.Out.error ◾ ◾ ◾ a.26 a.27;
+        return _x.28
+  | EST.Out.error a.29 a.30 =>
+    return _x.15
+
+════ 📦 instMonadEST._lam_0
+def instMonadEST._lam_0 α.1 β.2 f x _y.3 : EST.Out lcAny lcAny lcAny :=
+  let _x.4 := x _y.3;
+  cases _x.4 : EST.Out lcAny lcAny lcAny
+  | EST.Out.ok a.5 a.6 =>
+    let _x.7 := f a.5;
+    let _x.8 := @EST.Out.ok ◾ ◾ ◾ _x.7 a.6;
+    return _x.8
+  | EST.Out.error a.9 a.10 =>
+    let _x.11 := @EST.Out.error ◾ ◾ ◾ a.9 a.10;
+    return _x.11
+
+════ 📦 instMonadEST._lam_1
+def instMonadEST._lam_1 α.1 β.2 _y.3 _y.4 _y.5 : EST.Out lcAny lcAny lcAny :=
+  let _x.6 := _y.4 _y.5;
+  cases _x.6 : EST.Out lcAny lcAny lcAny
+  | EST.Out.ok a.7 a.8 =>
+    let _x.9 := @EST.Out.ok ◾ ◾ ◾ _y.3 a.8;
+    return _x.9
+  | EST.Out.error a.10 a.11 =>
+    let _x.12 := @EST.Out.error ◾ ◾ ◾ a.10 a.11;
+    return _x.12
+
+════ 📦 instMonadEST._lam_2
+def instMonadEST._lam_2 α.1 _y.2 _y.3 : EST.Out lcAny lcAny lcAny :=
+  let _x.4 := @EST.Out.ok ◾ ◾ ◾ _y.2 _y.3;
+  return _x.4
+
+════ 📦 instMonadEST._lam_3
+def instMonadEST._lam_3 α.1 β.2 f x _y.3 : EST.Out lcAny lcAny lcAny :=
+  let _x.4 := f _y.3;
+  cases _x.4 : EST.Out lcAny lcAny lcAny
+  | EST.Out.ok a.5 a.6 =>
+    let _x.7 := PUnit.unit;
+    let _x.8 := x _x.7 a.6;
+    cases _x.8 : EST.Out lcAny lcAny lcAny
+    | EST.Out.ok a.9 a.10 =>
+      let _x.11 := a.5 a.9;
+      let _x.12 := @EST.Out.ok ◾ ◾ ◾ _x.11 a.10;
+      return _x.12
+    | EST.Out.error a.13 a.14 =>
+      let _x.15 := @EST.Out.error ◾ ◾ ◾ a.13 a.14;
+      return _x.15
+  | EST.Out.error a.16 a.17 =>
+    let _x.18 := @EST.Out.error ◾ ◾ ◾ a.16 a.17;
+    return _x.18
+
+════ 📦 instMonadEST._lam_4
+def instMonadEST._lam_4 α.1 β.2 x y _y.3 : EST.Out lcAny lcAny lcAny :=
+  let _x.4 := x _y.3;
+  cases _x.4 : EST.Out lcAny lcAny lcAny
+  | EST.Out.ok a.5 a.6 =>
+    let _x.7 := PUnit.unit;
+    let _x.8 := y _x.7 a.6;
+    cases _x.8 : EST.Out lcAny lcAny lcAny
+    | EST.Out.ok a.9 a.10 =>
+      let _x.11 := @EST.Out.ok ◾ ◾ ◾ a.5 a.10;
+      return _x.11
+    | EST.Out.error a.12 a.13 =>
+      let _x.14 := @EST.Out.error ◾ ◾ ◾ a.12 a.13;
+      return _x.14
+  | EST.Out.error a.15 a.16 =>
+    return _x.4
+
+════ 📦 instMonadEST._lam_5
+def instMonadEST._lam_5 α.1 β.2 x y _y.3 : EST.Out lcAny lcAny lcAny :=
+  let _x.4 := x _y.3;
+  cases _x.4 : EST.Out lcAny lcAny lcAny
+  | EST.Out.ok a.5 a.6 =>
+    let _x.7 := PUnit.unit;
+    let _x.8 := y _x.7 a.6;
+    return _x.8
+  | EST.Out.error a.9 a.10 =>
+    let _x.11 := @EST.Out.error ◾ ◾ ◾ a.9 a.10;
+    return _x.11
+
+════ 📦 Id.instMonad._lam_0
+def Id.instMonad._lam_0 α.1 β.2 f x : lcAny :=
+  let _x.3 := f x;
+  return _x.3
+
+════ 📦 Id.instMonad._lam_1
+def Id.instMonad._lam_1 α.1 β.2 _y.3 _y.4 : lcAny :=
+  return _y.3
+
+════ 📦 Id.instMonad._lam_2
+def Id.instMonad._lam_2 α.1 x : lcAny :=
+  return x
+
+════ 📦 Id.instMonad._lam_3
+def Id.instMonad._lam_3 α.1 β.2 f x : lcAny :=
+  let _x.3 := PUnit.unit;
+  let _x.4 := x _x.3;
+  let _x.5 := f _x.4;
+  return _x.5
+
+════ 📦 Id.instMonad._lam_4
+def Id.instMonad._lam_4 α.1 β.2 x y : lcAny :=
+  return x
+
+════ 📦 Id.instMonad._lam_5
+def Id.instMonad._lam_5 α.1 β.2 x y : lcAny :=
+  let _x.3 := PUnit.unit;
+  let _x.4 := y _x.3;
+  return _x.4
+
+════ 📦 Id.instMonad._lam_6
+def Id.instMonad._lam_6 α.1 β.2 x f : lcAny :=
+  let _x.3 := f x;
+  return _x.3
+
+════ 📦 diffWithIxE._redArg._lam_0
+def diffWithIxE._redArg._lam_0 l1 l2 inst.1 a2 f3 inst.2 a1 f2 f1 a x.3 _y.4 _y.5 : EST.Out IO.Error lcAny
+  (ForInStep (Array lcAny)) :=
+  let _x.6 := Nat.decLt a l1;
+  cases _x.6 : EST.Out IO.Error lcAny (ForInStep (Array lcAny))
+  | Bool.false =>
+    let _x.7 := Nat.decLt a l2;
+    cases _x.7 : EST.Out IO.Error lcAny (ForInStep (Array lcAny))
+    | Bool.false =>
+      let _x.8 := ForInStep.yield ◾ _y.4;
+      let _x.9 := @EST.Out.ok ◾ ◾ ◾ _x.8 _y.5;
+      return _x.9
+    | Bool.true =>
+      let _x.10 := Array.get!Internal ◾ inst.1 a2 a;
+      let _x.11 := Int.ofNat a;
+      let _x.12 := f3 _x.11 _x.10 _y.5;
+      cases _x.12 : EST.Out IO.Error lcAny (ForInStep (Array lcAny))
+      | EST.Out.ok a.13 a.14 =>
+        let _x.15 := Array.push ◾ _y.4 a.13;
+        let _x.16 := ForInStep.yield ◾ _x.15;
+        let _x.17 := @EST.Out.ok ◾ ◾ ◾ _x.16 a.14;
+        return _x.17
+      | EST.Out.error a.18 a.19 =>
+        let _x.20 := @EST.Out.error ◾ ◾ ◾ a.18 a.19;
+        return _x.20
+  | Bool.true =>
+    let _x.21 := Nat.decLt a l2;
+    cases _x.21 : EST.Out IO.Error lcAny (ForInStep (Array lcAny))
+    | Bool.false =>
+      let _x.22 := Array.get!Internal ◾ inst.2 a1 a;
+      let _x.23 := Int.ofNat a;
+      let _x.24 := f2 _x.23 _x.22 _y.5;
+      cases _x.24 : EST.Out IO.Error lcAny (ForInStep (Array lcAny))
+      | EST.Out.ok a.25 a.26 =>
+        let _x.27 := ForInStep.yield ◾ _y.4;
+        let _x.28 := @EST.Out.ok ◾ ◾ ◾ _x.27 a.26;
+        return _x.28
+      | EST.Out.error a.29 a.30 =>
+        let _x.31 := @EST.Out.error ◾ ◾ ◾ a.29 a.30;
+        return _x.31
+    | Bool.true =>
+      let _x.32 := Array.get!Internal ◾ inst.2 a1 a;
+      let _x.33 := Array.get!Internal ◾ inst.1 a2 a;
+      let _x.34 := Int.ofNat a;
+      let _x.35 := f1 _x.34 _x.32 _x.33 _y.5;
+      cases _x.35 : EST.Out IO.Error lcAny (ForInStep (Array lcAny))
+      | EST.Out.ok a.36 a.37 =>
+        let _x.38 := Array.push ◾ _y.4 a.36;
+        let _x.39 := ForInStep.yield ◾ _x.38;
+        let _x.40 := @EST.Out.ok ◾ ◾ ◾ _x.39 a.37;
+        return _x.40
+      | EST.Out.error a.41 a.42 =>
+        let _x.43 := @EST.Out.error ◾ ◾ ◾ a.41 a.42;
+        return _x.43
+
+════ 📦 diffWithKeyAndIxE._redArg._lam_0
+def diffWithKeyAndIxE._redArg._lam_0 inst.1 as fk _f.2 _x.3 o1 f3 f1 a x.4 _y.5 _y.6 : EST.Out IO.Error lcAny
+  (ForInStep (Std.DHashMap.Raw String lcAny)) :=
+  let _x.7 := Array.get!Internal ◾ inst.1 as a;
+  let _x.8 := fk _x.7;
+  let _x.9 := Std.DHashMap.Internal.Raw₀.Const.get?._redArg _f.2 _x.3 o1 _x.8;
+  cases _x.9 : EST.Out IO.Error lcAny (ForInStep (Std.DHashMap.Raw String lcAny))
+  | Option.none =>
+    let _x.10 := Int.ofNat a;
+    let _x.11 := f3 _x.8 _x.10 _x.7 _y.6;
+    cases _x.11 : EST.Out IO.Error lcAny (ForInStep (Std.DHashMap.Raw String lcAny))
+    | EST.Out.ok a.12 a.13 =>
+      let _x.14 := Std.DHashMap.Internal.Raw₀.insert._redArg _f.2 _x.3 _y.5 _x.8 a.12;
+      let _x.15 := ForInStep.yield ◾ _x.14;
+      let _x.16 := @EST.Out.ok ◾ ◾ ◾ _x.15 a.13;
+      return _x.16
+    | EST.Out.error a.17 a.18 =>
+      let _x.19 := @EST.Out.error ◾ ◾ ◾ a.17 a.18;
+      return _x.19
+  | Option.some val.20 =>
+    let _x.21 := Int.ofNat a;
+    let _x.22 := f1 _x.8 _x.21 val.20 _x.7 _y.6;
+    cases _x.22 : EST.Out IO.Error lcAny (ForInStep (Std.DHashMap.Raw String lcAny))
+    | EST.Out.ok a.23 a.24 =>
+      let _x.25 := Std.DHashMap.Internal.Raw₀.insert._redArg _f.2 _x.3 _y.5 _x.8 a.23;
+      let _x.26 := ForInStep.yield ◾ _x.25;
+      let _x.27 := @EST.Out.ok ◾ ◾ ◾ _x.26 a.24;
+      return _x.27
+    | EST.Out.error a.28 a.29 =>
+      let _x.30 := @EST.Out.error ◾ ◾ ◾ a.28 a.29;
+      return _x.30
+
+════ 📦 diffWithKeyAndIxE._redArg._lam_1
+def diffWithKeyAndIxE._redArg._lam_1 _f.1 _x.2 a.3 f2 _x.4 a b acc _y.5 : EST.Out IO.Error lcAny (ForInStep PUnit) :=
+  let _x.6 := Std.DHashMap.Internal.Raw₀.contains._redArg _f.1 _x.2 a.3 a;
+  cases _x.6 : EST.Out IO.Error lcAny (ForInStep PUnit)
+  | Bool.false =>
+    let _x.7 := f2 a b _y.5;
+    cases _x.7 : EST.Out IO.Error lcAny (ForInStep PUnit)
+    | EST.Out.ok a.8 a.9 =>
+      let _x.10 := ForInStep.yield ◾ _x.4;
+      let _x.11 := @EST.Out.ok ◾ ◾ ◾ _x.10 a.9;
+      return _x.11
+    | EST.Out.error a.12 a.13 =>
+      let _x.14 := @EST.Out.error ◾ ◾ ◾ a.12 a.13;
+      return _x.14
+  | Bool.true =>
+    let _x.15 := ForInStep.yield ◾ _x.4;
+    let _x.16 := @EST.Out.ok ◾ ◾ ◾ _x.15 _y.5;
+    return _x.16
+
+════ 📦 diffWithKeyAndIxE._redArg._lam_2
+def diffWithKeyAndIxE._redArg._lam_2 _x.1 _f.2 a x.3 _y.4 _y.5 : EST.Out IO.Error lcAny (ForInStep PUnit) :=
+  let _x.6 := Std.DHashMap.Internal.AssocList.forInStep.go._redArg.2 _x.1 _f.2 a _y.4 _y.5;
+  return _x.6
+
+════ 📦 instBEqOfDecidableEq._redArg._lam_0
+def instBEqOfDecidableEq._redArg._lam_0 inst.1 a b : Bool :=
+  let _x.2 := inst.1 a b;
+  return _x.2
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg
+def _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg inst.1 as f sz i b : lcAny :=
+  let _x.2 := USize.decLt i sz;
+  cases _x.2 : lcAny
+  | Bool.false =>
+    cases inst.1 : lcAny
+    | Monad.mk toApplicative toBind =>
+      cases toApplicative : lcAny
+      | Applicative.mk toFunctor toPure toSeq toSeqLeft toSeqRight =>
+        let _x.3 := toPure ◾ b;
+        return _x.3
+  | Bool.true =>
+    cases inst.1 : lcAny
+    | Monad.mk toApplicative toBind =>
+      let _f.4 := Array.forIn'Unsafe.loop._redArg._lam_0.2 toApplicative i inst.1 as f sz;
+      let a := Array.uget ◾ as i ◾;
+      let _x.5 := f a ◾ b;
+      let _x.6 := toBind ◾ ◾ _x.5 _f.4;
+      return _x.6
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg._lam_0
+def _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._redArg._lam_0 toApplicative i inst.1 as f sz __do_lift.2 : lcAny :=
+  cases __do_lift.2 : lcAny
+  | ForInStep.done a.3 =>
+    cases toApplicative : lcAny
+    | Applicative.mk toFunctor toPure toSeq toSeqLeft toSeqRight =>
+      let _x.4 := toPure ◾ a.3;
+      return _x.4
+  | ForInStep.yield a.5 =>
+    let _x.6 := 1;
+    let _x.7 := USize.add i _x.6;
+    let _x.8 := Array.forIn'Unsafe.loop._redArg.2 inst.1 as f sz _x.7 a.5;
+    return _x.8
+
+════ 📦 Std.DHashMap.Internal.AssocList.contains._redArg
+def Std.DHashMap.Internal.AssocList.contains._redArg inst.1 a x.2 : Bool :=
+  cases x.2 : Bool
+  | Std.DHashMap.Internal.AssocList.nil =>
+    let _x.3 := Bool.false;
+    return _x.3
+  | Std.DHashMap.Internal.AssocList.cons key.4 value.5 tail.6 =>
+    let _x.7 := inst.1 key.4 a;
+    cases _x.7 : Bool
+    | Bool.false =>
+      let _x.8 := Std.DHashMap.Internal.AssocList.contains._redArg inst.1 a tail.6;
+      return _x.8
+    | Bool.true =>
+      return _x.7
+
+════ 📦 Std.DHashMap.Internal.AssocList.foldlM._redArg
+def Std.DHashMap.Internal.AssocList.foldlM._redArg inst.1 f x.2 x.3 : lcAny :=
+  cases inst.1 : lcAny
+  | Monad.mk toApplicative toBind =>
+    cases toApplicative : lcAny
+    | Applicative.mk toFunctor toPure toSeq toSeqLeft toSeqRight =>
+      cases x.3 : lcAny
+      | Std.DHashMap.Internal.AssocList.nil =>
+        let _x.4 := toPure ◾ x.2;
+        return _x.4
+      | Std.DHashMap.Internal.AssocList.cons key.5 value.6 tail.7 =>
+        let _f.8 := Std.DHashMap.Internal.AssocList.foldlM._redArg._lam_0 inst.1 f tail.7;
+        let _x.9 := f x.2 key.5 value.6;
+        let _x.10 := toBind ◾ ◾ _x.9 _f.8;
+        return _x.10
+
+════ 📦 Std.DHashMap.Internal.AssocList.get?._redArg
+def Std.DHashMap.Internal.AssocList.get?._redArg inst.1 a x.2 : Option lcAny :=
+  cases x.2 : Option lcAny
+  | Std.DHashMap.Internal.AssocList.nil =>
+    let _x.3 := Option.none ◾;
+    return _x.3
+  | Std.DHashMap.Internal.AssocList.cons key.4 value.5 tail.6 =>
+    let _x.7 := inst.1 key.4 a;
+    cases _x.7 : Option lcAny
+    | Bool.false =>
+      let _x.8 := Std.DHashMap.Internal.AssocList.get?._redArg inst.1 a tail.6;
+      return _x.8
+    | Bool.true =>
+      let _x.9 := Option.some ◾ value.5;
+      return _x.9
+
+════ 📦 Std.DHashMap.Internal.AssocList.replace._redArg
+def Std.DHashMap.Internal.AssocList.replace._redArg inst.1 a b x.2 : Std.DHashMap.Internal.AssocList lcAny lcAny :=
+  cases x.2 : Std.DHashMap.Internal.AssocList lcAny lcAny
+  | Std.DHashMap.Internal.AssocList.nil =>
+    return x.2
+  | Std.DHashMap.Internal.AssocList.cons key.3 value.4 tail.5 =>
+    let _x.6 := inst.1 key.3 a;
+    cases _x.6 : Std.DHashMap.Internal.AssocList lcAny lcAny
+    | Bool.false =>
+      let _x.7 := Std.DHashMap.Internal.AssocList.replace._redArg inst.1 a b tail.5;
+      let _x.8 := Std.DHashMap.Internal.AssocList.cons ◾ ◾ key.3 value.4 _x.7;
+      return _x.8
+    | Bool.true =>
+      let _x.9 := Std.DHashMap.Internal.AssocList.cons ◾ ◾ a b tail.5;
+      return _x.9
+
+════ 📦 Std.DHashMap.Internal.Raw₀.contains._redArg
+def Std.DHashMap.Internal.Raw₀.contains._redArg inst.1 inst.2 m a : Bool :=
+  cases m : Bool
+  | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+    let _x.5 := Array.size ◾ buckets.4;
+    let _x.6 := inst.2 a;
+    let _x.7 := 32;
+    let _x.8 := UInt64.shiftRight _x.6 _x.7;
+    let fold := UInt64.xor _x.6 _x.8;
+    let _x.9 := 16;
+    let _x.10 := UInt64.shiftRight fold _x.9;
+    let _x.11 := UInt64.xor fold _x.10;
+    let _x.12 := UInt64.toUSize _x.11;
+    let _x.13 := USize.ofNat _x.5;
+    let _x.14 := 1;
+    let _x.15 := USize.sub _x.13 _x.14;
+    let _x.16 := USize.land _x.12 _x.15;
+    let _x.17 := Array.uget ◾ buckets.4 _x.16 ◾;
+    let _x.18 := Std.DHashMap.Internal.AssocList.contains._redArg inst.1 a _x.17;
+    return _x.18
+
+════ 📦 Std.DHashMap.Internal.Raw₀.expand._redArg
+def Std.DHashMap.Internal.Raw₀.expand._redArg inst.1 data : Array (Std.DHashMap.Internal.AssocList lcAny lcAny) :=
+  let _x.2 := Array.size ◾ data;
+  let _x.3 := 2;
+  let nbuckets := Nat.mul _x.2 _x.3;
+  let _x.4 := 0;
+  let _x.5 := Std.DHashMap.Internal.AssocList.nil ◾ ◾;
+  let _x.6 := Array.replicate ◾ nbuckets _x.5;
+  let _x.7 := Std.DHashMap.Internal.Raw₀.expand.go._redArg.2 inst.1 _x.4 data _x.6;
+  return _x.7
+
+════ 📦 Std.DHashMap.Internal.Raw₀.insert._redArg
+def Std.DHashMap.Internal.Raw₀.insert._redArg inst.1 inst.2 m a b : Std.DHashMap.Raw lcAny lcAny :=
+  cases m : Std.DHashMap.Raw lcAny lcAny
+  | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+    let _x.5 := Array.size ◾ buckets.4;
+    let _x.6 := inst.2 a;
+    let _x.7 := 32;
+    let _x.8 := UInt64.shiftRight _x.6 _x.7;
+    let fold := UInt64.xor _x.6 _x.8;
+    let _x.9 := 16;
+    let _x.10 := UInt64.shiftRight fold _x.9;
+    let _x.11 := UInt64.xor fold _x.10;
+    let _x.12 := UInt64.toUSize _x.11;
+    let _x.13 := USize.ofNat _x.5;
+    let _x.14 := 1;
+    let _x.15 := USize.sub _x.13 _x.14;
+    let _x.16 := USize.land _x.12 _x.15;
+    let bkt := Array.uget ◾ buckets.4 _x.16 ◾;
+    let _x.17 := Std.DHashMap.Internal.AssocList.contains._redArg inst.1 a bkt;
+    cases _x.17 : Std.DHashMap.Raw lcAny lcAny
+    | Bool.false =>
+      let _x.18 := 1;
+      let size' := Nat.add size.3 _x.18;
+      let _x.19 := Std.DHashMap.Internal.AssocList.cons ◾ ◾ a b bkt;
+      let buckets' := Array.uset ◾ buckets.4 _x.16 _x.19 ◾;
+      let _x.20 := 4;
+      let _x.21 := Nat.mul size' _x.20;
+      let _x.22 := 3;
+      let _x.23 := Nat.div _x.21 _x.22;
+      let _x.24 := Array.size ◾ buckets';
+      let _x.25 := Nat.decLe _x.23 _x.24;
+      cases _x.25 : Std.DHashMap.Raw lcAny lcAny
+      | Bool.false =>
+        let val.26 := Std.DHashMap.Internal.Raw₀.expand._redArg inst.2 buckets';
+        let _x.27 := Std.DHashMap.Raw.mk ◾ ◾ size' val.26;
+        return _x.27
+      | Bool.true =>
+        let _x.28 := Std.DHashMap.Raw.mk ◾ ◾ size' buckets';
+        return _x.28
+    | Bool.true =>
+      let _x.29 := Std.DHashMap.Internal.AssocList.nil ◾ ◾;
+      let buckets' := Array.uset ◾ buckets.4 _x.16 _x.29 ◾;
+      let _x.30 := Std.DHashMap.Internal.AssocList.replace._redArg inst.1 a b bkt;
+      let _x.31 := Array.uset ◾ buckets' _x.16 _x.30 ◾;
+      let _x.32 := Std.DHashMap.Raw.mk ◾ ◾ size.3 _x.31;
+      return _x.32
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg inst.1 range f b i : lcAny :=
+  cases range : lcAny
+  | Std.Legacy.Range.mk start stop step step_pos =>
+    let _x.2 := Nat.decLt i stop;
+    cases _x.2 : lcAny
+    | Bool.false =>
+      cases inst.1 : lcAny
+      | Monad.mk toApplicative toBind =>
+        cases toApplicative : lcAny
+        | Applicative.mk toFunctor toPure toSeq toSeqLeft toSeqRight =>
+          let _x.3 := toPure ◾ b;
+          return _x.3
+    | Bool.true =>
+      cases inst.1 : lcAny
+      | Monad.mk toApplicative toBind =>
+        let _f.4 := Std.Legacy.Range.forIn'.loop._redArg._lam_0.2 toApplicative i step inst.1 range f;
+        let _x.5 := f i ◾ b;
+        let _x.6 := toBind ◾ ◾ _x.5 _f.4;
+        return _x.6
+
+════ 📦 Std.DHashMap.Internal.AssocList.foldlM._redArg._lam_0
+def Std.DHashMap.Internal.AssocList.foldlM._redArg._lam_0 inst.1 f tail.2 d : lcAny :=
+  let _x.3 := Std.DHashMap.Internal.AssocList.foldlM._redArg inst.1 f d tail.2;
+  return _x.3
+
+════ 📦 Std.DHashMap.Internal.Raw₀.Const.get?._redArg
+def Std.DHashMap.Internal.Raw₀.Const.get?._redArg inst.1 inst.2 m a : Option lcAny :=
+  cases m : Option lcAny
+  | Std.DHashMap.Raw.mk size.3 buckets.4 =>
+    let _x.5 := Array.size ◾ buckets.4;
+    let _x.6 := inst.2 a;
+    let _x.7 := 32;
+    let _x.8 := UInt64.shiftRight _x.6 _x.7;
+    let fold := UInt64.xor _x.6 _x.8;
+    let _x.9 := 16;
+    let _x.10 := UInt64.shiftRight fold _x.9;
+    let _x.11 := UInt64.xor fold _x.10;
+    let _x.12 := UInt64.toUSize _x.11;
+    let _x.13 := USize.ofNat _x.5;
+    let _x.14 := 1;
+    let _x.15 := USize.sub _x.13 _x.14;
+    let _x.16 := USize.land _x.12 _x.15;
+    let _x.17 := Array.uget ◾ buckets.4 _x.16 ◾;
+    let _x.18 := Std.DHashMap.Internal.AssocList.get?._redArg inst.1 a _x.17;
+    return _x.18
+
+════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg._lam_0
+def _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg._lam_0 toApplicative i step inst.1 range f __do_lift.2 : lcAny :=
+  cases __do_lift.2 : lcAny
+  | ForInStep.done a.3 =>
+    cases toApplicative : lcAny
+    | Applicative.mk toFunctor toPure toSeq toSeqLeft toSeqRight =>
+      let _x.4 := toPure ◾ a.3;
+      return _x.4
+  | ForInStep.yield a.5 =>
+    let _x.6 := Nat.add i step;
+    let _x.7 := Std.Legacy.Range.forIn'.loop._redArg.2 inst.1 range f a.5 _x.6;
+    return _x.7
+
+════ 📦 _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg
+def _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg inst.1 i source target : Array
+  (Std.DHashMap.Internal.AssocList lcAny lcAny) :=
+  let _x.2 := Array.size ◾ source;
+  let _x.3 := Nat.decLt i _x.2;
+  cases _x.3 : Array (Std.DHashMap.Internal.AssocList lcAny lcAny)
+  | Bool.false =>
+    return target
+  | Bool.true =>
+    let _f.4 := Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0.2 inst.1;
+    let es := Array.getInternal ◾ source i ◾;
+    let _x.5 := Std.DHashMap.Internal.AssocList.nil ◾ ◾;
+    let source := Array.set ◾ source i _x.5 ◾;
+    let _f.6 := Id.instMonad._lam_0;
+    let _f.7 := Id.instMonad._lam_1;
+    let _f.8 := Id.instMonad._lam_2;
+    let _f.9 := Id.instMonad._lam_3;
+    let _f.10 := Id.instMonad._lam_4;
+    let _f.11 := Id.instMonad._lam_5;
+    let _f.12 := Id.instMonad._lam_6;
+    let _x.13 := Functor.mk ◾ _f.6 _f.7;
+    let _x.14 := Applicative.mk ◾ _x.13 _f.8 _f.9 _f.10 _f.11;
+    let _x.15 := Monad.mk ◾ _x.14 _f.12;
+    let target := Std.DHashMap.Internal.AssocList.foldlM._redArg _x.15 _f.4 target es;
+    let _x.16 := 1;
+    let _x.17 := Nat.add i _x.16;
+    let _x.18 := Std.DHashMap.Internal.Raw₀.expand.go._redArg.2 inst.1 _x.17 source target;
+    return _x.18
+
+════ 📦 _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg
+def _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg inst.1 f x.2 x.3 : lcAny :=
+  cases inst.1 : lcAny
+  | Monad.mk toApplicative toBind =>
+    cases toApplicative : lcAny
+    | Applicative.mk toFunctor toPure toSeq toSeqLeft toSeqRight =>
+      cases x.2 : lcAny
+      | Std.DHashMap.Internal.AssocList.nil =>
+        let _x.4 := ForInStep.yield ◾ x.3;
+        let _x.5 := toPure ◾ _x.4;
+        return _x.5
+      | Std.DHashMap.Internal.AssocList.cons key.6 value.7 tail.8 =>
+        let _f.9 := Std.DHashMap.Internal.AssocList.forInStep.go._redArg._lam_0.2 toPure inst.1 f tail.8;
+        let _x.10 := f key.6 value.7 x.3;
+        let _x.11 := toBind ◾ ◾ _x.10 _f.9;
+        return _x.11
+
+════ 📦 _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0
+def _private.Std.Data.DHashMap.Internal.Defs.0.Std.DHashMap.Internal.Raw₀.expand.go._redArg._lam_0 inst.1 x1.2 x2.3 x3.4 : Array
+  (Std.DHashMap.Internal.AssocList lcAny lcAny) :=
+  let _x.5 := Array.size ◾ x1.2;
+  let _x.6 := inst.1 x2.3;
+  let _x.7 := 32;
+  let _x.8 := UInt64.shiftRight _x.6 _x.7;
+  let fold := UInt64.xor _x.6 _x.8;
+  let _x.9 := 16;
+  let _x.10 := UInt64.shiftRight fold _x.9;
+  let _x.11 := UInt64.xor fold _x.10;
+  let _x.12 := UInt64.toUSize _x.11;
+  let _x.13 := USize.ofNat _x.5;
+  let _x.14 := 1;
+  let _x.15 := USize.sub _x.13 _x.14;
+  let _x.16 := USize.land _x.12 _x.15;
+  let _x.17 := Array.uget ◾ x1.2 _x.16 ◾;
+  let _x.18 := Std.DHashMap.Internal.AssocList.cons ◾ ◾ x2.3 x3.4 _x.17;
+  let _x.19 := Array.uset ◾ x1.2 _x.16 _x.18 ◾;
+  return _x.19
+
+════ 📦 _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg._lam_0
+def _private.Std.Data.DHashMap.Internal.AssocList.Basic.0.Std.DHashMap.Internal.AssocList.forInStep.go._redArg._lam_0 toPure inst.1 f tail.2 __do_lift.3 : lcAny :=
+  cases __do_lift.3 : lcAny
+  | ForInStep.done a.4 =>
+    let _x.5 := toPure ◾ __do_lift.3;
+    return _x.5
+  | ForInStep.yield a.6 =>
+    let _x.7 := Std.DHashMap.Internal.AssocList.forInStep.go._redArg.2 inst.1 f tail.2 a.6;
+    return _x.7
+

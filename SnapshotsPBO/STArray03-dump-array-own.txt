@@ -1,0 +1,5 @@
+=== STArray03
+declarations looked at: 8
+copies of a shared array: inserted
+updates done in place: 1
+  1 in place: _private.Init.Data.Array.Basic.0.Array.forIn'Unsafe.loop._at_.test1.spec_0._redArg

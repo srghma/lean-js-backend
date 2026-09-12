@@ -1,0 +1,10 @@
+════ 🎯 hello
+def hello x : Nat :=
+  let y := 1;
+  let _x.1 := Nat.add x y;
+  return _x.1
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+

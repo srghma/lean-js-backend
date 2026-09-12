@@ -1,0 +1,30 @@
+════ 🎯 test1
+def test1 x : String :=
+  let _x.1 := "foo";
+  let _x.2 := String.decEq x _x.1;
+  cases _x.2 : String
+  | Bool.false =>
+    let _x.3 := "bar";
+    let _x.4 := String.decEq x _x.3;
+    cases _x.4 : String
+    | Bool.false =>
+      let _x.5 := "";
+      let _x.6 := String.decEq x _x.5;
+      cases _x.6 : String
+      | Bool.false =>
+        let _x.7 := "catch";
+        return _x.7
+      | Bool.true =>
+        let _x.8 := "3";
+        return _x.8
+    | Bool.true =>
+      let _x.9 := "2";
+      return _x.9
+  | Bool.true =>
+    let _x.10 := "1";
+    return _x.10
+
+════ 📦 String.decEq
+def String.decEq @&s₁ @&s₂ : Bool :=
+  extern
+

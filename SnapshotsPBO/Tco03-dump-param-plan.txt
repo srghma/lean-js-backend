@@ -1,0 +1,10 @@
+════ test
+-- IR
+def test (x_1 : tobj) : tobj :=
+  let x_2 : tobj := test.go x_1;
+  ret x_2
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

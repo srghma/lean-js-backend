@@ -1,0 +1,10 @@
+════ split plans
+════ test before
+def test (x_1 : obj) : obj :=
+  let x_2 : obj := pap test._lam_0._boxed x_1;
+  ret x_2
+════ test after
+def test (x_1 : obj) : obj :=
+  let x_2 : obj := pap test._lam_0._boxed x_1;
+  ret x_2
+════ test parameter plan: (every parameter kept)

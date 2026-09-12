@@ -1,0 +1,5 @@
+=== HashContainers
+declarations looked at: 31
+copies of a shared array: not needed
+updates done in place: 2
+  2 in place: Std.DHashMap.Internal.Raw₀.insert._at_.test1.spec_1._redArg

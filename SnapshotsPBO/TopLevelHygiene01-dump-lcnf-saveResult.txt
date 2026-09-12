@@ -1,0 +1,5 @@
+════ 🎯 test1
+def test1 α β wat a : lcAny :=
+  let _x.1 := wat a;
+  return _x.1
+

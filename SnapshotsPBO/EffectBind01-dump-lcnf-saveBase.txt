@@ -1,0 +1,47 @@
+════ 🎯 test1
+def test1 a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := "1";
+  let _x.3 := IO.println._at_.test1.spec_0 _x.2 a.1;
+  cases _x.3 : EST.Out IO.Error lcAny PUnit
+  | EST.Out.ok a.4 a.5 =>
+    let _x.6 := "2";
+    let _x.7 := IO.println._at_.test1.spec_0 _x.6 a.5;
+    cases _x.7 : EST.Out IO.Error lcAny PUnit
+    | EST.Out.ok a.8 a.9 =>
+      let _x.10 := "3";
+      let _x.11 := IO.println._at_.test1.spec_0 _x.10 a.9;
+      cases _x.11 : EST.Out IO.Error lcAny PUnit
+      | EST.Out.ok a.12 a.13 =>
+        let _x.14 := @EST.Out.ok _ _ _ a.8 a.13;
+        return _x.14
+      | EST.Out.error a.15 a.16 =>
+        return _x.11
+    | EST.Out.error a.17 a.18 =>
+      return _x.7
+  | EST.Out.error a.19 a.20 =>
+    return _x.3
+
+════ 📦 IO.getStdout
+def IO.getStdout a._@._internal._hyg.1 : ST.Out lcAny IO.FS.Stream :=
+  extern
+
+════ 📦 String.push
+def String.push a._@._internal._hyg.1 a._@._internal._hyg.2 : String :=
+  extern
+
+════ 📦 IO.println._at_.test1.spec_0
+def IO.println._at_.test1.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := 10;
+  let _x.3 := String.push s _x.2;
+  let _x.4 := IO.print._at_.IO.println._at_.test1.spec_0.spec_0 _x.3 a.1;
+  return _x.4
+
+════ 📦 IO.print._at_.IO.println._at_.test1.spec_0.spec_0
+def IO.print._at_.IO.println._at_.test1.spec_0.spec_0 s a.1 : EST.Out IO.Error lcAny PUnit :=
+  let _x.2 := IO.getStdout a.1;
+  cases _x.2 : EST.Out IO.Error lcAny PUnit
+  | ST.Out.mk val.3 state.4 =>
+    let _x.5 := val.3 # 4;
+    let _x.6 := _x.5 s state.4;
+    return _x.6
+

@@ -1,0 +1,36 @@
+════ 🎯 foo
+-- IR (what the backend reads)
+def foo : obj :=
+  let x_1 : obj := foo._closed_0;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test
+-- IR (what the backend reads)
+def test : obj :=
+  let x_1 : obj := foo;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 foo._closed_0
+-- IR (what the backend reads)
+def foo._closed_0 : obj :=
+  let x_1 : obj := "foo";
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.InlineNever]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (3): [`foo, `test, `foo._closed_0]
+ctors (0): []
+inducts (0): []

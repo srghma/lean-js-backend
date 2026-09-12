@@ -1,0 +1,25 @@
+════ test1
+-- IR
+def test1 (x_1 : u8) : obj :=
+  let x_2 : obj := test1._closed_6;
+  let x_3 : obj := Monoid.guard._at_.test1.spec_0 x_1 x_2;
+  dec x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : tobj) (x_2 : u8) : obj :=
+  let x_3 : obj := test1._closed_6;
+  let x_4 : obj := app x_1 ◾ x_3;
+  let x_5 : obj := Monoid.guard._at_.test1.spec_0 x_2 x_4;
+  dec x_4;
+  ret x_5
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+

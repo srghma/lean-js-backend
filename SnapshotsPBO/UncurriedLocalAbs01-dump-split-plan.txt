@@ -1,0 +1,29 @@
+════ split plans
+════ sum before
+  (no compiled code)
+════ sum after
+  (no compiled code)
+════ sum parameter plan: (every parameter kept)
+════ test before
+def test (x_1 : tobj) (x_2 : tobj) : tobj :=
+  inc x_2;
+  inc[2] x_1;
+  let x_3 : tobj := test._lam_0 x_1 x_1 x_2;
+  inc x_1;
+  let x_4 : tobj := test._lam_0 x_1 x_2 x_1;
+  let x_5 : tobj := Int.add x_3 x_4;
+  dec x_4;
+  dec x_3;
+  ret x_5
+════ test after
+def test (x_1 : tobj) (x_2 : tobj) : tobj :=
+  inc x_2;
+  inc[2] x_1;
+  let x_3 : tobj := test._lam_0 x_1 x_1 x_2;
+  inc x_1;
+  let x_4 : tobj := test._lam_0 x_1 x_2 x_1;
+  let x_5 : tobj := Int.add x_3 x_4;
+  dec x_4;
+  dec x_3;
+  ret x_5
+════ test parameter plan: (every parameter kept)

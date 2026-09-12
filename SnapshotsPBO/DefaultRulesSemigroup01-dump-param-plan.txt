@@ -1,0 +1,32 @@
+════ test1
+-- IR
+def test1 (x_1 : obj) (x_2 : obj) (x_3 : tobj) : obj :=
+  inc x_3;
+  let x_4 : obj := app x_1 x_3;
+  let x_5 : obj := app x_2 x_3;
+  let x_6 : obj := String.append x_4 x_5;
+  dec x_5;
+  ret x_6
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : obj) (x_2 : obj) (x_3 : tobj) : obj :=
+  inc x_3;
+  let x_4 : obj := app x_1 x_3;
+  let x_5 : obj := app x_2 x_3;
+  inc x_4;
+  let x_6 : obj := String.append x_4 x_5;
+  let x_7 : obj := String.append x_6 x_4;
+  dec x_4;
+  let x_8 : obj := String.append x_7 x_5;
+  dec x_5;
+  ret x_8
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top, top]
+-- callers:
+

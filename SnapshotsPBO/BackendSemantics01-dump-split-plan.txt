@@ -1,0 +1,37 @@
+════ split plans
+════ test1 before
+def test1 : u32 :=
+  let x_1 : u32 := test1._closed_2;
+  ret x_1
+════ test1 after
+def test1 : u32 :=
+  let x_1 : u32 := test1._closed_2;
+  ret x_1
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 : u32 :=
+  let x_1 : u32 := test2._closed_2;
+  ret x_1
+════ test2 after
+def test2 : u32 :=
+  let x_1 : u32 := test2._closed_2;
+  ret x_1
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 : u32 :=
+  let x_1 : u32 := test3._closed_0;
+  ret x_1
+════ test3 after
+def test3 : u32 :=
+  let x_1 : u32 := test3._closed_0;
+  ret x_1
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 : u32 :=
+  let x_1 : u32 := 0;
+  ret x_1
+════ test4 after
+def test4 : u32 :=
+  let x_1 : u32 := 0;
+  ret x_1
+════ test4 parameter plan: (every parameter kept)

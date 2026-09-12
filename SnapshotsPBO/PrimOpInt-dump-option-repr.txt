@@ -1,0 +1,58 @@
+=== PrimOpInt
+places holding an unboxed `Option`: 0
+  a parameter of a declaration the file is for: test1
+  a parameter of a declaration the file is for: test10
+  a parameter of a declaration the file is for: test11
+  a parameter of a declaration the file is for: test2
+  a parameter of a declaration the file is for: test3
+  a parameter of a declaration the file is for: test4
+  a parameter of a declaration the file is for: test5
+  a parameter of a declaration the file is for: test6
+  a parameter of a declaration the file is for: test7
+  a parameter of a declaration the file is for: test8
+  a parameter of a declaration the file is for: test9
+  an argument of a primitive: test1
+  an argument of a primitive: test10
+  an argument of a primitive: test11
+  an argument of a primitive: test2
+  an argument of a primitive: test3
+  an argument of a primitive: test4
+  an argument of a primitive: test5
+  an argument of a primitive: test6
+  an argument of a primitive: test7
+  an argument of a primitive: test8
+  an argument of a primitive: test9
+  the answer of a declaration the file is for: Array.append
+  the answer of a declaration the file is for: Array.append._redArg
+  the answer of a declaration the file is for: Array.appendCore
+  the answer of a declaration the file is for: Array.appendCore._redArg
+  the answer of a declaration the file is for: Float.ofBinaryScientific
+  the answer of a declaration the file is for: Float.ofNat
+  the answer of a declaration the file is for: Float.ofScientific
+  the answer of a declaration the file is for: IO.Error.toString
+  the answer of a declaration the file is for: Int.repr
+  the answer of a declaration the file is for: Nat.repr
+  the answer of a declaration the file is for: Nat.reprFast
+  the answer of a declaration the file is for: main
+  the answer of a declaration the file is for: test1
+  the answer of a declaration the file is for: test10
+  the answer of a declaration the file is for: test11
+  the answer of a declaration the file is for: test2
+  the answer of a declaration the file is for: test3
+  the answer of a declaration the file is for: test4
+  the answer of a declaration the file is for: test5
+  the answer of a declaration the file is for: test6
+  the answer of a declaration the file is for: test7
+  the answer of a declaration the file is for: test8
+  the answer of a declaration the file is for: test9
+  the answer of a primitive: test1
+  the answer of a primitive: test10
+  the answer of a primitive: test11
+  the answer of a primitive: test2
+  the answer of a primitive: test3
+  the answer of a primitive: test4
+  the answer of a primitive: test5
+  the answer of a primitive: test6
+  the answer of a primitive: test7
+  the answer of a primitive: test8
+  the answer of a primitive: test9

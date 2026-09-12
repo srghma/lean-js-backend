@@ -1,0 +1,40 @@
+════ TestEnum
+❌ ⚠️ Name 'TestEnum' is not present in extracted declarations!
+-- IR: not in the extracted data
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ instBEqTestEnum
+-- IR
+def instBEqTestEnum : obj :=
+  let x_1 : obj := instBEqTestEnum._closed_0;
+  ret x_1
+-- plan: every parameter kept
+-- frozen: true
+-- values: []
+-- callers:
+
+════ test1
+-- IR
+def test1 (x_1 : u8) : u8 :=
+  let x_2 : u8 := 2;
+  let x_3 : u8 := instBEqTestEnum.beq x_2 x_1;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : u8) : u8 :=
+  let x_2 : u8 := 2;
+  let x_3 : u8 := instBEqTestEnum.beq x_1 x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+

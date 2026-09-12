@@ -1,0 +1,24 @@
+════ test1
+-- IR
+def test1 (x_1 : void) : obj :=
+  let x_2 : tobj := test1._closed_0;
+  let x_3 : obj := ctor_0[EST.Out.ok] x_2;
+  ret x_3
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top]
+-- callers:
+
+════ test2
+-- IR
+def test2 (x_1 : @& tobj) (x_2 : void) : obj :=
+  let x_3 : tobj := test1._closed_0;
+  let x_4 : tobj := Int.add x_1 x_3;
+  dec x_3;
+  let x_5 : obj := ctor_0[EST.Out.ok] x_4;
+  ret x_5
+-- plan: every parameter kept
+-- frozen: true
+-- values: [top, top]
+-- callers:
+

@@ -1,0 +1,180 @@
+════ 🎯 test1
+-- IR (what the backend reads)
+def test1 : u32 :=
+  let x_1 : u32 := test1._closed_2;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test2
+-- IR (what the backend reads)
+def test2 : u32 :=
+  let x_1 : u32 := test2._closed_2;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test3
+-- IR (what the backend reads)
+def test3 : u32 :=
+  let x_1 : u32 := test3._closed_0;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 🎯 test4
+-- IR (what the backend reads)
+def test4 : u32 :=
+  let x_1 : u32 := 0;
+  ret x_1
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 Int32.add
+-- IR (what the backend reads)
+extern Int32.add (x_1 : u32) (x_2 : u32) : u32
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int32_add"
+decl.hashKeyType?: none
+
+════ 📦 Int32.neg
+-- IR (what the backend reads)
+extern Int32.neg (x_1 : u32) : u32
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int32_neg"
+decl.hashKeyType?: none
+
+════ 📦 Int32.ofNat
+-- IR (what the backend reads)
+extern Int32.ofNat (x_1 : @& tobj) : u32
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int32_of_nat"
+decl.hashKeyType?: none
+
+════ 📦 Int32.sub
+-- IR (what the backend reads)
+extern Int32.sub (x_1 : u32) (x_2 : u32) : u32
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_int32_sub"
+decl.hashKeyType?: none
+
+════ 📦 UInt32.ofNatLT
+-- IR (what the backend reads)
+extern UInt32.ofNatLT (x_1 : @& tobj) (x_2 : ◾) : u32
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: some "lean_uint32_of_nat"
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_0
+-- IR (what the backend reads)
+def test1._closed_0 : u32 :=
+  let x_1 : tagged := 2147483647;
+  let x_2 : u32 := Int32.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_1
+-- IR (what the backend reads)
+def test1._closed_1 : u32 :=
+  let x_1 : tagged := 1;
+  let x_2 : u32 := Int32.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test1._closed_2
+-- IR (what the backend reads)
+def test1._closed_2 : u32 :=
+  let x_1 : u32 := test1._closed_1;
+  let x_2 : u32 := test1._closed_0;
+  let x_3 : u32 := Int32.sub x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2._closed_0
+-- IR (what the backend reads)
+def test2._closed_0 : u32 :=
+  let x_1 : tagged := 2147483648;
+  let x_2 : u32 := Int32.ofNat x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2._closed_1
+-- IR (what the backend reads)
+def test2._closed_1 : u32 :=
+  let x_1 : u32 := test2._closed_0;
+  let x_2 : u32 := Int32.neg x_1;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test2._closed_2
+-- IR (what the backend reads)
+def test2._closed_2 : u32 :=
+  let x_1 : u32 := test1._closed_1;
+  let x_2 : u32 := test2._closed_1;
+  let x_3 : u32 := Int32.add x_2 x_1;
+  ret x_3
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ 📦 test3._closed_0
+-- IR (what the backend reads)
+def test3._closed_0 : u32 :=
+  let x_1 : tagged := 65535;
+  let x_2 : u32 := UInt32.ofNatLT x_1 ◾;
+  ret x_2
+-- JsOleanData
+decl.resultIsBool: false
+decl.externSym?: none
+decl.hashKeyType?: none
+
+════ JsOleanData summary
+modules: #[`LeanJsCliSnapshots2.BackendSemantics01]
+entry: Lean.Compiler.JS.JsEntryPoint.missing
+decls (16): [`test1,
+ `test2,
+ `test3,
+ `test4,
+ `Int32.add,
+ `Int32.neg,
+ `Int32.ofNat,
+ `Int32.sub,
+ `UInt32.ofNatLT,
+ `test1._closed_0,
+ `test1._closed_1,
+ `test1._closed_2,
+ `test2._closed_0,
+ `test2._closed_1,
+ `test2._closed_2,
+ `test3._closed_0]
+ctors (0): []
+inducts (0): []

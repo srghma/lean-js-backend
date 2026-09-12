@@ -1,0 +1,161 @@
+════ split plans
+════ test1 before
+def test1 (x_1 : u8) (x_2 : @& tobj) : tobj :=
+  case x_1 : u8 of
+  Colour.red →
+    inc x_2;
+    ret x_2
+  default →
+    case x_1 : u8 of
+    Colour.red →
+      let x_3 : tagged := 0;
+      ret x_3
+    Colour.green →
+      let x_4 : tagged := 1;
+      let x_5 : tobj := Nat.add x_2 x_4;
+      ret x_5
+    Colour.blue →
+      let x_6 : tagged := 2;
+      let x_7 : tobj := Nat.add x_2 x_6;
+      ret x_7
+════ test1 after
+def test1 (x_1 : u8) (x_2 : @& tobj) : tobj :=
+  case x_1 : u8 of
+  Colour.red →
+    inc x_2;
+    ret x_2
+  default →
+    case x_1 : u8 of
+    Colour.red →
+      let x_3 : tagged := 0;
+      ret x_3
+    Colour.green →
+      let x_4 : tagged := 1;
+      let x_5 : tobj := Nat.add x_2 x_4;
+      ret x_5
+    Colour.blue →
+      let x_6 : tagged := 2;
+      let x_7 : tobj := Nat.add x_2 x_6;
+      ret x_7
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  case x_1 : tobj of
+  Shape.dot →
+    inc x_2;
+    ret x_2
+  default →
+    case x_1 : tobj of
+    Shape.dot →
+      let x_3 : tagged := 0;
+      ret x_3
+    Shape.circle →
+      let x_4 : tobj := proj[0] x_1;
+      let x_5 : tobj := Nat.add x_4 x_2;
+      ret x_5
+    Shape.rect →
+      let x_6 : tobj := proj[0] x_1;
+      let x_7 : tobj := proj[1] x_1;
+      let x_8 : tobj := Nat.add x_6 x_7;
+      let x_9 : tobj := Nat.add x_8 x_2;
+      dec x_8;
+      ret x_9
+════ test2 after
+def test2 (x_1 : @& tobj) (x_2 : @& tobj) : tobj :=
+  case x_1 : tobj of
+  Shape.dot →
+    inc x_2;
+    ret x_2
+  default →
+    case x_1 : tobj of
+    Shape.dot →
+      let x_3 : tagged := 0;
+      ret x_3
+    Shape.circle →
+      let x_4 : tobj := proj[0] x_1;
+      let x_5 : tobj := Nat.add x_4 x_2;
+      ret x_5
+    Shape.rect →
+      let x_6 : tobj := proj[0] x_1;
+      let x_7 : tobj := proj[1] x_1;
+      let x_8 : tobj := Nat.add x_6 x_7;
+      let x_9 : tobj := Nat.add x_8 x_2;
+      dec x_8;
+      ret x_9
+════ test2 parameter plan: (every parameter kept)
+════ test3 before
+def test3 (x_1 : @& tobj) : tobj :=
+  case x_1 : tobj of
+  Shape.dot →
+    let x_2 : tagged := 0;
+    ret x_2
+  Shape.circle →
+    let x_3 : tobj := proj[0] x_1;
+    inc x_3;
+    ret x_3
+  Shape.rect →
+    let x_4 : tobj := proj[0] x_1;
+    let x_5 : tobj := proj[1] x_1;
+    let x_6 : tobj := Nat.add x_4 x_5;
+    ret x_6
+════ test3 after
+def test3 (x_1 : @& tobj) : tobj :=
+  case x_1 : tobj of
+  Shape.dot →
+    let x_2 : tagged := 0;
+    ret x_2
+  Shape.circle →
+    let x_3 : tobj := proj[0] x_1;
+    inc x_3;
+    ret x_3
+  Shape.rect →
+    let x_4 : tobj := proj[0] x_1;
+    let x_5 : tobj := proj[1] x_1;
+    let x_6 : tobj := Nat.add x_4 x_5;
+    ret x_6
+════ test3 parameter plan: (every parameter kept)
+════ test4 before
+def test4 (x_1 : tobj) : obj :=
+  case x_1 : tobj of
+  List.nil →
+    let x_2 : obj := test4._closed_0;
+    ret x_2
+  List.cons →
+    let x_3 : tobj := proj[1] x_1;
+    case x_3 : tobj of
+    List.nil →
+      let x_4 : tobj := proj[0] x_1;
+      inc x_4;
+      dec x_1;
+      let x_5 : obj := test4._closed_1;
+      let x_6 : obj := Nat.reprFast x_4;
+      let x_7 : obj := String.append x_5 x_6;
+      dec x_6;
+      ret x_7
+    List.cons →
+      dec x_1;
+      let x_8 : obj := test4._closed_2;
+      ret x_8
+════ test4 after
+def test4 (x_1 : tobj) : obj :=
+  case x_1 : tobj of
+  List.nil →
+    let x_2 : obj := test4._closed_0;
+    ret x_2
+  List.cons →
+    let x_3 : tobj := proj[1] x_1;
+    case x_3 : tobj of
+    List.nil →
+      let x_4 : tobj := proj[0] x_1;
+      inc x_4;
+      dec x_1;
+      let x_5 : obj := test4._closed_1;
+      let x_6 : obj := Nat.reprFast x_4;
+      let x_7 : obj := String.append x_5 x_6;
+      dec x_6;
+      ret x_7
+    List.cons →
+      dec x_1;
+      let x_8 : obj := test4._closed_2;
+      ret x_8
+════ test4 parameter plan: (every parameter kept)

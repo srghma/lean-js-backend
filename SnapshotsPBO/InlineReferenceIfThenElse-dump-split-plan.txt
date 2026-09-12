@@ -1,0 +1,37 @@
+════ split plans
+════ extern1 before
+def extern1 : obj :=
+  let x_1 : obj := extern1._closed_1;
+  ret x_1
+════ extern1 after
+def extern1 : obj :=
+  let x_1 : obj := extern1._closed_1;
+  ret x_1
+════ extern1 parameter plan: (every parameter kept)
+════ fn before
+def fn (x_1 : ◾) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := fn._closed_0;
+  ret x_3
+════ fn after
+def fn (x_1 : ◾) (x_2 : @& tobj) : tobj :=
+  let x_3 : tobj := fn._closed_0;
+  ret x_3
+════ fn parameter plan: (every parameter kept)
+════ test1 before
+def test1 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+════ test1 after
+def test1 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+════ test1 parameter plan: (every parameter kept)
+════ test2 before
+def test2 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+════ test2 after
+def test2 : tobj :=
+  let x_1 : tobj := test1._closed_0;
+  ret x_1
+════ test2 parameter plan: (every parameter kept)
