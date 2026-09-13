@@ -1,1 +1,0 @@
-UncurriedEffectFns02: throws

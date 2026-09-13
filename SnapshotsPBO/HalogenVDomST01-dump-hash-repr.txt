@@ -1,6 +1,0 @@
-=== HalogenVDomST01
-empty-container declarations: 1
-operations: 0
-  built other than empty: Std.DHashMap.Internal.Raw₀.insert._redArg
-  passed to a function value: _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._redArg
-  stored in a constructor: diffWithKeyAndIxE._redArg._lam_0

@@ -1,5 +1,0 @@
-=== OptionUnbox
-empty-container declarations: 0
-operations: 1
-  getOpt (String keys) -> Lean's own implementation: Std.DHashMap.Internal.Raw₀.Const.get?._at_.test3.spec_0._redArg
-  an operation applied to a value that is not a known container: test3

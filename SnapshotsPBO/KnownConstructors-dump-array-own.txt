@@ -1,5 +1,0 @@
-=== KnownConstructors
-declarations looked at: 30
-copies of a shared array: inserted
-updates done in place: 2
-  2 in place: test3

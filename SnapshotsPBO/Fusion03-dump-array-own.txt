@@ -1,8 +1,0 @@
-=== Fusion03
-declarations looked at: 35
-copies of a shared array: not needed
-updates done in place: 4
-  1 in place: _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test.spec_0
-  1 in place: _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test.spec_1
-  1 in place: _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test.spec_2
-  1 in place: _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test.spec_4

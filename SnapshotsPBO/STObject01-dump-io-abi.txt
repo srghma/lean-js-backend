@@ -1,1 +1,0 @@
-STObject01: throws

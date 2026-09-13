@@ -1,4 +1,0 @@
-=== IoEntry
-declarations looked at: 81
-copies of a shared array: not needed
-updates done in place: 0

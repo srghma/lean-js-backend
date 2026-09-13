@@ -1,6 +1,0 @@
-=== ReadBeforeWrite
-declarations looked at: 9
-copies of a shared array: inserted
-updates done in place: 4
-  3 in place: test2
-  1 in place: test3

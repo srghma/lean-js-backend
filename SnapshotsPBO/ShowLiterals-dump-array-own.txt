@@ -1,8 +1,0 @@
-=== ShowLiterals
-declarations looked at: 98
-copies of a shared array: inserted
-updates done in place: 4
-  1 in place: test7._closed_1
-  1 in place: test7._closed_2
-  1 in place: test7._closed_3
-  1 in place: test7._closed_4

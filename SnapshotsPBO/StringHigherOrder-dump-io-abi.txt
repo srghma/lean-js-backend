@@ -1,1 +1,0 @@
-StringHigherOrder: throws

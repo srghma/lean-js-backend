@@ -1,8 +1,0 @@
-=== UnpackArray01
-declarations looked at: 9
-copies of a shared array: inserted
-updates done in place: 4
-  1 in place: test
-  1 in place: test._closed_5
-  1 in place: test._closed_6
-  1 in place: test._closed_7

@@ -1,1 +1,0 @@
-STArray03: throws

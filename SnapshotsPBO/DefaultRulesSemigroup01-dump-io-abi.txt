@@ -1,1 +1,0 @@
-DefaultRulesSemigroup01: throws

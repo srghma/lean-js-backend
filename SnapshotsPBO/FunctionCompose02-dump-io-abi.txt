@@ -1,1 +1,0 @@
-FunctionCompose02: throws

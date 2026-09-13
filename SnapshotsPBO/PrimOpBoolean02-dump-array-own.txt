@@ -1,7 +1,0 @@
-=== PrimOpBoolean02
-declarations looked at: 46
-copies of a shared array: inserted
-updates done in place: 6
-  4 in place: boolValues
-  1 in place: test9._closed_1
-  1 in place: test9._closed_2

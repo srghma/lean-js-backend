@@ -1,5 +1,0 @@
-=== UncurriedLocalAbs01
-declarations looked at: 5
-copies of a shared array: inserted
-updates done in place: 19
-  19 in place: test._lam_0

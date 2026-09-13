@@ -1,7 +1,0 @@
-=== MapFilter
-declarations looked at: 11
-copies of a shared array: not needed
-updates done in place: 3
-  1 in place: _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test1.spec_0
-  1 in place: _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test2.spec_0
-  1 in place: _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.test4.spec_0

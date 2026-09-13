@@ -1,5 +1,0 @@
-=== PrimOpChar02
-declarations looked at: 31
-copies of a shared array: inserted
-updates done in place: 3
-  3 in place: charValues

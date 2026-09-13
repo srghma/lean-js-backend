@@ -1,1 +1,0 @@
-UncurriedSTFns01: throws

@@ -1,7 +1,0 @@
-=== DefaultRulesMonoid01
-declarations looked at: 11
-copies of a shared array: inserted
-updates done in place: 3
-  1 in place: test1._closed_4
-  1 in place: test1._closed_5
-  1 in place: test1._closed_6

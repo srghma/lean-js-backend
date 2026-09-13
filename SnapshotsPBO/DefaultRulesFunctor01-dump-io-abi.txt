@@ -1,1 +1,0 @@
-DefaultRulesFunctor01: throws

@@ -1,1 +1,0 @@
-DefaultRulesMonoid01: throws

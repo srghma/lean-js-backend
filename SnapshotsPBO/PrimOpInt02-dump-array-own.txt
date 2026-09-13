@@ -1,7 +1,0 @@
-=== PrimOpInt02
-declarations looked at: 55
-copies of a shared array: inserted
-updates done in place: 8
-  6 in place: intValues._redArg
-  1 in place: test11._closed_2
-  1 in place: test11._closed_3

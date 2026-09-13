@@ -1,1 +1,0 @@
-PrimOpArray01: throws

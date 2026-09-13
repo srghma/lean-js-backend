@@ -1,9 +1,0 @@
-════ 🎯 assertEqual
--- LCNF (result): not stored
-
-════ 🎯 assertEqual3
--- LCNF (result): not stored
-
-════ 🎯 main
--- LCNF (result): not stored
-

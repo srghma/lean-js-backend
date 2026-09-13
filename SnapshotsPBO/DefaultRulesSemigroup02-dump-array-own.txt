@@ -1,7 +1,0 @@
-=== DefaultRulesSemigroup02
-declarations looked at: 15
-copies of a shared array: inserted
-updates done in place: 3
-  1 in place: _private.Init.Data.Array.Basic.0.Array.foldlMUnsafe.fold._at_.Array.append.spec_0._redArg
-  1 in place: test3._closed_2
-  1 in place: test4._closed_2

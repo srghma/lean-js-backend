@@ -1,4 +1,0 @@
-=== STArray04
-declarations looked at: 4
-copies of a shared array: not needed
-updates done in place: 0

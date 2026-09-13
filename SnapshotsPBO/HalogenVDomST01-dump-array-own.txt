@@ -1,5 +1,0 @@
-=== HalogenVDomST01
-declarations looked at: 88
-copies of a shared array: not needed
-updates done in place: 1
-  1 in place: Std.DHashMap.Internal.Raw₀.insert._redArg

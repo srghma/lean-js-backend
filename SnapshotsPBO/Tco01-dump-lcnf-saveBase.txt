@@ -1,9 +1,0 @@
-════ 🎯 test
-def test n : Nat :=
-  cases n : Nat
-  | Nat.zero =>
-    return n
-  | Nat.succ n.1 =>
-    let _x.2 := test n.1;
-    return _x.2
-
