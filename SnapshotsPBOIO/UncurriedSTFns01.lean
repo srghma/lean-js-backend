@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5, test6
 def test1 (f : Int → Int → Int → IO Unit) (g : Int → Int) : IO Unit := f (g 1) 2 3
 def test2 (f : Int → Int → Int → IO Unit) (g : Int → Int) (i : Int) : IO Unit := f (g 1) 2 i
 def test3 (f : Int → Int → Int → IO Unit) (g : Int → Int) (i j : Int) : IO Unit := f (g 1) i j

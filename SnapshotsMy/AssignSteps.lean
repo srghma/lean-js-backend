@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4
 /-!
 The step of a loop the backend makes out of a tail call: the assignments are written
 one after another, and a value that is *in the way* — one that a later assignment's

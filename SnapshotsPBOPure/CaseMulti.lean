@@ -1,4 +1,3 @@
--- @js_export: test1
 def test1 (x y : Int) : String :=
   match x, y with
   | 1, 1 => "1.1"

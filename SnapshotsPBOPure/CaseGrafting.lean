@@ -1,4 +1,3 @@
--- @js_export: test1
 def test1 : Bool → Bool → Bool → Int
   | _, false, true => 1
   | false, true, _ => 2

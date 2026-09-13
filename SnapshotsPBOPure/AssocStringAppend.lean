@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3
 def test1 (x : String) : String :=
   "a" ++ ((((("b" ++ x) ++ x) ++ x) ++ x) ++ "c") ++ "d"
 

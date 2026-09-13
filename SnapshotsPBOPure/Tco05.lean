@@ -1,4 +1,3 @@
--- @js_export: span
 def span (p : Int → Bool) (arr : Array Int) : Option Nat :=
   let rec go (i : Nat) : Option Nat :=
     if h : i < arr.size then

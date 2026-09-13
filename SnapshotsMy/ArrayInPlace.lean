@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5, test6
 /-!
 The array updates the backend performs in place (`LakeJs.Backend.ArrayOwn`). An update
 of an array nothing else holds becomes the JavaScript that mutates it (`_arrPush`,

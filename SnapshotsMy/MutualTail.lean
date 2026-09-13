@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5
 /-!
 Mutually tail-recursive functions: each of these calls the next in tail position, so
 none of them may grow the JavaScript stack. The group is compiled into a single

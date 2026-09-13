@@ -1,4 +1,3 @@
--- @js_export: charValues, test1, test2, test3, test4, test5, test6
 def charValues (op : Char → Char → Bool) : Array Bool :=
   #[ op 'a' 'a', op 'a' 'b', op 'b' 'a' ]
 

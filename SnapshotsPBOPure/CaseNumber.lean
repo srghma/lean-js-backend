@@ -1,4 +1,3 @@
--- @js_export: test1
 def test1 (f : Float) : String :=
   if f == 1.0 then "1"
   else if f == 2.0 then "2"

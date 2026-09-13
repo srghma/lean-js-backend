@@ -1,4 +1,3 @@
--- @js_export: diffWithIxE, diffWithKeyAndIxE
 import Std.Data.HashMap
 open Std
 

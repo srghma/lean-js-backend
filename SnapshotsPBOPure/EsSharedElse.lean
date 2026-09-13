@@ -1,4 +1,3 @@
--- @js_export: test1
 def test1 (a b c : Bool) : Int :=
   if a then
     if b then

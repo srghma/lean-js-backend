@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4
 def test1 (k : Int → Array Int) : IO Unit :=
   flip Array.forM (k 42) fun a => do
     IO.println a

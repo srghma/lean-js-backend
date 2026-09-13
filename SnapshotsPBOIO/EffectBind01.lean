@@ -1,4 +1,3 @@
--- @js_export: test1
 -- all datatypes that are iso to PUniq.unit will be rendered as `null`.
 def test1 : IO Unit := do
   IO.println "1"

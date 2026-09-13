@@ -1,4 +1,3 @@
--- @js_export: test
 partial def test (n : Int) : Int :=
   let rec go (n : Int) : Int :=
     let rec k (m : Int) : Int :=

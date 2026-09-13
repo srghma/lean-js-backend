@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5
 /-!
 `Array.append` on an array nothing else holds (`LakeJs.Backend.ArrayOwn`). Appending
 copies the whole accumulator at every step, so an accumulator loop that builds `n`

@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3
 def test1 (arr : Array String) : Array String :=
   let x := #["a"]
   let y := #["b"]

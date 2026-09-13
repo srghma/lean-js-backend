@@ -1,4 +1,3 @@
--- @js_export: test1
 structure Product3 (α β γ : Type) where
   a : α
   b : β

@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4
 /-!
 Walking a string one position at a time. A Lean string position is a byte offset into
 the UTF-8 encoding of the string, so every primitive that takes one is written in

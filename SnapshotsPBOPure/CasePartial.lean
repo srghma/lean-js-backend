@@ -1,4 +1,3 @@
--- @js_export: test1
 def test1 : Int → Int
   | 1 => 1
   | 2 => 2

@@ -1,4 +1,3 @@
--- @js_export: foo, test
 @[noinline]
 def foo : String := "foo"
 

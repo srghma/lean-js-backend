@@ -1,4 +1,3 @@
--- @js_export: test1, test10, test11, test12, test13, test2, test3, test4, test5, test6, test7, test8, test9
 def test1 (a b : Float) : Float := a + b
 def test2 (a b : Float) : Float := a - b
 def test3 (a b : Float) : Bool := a == b

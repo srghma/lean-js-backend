@@ -1,4 +1,3 @@
--- @js_export: test
 def test (f : IO.Ref Int → IO.Ref Int) : IO Unit := do
   let ref ← IO.mkRef 0
   let wat := f ref

@@ -1,4 +1,3 @@
--- @js_export: f, g, test1, test2, test3, test4
 def f (_ : String) : String := "a"
 def g (_ : String) : String := "b"
 

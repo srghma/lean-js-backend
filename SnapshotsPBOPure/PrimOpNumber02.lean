@@ -1,4 +1,3 @@
--- @js_export: nan, numValues, test1, test10, test11, test2, test3, test4, test5, test6, test7, test8, test9
 def nan : Float := 0.0 / 0.0
 
 def numValues {α : Type} (op : Float → Float → α) : Array α :=

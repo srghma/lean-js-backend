@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5
 /-!
 A value read out of an array *before* an update of that array which the ownership
 analysis performs in place. The read has to stay where it is: moving it past the

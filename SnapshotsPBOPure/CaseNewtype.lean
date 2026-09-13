@@ -1,4 +1,3 @@
--- @js_export: test1, test2
 structure NewTypeInt where
   val : Int
 

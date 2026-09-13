@@ -1,4 +1,3 @@
--- @js_export: intValues, test1, test10, test11, test2, test3, test4, test5, test6, test7, test8, test9
 def intValues {α : Type} (op : Int → Int → α) : Array α :=
   #[ op 1 1, op 1 2, op 2 1, op 1 (-2), op (-1) 2, op (-1) (-1) ]
 

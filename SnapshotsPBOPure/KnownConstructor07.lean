@@ -1,4 +1,3 @@
--- @js_export: test
 structure PairBox where
   foo : Int
   bar : Int

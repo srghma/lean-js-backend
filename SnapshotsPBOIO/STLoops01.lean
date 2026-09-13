@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4
 def test1 (ref : IO.Ref Int) (k : Int → Array Int) : IO Unit := do
   for a in k 42 do
     let val ← ref.get

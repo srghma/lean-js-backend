@@ -1,4 +1,3 @@
--- @js_export: extern1, fn, test1, test2
 structure RecC where
   c : Bool
 

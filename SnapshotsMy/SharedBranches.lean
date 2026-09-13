@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5
 /-!
 # Branches that begin with the same computation, and a string position of `0`
 

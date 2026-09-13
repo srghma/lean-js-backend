@@ -1,4 +1,3 @@
--- @js_export: test
 structure FloatLetResult where
   b  : Int
   c1 : Int

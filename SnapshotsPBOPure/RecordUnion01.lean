@@ -1,4 +1,3 @@
--- @js_export: test
 structure Input where
   bar : String
 

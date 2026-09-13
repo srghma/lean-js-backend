@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5
 def test1 (n : Int) : String :=
   if n < 1 then "n: " ++ toString n
   else if n > 1 && n < 100 then "1 < x < 100: " ++ toString n

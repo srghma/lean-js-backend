@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5
 /-!
 Fusing a `map` into the `filter` that consumes it: the intermediate array is not
 built. The condition is that the mapped array is used exactly once — as the argument

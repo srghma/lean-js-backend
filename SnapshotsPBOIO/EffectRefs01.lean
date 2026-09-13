@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5, test6, test7, test8, test9
 def test1 : IO (IO.Ref Int) := IO.mkRef 42
 
 def test2 (g : Int → α) : IO (IO.Ref α) := IO.mkRef (g 42)
