@@ -1,2 +1,2 @@
-const test = a => ({...a, foo: 42});
-export {test};
+const test = (a) => ({ ...a, foo: 42 });
+export { test };

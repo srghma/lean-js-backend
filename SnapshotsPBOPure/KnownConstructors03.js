@@ -1,5 +1,7 @@
-const test = x => {
-  if (x > 42) { return "Hello, World!"; }
+const test = (x) => {
+  if (x > 42) {
+    return "Hello, World!";
+  }
   return "";
 };
-export {test};
+export { test };

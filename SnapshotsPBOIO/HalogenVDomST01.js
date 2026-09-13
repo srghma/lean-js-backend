@@ -13,7 +13,9 @@ const diffWithKeyAndIxE = (o1, as, fk, f1, f2, f3) => {
     o2[k] = v2;
   }
   for (const k of Object.keys(o1)) {
-    if (Object.hasOwn(o2, k)) { continue; }
+    if (Object.hasOwn(o2, k)) {
+      continue;
+    }
     f2(k, o1[k]);
   }
   return o2;
@@ -40,4 +42,4 @@ const diffWithIxE = (a1, a2, f1, f2, f3) => {
   }
   return a3;
 };
-export {diffWithIxE, diffWithKeyAndIxE};
+export { diffWithIxE, diffWithKeyAndIxE };

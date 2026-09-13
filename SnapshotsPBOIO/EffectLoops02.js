@@ -1,22 +1,16 @@
-const test4 = lo => hi => () => {
-  for (let a = lo; a < hi; a++) {
-    if (a < 10) {
+const test1 = (lo) => (hi) => {
+  const $0 = (lo + 1) | 0;
+  const $1 = (hi + 1) | 0;
+  return () => {
+    for (let a = $0; a < $1; a++) {
       console.log(a.toString());
-    } else {
-      console.log("wat");
-    }
-  }
-};
-const test3 = lo => hi => () => {
-  for (let a = lo; a < hi; a++) {
-    if (a < 10) {
       console.log(a.toString());
     }
-  }
+  };
 };
-const test2 = lo => hi => {
-  const $0 = lo + 1 | 0;
-  const $1 = hi + 1 | 0;
+const test2 = (lo) => (hi) => {
+  const $0 = (lo + 1) | 0;
+  const $1 = (hi + 1) | 0;
   return () => {
     for (let a = $0; a < $1; a++) {
       console.log(a.toString());
@@ -29,14 +23,20 @@ const test2 = lo => hi => {
     }
   };
 };
-const test1 = lo => hi => {
-  const $0 = lo + 1 | 0;
-  const $1 = hi + 1 | 0;
-  return () => {
-    for (let a = $0; a < $1; a++) {
-      console.log(a.toString());
+const test3 = (lo) => (hi) => () => {
+  for (let a = lo; a < hi; a++) {
+    if (a < 10) {
       console.log(a.toString());
     }
-  };
+  }
+};
+const test4 = (lo) => (hi) => () => {
+  for (let a = lo; a < hi; a++) {
+    if (a < 10) {
+      console.log(a.toString());
+    } else {
+      console.log("wat");
+    }
+  }
 };
 export { test1, test2, test3, test4 };

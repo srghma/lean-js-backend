@@ -1,4 +1,14 @@
-const test2 = random => () => {
+const test1 = (random) => () => {
+  const n = random();
+  if (n > 100) {
+    return console.log("Too hot");
+  }
+  if (n < 20) {
+    return console.log("Too cold");
+  }
+  return console.log("Just right");
+};
+const test2 = (random) => () => {
   const n = random();
   if (n > 100) {
     console.log("Too hot");
@@ -9,10 +19,4 @@ const test2 = random => () => {
   }
   return console.log("Done");
 };
-const test1 = random => () => {
-  const n = random();
-  if (n > 100) { return console.log("Too hot"); }
-  if (n < 20) { return console.log("Too cold"); }
-  return console.log("Just right");
-};
-export {test1, test2};
+export { test1, test2 };

@@ -1,4 +1,4 @@
-const test = arr => {
+const test = (arr) => {
   let ix = 0;
   let acc = { tag: "Nil" }; // List.nil
 

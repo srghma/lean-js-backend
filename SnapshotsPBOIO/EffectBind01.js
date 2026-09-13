@@ -4,4 +4,4 @@ const test1 = () => {
   console.log("3");
   return null;
 };
-export {test1};
+export { test1 };

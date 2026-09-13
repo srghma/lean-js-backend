@@ -1,18 +1,14 @@
-const test4 = arr => () => {
-  for (const a of arr) {
-    if (a < 10) {
-      console.log(a.toString());
-    } else {
-      console.log("wat");
+const test1 = (k) => {
+  const $0 = k(42);
+  return () => {
+    for (const a of $0) {
+      const $1 = a.toString();
+      console.log($1);
+      console.log($1);
     }
-  }
+  };
 };
-const test3 = arr => () => {
-  for (const a of arr) {
-    if (a < 10) { console.log(a.toString()); }
-  }
-};
-const test2 = k => {
+const test2 = (k) => {
   const $0 = k(42);
   return () => {
     for (const a of $0) {
@@ -26,14 +22,20 @@ const test2 = k => {
     }
   };
 };
-const test1 = k => {
-  const $0 = k(42);
-  return () => {
-    for (const a of $0) {
-      const $1 = a.toString();
-      console.log($1);
-      console.log($1);
+const test3 = (arr) => () => {
+  for (const a of arr) {
+    if (a < 10) {
+      console.log(a.toString());
     }
-  };
+  }
 };
-export {test1, test2, test3, test4};
+const test4 = (arr) => () => {
+  for (const a of arr) {
+    if (a < 10) {
+      console.log(a.toString());
+    } else {
+      console.log("wat");
+    }
+  }
+};
+export { test1, test2, test3, test4 };

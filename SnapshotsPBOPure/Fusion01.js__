@@ -1,11 +1,11 @@
-const test = arr => {
+const test = (arr) => {
   // 1. Inlined `fromArray` (Array.foldr) with TCO loop
   let n = arr.length - 1;
   let acc = { tag: "Nil" }; // List.nil
 
   while (n >= 0) {
     const x = arr[n];
-    
+
     // Inlined: mapF (· + 1) >>> mapF toString
     const s = (x + 1).toString();
 

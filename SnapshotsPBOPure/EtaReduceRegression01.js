@@ -1,8 +1,13 @@
-const identity = x => x;
-const fold = dictFoldable => dictMonoid => dictFoldable.foldMap(dictMonoid)(identity);
-const test = v1 => {
-  if (v1.tag === "none") { return ""; }
-  if (v1.tag === "some") { return v1._1; }
-  throw new Error('UNREACHABLE');
+const identity = (x) => x;
+const fold = (dictFoldable) => (dictMonoid) =>
+  dictFoldable.foldMap(dictMonoid)(identity);
+const test = (v1) => {
+  if (v1.tag === "none") {
+    return "";
+  }
+  if (v1.tag === "some") {
+    return v1._1;
+  }
+  throw new Error("UNREACHABLE");
 };
-export {fold, identity, test};
+export { fold, identity, test };
