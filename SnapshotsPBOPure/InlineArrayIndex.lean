@@ -1,8 +1,6 @@
--- @js_export: assertEqual, main, testArrayIndex
-def testArrayIndex {α : Type} (arr : Array α) (ix : Int) : Option α :=
-  if ix < 0 then
-    none
-  else if h : ix.toNat < arr.size then
-    some (getElem arr ix.toNat h)
-  else
-    none
+@[inline] def array : Array Int := #[1, 2, 3] -- need to inline?
+
+def test1 : Option Int := array[0]?
+def test2 : Option Int := array[1]?
+def test3 : Option Int := array[2]?
+def test4 : Option Int := array[3]?

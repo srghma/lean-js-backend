@@ -3,7 +3,7 @@ import * as $runtime from "../runtime.js";
 import * as Assert from "../Assert/index.js";
 import * as Data$dEq from "../Data.Eq/index.js";
 import * as Data$dShow from "../Data.Show/index.js";
-const divNoInline = (a) => (b) => $runtime.intDiv(a, b);
+const divNoInline = (a, b) => $runtime.intDiv(a, b);
 const main = /* #__PURE__ */ (() => {
   const $0 = Assert.assertEqual(Data$dEq.eqInt)(Data$dShow.showInt)("div1")({
     expected: 0,

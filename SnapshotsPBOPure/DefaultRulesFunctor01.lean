@@ -12,7 +12,6 @@ infixl:100 " $> "  => fun x a => Functor.mapConst a x
 -- 4. PureScript's `<@>` (flap)
 infixl:100 " <@> " => fun ff x => (fun g => g x) <$> ff
 
-
 -- test1: mb <#> \i -> show i
 def test1 (mb : Option Int) : Option String :=
   mb <#> fun (i : Int) => toString i

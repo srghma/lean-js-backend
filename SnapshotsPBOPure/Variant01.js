@@ -16,7 +16,7 @@ const test1 = (r) => {
     "Data.Variant: pattern match failure [" + r.type + "]",
   );
 };
-const test2 = (x) => (r) => {
+const test2 = (x, r) => {
   if (r.type === "foo") {
     return r.value.toString();
   }
@@ -31,5 +31,8 @@ const test2 = (x) => (r) => {
   }
   return x(r);
 };
-const test3 = { type: "foo", value: 42 };
+const test3 = {
+  type: "foo",
+  value: 42,
+};
 export { test1, test2, test3 };

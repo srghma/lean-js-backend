@@ -4,7 +4,11 @@ const test1 = 42;
 const test2 = 42;
 const test3 = 42;
 const extern1 = {
-  a: { b: { c: true } },
+  a: {
+    b: {
+      c: true,
+    },
+  },
   d: /* #__PURE__ */ fn({}),
   e: true,
   f: false,

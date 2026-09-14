@@ -4,7 +4,6 @@ abbrev F := Int → String
 instance {α β : Type} [Append β] : Append (α → β) where
   append f g := fun x => f x ++ g x
 
-
 -- test1 :: F -> F -> Int -> String
 -- test1 f g = f <> g
 def test1 (f g : F) : Int → String :=

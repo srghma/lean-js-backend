@@ -3,30 +3,29 @@ import * as Data$dVariant from "../Data.Variant/index.js";
 import * as Partial from "../Partial/index.js";
 import * as Record$dUnsafe from "../Record.Unsafe/index.js";
 import * as Type$dProxy from "../Type.Proxy/index.js";
-const variantBuildMatchNil = { variantBuildMatch: (v) => (k) => (v1) => k };
+const variantBuildMatchNil = {
+  variantBuildMatch: (v) => (k) => (v1) => k,
+};
 const variantBuildMatch = (dict) => dict.variantBuildMatch;
-const variantBuildMatchCons =
-  (dictTypeEquals) =>
-  () =>
-  () =>
-  (dictIsSymbol) =>
-  (dictVariantBuildMatch) => ({
-    variantBuildMatch: (v) => (k) => (r) => {
-      const $0 = Record$dUnsafe.unsafeGet(
-        dictIsSymbol.reflectSymbol(Type$dProxy.Proxy),
-      )(r);
-      const $1 = dictVariantBuildMatch.variantBuildMatch(Type$dProxy.Proxy)(k)(
-        r,
-      );
-      return (r$1) => {
-        if (r$1.type === dictIsSymbol.reflectSymbol(Type$dProxy.Proxy)) {
-          return $0(r$1.value);
-        }
-        return $1(r$1);
-      };
-    },
-  });
-const match = () => (dictVariantBuildMatch) =>
+const variantBuildMatchCons = (
+  dictTypeEquals,
+  dictIsSymbol,
+  dictVariantBuildMatch,
+) => ({
+  variantBuildMatch: (v) => (k) => (r) => {
+    const $0 = Record$dUnsafe.unsafeGet(
+      dictIsSymbol.reflectSymbol(Type$dProxy.Proxy),
+    )(r);
+    const $1 = dictVariantBuildMatch.variantBuildMatch(Type$dProxy.Proxy)(k)(r);
+    return (r$1) => {
+      if (r$1.type === dictIsSymbol.reflectSymbol(Type$dProxy.Proxy)) {
+        return $0(r$1.value);
+      }
+      return $1(r$1);
+    };
+  },
+});
+const match = (dictVariantBuildMatch) =>
   dictVariantBuildMatch.variantBuildMatch(Type$dProxy.Proxy)(
     Data$dVariant.case_,
   );

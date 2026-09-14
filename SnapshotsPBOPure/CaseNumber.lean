@@ -4,7 +4,7 @@ def test1 (f : Float) : String :=
   else if f == 3.0 then "3"
   else "catch"
 
--- TODO: enable on latest lean version
+-- TODO: enable when on latest lean version
 -- def test2 : Float → String
 --   | 1.0 => "1"
 --   | 2.0 => "2"

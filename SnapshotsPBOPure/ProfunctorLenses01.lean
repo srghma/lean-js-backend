@@ -1,21 +1,20 @@
--- @js_export: test1, test2, test3, test4, test5, test6, test7, test8
-structure RecBaz where
+private structure RecBaz where
   baz : Int
 deriving Repr
 
-structure RecFooBaz where
+private structure RecFooBaz where
   foo : Int
   bar : RecBaz
 deriving Repr
 
-structure RecFooBar where
+private structure RecFooBar where
   foo : Int
   bar : Int
 deriving Repr
 
-def view_foo (a : RecFooBaz) : Int := a.foo
-def over_bar (f : Int → Int) (a : RecFooBar) : RecFooBar := { a with bar := f a.bar }
-def over_bar_baz (f : Int → Int) (a : RecFooBaz) : RecFooBaz := { a with bar := { a.bar with baz := f a.bar.baz } }
+private def view_foo (a : RecFooBaz) : Int := a.foo
+private def over_bar (f : Int → Int) (a : RecFooBar) : RecFooBar := { a with bar := f a.bar }
+private def over_bar_baz (f : Int → Int) (a : RecFooBaz) : RecFooBaz := { a with bar := { a.bar with baz := f a.bar.baz } }
 
 def test1 := view_foo
 def test2 (a : RecFooBaz) := a.foo

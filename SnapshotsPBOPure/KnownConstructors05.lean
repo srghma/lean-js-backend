@@ -1,4 +1,3 @@
--- @js_export: Test, Bar, Baz, Foo, Qux, fromString, test
 inductive Test where | Foo | Bar | Baz | Qux
 
 def fromString : String → Option Test

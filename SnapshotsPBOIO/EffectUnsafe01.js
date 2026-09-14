@@ -1,5 +1,7 @@
 const test1 = 1;
-const counter = { value: 1 };
+const counter = {
+  value: 1,
+};
 const test2 = (random) => {
   const n = random();
   const m = random();

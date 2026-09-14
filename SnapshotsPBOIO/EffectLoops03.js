@@ -12,7 +12,7 @@ const test2 = (cond) => () => {
     console.log("bar");
   }
 };
-const test3 = (cond) => (ref) => () => {
+const test3 = (cond, ref) => () => {
   while (cond.value) {
     const a = ref.value;
     if (a < 10) {
@@ -20,7 +20,7 @@ const test3 = (cond) => (ref) => () => {
     }
   }
 };
-const test4 = (cond) => (ref) => () => {
+const test4 = (cond, ref) => () => {
   while (cond.value) {
     const a = ref.value;
     if (a < 10) {

@@ -22,6 +22,10 @@ rev = "v4.34.0-rc2"
 name = "LakeJs"
 roots = ["LakeJs"]
 
+[[lean_lib]]
+name = "SnapshotsPBOPure"
+globs = ["SnapshotsPBOPure.*"]
+
 [[lean_exe]]
 name = "LakeJsTest"
 root = "LakeJsTest.Main"

@@ -1,9 +1,14 @@
-const $Column$zero = { tag: "zero" };
-const $Column$one = (value0) => ({ tag: "one", _1: value0 });
-const $Column$two = (value0) => (value1) => ({
+const $Column$zero = {
+  tag: "zero",
+};
+const $Column$one = (value0) => ({
   tag: "one",
-  _1: value0,
-  _2: value1,
+  _n: value0,
+});
+const $Column$two = (value0) => (value1) => ({
+  tag: "two",
+  _a: value0,
+  _b: value1,
 });
 const testP = (v) => (v1) => (v2) => {
   if (v1 === 2) {
@@ -34,8 +39,8 @@ const testP = (v) => (v1) => (v2) => {
 };
 const testPB = (v) => (v1) => {
   if (v.tag === "one") {
-    if (v._1 === 1 && v1.tag === "one") {
-      if (v1._1 === 1) {
+    if (v._n === 1 && v1.tag === "one") {
+      if (v1._n === 1) {
         return 1;
       }
       return 4;
@@ -45,8 +50,8 @@ const testPB = (v) => (v1) => {
     }
     return 4;
   }
-  if (v.tag === "two" && v._1 === 2 && v._2 === 3 && v1.tag === "two") {
-    if (v1._1 === 2 && v1._2 === 3) {
+  if (v.tag === "two" && v._a === 2 && v._b === 3 && v1.tag === "two") {
+    if (v1._a === 2 && v1._b === 3) {
       return 2;
     }
     return 4;
@@ -59,19 +64,19 @@ const testPB = (v) => (v1) => {
 const testPBA = (v) => (v1) => {
   if (v1.tag === "one") {
     if (v.tag === "one") {
-      if (v._1 === 1) {
-        if (v1._1 === 1) {
+      if (v._n === 1) {
+        if (v1._n === 1) {
           return 1;
         }
         return 4;
       }
-      if (v._1 === 2 && v1._1 === 2) {
+      if (v._n === 2 && v1._n === 2) {
         return 2;
       }
     }
     return 4;
   }
-  if (v.tag === "two" && v._1 === 1 && v1.tag === "two") {
+  if (v.tag === "two" && v._a === 1 && v1.tag === "two") {
     return 3;
   }
   return 4;
@@ -79,13 +84,13 @@ const testPBA = (v) => (v1) => {
 const testPBAN = (v) => (v1) => {
   if (v.tag === "one") {
     if (v1.tag === "one") {
-      if (v._1 === 1) {
-        if (v1._1 === 1) {
+      if (v._n === 1) {
+        if (v1._n === 1) {
           return 1;
         }
         return 4;
       }
-      if (v._1 === 2 && v1._1 === 2) {
+      if (v._n === 2 && v1._n === 2) {
         return 2;
       }
     }

@@ -24,5 +24,5 @@ const $gf = ($gf$b$copy, $gf$a0$copy, $gf$a1$copy) => {
   return $gf$r;
 };
 const g = (a) => $gf(0, a);
-const f = (a) => (b) => $gf(1, a, b);
+const f = (a, b) => $gf(1, a, b);
 export { f, g };

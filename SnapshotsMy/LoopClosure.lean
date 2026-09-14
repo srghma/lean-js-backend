@@ -1,5 +1,4 @@
--- @js_export: test1, test2
-def apply3 (f : Nat → Nat) : Nat := f 1 + f 2 + f 3
+private def apply3 (f : Nat → Nat) : Nat := f 1 + f 2 + f 3
 
 def test1 (k : Nat) (n : Nat) : Nat := Id.run do
   let mut s := 0

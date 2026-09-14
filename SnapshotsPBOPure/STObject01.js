@@ -1,7 +1,9 @@
 const test1 = {};
 const test2 = /* #__PURE__ */ (() => {
   const obj = {};
-  return { ...obj };
+  return {
+    ...obj,
+  };
 })();
 const test3 = /* #__PURE__ */ (() => {
   const obj = {};

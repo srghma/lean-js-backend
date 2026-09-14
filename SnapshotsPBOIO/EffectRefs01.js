@@ -1,23 +1,27 @@
-const test1 = () => ({ value: 42 });
+const test1 = () => ({
+  value: 42,
+});
 const test2 = (g) => {
   const $0 = g(42);
-  return () => ({ value: $0 });
+  return () => ({
+    value: $0,
+  });
 };
 const test3 = (r) => () => r.value;
-const test4 = (g) => (r) => {
+const test4 = (g, r) => {
   const $0 = g(r);
   return () => $0.value;
 };
 const test5 = (r) => () => (r.value = 42);
-const test6 = (g) => (r) => {
+const test6 = (g, r) => {
   const $0 = g(42);
   return () => (r.value = $0);
 };
-const test7 = (g) => (r) => () => {
+const test7 = (g, r) => () => {
   const $0 = r.value;
   return (r.value = g($0));
 };
-const test8 = (g) => (r) => {
+const test8 = (g, r) => {
   const $0 = g(g);
   return () => {
     const $1 = r.value;

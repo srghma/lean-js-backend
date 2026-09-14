@@ -1,4 +1,4 @@
-const test1 = (ref) => (lo) => (hi) => {
+const test1 = (ref, lo, hi) => {
   const $0 = (lo + 1) | 0;
   const $1 = (hi + 1) | 0;
   return () => {
@@ -10,7 +10,7 @@ const test1 = (ref) => (lo) => (hi) => {
     }
   };
 };
-const test2 = (ref) => (lo) => (hi) => {
+const test2 = (ref, lo, hi) => {
   const $0 = (lo + 1) | 0;
   const $1 = (hi + 1) | 0;
   return () => {
@@ -28,7 +28,7 @@ const test2 = (ref) => (lo) => (hi) => {
     }
   };
 };
-const test3 = (ref) => (lo) => (hi) => () => {
+const test3 = (ref, lo, hi) => () => {
   for (let a = lo; a < hi; a++) {
     if (a < 10) {
       const $0 = ref.value;
@@ -36,7 +36,7 @@ const test3 = (ref) => (lo) => (hi) => () => {
     }
   }
 };
-const test4 = (ref) => (lo) => (hi) => () => {
+const test4 = (ref, lo, hi) => () => {
   for (let a = lo; a < hi; a++) {
     if (a < 10) {
       const $0 = ref.value;

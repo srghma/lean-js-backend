@@ -1,8 +1,12 @@
 // @inline export traverseFun1 arity=1
 // @inline export rewriteBottomUpM arity=1
-const $Fun = (tag, _1, _2) => ({ tag, _1, _2 });
-const Abs = (value0) => (value1) => $Fun("Abs", value0, value1);
-const App = (value0) => (value1) => $Fun("App", value0, value1);
+const $Fun = (tag, _1, _2) => ({
+  tag,
+  _1,
+  _2,
+});
+const Abs = (value0, value1) => $Fun("Abs", value0, value1);
+const App = (value0, value1) => $Fun("App", value0, value1);
 const traverseFun1 = (dictApplicative) => {
   const Apply0 = dictApplicative.Apply0();
   const $0 = Apply0.Functor0();

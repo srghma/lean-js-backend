@@ -1,4 +1,4 @@
-def intValues {α : Type} (op : Int → Int → α) : Array α :=
+@[inline] def intValues {α : Type} (op : Int → Int → α) : Array α :=
   #[ op 1 1, op 1 2, op 2 1, op 1 (-2), op (-1) 2, op (-1) (-1) ]
 
 def test1 := intValues (fun a b => a + b)

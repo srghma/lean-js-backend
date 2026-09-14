@@ -1,4 +1,3 @@
--- @js_export: Column, testP, testPB, testPBA, testPBAN
 inductive Column where
   | zero
   | one (n : Int)

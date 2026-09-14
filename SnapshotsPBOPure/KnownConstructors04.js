@@ -4,7 +4,7 @@ const test1 = (x) => {
   }
   throw new Error("UNREACHABLE");
 };
-const test2 = (f) => (x) => {
+const test2 = (f, x) => {
   if (x > 42) {
     return f("Hello, World")("Hello, Universe");
   }

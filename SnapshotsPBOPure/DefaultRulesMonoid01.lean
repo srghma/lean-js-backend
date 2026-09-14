@@ -1,12 +1,11 @@
--- @js_export: test1, test2
--- 2. Scoped to `Monoid` to avoid clashing with Lean's built-in Alternative `guard`
+-- Scoped to `Monoid` to avoid clashing with Lean's built-in Alternative `guard`
 namespace Monoid
-  def guard {M : Type} [EmptyCollection M] (b : Bool) (a : M) : M :=
+  private def guard {M : Type} [EmptyCollection M] (b : Bool) (a : M) : M :=
     if b then a else ∅
 end Monoid
 
 -- type F = forall a. a -> a
-def F := ∀ {α : Type}, α → α
+private def F := ∀ {α : Type}, α → α
 
 -- test1 :: Boolean -> Array Int
 -- test1 = flip guard [ 1, 2, 3 ]

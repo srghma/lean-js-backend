@@ -1,5 +1,5 @@
-const test1 = (x) => (y) => x !== y;
-const test2 = (a) => (b) => a !== b;
+const test1 = (x, y) => x !== y;
+const test2 = (a, b) => a !== b;
 const test3 = (a) => 12 !== a;
 const test4 = (a) => a !== 12;
 const test5 = (y) => 12 !== y;

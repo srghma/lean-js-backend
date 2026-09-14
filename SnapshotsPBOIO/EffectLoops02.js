@@ -1,4 +1,4 @@
-const test1 = (lo) => (hi) => {
+const test1 = (lo, hi) => {
   const $0 = (lo + 1) | 0;
   const $1 = (hi + 1) | 0;
   return () => {
@@ -8,7 +8,7 @@ const test1 = (lo) => (hi) => {
     }
   };
 };
-const test2 = (lo) => (hi) => {
+const test2 = (lo, hi) => {
   const $0 = (lo + 1) | 0;
   const $1 = (hi + 1) | 0;
   return () => {
@@ -23,14 +23,14 @@ const test2 = (lo) => (hi) => {
     }
   };
 };
-const test3 = (lo) => (hi) => () => {
+const test3 = (lo, hi) => () => {
   for (let a = lo; a < hi; a++) {
     if (a < 10) {
       console.log(a.toString());
     }
   }
 };
-const test4 = (lo) => (hi) => () => {
+const test4 = (lo, hi) => () => {
   for (let a = lo; a < hi; a++) {
     if (a < 10) {
       console.log(a.toString());

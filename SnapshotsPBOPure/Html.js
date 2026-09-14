@@ -1,26 +1,64 @@
-const $Html = (tag, _1, _2) => ({ tag, _1, _2 });
-const Elem = (value0) => (value1) => $Html("Elem", value0, value1);
-const Text = (value0) => $Html("Text", value0);
-const h11 = /* #__PURE__ */ (() => {
-  const $0 = Elem("h1");
-  return (x) => $0([x]);
-})();
-const h21 = /* #__PURE__ */ (() => {
-  const $0 = Elem("h2");
-  return (x) => $0([x]);
-})();
-const p1 = /* #__PURE__ */ Elem("p");
-const section1 = /* #__PURE__ */ Elem("section");
-const article1 = /* #__PURE__ */ Elem("article");
-const test = (user) =>
-  section1([
-    h11($Html("Text", "Posts for " + user)),
-    article1([
-      h21($Html("Text", "The first post")),
-      p1([
-        $Html("Text", "This is the first post."),
-        $Html("Text", "Not much else to say."),
-      ]),
-    ]),
-  ]);
-export { $Html, Elem, Text, article1, h11, h21, p1, section1, test };
+const render = (v) => {
+  if (v.tag === "text") {
+    return "Html.text " + JSON.stringify(v._content);
+  }
+  if (v.tag === "elem") {
+    const childrenStr = $String$intercalate(", ")($List$map(render)(v._children));
+    return "Html.elem " + JSON.stringify(v._tag) + " [" + childrenStr + "]";
+  }
+  throw new Error("UNREACHABLE");
+};
+const test = (user) => ({
+  tag: "elem",
+  _tag: "section",
+  _children: {
+    tag: "cons",
+    _head: {
+      tag: "elem",
+      _tag: "h1",
+      _children: {
+        tag: "cons",
+        _head: { tag: "text", _content: "Posts for " + user },
+        _tail: { tag: "nil" },
+      },
+    },
+    _tail: {
+      tag: "cons",
+      _head: {
+        tag: "elem",
+        _tag: "article",
+        _children: {
+          tag: "cons",
+          _head: {
+            tag: "elem",
+            _tag: "h2",
+            _children: {
+              tag: "cons",
+              _head: { tag: "text", _content: "The first post" },
+              _tail: { tag: "nil" },
+            },
+          },
+          _tail: {
+            tag: "cons",
+            _head: {
+              tag: "elem",
+              _tag: "p",
+              _children: {
+                tag: "cons",
+                _head: { tag: "text", _content: "This is the first post." },
+                _tail: {
+                  tag: "cons",
+                  _head: { tag: "text", _content: "Not much else to say." },
+                  _tail: { tag: "nil" },
+                },
+              },
+            },
+            _tail: { tag: "nil" },
+          },
+        },
+      },
+      _tail: { tag: "nil" },
+    },
+  },
+});
+export { test };

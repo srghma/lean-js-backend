@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5, test6
 /-!
 Specializing a declaration to what a call site knows.
 
@@ -16,7 +15,7 @@ literal string is computed while compiling, so the primitive that reads it does 
 appear in the generated code at all.
 -/
 
-def describe (label : String) (n : Nat) (extra : Option String) : String :=
+private def describe (label : String) (n : Nat) (extra : Option String) : String :=
   match extra with
   | none => label ++ " (" ++ toString n ++ ")"
   | some s => label ++ " (" ++ toString n ++ ", " ++ s ++ ")"

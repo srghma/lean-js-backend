@@ -6,7 +6,7 @@ const test = (v1) => {
     return "";
   }
   if (v1.tag === "some") {
-    return v1._1;
+    return v1._val;
   }
   throw new Error("UNREACHABLE");
 };

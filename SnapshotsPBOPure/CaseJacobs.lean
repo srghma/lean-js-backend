@@ -1,4 +1,3 @@
--- @js_export: Expr, instToStringExpr, test1
 inductive Expr where
   | add (a : Expr) (b : Expr)
   | mul (a : Expr) (b : Expr)
@@ -15,7 +14,7 @@ def renderExpr : Expr → String
 instance : ToString Expr where
   toString a := renderExpr a -- will be inlined
 
-#print instToStringExpr
+-- #print instToStringExpr
 
 def test1 : Expr → String
   | .add .zero .zero => "e1"

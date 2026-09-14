@@ -1,4 +1,4 @@
-const test = (random) => (value) => () => {
+const test = (random, value) => () => {
   const x = random();
   const c = value();
   const b = (c + c) | 0;

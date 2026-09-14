@@ -1,4 +1,4 @@
-const when$p = (bool) => (k) => {
+const when$p = (bool, k) => {
   if (bool) {
     return k();
   }

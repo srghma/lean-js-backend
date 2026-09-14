@@ -1,4 +1,3 @@
--- @js_export: counter, test1, test2
 -- will use mutating property, bc `let` + `export` = `const`
 initialize counter : IO.Ref Nat ← IO.mkRef 0
 

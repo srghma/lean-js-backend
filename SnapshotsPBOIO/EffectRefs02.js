@@ -18,7 +18,9 @@ const test2 = () => {
   };
 };
 const test3 = () => {
-  const count = { value: 0 };
+  const count = {
+    value: 0,
+  };
   return {
     _1: count,
     _2: (n) => () => {

@@ -1,4 +1,4 @@
-const span = (p) => (arr) => {
+const span = (p, arr) => {
   const go = (go$a0$copy) => {
     let go$a0 = go$a0$copy,
       go$c = true,

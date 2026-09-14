@@ -1,8 +1,13 @@
-const $Option$none = { tag: "none" };
-const $Option$some = (value0) => ({ tag: "some", _1: value0 });
+const $Option$none = {
+  tag: "none",
+};
+const $Option$some = (value0) => ({
+  tag: "some",
+  _val: value0,
+});
 const test1 = (mb) => {
   if (mb.tag === "some") {
-    return $Option$some(mb._1);
+    return $Option$some(mb._val);
   }
   return $Option$none;
 };
@@ -26,7 +31,7 @@ const test4 = (mb) => {
 };
 const test5 = (mb) => {
   if (mb.tag === "some") {
-    return $Option$some(mb._1);
+    return $Option$some(mb._val);
   }
   return $Option$none;
 };

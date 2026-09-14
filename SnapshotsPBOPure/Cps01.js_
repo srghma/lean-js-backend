@@ -28,10 +28,10 @@ const applicativeState = {
   pure: (a) => (next) => (s1) => next(s1)(a),
   Apply0: () => applyState,
 };
-const runState = (s) => (v) => v(Data$dTuple.Tuple)(s);
-const put = (s) => (next) => (v) => next(s)();
-const $$get = (next) => (s) => next(s)(s);
-const test4 = (next1) => (s1) => next1((s1 + 2) | 0)();
+const runState = (s, v) => v(Data$dTuple.Tuple)(s);
+const put = (s, next, v) => next(s)();
+const $$get = (next, s) => next(s)(s);
+const test4 = (next1, s1) => next1((s1 + 2) | 0)();
 export {
   State,
   applicativeState,

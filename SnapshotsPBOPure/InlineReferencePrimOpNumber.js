@@ -3,7 +3,15 @@
 // @inline export externTest always
 const fn = (v) => 0.0;
 const localTest = (f) => {
-  const rec = { a: { b: { c: 99.0 } }, d: fn({}), e: 11.0 };
+  const rec = {
+    a: {
+      b: {
+        c: 99.0,
+      },
+    },
+    d: fn({}),
+    e: 11.0,
+  };
   const res = f(rec);
   if (res !== -Infinity) {
     return res;
@@ -14,7 +22,15 @@ const test1 = 110.0;
 const test2 = 88.0;
 const test3 = 1089.0;
 const test4 = 9.0;
-const extern = { a: { b: { c: 99.0 } }, d: /* #__PURE__ */ fn({}), e: 11.0 };
+const extern = {
+  a: {
+    b: {
+      c: 99.0,
+    },
+  },
+  d: /* #__PURE__ */ fn({}),
+  e: 11.0,
+};
 const externTest = (f) => {
   const res = f(extern);
   if (res !== -Infinity) {

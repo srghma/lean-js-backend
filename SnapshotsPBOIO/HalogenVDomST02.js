@@ -40,15 +40,26 @@ const main = () => {
     ["1", "2", "3"],
     [1, 2],
     (ix, a, b) => {
-      merged1.push({ a, b });
-      return { ix, a, b };
+      merged1.push({
+        a,
+        b,
+      });
+      return {
+        ix,
+        a,
+        b,
+      };
     },
     (v, a) => {
       deleted1.push(a);
     },
     (ix, b) => {
       added1.push(b);
-      return { ix, a: "", b };
+      return {
+        ix,
+        a: "",
+        b,
+      };
     },
   );
   const m1 = [...merged1];
@@ -56,15 +67,28 @@ const main = () => {
   const d1 = [...deleted1];
   assertEqual("diffWithIxE/merged")({
     expected: [
-      { a: "1", b: 1 },
-      { a: "2", b: 2 },
+      {
+        a: "1",
+        b: 1,
+      },
+      {
+        a: "2",
+        b: 2,
+      },
     ],
     actual: m1,
   })();
-  Assert.assertEqual({ eq: Data$dEq.eqArrayImpl(Data$dEq.eqIntImpl) })({
+  Assert.assertEqual({
+    eq: Data$dEq.eqArrayImpl(Data$dEq.eqIntImpl),
+  })({
     show: Data$dShow.showArrayImpl(Data$dShow.showIntImpl),
-  })("diffWithIxE/added")({ expected: [], actual: a1 })();
-  Assert.assertEqual({ eq: Data$dEq.eqArrayImpl(Data$dEq.eqStringImpl) })({
+  })("diffWithIxE/added")({
+    expected: [],
+    actual: a1,
+  })();
+  Assert.assertEqual({
+    eq: Data$dEq.eqArrayImpl(Data$dEq.eqStringImpl),
+  })({
     show: Data$dShow.showArrayImpl(Data$dShow.showStringImpl),
   })("diffWithIxE/deleted")({
     expected: ["3"],
@@ -72,8 +96,16 @@ const main = () => {
   })();
   return assertEqual3("diffWithIxE/result")({
     expected: [
-      { ix: 0, a: "1", b: 1 },
-      { ix: 1, a: "2", b: 2 },
+      {
+        ix: 0,
+        a: "1",
+        b: 1,
+      },
+      {
+        ix: 1,
+        a: "2",
+        b: 2,
+      },
     ],
     actual: result,
   })();

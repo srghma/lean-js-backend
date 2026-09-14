@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5, test6
 import Std.Data.HashMap
 
 /-!
@@ -15,7 +14,7 @@ the two representations stand side by side without being confused.
 -/
 
 /-- The first entry larger than the bound: built here, taken apart at the call. -/
-def firstBig (xs : List Nat) (bound : Nat) : Option Nat := xs.find? (· > bound)
+private def firstBig (xs : List Nat) (bound : Nat) : Option Nat := xs.find? (· > bound)
 
 def test1 (xs : List Nat) (bound : Nat) : Nat := (firstBig xs bound).getD 0
 

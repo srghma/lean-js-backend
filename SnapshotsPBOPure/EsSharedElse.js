@@ -1,4 +1,4 @@
-const test1 = (a) => (b) => (c) => {
+const test1 = (a, b, c) => {
   if (a && b) {
     return 1;
   }

@@ -1,3 +1,7 @@
+prelude
+import Init.Prelude
+import Init.Data.String
+
 -- 1. Identity function (exported standalone)
 def identity (x : α) : α := x
 

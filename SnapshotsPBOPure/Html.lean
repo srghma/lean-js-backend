@@ -1,11 +1,10 @@
--- @js_export: Html, Elem, Text, article1, h11, h21, p1, section1, test
-inductive Html where
-  | elem (tag : String) (children : List Html)
+private inductive Html where
+  | elem (tag : String) (children : List Html) -- the constructors of enums are always like =<F12>
   | text (content : String)
 deriving Repr
 
-def render : Html → String
-  | .text content => s!"Html.text {repr content}"
+private def render : Html → String
+  | .text content => s!"Html.text {repr content}" -- repr on string + Format.pretty => just wrap string in "" and escape "" if have inside => JSON.stringify
   | .elem tag children =>
       let childrenStr := String.intercalate ", " (children.map render)
       s!"Html.elem {repr tag} [{childrenStr}]"

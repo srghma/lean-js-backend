@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5, test6
 def F := ∀ {α β γ : Type}, α → β → γ
 
 -- test1: annotate that (g "foo" a) produces Unit
@@ -18,7 +17,7 @@ def test4 (f : F) : F :=
   fun b a => flip f a b
 
 -- test5: works as-is
-def test5 {α β : Type} (a : α) : β → α :=
+def test5 (α β : Type) (a : α) : β → α :=
   Function.const β a
 
 -- test6: works as-is (and remains fully polymorphic!)

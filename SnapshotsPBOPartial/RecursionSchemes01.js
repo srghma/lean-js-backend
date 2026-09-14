@@ -1,8 +1,12 @@
 // @inline Snapshot.RecursionSchemes01.cata arity=2
 // @inline Snapshot.RecursionSchemes01.functorExprF.map arity=2
-const $ExprF = (tag, _1, _2) => ({ tag, _1, _2 });
-const Add = (value0) => (value1) => $ExprF("Add", value0, value1);
-const Mul = (value0) => (value1) => $ExprF("Mul", value0, value1);
+const $ExprF = (tag, _1, _2) => ({
+  tag,
+  _1,
+  _2,
+});
+const Add = (value0, value1) => $ExprF("Add", value0, value1);
+const Mul = (value0, value1) => $ExprF("Mul", value0, value1);
 const Lit = (value0) => $ExprF("Lit", value0);
 const functorExprF = {
   map: (f) => (m) => {

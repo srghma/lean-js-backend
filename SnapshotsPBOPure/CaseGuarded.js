@@ -22,82 +22,82 @@ const test2 = (v) => {
   }
   return 0;
 };
-const test3 = (v) => {
-  if (v._1 === v._2) {
-    return v._1;
+const test3 = (v_1, v_2, v_3) => {
+  if (v_1 === v_2) {
+    return v_1;
   }
-  if (v._3 === v._2) {
-    return v._1;
+  if (v_3 === v_2) {
+    return v_1;
   }
-  if (v._1 === v._3) {
-    return v._3;
+  if (v_1 === v_3) {
+    return v_3;
   }
-  return v._2;
+  return v_2;
 };
-const test4 = (v) => (v1) => {
-  if (v.a === 1) {
-    if (v1.d === 1) {
+const test4 = (v_a, v_b, v_c) => (v1_d, v1_e, v1_f) => {
+  if (v_a === 1) {
+    if (v1_d === 1) {
       return 1;
     }
-    if (v1.d === 2) {
+    if (v1_d === 2) {
       return 2;
     }
-    if (v1.d === 3) {
+    if (v1_d === 3) {
       return 3;
     }
-    if (v1.d === 4) {
+    if (v1_d === 4) {
       return 4;
     }
-    if (v1.d === 5) {
+    if (v1_d === 5) {
       return 5;
     }
-    return (((11 + v.c) | 0) + v1.f) | 0;
+    return (((11 + v_c) | 0) + v1_f) | 0;
   }
-  if (v1.d === 2) {
+  if (v1_d === 2) {
     return 2;
   }
-  if (v1.d === 3) {
+  if (v1_d === 3) {
     return 3;
   }
-  if (v.a === 2) {
-    if (v1.d === 1) {
+  if (v_a === 2) {
+    if (v1_d === 1) {
       return 6;
     }
-    if (v1.d === 4) {
-      if (v.c === v1.e) {
+    if (v1_d === 4) {
+      if (v_c === v1_e) {
         return 7;
       }
-      if (v.c < v1.e) {
+      if (v_c < v1_e) {
         return 8;
       }
-      if (v.c > v1.e) {
+      if (v_c > v1_e) {
         return 9;
       }
     }
-    return (((11 + v.c) | 0) + v1.f) | 0;
+    return (((11 + v_c) | 0) + v1_f) | 0;
   }
-  if (v1.d === 4) {
-    if (v.c === v1.e) {
+  if (v1_d === 4) {
+    if (v_c === v1_e) {
       return 7;
     }
-    if (v.c < v1.e) {
+    if (v_c < v1_e) {
       return 8;
     }
-    if (v.c > v1.e) {
+    if (v_c > v1_e) {
       return 9;
     }
-    return (((11 + v.c) | 0) + v1.f) | 0;
+    return (((11 + v_c) | 0) + v1_f) | 0;
   }
-  if (v.b === 2 && v1.d === 1 && v1.f === 10) {
+  if (v_b === 2 && v1_d === 1 && v1_f === 10) {
     return 10;
   }
-  return (((11 + v.c) | 0) + v1.f) | 0;
+  return (((11 + v_c) | 0) + v1_f) | 0;
 };
 const test5 = (v) => {
-  if (v.tag === "some" && v._1.tag === "ok") {
-    return v._1._1;
+  if (v.tag === "some" && v._val.tag === "ok") {
+    return v._val._val;
   }
-  if (v.tag === "some" && v._1.tag === "error" && v._1._1 === 2) {
+  if (v.tag === "some" && v._val.tag === "error" && v._val._1 === 2) {
     return 4;
   }
   return 5;

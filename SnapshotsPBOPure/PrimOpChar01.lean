@@ -1,2 +1,6 @@
--- @js_export: test1, test2, test3, test4, test5, test6
-def test1 (c : Char) : Nat := c.toNat
+def test1 (a b : Char) : Bool := a == b
+def test2 (a b : Char) : Bool := a != b
+def test3 (a b : Char) : Bool := a < b
+def test4 (a b : Char) : Bool := decide (a > b)
+def test5 (a b : Char) : Bool := a <= b
+def test6 (a b : Char) : Bool := decide (a >= b)

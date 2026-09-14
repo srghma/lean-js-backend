@@ -4,7 +4,7 @@ const test = (eff) => () => {
     return;
   }
   if (res.tag === "some") {
-    for (const a of res._1) {
+    for (const a of res._val) {
       console.log(a);
     }
     return;

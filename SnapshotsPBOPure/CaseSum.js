@@ -1,11 +1,17 @@
-const $SumType$L = (value0) => ({ tag: "L", _1: value0 });
-const $SumType$R = (value0) => ({ tag: "R", _1: value0 });
+const $SumType$L = (n) => ({
+  tag: "L",
+  _n: n,
+});
+const $SumType$R = (n) => ({
+  tag: "R",
+  _n: n,
+});
 const test1 = (v) => {
   if (v.tag === "L") {
-    if (v._1 === 1) {
+    if (v._n === 1) {
       return "1";
     }
-    if (v._1 === 2) {
+    if (v._n === 2) {
       return "2";
     }
     return "3";

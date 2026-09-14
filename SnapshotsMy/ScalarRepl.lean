@@ -1,4 +1,3 @@
--- @js_export: test1, test2, test3, test4, test5, test6
 /-!
 Scalar replacement of a constructor a helper is only ever handed
 (`LakeJs.Backend.ScalarRepl`): a parameter every caller builds for the call and that

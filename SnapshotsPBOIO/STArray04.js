@@ -1,4 +1,4 @@
-const test1 = (f) => (as) => () => {
+const test1 = (f, as) => () => {
   const bs = [];
   for (const a of as) {
     bs.push(f(a));

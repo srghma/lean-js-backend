@@ -7,7 +7,9 @@ const test = /* #__PURE__ */ (() => {
     }
     return test1$lazy().bar;
   };
-  const test2$lazy = $runtime.binding(() => ({ baz: test1$lazy().bar }));
+  const test2$lazy = $runtime.binding(() => ({
+    baz: test1$lazy().bar,
+  }));
   const test1$lazy = $runtime.binding(() => ({
     foo: test2$lazy().baz,
     bar: test3(42),

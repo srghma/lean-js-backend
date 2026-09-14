@@ -1,4 +1,4 @@
-const test1 = (test1$a0$copy) => (test1$a1$copy) => {
+const test1 = (test1$a0$copy, test1$a1$copy) => {
   let test1$a0 = test1$a0$copy,
     test1$a1 = test1$a1$copy,
     test1$c = true,
