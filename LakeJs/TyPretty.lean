@@ -42,6 +42,8 @@ def Ty.pretty : Ty → String
       "(recTaggedUnion " ++ n.toString ++ " " ++ Ty.prettyRecCtors cs ++ ")"
   | .recObject { name := n, fields := fs, .. } =>
       "(recObject " ++ n.toString ++ " " ++ Ty.prettySelfFields fs ++ ")"
+  | .recAlias { name := n, body := b } =>
+      "(recAlias " ++ n.toString ++ " " ++ Ty.prettySelf b ++ ")"
   | .mutualRecursiveFamily fam =>
       "(mutual " ++ fam.name.toString ++ "#" ++ toString fam.member ++ ")"
 

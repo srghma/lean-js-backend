@@ -7,21 +7,61 @@ open NonEmpty.String
 @[expose] public section
 
 /-!
-# The six schemas of a user-defined Lean type
+# The seven schemas of a user-defined Lean type
 
 A Lean declaration that is neither a primitive (`PrimTy`) nor a built-in container
-(`Array`, `List`, `Thunk`, `Task`, …) is compiled through exactly one of six schemas:
+(`Array`, `List`, `Thunk`, `Task`, …) is compiled through exactly one of seven
+schemas:
 
-| Shape                                     | Mutual? | Recursive? | ≥ 2 ctors? | Has fields? | schema                     | `Ty` constructor           |
-| :---------------------------------------- | :------ | :--------- | :--------- | :---------- | :------------------------- | :------------------------- |
-| `inductive Direction \| north \| …`       | no      | no         | yes        | no          | `LeanEnumSchema`           | `Ty.enum`                  |
-| `structure Point where x, y`              | no      | no         | no         | yes         | `LeanRecordSchema`         | `Ty.record`                |
-| `inductive Option \| none \| some …`      | no      | no         | yes        | yes         | `LeanTaggedUnionSchema`    | `Ty.taggedUnion`           |
-| `inductive MyList \| nil \| cons …`       | no      | yes        | yes        | yes         | `LeanRecTaggedUnionSchema` | `Ty.recTaggedUnion`        |
-| `structure Rose where kids : Array Rose`  | no      | yes        | no         | yes         | `LeanRecObjectSchema`      | `Ty.recObject`             |
-| a genuinely mutual block                  | yes     | yes        | varies     | varies      | `LeanMutualRecFamily`      | `Ty.mutualRecursiveFamily` |
+| Shape                                       | Mutual? | Recursive? | ≥ 2 ctors? | Fields of a 1-ctor decl | schema                     | `Ty` constructor           |
+| :------------------------------------------ | :------ | :--------- | :--------- | :---------------------- | :------------------------- | :------------------------- |
+| `inductive Direction \| north \| …`         | no      | no         | yes        | —                       | `LeanEnumSchema`           | `Ty.enum`                  |
+| `structure Point where x, y`                | no      | no         | no         | ≥ 2                     | `LeanRecordSchema`         | `Ty.record`                |
+| `inductive Option \| none \| some …`        | no      | no         | yes        | —                       | `LeanTaggedUnionSchema`    | `Ty.taggedUnion`           |
+| `inductive MyList \| nil \| cons …`         | no      | yes        | yes        | —                       | `LeanRecTaggedUnionSchema` | `Ty.recTaggedUnion`        |
+| `structure Tree where n : Nat; kids : Array Tree` | no | yes     | no         | ≥ 2                     | `LeanRecObjectSchema`      | `Ty.recObject`             |
+| `structure Rose where kids : Array Rose`    | no      | yes        | no         | exactly 1               | `LeanRecAliasSchema`       | `Ty.recAlias`              |
+| a genuinely mutual block                    | yes     | yes        | varies     | any                     | `LeanMutualRecFamily`      | `Ty.mutualRecursiveFamily` |
 
-The six are **disjoint**, so no Lean type has two spellings: a tagged union all of
+## No newtypes
+
+A declaration with **one constructor carrying exactly one field** — a newtype /
+wrapper — has no runtime representation of its own: the wrapper is erased and the
+type *is* its field's type.  So there is no schema for it:
+
+* `structure Wrapper where x : Nat` is `Ty.nat`, not a one-field `Ty.record`;
+* `structure Rose where kids : Array Rose` is the *recursive* case — erasing the
+  wrapper leaves the equation `Rose = Array Rose`, which is not a plain `Ty` but a
+  fixed point.  That is what `LeanRecAliasSchema` records: the single field's type,
+  with `SelfTy.self` marking the recursive occurrence.  In JS a `Rose` is an array of
+  arrays of … — `[[], [[]], …]` — with no object wrapper anywhere.
+
+This is why `LeanRecordSchema` and `LeanRecObjectSchema` require **two** fields.
+
+A member of a `LeanMutualRecFamily` may be a wrapper, and then it is an **alias
+member** (`famIsAliasMember`): the mutual analogue of `LeanRecAliasSchema`.  It has no
+object of its own either — a value of it is a value of its single field, with no tag
+and no wrapping object — so a mutual block such as
+
+```lean
+mutual
+  inductive Exp | lit (n : Int) | block (s : Stm)
+  inductive Stm | ret (es : Array Exp)
+end
+```
+
+is accepted, with `Stm = Array Exp`.  The block stays well formed: every member of a
+genuinely mutual block references the block
+(`LeanMutualRecFamily.famTargets_ne_nil`), so an alias member is always *recursive*,
+and a cycle of aliases with no guard (`A = B`, `B = A`) is uninhabited and is rejected
+by `famWellFoundedOk`.
+
+Unit-like and void-like *fields* never reach a schema either: they are erased by the
+front-end (`Array Unit` becomes `Ty.nat`, a `Unit`-typed field disappears, a
+constructor with an uninhabited field disappears), which is also what can turn a
+two-field record into a wrapper — see `LakeJs.SourceToTy`.
+
+The shapes are **disjoint**, so no Lean type has two spellings: a tagged union all of
 whose constructors are field-less must be an enum; a "recursive" declaration that
 never mentions itself must be one of the non-recursive shapes; and a family must be
 *genuinely* mutual — at least two members whose reference graph is strongly connected.
@@ -125,7 +165,11 @@ def recTaggedUnionShapeOk (s : RecTaggedUnionShape) : Bool :=
 A recursive record: field names pairwise distinct, some field really mentioning the
 declared type, and **every** self occurrence guarded by a possibly-empty container, so
 that a value can be built at all (`structure S where s : S` is rejected;
-`structure Rose where kids : Array Rose` is accepted).
+`structure Tree where n : Nat; kids : Array Tree` is accepted).
+
+The "at least two fields" condition is an index pattern of `LeanRecObjectSchema`, not
+part of this check: a one-field recursive record is a newtype, and is erased into a
+`LeanRecAliasSchema`.
 -/
 def recObjectShapeOk (fs : SelfFieldShape) : Bool :=
   selfFieldNamesOk fs && selfFieldsUseSelf fs && selfFieldsAreBase fs
@@ -247,17 +291,22 @@ end LeanEnumSchema
 
 /--
 A plain record: **not** recursive, **not** mutual, exactly one constructor with at
-least one field (a field-less record is a unit type).
+least **two** fields.
+
+A field-less record is a unit type, and a *one*-field record is a newtype: both are
+erased, so neither is representable.  "At least two fields" is an index pattern
+(`field1 :: field2 :: fieldRest`), so it holds by construction.
 
 In JS: `{ _x: …, _y: … }` or `{ _1: …, _2: … }`, depending on the configuration.
 -/
 structure LeanRecordSchema (α : Type) where
   name : NonEmptyString
   {field1 : NonEmptyString}
+  {field2 : NonEmptyString}
   {fieldRest : FieldShape}
-  fields : FieldRow α (field1 :: fieldRest)
+  fields : FieldRow α (field1 :: field2 :: fieldRest)
   /-- Field names are pairwise distinct. -/
-  h_names : fieldShapeOk (field1 :: fieldRest) = true := by decide
+  h_names : fieldShapeOk (field1 :: field2 :: fieldRest) = true := by decide
 
 /--
 A **non-mutual, non-recursive** tagged union: ≥ 2 constructors, at least one of which
@@ -288,16 +337,43 @@ structure LeanRecTaggedUnionSchema (α : Type) where
   h_shape : recTaggedUnionShapeOk (ctor1 :: ctor2 :: ctorRest) = true := by decide
 
 /--
-A **non-mutual, recursive** record: one constructor, at least one field, at least one
-field mentioning the type itself, and every such occurrence guarded by a possibly-empty
-container (`structure Rose where kids : Array Rose`).
+A **non-mutual, recursive** record: one constructor, at least **two** fields, at least
+one field mentioning the type itself, and every such occurrence guarded by a
+possibly-empty container
+(`structure Tree where n : Nat; kids : Array Tree`).
+
+A one-field recursive record is a newtype; the wrapper is erased and the type becomes
+a `LeanRecAliasSchema` (`structure Rose where kids : Array Rose`).
 -/
 structure LeanRecObjectSchema (α : Type) where
   name : NonEmptyString
   {field1 : NonEmptyString × Bool × Bool}
+  {field2 : NonEmptyString × Bool × Bool}
   {fieldRest : SelfFieldShape}
-  fields : SelfFieldRow α (field1 :: fieldRest)
-  h_shape : recObjectShapeOk (field1 :: fieldRest) = true := by decide
+  fields : SelfFieldRow α (field1 :: field2 :: fieldRest)
+  h_shape : recObjectShapeOk (field1 :: field2 :: fieldRest) = true := by decide
+
+/--
+A **non-mutual, recursive newtype**, with the wrapper erased: one constructor, exactly
+one field, and that field mentions the type itself under a guard.
+
+`structure Rose where kids : Array Rose` is the example.  There is no object in the
+runtime representation — a `Rose` *is* an `Array Rose`, i.e. a JS array of arrays of
+… — so the schema records no field name, only the declaration's name (for diagnostics)
+and the body of the fixed point `Name = body[self := Name]`.
+
+The indices of `body` carry both invariants:
+
+* `usesSelf = true` — the field really does mention the declared type; a one-field
+  wrapper that does *not* is erased completely (its `Ty` is the field's own `Ty`, and
+  no schema is created);
+* `avoidsSelf = true` — every self occurrence is guarded by a possibly-empty container,
+  so the fixed point has values.  `structure S where s : S` (body `SelfTy.self`, of
+  index `true false`) does not typecheck here, and indeed has no values.
+-/
+structure LeanRecAliasSchema (α : Type) where
+  name : NonEmptyString
+  body : SelfTy α true true
 
 /-! ## Genuinely mutual families
 
@@ -511,6 +587,22 @@ def famInhabIter (s : FamShape) : Nat → List Nat → List Nat
 def famWellFoundedOk (s : FamShape) : Bool :=
   (List.range s.length).all ((famInhabIter s s.length []).contains ·)
 
+/-- Is member `i` an **alias member**: exactly one constructor carrying exactly one
+    field?  Such a member is a newtype, and a newtype has no object of its own: its
+    runtime representation *is* its single field's, with no tag and no wrapping
+    object — exactly what `LeanRecAliasSchema` does for a non-mutual declaration.  The
+    tag and the field name recorded for such a member are diagnostics only.
+
+    An alias member is therefore allowed in a family; it is not a reason to reject the
+    block.  It cannot escape the family either: every member of a genuinely mutual
+    block references the block (`LeanMutualRecFamily.famTargets_ne_nil`), so an alias
+    member is always the mutual analogue of `Ty.recAlias`, never a disguised
+    declaration of its own. -/
+def famIsAliasMember (s : FamShape) (i : Nat) : Bool :=
+  match s[i]? with
+  | some (_, [c]) => decide (c.2.length = 1)
+  | _             => false
+
 /-- All the invariants of a genuinely mutual block, as one decidable check. -/
 def famShapeOk (s : FamShape) : Bool :=
   famMemberNamesOk s && famTagsOk s && famFieldNamesOk s && famCtorsNonEmptyOk s
@@ -706,6 +798,44 @@ theorem exists_cross_edge (fam : LeanMutualRecFamily α) (i : Nat)
   have h3 := List.all_eq_true.mp h1 j hj'
   exact List.contains_iff_mem.mp h3
 
+/-- A member that mentions nothing cannot reach anything but itself. -/
+theorem famReachIter_eq_self {s : FamShape} {i : Nat} (h : famTargets s i = [])
+    (n : Nat) (acc : List Nat) (hacc : ∀ x ∈ acc, x = i) :
+    ∀ x ∈ famReachIter s n acc, x = i := by
+  induction n generalizing acc with
+  | zero => intro x hx; exact hacc x hx
+  | succ n ih =>
+    intro x hx
+    refine ih (famReachStep s acc) ?_ x hx
+    intro y hy
+    simp only [famReachStep, List.mem_filter, Bool.or_eq_true, List.any_eq_true] at hy
+    rcases hy.2 with hmem | ⟨z, hz, hzy⟩
+    · exact hacc y (List.contains_iff_mem.mp hmem)
+    · have : z = i := hacc z hz
+      subst this
+      rw [h] at hzy
+      simp at hzy
+
+/-- **Every** member of a genuinely mutual family references the family: a member
+    mentioning nobody could not be reached from — or reach — the others, so the block
+    would not be strongly connected.  In particular an alias member
+    (`famIsAliasMember`) is always a *recursive* newtype, i.e. the mutual analogue of
+    `Ty.recAlias`, and never an independent declaration in disguise. -/
+theorem famTargets_ne_nil (fam : LeanMutualRecFamily α) (i : Nat)
+    (hi : i < fam.numMembers) : famTargets fam.shape i ≠ [] := by
+  intro h
+  obtain ⟨j, _, hji, hmem⟩ := exists_cross_edge fam i hi
+  exact hji (famReachIter_eq_self h _ [i] (by simp) j hmem)
+
+/-- The single field of an alias member really does mention the family. -/
+theorem aliasMember_usesFamily (fam : LeanMutualRecFamily α) (i : Nat)
+    (hi : i < fam.numMembers) {nm tag fname : NonEmptyString} {k : FamFieldKind}
+    (h : fam.shape[i]? = some (nm, [(tag, [(fname, k)])])) : k.usesFamily = true := by
+  have hne := famTargets_ne_nil fam i hi
+  rw [famTargets, h] at hne
+  simp only [List.flatMap_cons, List.flatMap_nil, List.append_nil] at hne
+  simpa [FamFieldKind.usesFamily, List.isEmpty_iff] using hne
+
 end LeanMutualRecFamily
 
 /-! ## Reading a row back
@@ -789,10 +919,10 @@ namespace LeanRecordSchema
 variable {α : Type}
 
 /-- The field names, in declaration order. -/
-def names (s : LeanRecordSchema α) : FieldShape := s.field1 :: s.fieldRest
+def names (s : LeanRecordSchema α) : FieldShape := s.field1 :: s.field2 :: s.fieldRest
 
-/-- A record always has at least one field: no unit-like record. -/
-theorem one_le_numFields (s : LeanRecordSchema α) : 1 ≤ s.names.length := by
+/-- A record always has at least two fields: no unit-like record, and no newtype. -/
+theorem two_le_numFields (s : LeanRecordSchema α) : 2 ≤ s.names.length := by
   simp [names]
 
 /-- Field names are pairwise distinct. -/
@@ -868,10 +998,12 @@ namespace LeanRecObjectSchema
 variable {α : Type}
 
 /-- The fields, as a shape. -/
-def shape (s : LeanRecObjectSchema α) : SelfFieldShape := s.field1 :: s.fieldRest
+def shape (s : LeanRecObjectSchema α) : SelfFieldShape :=
+  s.field1 :: s.field2 :: s.fieldRest
 
-/-- A recursive record always has at least one field. -/
-theorem one_le_numFields (s : LeanRecObjectSchema α) : 1 ≤ s.shape.length := by
+/-- A recursive record always has at least two fields: a one-field one is a newtype,
+    and is erased into a `LeanRecAliasSchema`. -/
+theorem two_le_numFields (s : LeanRecObjectSchema α) : 2 ≤ s.shape.length := by
   simp [shape]
 
 /-- Field names are pairwise distinct. -/

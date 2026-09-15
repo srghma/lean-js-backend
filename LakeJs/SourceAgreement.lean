@@ -79,7 +79,7 @@ example : rendered myListSrc.toTy = some myListTy.pretty := by decide
 
 /-! ## A recursive record -/
 
-/-- `structure Rose where v : Int; kids : Array Rose`. -/
+/-- `structure Rose where v : Int; kids : Array Rose` — two fields, so a real object. -/
 def roseSrc : SrcDecl :=
   { block := [{ name := nes!"Rose"
               , ctors := [{ tag := nes!"Rose.mk"
@@ -87,6 +87,65 @@ def roseSrc : SrcDecl :=
     member := 0 }
 
 example : rendered roseSrc.toTy = some roseTy.pretty := by decide
+
+/-! ## A recursive newtype, and the erasures
+
+The model's `RawDecl` is the declaration *before* erasure, which is what the
+elaborator also sees; `RawDecl.toTy` erases and then translates. -/
+
+/-- `structure Rose2 where kids : Array Rose2` — a newtype, so both translators
+    produce the fixed point `Rose2 = Array Rose2`, with no object. -/
+def rose2Src : SrcDecl :=
+  { block := [{ name := nes!"Rose2"
+              , ctors := [{ tag := nes!"Rose2.mk"
+                          , fields := [(nes!"kids", .array (.ref 0))] }] }]
+    member := 0 }
+
+example : rendered rose2Src.toTy = some rose2Ty.pretty := by decide
+
+/-- `structure UnitTree where val : Unit; kids : Array UnitTree` — the `Unit` field is
+    erased, which turns the declaration into the newtype above. -/
+def unitTreeSrc : RawDecl :=
+  { block := [{ name := nes!"UnitTree"
+              , ctors := [{ tag := nes!"UnitTree.mk"
+                          , fields := [ (nes!"val", .unitLike)
+                                      , (nes!"kids", .array (.ref 0)) ] }] }]
+    member := 0 }
+
+example : rendered unitTreeSrc.toTy = some (lean_ty% UnitTree).pretty := by decide
+
+/-- `structure Wrapper where x : Nat` — a non-recursive newtype: both translators
+    return `Nat` itself. -/
+def wrapperSrc : SrcDecl :=
+  { block := [{ name := nes!"Wrapper"
+              , ctors := [{ tag := nes!"Wrapper.mk", fields := [(nes!"x", .ext .nat)] }] }]
+    member := 0 }
+
+example : rendered wrapperSrc.toTy = some (lean_ty% Wrapper).pretty := by decide
+
+/-- `structure Counts where flags : Array Unit; opt : Option Unit; both : Unit × Int;
+    empty : Array Empty` — the containers are rewritten and the last field is erased. -/
+def countsSrc : RawDecl :=
+  { block := [{ name := nes!"Counts"
+              , ctors := [{ tag := nes!"Counts.mk"
+                          , fields := [ (nes!"flags", .array .unitLike)
+                                      , (nes!"opt", .option .unitLike)
+                                      , (nes!"both", .prod .unitLike (.ext .int))
+                                      , (nes!"empty", .array .voidLike) ] }] }]
+    member := 0 }
+
+example : rendered countsSrc.toTy = some (lean_ty% Counts).pretty := by decide
+
+/-- `inductive OnlyGood | bad (x : Empty) (y : Int) | good (v : Int)` — the impossible
+    constructor disappears, leaving a newtype, which is erased too. -/
+def onlyGoodSrc : RawDecl :=
+  { block := [{ name := nes!"OnlyGood"
+              , ctors := [ { tag := nes!"bad"
+                           , fields := [(nes!"x", .voidLike), (nes!"y", .ext .int)] }
+                         , { tag := nes!"good", fields := [(nes!"v", .ext .int)] } ] }]
+    member := 0 }
+
+example : rendered onlyGoodSrc.toTy = some (lean_ty% OnlyGood).pretty := by decide
 
 /-! ## A mutual family
 

@@ -33,8 +33,9 @@ of which never mentions the declared type (so the declaration is well-founded) a
 the second of which always carries a field (so the declaration is never a field-less
 enum, whose rendering the kernel cannot evaluate: `String.intercalate` does not
 reduce).  Fields are drawn from `Int`, `String`, `Bool`, `Self`, `Array Self`,
-`Option Self` and `Int × Self`, which exercises the direct, guarded, nested and
-product occurrences.
+`Option Self`, `Int × Self`, `Unit` and `Array Unit`, which exercises the direct,
+guarded, nested and product occurrences, and the erasure of unit-like fields and of
+containers over them.
 -/
 
 namespace LakeJs.SourceRandom
@@ -62,9 +63,11 @@ def leanTyOf (self : String) : Nat → String
   | 3 => self
   | 4 => "Array " ++ self
   | 5 => "Option " ++ self
-  | _ => "Int × " ++ self
+  | 6 => "Int × " ++ self
+  | 7 => "Unit"
+  | _ => "Array Unit"
 
-/-- The `SrcTy` source text of field type `code`. -/
+/-- The `RawTy` source text of field type `code`. -/
 def srcTyOf : Nat → String
   | 0 => ".ext .int"
   | 1 => ".ext .string"
@@ -72,7 +75,19 @@ def srcTyOf : Nat → String
   | 3 => ".ref 0"
   | 4 => ".array (.ref 0)"
   | 5 => ".option (.ref 0)"
-  | _ => ".prod (.ext .int) (.ref 0)"
+  | 6 => ".prod (.ext .int) (.ref 0)"
+  | 7 => ".unitLike"
+  | _ => ".array .unitLike"
+
+/-- A field type that does not mention the declared type; `Unit` and `Array Unit` are
+    included, so the generated tests exercise erasure too. -/
+def nonSelfCode (k : Nat) : Nat :=
+  match k % 5 with
+  | 0 => 0
+  | 1 => 1
+  | 2 => 2
+  | 3 => 7
+  | _ => 8
 
 /-- Fields of one constructor: `(name, code)` pairs.  `selfOk = false` restricts the
     codes to those that do not mention the declared type. -/
@@ -85,7 +100,13 @@ def genFields (selfOk : Bool) (atLeastOne : Bool) (seed : Nat) :
     | 0 => (s, acc.reverse)
     | k + 1 =>
         let s' := lcg s
-        let code := if selfOk then s' % 7 else s' % 3
+        -- the *first* field of a constructor that must have one is never unit-like,
+        -- so that constructor still carries a field after erasure (a declaration all
+        -- of whose constructors are field-less is an enum, whose rendering the kernel
+        -- cannot evaluate)
+        let code :=
+          if atLeastOne && k + 1 == count then (if selfOk then s' % 7 else s' % 3)
+          else if selfOk then s' % 9 else nonSelfCode s'
         go k s' (("f" ++ toString k, code) :: acc)
   go count s1 []
 
@@ -118,11 +139,11 @@ def declText (i : Nat) (ctors : List (String × List (String × Nat))) : String 
           (fields.map fun (fn, code) => "(nes!\"" ++ fn ++ "\", " ++ srcTyOf code ++ ")") ++ "] }")
   "inductive " ++ name ++ " where\n" ++ ctorText ++ "\n\n" ++
   "def ty" ++ name ++ " : Ty := lean_ty% " ++ name ++ "\n\n" ++
-  "def src" ++ name ++ " : LakeJs.Source.SrcDecl :=\n" ++
+  "def src" ++ name ++ " : LakeJs.Source.RawDecl :=\n" ++
   "  { block := [{ name := nes!\"" ++ name ++ "\"\n" ++
   "              , ctors := [ " ++ srcCtors ++ " ] }]\n" ++
   "    member := 0 }\n\n" ++
-  "example : rendered (LakeJs.Source.SrcDecl.toTy src" ++ name ++ ")"
+  "example : rendered (LakeJs.Source.RawDecl.toTy src" ++ name ++ ")"
     ++ " = some (Ty.pretty ty" ++ name ++ ") := by decide\n"
 
 /-- Parse and elaborate one command. -/
@@ -170,8 +191,8 @@ gen_agreement 20 seed 20250915
 
 /-- The generated declarations really are there: the last one translates, and its two
     translations are the ones compared above. -/
-example : (rendered (LakeJs.Source.SrcDecl.toTy srcGen19)).isSome = true := by decide
-example : (LakeJs.Source.classify srcGen19).isSome = true := by decide
+example : (rendered (LakeJs.Source.RawDecl.toTy srcGen19)).isSome = true := by decide
+example : (LakeJs.Source.RawDecl.classify srcGen19).isSome = true := by decide
 
 end LakeJs.SourceRandomTests
 

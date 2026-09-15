@@ -23,10 +23,11 @@ One elaborator per shape of `Ty`:
 | `lean_tagged_union_schema% T`    | `LeanTaggedUnionSchema Ty`   |
 | `lean_rec_tagged_union_schema% T`| `LeanRecTaggedUnionSchema Ty`|
 | `lean_rec_object_schema% T`      | `LeanRecObjectSchema Ty`     |
+| `lean_rec_alias_schema% T`       | `LeanRecAliasSchema Ty`      |
 | `lean_mutual_rec_family% T`      | `LeanMutualRecFamily Ty`     |
 | `lean_ty% T`                     | `Ty`                         |
 
-Each of the first six *checks* that `T` really has that shape and fails with an
+Each of the first seven *checks* that `T` really has that shape and fails with an
 explanation otherwise, so `lean_enum_schema% Option` is an error, not a silently
 different schema.  `lean_ty% T` classifies `T` and picks the right one; it is also
 what translates the field types, so a record field of a user-defined type expands
@@ -40,6 +41,15 @@ A declaration is translatable when
   the built-in `Ty.list` covers it);
 * it is not a unit type (one constructor, no fields) and not void (no constructors),
   since neither has a runtime representation;
+* unit-like and void-like *fields* are not an obstacle — they are **erased**
+  (`normOfExpr`): a `Unit` field disappears, a constructor with an `Empty` field
+  disappears, `Array Unit` becomes `Nat`, `Option Unit` becomes `Bool`;
+* a **newtype** — one constructor with one field, after that erasure — has no object of
+  its own: `lean_ty% T` returns the field's own `Ty` when the field does not mention
+  `T`, and `Ty.recAlias` (the fixed point) when it does, so
+  `structure Rose where kids : Array Rose` is a JS array of arrays of …, not
+  `{ _kids: […] }`.  A newtype *member of a mutual block* is the same thing one level
+  up: an alias member, whose value is its field's value;
 * every field type is a primitive (`PrimTy`), a built-in container of a translatable
   type (`Array`, `List`, `Option`, `Prod`, `Thunk`, `Task`), a non-dependent function
   of translatable types, or another translatable declaration.
@@ -125,6 +135,125 @@ meta def ctorFields (ctorName : Name) : MetaM (List (String × Expr)) := do
       let decl ← fv.fvarId!.getDecl
       return (fieldName i decl.userName, ← instantiateMVars decl.type)
 
+/-! ## Erasing unit-like and void-like types
+
+No `Ty` is unit-like or void-like, but a Lean field may well be: `Unit`, `Empty`,
+`Array Unit`, `Option Empty`, `Nat → Unit`, …  Such a field is not an error — it is
+**erased**, and a constructor with a void-like field is erased with it.  A container of
+an erased type is *rewritten*: only the length of an `Array Unit` survives, so it is a
+`Nat`; an `Option Unit` is a `Bool`; an `Array Empty` is the empty array, hence
+unit-like itself.
+
+`normOfExpr` performs that rewriting on the Lean type expression, so every translator
+below only ever sees a type that really has a `Ty`. -/
+
+/-- The result of erasing unit-like and void-like types from a Lean type. -/
+meta inductive NormRes where
+  /-- Unit-like: exactly one value, so the field disappears. -/
+  | erased
+  /-- Void-like: no values, so the enclosing constructor disappears. -/
+  | void
+  /-- Representable, as this (rewritten) type. -/
+  | keep (e : Expr)
+
+mutual
+
+/-- Erase unit-like and void-like types from a Lean type expression, rewriting the
+    containers whose element type disappears. -/
+meta partial def normOfExpr (visiting : List Name) (e₀ : Expr) : MetaM NormRes := do
+  let e ← whnf e₀
+  if e.isForall then
+    if e.bindingBody!.hasLooseBVars then
+      -- dependent: leave it alone, the translator reports it
+      return .keep e
+    return ← forallTelescopeReducing e fun args body => do
+      if body.hasLooseBVars then return .keep e
+      let mut ptys : Array Expr := #[]
+      for a in args do
+        match ← normOfExpr visiting (← inferType a) with
+        | .void   => return .erased  -- a function from a void type has exactly one value
+        | .erased => pure ()         -- a unit parameter carries nothing
+        | .keep t => ptys := ptys.push t
+      match ← normOfExpr visiting body with
+      | .void   => return .void
+      | .erased => return .erased
+      | .keep b => return .keep (ptys.foldr (fun t acc => .forallE `x t acc .default) b)
+  let args := e.getAppArgs
+  match e.getAppFn with
+  | .const c _ =>
+    match c, args with
+    | ``PUnit, _ | ``Unit, _ | ``True, _ => return .erased
+    | ``PEmpty, _ | ``Empty, _ | ``False, _ => return .void
+    | ``Array, #[a] | ``List, #[a] =>
+        match ← normOfExpr visiting a with
+        | .void   => return .erased                    -- only the empty one exists
+        | .erased => return .keep (.const ``Nat [])    -- only the length survives
+        | .keep t => return .keep (mkApp (e.getAppFn) t)
+    | ``Option, #[a] =>
+        match ← normOfExpr visiting a with
+        | .void   => return .erased                    -- only `none`
+        | .erased => return .keep (.const ``Bool [])   -- `none` or `some ()`
+        | .keep t => return .keep (mkApp (e.getAppFn) t)
+    | ``Thunk, #[a] | ``Task, #[a] =>
+        match ← normOfExpr visiting a with
+        | .void   => return .void
+        | .erased => return .erased
+        | .keep t => return .keep (mkApp (e.getAppFn) t)
+    | ``Prod, #[a, b] =>
+        match ← normOfExpr visiting a, ← normOfExpr visiting b with
+        | .void, _ => return .void
+        | _, .void => return .void
+        | .erased, .erased => return .erased
+        | .erased, .keep t => return .keep t
+        | .keep t, .erased => return .keep t
+        | .keep x, .keep y => return .keep (mkApp2 (e.getAppFn) x y)
+    | ``BitVec, #[n] =>
+        match (← whnf n).rawNatLit? with
+        | some 0 => return .erased                     -- `BitVec 0` is a unit type
+        | _      => return .keep e
+    | _, #[] =>
+        if visiting.contains c then return .keep e
+        if (primOfConst? c).isSome then return .keep e
+        match (← getEnv).find? c with
+        | some (.inductInfo iv) =>
+            if iv.numParams != 0 || iv.numIndices != 0 then return .keep e
+            match ← erasedCtors (iv.all ++ visiting) c with
+            | []        => return .void
+            | [(_, [])] => return .erased
+            | _         => return .keep e
+        | _ => return .keep e
+    | _, _ => return .keep e
+  | _ => return .keep e
+
+/-- The surviving fields of a constructor: unit-like fields are dropped, and a
+    void-like field makes the whole constructor impossible (`none`). -/
+meta partial def erasedCtorFields (visiting : List Name) (ctorName : Name) :
+    MetaM (Option (List (String × Expr))) := do
+  let mut out : List (String × Expr) := []
+  for (nm, t) in ← ctorFields ctorName do
+    match ← normOfExpr visiting t with
+    | .void   => return none
+    | .erased => pure ()
+    | .keep e => out := out ++ [(nm, e)]
+  return some out
+
+/-- The surviving constructors of a declaration, with their surviving fields. -/
+meta partial def erasedCtors (visiting : List Name) (n : Name) :
+    MetaM (List (Name × List (String × Expr))) := do
+  let iv ← getConstInfoInduct n
+  let visiting := iv.all ++ visiting
+  let mut out : List (Name × List (String × Expr)) := []
+  for c in iv.ctors do
+    if let some fs ← erasedCtorFields visiting c then
+      out := out ++ [(c, fs)]
+  return out
+
+end
+
+/-- The surviving constructors of `n`, as seen from outside. -/
+meta def declCtors (n : Name) : MetaM (List (Name × List (String × Expr))) :=
+  erasedCtors [] n
+
 /-- Reject declarations this translation cannot describe. -/
 meta def checkTranslatable (n : Name) : MetaM InductiveVal := do
   let iv ← getConstInfoInduct n
@@ -140,17 +269,22 @@ meta def checkTranslatable (n : Name) : MetaM InductiveVal := do
 
 /-! ## Classification -/
 
-/-- Which of the six shapes a declaration has. -/
+/-- Which shape a declaration has, once unit-like fields and impossible constructors
+    have been erased.
+
+`transparent` is the **newtype** case that has no shape of its own: one constructor
+with one field, not mentioning the declaration itself, so the declaration *is* that
+field's type. -/
 meta inductive SchemaKind where
-  | enum | record | taggedUnion | recTaggedUnion | recObject | mutualFamily
+  | enum | record | taggedUnion | recTaggedUnion | recObject | recAlias | transparent
+  | mutualFamily
   deriving DecidableEq, Repr, Inhabited
 
-/-- The members of the block that member `i` mentions. -/
+/-- The members of the block that member `n` mentions. -/
 meta def blockTargets (block : List Name) (n : Name) : MetaM (List Name) := do
-  let iv ← getConstInfoInduct n
   let mut out : List Name := []
-  for c in iv.ctors do
-    for (_, t) in ← ctorFields c do
+  for (_, fs) in ← declCtors n do
+    for (_, t) in fs do
       for m in block do
         if mentionsAny [m] t && !out.contains m then
           out := m :: out
@@ -171,7 +305,7 @@ meta def blockStronglyConnected (block : List Name) : MetaM Bool := do
       if next.length == acc.length then acc else reach fuel next
   return block.all fun i => (block.all fun j => (reach block.length [i]).contains j)
 
-/-- Classify a declaration. -/
+/-- Classify a declaration, after erasure. -/
 meta def classify (n : Name) : MetaM SchemaKind := do
   let iv ← checkTranslatable n
   let block := iv.all
@@ -179,21 +313,45 @@ meta def classify (n : Name) : MetaM SchemaKind := do
     if ← blockStronglyConnected block then
       return .mutualFamily
   -- a non-mutual declaration (or a member of a "fake mutual" block)
+  let cs ← declCtors n
   let mut selfRec := false
-  let mut anyField := false
-  for c in iv.ctors do
-    for (_, t) in ← ctorFields c do
-      anyField := true
+  for (_, fs) in cs do
+    for (_, t) in fs do
       if mentionsAny [n] t then selfRec := true
-  match iv.ctors with
-  | [] => throwError "'{n}' is a void type"
-  | [_] =>
-      if !anyField then
-        throwError "'{n}' is a unit type: it carries no information and is erased"
-      return if selfRec then .recObject else .record
+  match cs with
+  | [] =>
+      throwError "'{n}' is a void type: every constructor has a field that cannot be \
+        built, so it has no values"
+  | [(_, [])] =>
+      throwError "'{n}' is a unit type: it carries no information and is erased"
+  | [(_, [_])] =>
+      -- a newtype: the wrapper has no runtime representation
+      return if selfRec then .recAlias else .transparent
+  | [(_, _)] => return if selfRec then .recObject else .record
   | _ =>
-      if !anyField then return .enum
+      if !(cs.any fun c => !c.2.isEmpty) then return .enum
       return if selfRec then .recTaggedUnion else .taggedUnion
+
+/-- Is every occurrence of `self` in this type guarded by a possibly-empty container,
+    so that a value exists without one? -/
+meta partial def avoidsSelf (self : Name) (e₀ : Expr) : MetaM Bool := do
+  let e ← whnf e₀
+  if !mentionsAny [self] e then return true
+  if e.isConstOf self then return false
+  if e.isForall then
+    return ← forallTelescopeReducing e fun _ body => avoidsSelf self body
+  let args := e.getAppArgs
+  match e.getAppFn with
+  | .const c _ =>
+    if c == ``Array || c == ``List || c == ``Option then
+      return true
+    else if (c == ``Thunk || c == ``Task) && args.size == 1 then
+      avoidsSelf self args[0]!
+    else if c == ``Prod && args.size == 2 then
+      return (← avoidsSelf self args[0]!) && (← avoidsSelf self args[1]!)
+    else
+      return false
+  | _ => return false
 
 /-! ## Translating types -/
 
@@ -242,7 +400,8 @@ meta partial def tyOfExpr (visiting : List Name) (e₀ : Expr) : MetaM Term := d
   | _ => throwError "'{e}' is not a translatable type"
 
 /-- The `Ty` of a user-defined declaration: its schema, wrapped in the matching
-    constructor. -/
+    constructor — except for a non-recursive newtype, which has no schema at all and
+    *is* its single field's `Ty`. -/
 meta partial def tyOfDecl (visiting : List Name) (n : Name) : MetaM Term := do
   if visiting.contains n then
     throwError "'{n}' refers to itself through a position this translation does not \
@@ -254,6 +413,11 @@ meta partial def tyOfDecl (visiting : List Name) (n : Name) : MetaM Term := do
   | .taggedUnion     => do `(Ty.taggedUnion $(← taggedUnionSchemaSyn visiting n))
   | .recTaggedUnion  => do `(Ty.recTaggedUnion $(← recTaggedUnionSchemaSyn visiting n))
   | .recObject       => do `(Ty.recObject $(← recObjectSchemaSyn visiting n))
+  | .recAlias        => do `(Ty.recAlias $(← recAliasSchemaSyn visiting n))
+  | .transparent     => do
+      let some (_, [(_, t)]) := (← declCtors n).head?
+        | throwError "'{n}' is not a newtype"
+      tyOfExpr (n :: visiting) t
   | .mutualFamily    => do `(Ty.mutualRecursiveFamily $(← mutualFamilySchemaSyn visiting n))
 
 /-- A `FieldRow` of ordinary (non-recursive) fields. -/
@@ -267,8 +431,7 @@ meta partial def enumSchemaSyn (n : Name) : MetaM Term := do
   if (← classify n) != .enum then
     throwError "'{n}' is not a plain enum (a non-mutual, non-recursive `inductive` \
       with at least two field-less constructors)"
-  let iv ← getConstInfoInduct n
-  let tags := iv.ctors.map (fun c => ctorTag false n c)
+  let tags := (← declCtors n).map (fun c => ctorTag false n c.1)
   match tags with
   | t1 :: t2 :: rest => do
       let restSyn ← rest.toArray.mapM nesSyn
@@ -277,23 +440,22 @@ meta partial def enumSchemaSyn (n : Name) : MetaM Term := do
          , ctorRest := [$restSyn,*] } : LeanEnumSchema))
   | _ => throwError "'{n}' has fewer than two constructors"
 
-/-- The `LeanRecordSchema` of a one-constructor, non-recursive declaration. -/
+/-- The `LeanRecordSchema` of a one-constructor, non-recursive declaration with at
+    least two fields. -/
 meta partial def recordSchemaSyn (visiting : List Name) (n : Name) : MetaM Term := do
   if (← classify n) != .record then
     throwError "'{n}' is not a plain record (a non-mutual, non-recursive declaration \
-      with exactly one constructor and at least one field)"
-  let iv ← getConstInfoInduct n
-  let some c := iv.ctors.head? | throwError "'{n}' has no constructor"
-  let fields ← ctorFields c
+      with exactly one constructor and at least two fields; a one-field one is a \
+      newtype, and is erased into its field)"
+  let some (_, fields) := (← declCtors n).head? | throwError "'{n}' has no constructor"
   `(({ name := $(← nesSyn (shortName n))
      , fields := $(← fieldRowSyn (n :: visiting) fields) } : LeanRecordSchema Ty))
 
 /-- A `CtorRow` of non-recursive constructors. -/
 meta partial def ctorRowSyn (visiting : List Name) (tyName : Name) :
-    List Name → MetaM Term
+    List (Name × List (String × Expr)) → MetaM Term
   | [] => `(CtorRow.nil)
-  | c :: rest => do
-      let fields ← ctorFields c
+  | (c, fields) :: rest => do
       `(CtorRow.cons $(← nesSyn (ctorTag false tyName c))
           $(← fieldRowSyn visiting fields) $(← ctorRowSyn visiting tyName rest))
 
@@ -302,9 +464,9 @@ meta partial def taggedUnionSchemaSyn (visiting : List Name) (n : Name) : MetaM 
   if (← classify n) != .taggedUnion then
     throwError "'{n}' is not a non-recursive tagged union (≥ 2 constructors, at least \
       one with a field, no recursion, no mutual block)"
-  let iv ← getConstInfoInduct n
   `(({ name := $(← nesSyn (shortName n))
-     , ctors := $(← ctorRowSyn (n :: visiting) n iv.ctors) } : LeanTaggedUnionSchema Ty))
+     , ctors := $(← ctorRowSyn (n :: visiting) n (← declCtors n))
+     } : LeanTaggedUnionSchema Ty))
 
 /-- The `SelfTy` of a field of a recursive declaration named `self`. -/
 meta partial def selfTyOfExpr (visiting : List Name) (self : Name) (e₀ : Expr) : MetaM Term := do
@@ -344,31 +506,47 @@ meta partial def selfFieldRowSyn (visiting : List Name) (self : Name) :
           $(← selfFieldRowSyn visiting self rest))
 
 /-- A `RecCtorRow`. -/
-meta partial def recCtorRowSyn (visiting : List Name) (self : Name) : List Name → MetaM Term
+meta partial def recCtorRowSyn (visiting : List Name) (self : Name) :
+    List (Name × List (String × Expr)) → MetaM Term
   | [] => `(RecCtorRow.nil)
-  | c :: rest => do
+  | (c, fields) :: rest => do
       `(RecCtorRow.cons $(← nesSyn (ctorTag false self c))
-          $(← selfFieldRowSyn visiting self (← ctorFields c))
+          $(← selfFieldRowSyn visiting self fields)
           $(← recCtorRowSyn visiting self rest))
 
 /-- The `LeanRecTaggedUnionSchema` of a non-mutual recursive `inductive`. -/
 meta partial def recTaggedUnionSchemaSyn (visiting : List Name) (n : Name) : MetaM Term := do
   if (← classify n) != .recTaggedUnion then
     throwError "'{n}' is not a non-mutual recursive tagged union"
-  let iv ← getConstInfoInduct n
   `(({ name := $(← nesSyn (shortName n))
-     , ctors := $(← recCtorRowSyn (n :: visiting) n iv.ctors)
+     , ctors := $(← recCtorRowSyn (n :: visiting) n (← declCtors n))
      } : LeanRecTaggedUnionSchema Ty))
 
-/-- The `LeanRecObjectSchema` of a non-mutual recursive one-constructor declaration. -/
+/-- The `LeanRecObjectSchema` of a non-mutual recursive one-constructor declaration
+    with at least two fields. -/
 meta partial def recObjectSchemaSyn (visiting : List Name) (n : Name) : MetaM Term := do
   if (← classify n) != .recObject then
-    throwError "'{n}' is not a non-mutual recursive record"
-  let iv ← getConstInfoInduct n
-  let some c := iv.ctors.head? | throwError "'{n}' has no constructor"
+    throwError "'{n}' is not a non-mutual recursive record with at least two fields \
+      (a one-field one is a newtype: it is erased, and becomes a `Ty.recAlias`)"
+  let some (_, fields) := (← declCtors n).head? | throwError "'{n}' has no constructor"
   `(({ name := $(← nesSyn (shortName n))
-     , fields := $(← selfFieldRowSyn (n :: visiting) n (← ctorFields c))
+     , fields := $(← selfFieldRowSyn (n :: visiting) n fields)
      } : LeanRecObjectSchema Ty))
+
+/-- The `LeanRecAliasSchema` of a **recursive newtype**: one constructor with one
+    field, mentioning the declaration itself.  The wrapper is erased, so the schema is
+    just the fixed point of the field's type. -/
+meta partial def recAliasSchemaSyn (visiting : List Name) (n : Name) : MetaM Term := do
+  if (← classify n) != .recAlias then
+    throwError "'{n}' is not a recursive newtype (exactly one constructor, carrying \
+      exactly one field, which mentions '{n}')"
+  let some (_, [(_, t)]) := (← declCtors n).head?
+    | throwError "'{n}' is not a newtype"
+  if !(← avoidsSelf n t) then
+    throwError "'{n}' is a newtype whose field is an unguarded occurrence of '{n}': \
+      erasing the wrapper leaves the equation '{n} = {n}', which has no values"
+  `(({ name := $(← nesSyn (shortName n))
+     , body := $(← selfTyOfExpr (n :: visiting) n t) } : LeanRecAliasSchema Ty))
 
 /-- The `FamTy` of a field of a member of the mutual block `block`.  This mirrors
     `selfTyOfExpr`: a field of a family member may use the family anywhere a field of
@@ -418,11 +596,11 @@ meta partial def famFieldRowSyn (visiting : List Name) (block : List Name) :
 
 /-- A `FamCtorRow`. -/
 meta partial def famCtorRowSyn (visiting : List Name) (block : List Name) (tyName : Name) :
-    List Name → MetaM Term
+    List (Name × List (String × Expr)) → MetaM Term
   | [] => `(FamCtorRow.nil)
-  | c :: rest => do
+  | (c, fields) :: rest => do
       `(FamCtorRow.cons $(← nesSyn (ctorTag true tyName c))
-          $(← famFieldRowSyn visiting block (← ctorFields c))
+          $(← famFieldRowSyn visiting block fields)
           $(← famCtorRowSyn visiting block tyName rest))
 
 /-- A `FamMemberRow`. -/
@@ -430,9 +608,9 @@ meta partial def famMemberRowSyn (visiting : List Name) (block : List Name) :
     List Name → MetaM Term
   | [] => `(FamMemberRow.nil)
   | m :: rest => do
-      let iv ← checkTranslatable m
+      let _ ← checkTranslatable m
       `(FamMemberRow.cons $(← nesSyn (shortName m))
-          $(← famCtorRowSyn visiting block m iv.ctors)
+          $(← famCtorRowSyn visiting block m (← declCtors m))
           $(← famMemberRowSyn visiting block rest))
 
 /-- The `LeanMutualRecFamily` of a genuinely mutual block, pointing at the member
@@ -444,6 +622,9 @@ meta partial def mutualFamilySchemaSyn (visiting : List Name) (n : Name) : MetaM
       shapes have their own schemas"
   let iv ← getConstInfoInduct n
   let block := iv.all
+  -- A member *may* be a newtype; it is then an alias member, with no object of its own
+  -- (`famIsAliasMember`).  Nothing extra to check here: the schema's `famShapeOk`
+  -- obligation rules out the ill-formed blocks, including uninhabited alias cycles.
   let some idx := block.idxOf? n | throwError "'{n}' is not a member of its own block"
   let visiting := block ++ visiting
   `(({ name := $(← nesSyn (shortName (block.head!)))
@@ -452,6 +633,7 @@ meta partial def mutualFamilySchemaSyn (visiting : List Name) (n : Name) : MetaM
      } : LeanMutualRecFamily Ty))
 
 end
+
 
 /-! ## The elaborators -/
 
@@ -478,6 +660,10 @@ elab "lean_rec_tagged_union_schema% " id:ident : term => do
     recursive one-constructor declaration. -/
 elab "lean_rec_object_schema% " id:ident : term => do
   elabTerm (← recObjectSchemaSyn [] (← resolveGlobalConstNoOverload id)) none
+
+/-- `lean_rec_alias_schema% T` — the `LeanRecAliasSchema Ty` of a recursive newtype. -/
+elab "lean_rec_alias_schema% " id:ident : term => do
+  elabTerm (← recAliasSchemaSyn [] (← resolveGlobalConstNoOverload id)) none
 
 /-- `lean_mutual_rec_family% T` — the `LeanMutualRecFamily Ty` of a genuinely mutual
     block, pointing at member `T`. -/

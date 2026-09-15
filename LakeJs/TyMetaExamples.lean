@@ -116,6 +116,59 @@ example :
     forestTy.pretty = "(recObject Forest label:string kids:(array (prod int self)))" := by
   decide
 
+/-! ## Newtypes are erased
+
+A declaration with one constructor carrying one field has no object of its own. -/
+
+/-- `structure Rose2 where kids : Array Rose2` — a *recursive* newtype: the wrapper is
+    erased and the type is the fixed point `Rose2 = Array Rose2`, i.e. in JS an array
+    of arrays of … -/
+structure Rose2 where
+  kids : Array Rose2
+
+def rose2Schema : LeanRecAliasSchema Ty := lean_rec_alias_schema% Rose2
+def rose2Ty : Ty := lean_ty% Rose2
+
+example : rose2Ty.pretty = "(recAlias Rose2 (array self))" := by decide
+
+/-- A **non-recursive** newtype disappears completely: `Wrapper` *is* a `Nat`. -/
+structure Wrapper where
+  x : Nat
+
+example : (lean_ty% Wrapper) = Ty.nat := rfl
+
+/-! ## Unit-like and void-like fields are erased -/
+
+/-- The example from the task: the `Unit` field is unrepresentable and disappears,
+    which leaves a one-field wrapper, which is erased in turn — so `UnitTree` has
+    exactly the same representation as `Rose2`. -/
+structure UnitTree where
+  val  : Unit
+  kids : Array UnitTree
+
+example : (lean_ty% UnitTree).pretty = "(recAlias UnitTree (array self))" := by decide
+
+/-- Containers of unit-like types are *rewritten*, not dropped: only the length of an
+    `Array Unit` survives, an `Option Unit` is a boolean, and a `Unit × Int` is an
+    `Int`.  `Array Empty` has exactly one value, so that field is unit-like and
+    disappears. -/
+structure Counts where
+  flags : Array Unit
+  opt   : Option Unit
+  both  : Unit × Int
+  empty : Array Empty
+
+example :
+    (lean_ty% Counts).pretty = "(record Counts flags:nat opt:bool both:int)" := by decide
+
+/-- A constructor with a void-like field can never be applied, so it disappears.  Here
+    that leaves one constructor with one field, i.e. a newtype, which is erased too. -/
+inductive OnlyGood where
+  | bad (x : Empty) (y : Int)
+  | good (v : Int)
+
+example : (lean_ty% OnlyGood) = Ty.int := rfl
+
 /-! ## Genuinely mutual family -/
 
 mutual
@@ -187,6 +240,29 @@ example : ∀ (g : FamGuard) (i : Nat),
 example : (lean_mutual_rec_family% Alt).member = 1 := by decide
 example : (lean_mutual_rec_family% Alt).shape = tmFamily.shape := by decide
 
+/-! ## A mutual block with an **alias member**
+
+A member that is left with one constructor carrying one field is a newtype there too,
+and a newtype has no object of its own: `Block` below is just an `Array Line`, with no
+tag and no wrapping object.  The block is accepted, and the alias member is visible in
+its shape. -/
+
+mutual
+  inductive Line where
+    | text (s : String)
+    | nested (b : Block)
+  inductive Block where
+    | mk (lines : Array Line)
+end
+
+def lineFamily : LeanMutualRecFamily Ty := lean_mutual_rec_family% Line
+def blockTy : Ty := lean_ty% Block
+
+example : famShapeOk lineFamily.shape = true := by decide
+example : famIsAliasMember lineFamily.shape 1 = true := by decide
+example : famIsAliasMember lineFamily.shape 0 = false := by decide
+example : (lean_mutual_rec_family% Block).member = 1 := by decide
+
 /-! ## The "fake mutual" block of `Types.md` is two enums, not a family -/
 
 mutual
@@ -246,6 +322,16 @@ example :
       = "(taggedUnion Choice left{l:int}|right{r:bool}|both{l:int r:bool})" := by
   decide
 
+/-- A parameterised **newtype**: the wrapper is erased, so the generated function is
+    the identity on `Ty`. -/
+structure Ident (α : Type) where
+  value : α
+
+derive_ty Ident as Ty.ident
+
+example : Ty.ident .int = Ty.int := rfl
+example : (Ty.ident (Ty.array .string)).pretty = "(array string)" := by decide
+
 /-! ## What `derive_ty` rejects
 
 ```lean
@@ -262,6 +348,8 @@ Each of these is an elaboration error, so it is shown commented out:
 ```lean
 def bad1 : LeanEnumSchema := lean_enum_schema% Point        -- `Point` is a record
 def bad2 : LeanRecordSchema Ty := lean_record_schema% Rose  -- `Rose` is recursive
+def bad7 : LeanRecObjectSchema Ty := lean_rec_object_schema% Rose2  -- a newtype
+def bad8 : LeanRecordSchema Ty := lean_record_schema% Wrapper       -- a newtype
 def bad3 : Ty := lean_ty% PUnit                             -- unit type: erased
 def bad4 : Ty := lean_ty% Empty                             -- void type
 def bad5 : Ty := lean_ty% List                              -- takes a parameter

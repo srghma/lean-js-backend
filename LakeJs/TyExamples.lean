@@ -62,8 +62,13 @@ def point3 : Ty :=
   .record { name := nes!"Point3", fields := .cons (nes!"p") point
                                               (.cons (nes!"z") .float .nil) }
 
--- A field-less record is a unit type: `fields` must be a `.cons`, so `.nil` is a type
--- error.  Duplicate field names are rejected by `h_names`:
+-- A field-less record is a unit type and a one-field record is a newtype: `fields`
+-- must be a `.cons _ _ (.cons _ _ _)`, so neither `.nil` nor a single `.cons` is a
+-- `LeanRecordSchema`.  `structure Wrapper where x : Nat` therefore has no record of
+-- its own — it *is* `Ty.nat`:
+def wrapper : Ty := .nat
+
+-- Duplicate field names are rejected by `h_names`:
 example : fieldShapeOk [nes!"x", nes!"x"] = false := by decide
 
 /-! ## Tagged union — `Option`, `Prod` -/
@@ -135,11 +140,11 @@ example :
          (nes!"node", [(nes!"v", false, true), (nes!"kid", true, false)])]
       = true := by decide
 
-/-! ## Recursive record — `structure Rose where v : Int; kids : Array Rose` -/
+/-! ## Recursive record — `structure Tree where v : Int; kids : Array Tree` -/
 
-def rose : Ty :=
+def treeRecord : Ty :=
   .recObject
-    { name   := nes!"Rose"
+    { name   := nes!"Tree"
       fields := .cons (nes!"v") (.ty .int) (.cons (nes!"kids") (.array .self) .nil) }
 
 /-! Rejected: `structure S where s : S` is uninhabited — the self occurrence is
@@ -152,6 +157,37 @@ example : recObjectShapeOk [(nes!"s", true, false)] = false := by decide
 
 /-! Rejected: a "recursive" record that never mentions itself is a `Ty.record`. -/
 example : recObjectShapeOk [(nes!"v", false, true)] = false := by decide
+
+/-! ## Recursive newtype — `structure Rose where kids : Array Rose`
+
+One constructor with exactly one field is a wrapper, and wrappers are erased: a `Rose`
+is *not* `{ _kids: […] }` but simply `[…]`, an array of arrays of …  A one-field
+`LeanRecObjectSchema` cannot even be written (`fields` needs two `.cons`es); the shape
+is `Ty.recAlias`, whose body is the field's type with `.self` marking the recursion. -/
+
+def rose : Ty := .recAlias { name := nes!"Rose", body := .array .self }
+
+example : rose.pretty = "(recAlias Rose (array self))" := by decide
+
+/-! `structure UnitTree where val : Unit; kids : Array UnitTree` is the same type: the
+`Unit`-typed field is unrepresentable and is erased, which leaves a one-field wrapper,
+which is erased in turn. -/
+example : (Ty.recAlias { name := nes!"UnitTree", body := .array .self }).pretty
+    = "(recAlias UnitTree (array self))" := by decide
+
+/-! Rejected: `structure S where s : S`.  Its body would be `SelfTy.self`, whose
+`avoidsSelf` index is `false`, so it is not a legal `body`; and indeed `S` has no
+values.  The same goes for `structure S where s : Thunk S` (`.thunk .self`, again
+`avoidsSelf = false`).
+
+```lean
+def bad : Ty := .recAlias { name := nes!"S", body := .self }        -- type error
+def bad' : Ty := .recAlias { name := nes!"S", body := .thunk .self } -- type error
+```
+
+Rejected too: a one-field wrapper that does *not* mention itself is erased completely
+(`structure Wrapper where x : Nat` is `Ty.nat`), so a `body` of index `usesSelf =
+false`, such as `.ty .nat`, is a type error as well. -/
 
 /-! ## Mutual families -/
 
@@ -179,15 +215,47 @@ example : famShapeOk colorShapeShape = false := by decide
 ```lean
 mutual
   inductive Exp  | lit (n : Int) | block (s : Stm)
-  inductive Stm  | ret (e : Exp)
+  inductive Stm  | nop | ret (e : Exp)
 end
 ``` -/
 def expStmShape : FamShape :=
   [ (nes!"Exp", [ (nes!"Exp.lit", [(nes!"n", .nonRec)])
                 , (nes!"Exp.block", [(nes!"s", .recAt 1)]) ])
-  , (nes!"Stm", [ (nes!"Stm.ret", [(nes!"e", .recAt 0)]) ]) ]
+  , (nes!"Stm", [ (nes!"Stm.nop", [])
+                , (nes!"Stm.ret", [(nes!"e", .recAt 0)]) ]) ]
 
 example : famShapeOk expStmShape = true := by decide
+
+/-! A member of a family may be a **newtype**, and then it is an *alias member*: a
+member with one constructor carrying one field has no object of its own, so a value of
+it is a value of its single field — the mutual analogue of `Ty.recAlias`.  Dropping
+`Stm.nop` from the block above makes `Stm` such a member, and the block is still
+accepted (`Stm` is then simply `Exp`): -/
+def expStmAliasShape : FamShape :=
+  [ (nes!"Exp", [ (nes!"Exp.lit", [(nes!"n", .nonRec)])
+                , (nes!"Exp.block", [(nes!"s", .recAt 1)]) ])
+  , (nes!"Stm", [ (nes!"Stm.ret", [(nes!"e", .recAt 0)]) ]) ]
+
+example : famIsAliasMember expStmAliasShape 1 = true := by decide
+example : famIsAliasMember expStmAliasShape 0 = false := by decide
+example : famShapeOk expStmAliasShape = true := by decide
+
+/-! An alias member must still be *buildable*: a cycle of unguarded aliases has no
+values at all, and is rejected by the inhabitation check. -/
+def aliasCycleShape : FamShape :=
+  [ (nes!"A", [ (nes!"A.mk", [(nes!"b", .recAt 1)]) ])
+  , (nes!"B", [ (nes!"B.mk", [(nes!"a", .recAt 0)]) ]) ]
+
+example : famWellFoundedOk aliasCycleShape = false := by decide
+example : famShapeOk aliasCycleShape = false := by decide
+
+/-! Guarded, the same cycle is fine: `A = Array B`, `B = Array A`, i.e. nested JS
+arrays, and `A = []` is a value. -/
+def aliasCycleGuardedShape : FamShape :=
+  [ (nes!"A", [ (nes!"A.mk", [(nes!"b", .recUnder .array 1)]) ])
+  , (nes!"B", [ (nes!"B.mk", [(nes!"a", .recUnder .array 0)]) ]) ]
+
+example : famShapeOk aliasCycleGuardedShape = true := by decide
 
 /-- Member `0` (`Exp`) of that block.  Note that the *non-recursive* fields carry real
 `Ty`s (`Exp.lit` holds an `.int`), which the old family schema could not express. -/
@@ -200,7 +268,8 @@ def expTy : Ty :=
           (.cons (nes!"Exp.lit") (.consTy (nes!"n") .int .nil)
             (.cons (nes!"Exp.block") (.consRec (nes!"s") 1 .nil) .nil))
           (.cons (nes!"Stm")
-            (.cons (nes!"Stm.ret") (.consRec (nes!"e") 0 .nil) .nil) .nil) }
+            (.cons (nes!"Stm.nop") .nil
+              (.cons (nes!"Stm.ret") (.consRec (nes!"e") 0 .nil) .nil)) .nil) }
 
 /-- Member `1` (`Stm`) of the same block. -/
 def stmTy : Ty :=
@@ -212,7 +281,8 @@ def stmTy : Ty :=
           (.cons (nes!"Exp.lit") (.consTy (nes!"n") .int .nil)
             (.cons (nes!"Exp.block") (.consRec (nes!"s") 1 .nil) .nil))
           (.cons (nes!"Stm")
-            (.cons (nes!"Stm.ret") (.consRec (nes!"e") 0 .nil) .nil) .nil) }
+            (.cons (nes!"Stm.nop") .nil
+              (.cons (nes!"Stm.ret") (.consRec (nes!"e") 0 .nil) .nil)) .nil) }
 
 -- There is no member `2`: `member := 2` fails `h_member`.
 example : ¬ (2 < expStmShape.length) := by decide
@@ -245,10 +315,11 @@ example : famWellFoundedOk uninhabitedShape = false := by decide
 example : famShapeOk uninhabitedShape = false := by decide
 
 /-! Guarding makes the same block well-founded: `A.mk` holds an `Array B`, which may be
-empty. -/
+empty.  Each member needs a second field (or a second constructor) as well, since a
+one-field member would be a newtype. -/
 def guardedShape : FamShape :=
-  [ (nes!"A", [ (nes!"A.mk", [(nes!"bs", .recUnder .array 1)]) ])
-  , (nes!"B", [ (nes!"B.mk", [(nes!"a", .recAt 0)]) ]) ]
+  [ (nes!"A", [ (nes!"A.mk", [(nes!"bs", .recUnder .array 1), (nes!"n", .nonRec)]) ])
+  , (nes!"B", [ (nes!"B.mk", [(nes!"a", .recAt 0), (nes!"m", .nonRec)]) ]) ]
 
 example : famWellFoundedOk guardedShape = true := by decide
 example : famShapeOk guardedShape = true := by decide

@@ -22,11 +22,14 @@ derive_ty Prod   as Ty.prod     -- def Ty.prod   : Ty → Ty → Ty
 ```
 
 The command reads the constructors of the declaration exactly as `lean_ty%` does —
-same classification into the six shapes, same tags, same field names, same
-translation of field types — with one addition: a type parameter of the declaration
-translates to the corresponding `Ty` argument of the generated function.  So the
-schema is *derived* from Lean's own `Option`/`Prod`, and cannot silently drift from
-them: if `Option`'s field were renamed from `val`, the generated JS field name would
+same classification into the shapes, same tags, same field names, same erasure of
+unit-like fields and of newtype wrappers, same translation of field types — with one
+addition: a type parameter of the declaration translates to the corresponding `Ty`
+argument of the generated function.  So `derive_ty Id as Ty.id` for
+`structure Id (α) where val : α` generates `fun α0 => α0`: a wrapper is its field.
+
+The schema is therefore *derived* from Lean's own `Option`/`Prod`, and cannot silently
+drift from them: if `Option`'s field were renamed from `val`, the generated JS field name would
 follow.
 
 ## What is supported
@@ -106,13 +109,13 @@ meta def paramFieldRowSyn : List (String × Expr) → MetaM Term
       `(FieldRow.cons $(← nesSyn nm) $(← tyOfExpr [] t) $(← paramFieldRowSyn rest))
 
 /-- A `CtorRow` of non-recursive constructors. -/
-meta def paramCtorRowSyn (self : Name) (params : Array Expr) :
-    List Name → MetaM Term
+meta def paramCtorRowSyn (self : Name) :
+    List (Name × List (String × Expr)) → MetaM Term
   | [] => `(CtorRow.nil)
-  | c :: rest => do
+  | (c, fs) :: rest => do
       `(CtorRow.cons $(← nesSyn (ctorTag false self c))
-          $(← paramFieldRowSyn (← paramCtorFields params c))
-          $(← paramCtorRowSyn self params rest))
+          $(← paramFieldRowSyn fs)
+          $(← paramCtorRowSyn self rest))
 
 /-- The `SelfTy` of a field of a recursive parameterised declaration. -/
 meta partial def paramSelfTyOfExpr (self : Name) (params : Array Expr) (e₀ : Expr) :
@@ -155,14 +158,29 @@ meta def paramSelfFieldRowSyn (self : Name) (params : Array Expr) :
           $(← paramSelfFieldRowSyn self params rest))
 
 /-- A `RecCtorRow`. -/
-meta def paramRecCtorRowSyn (self : Name) (params : Array Expr) : List Name → MetaM Term
+meta def paramRecCtorRowSyn (self : Name) (params : Array Expr) :
+    List (Name × List (String × Expr)) → MetaM Term
   | [] => `(RecCtorRow.nil)
-  | c :: rest => do
+  | (c, fs) :: rest => do
       `(RecCtorRow.cons $(← nesSyn (ctorTag false self c))
-          $(← paramSelfFieldRowSyn self params (← paramCtorFields params c))
+          $(← paramSelfFieldRowSyn self params fs)
           $(← paramRecCtorRowSyn self params rest))
 
 /-! ## The body of the generated definition -/
+
+/-- Erase the unit-like fields of a constructor of a parameterised declaration;
+    `none` when a field is void-like, so the constructor can never be applied. -/
+meta def eraseParamFields :
+    List (String × Expr) → MetaM (Option (List (String × Expr)))
+  | [] => return some []
+  | (nm, t) :: rest => do
+      match ← normOfExpr [] t with
+      | .void   => return none
+      | .erased => eraseParamFields rest
+      | .keep e =>
+          match ← eraseParamFields rest with
+          | none   => return none
+          | some r => return some ((nm, e) :: r)
 
 /-- The `Ty` of the declaration `self`, with its type parameters standing for the
     arguments of the generated function.  Same classification as `LakeJs.TyMeta`: the
@@ -178,14 +196,28 @@ meta def deriveTyBody (self : Name) (params : Array Expr) : MetaM Term := do
       parameters of its members"
   if iv.ctors.isEmpty then
     throwError "'{self}' is a void type: it has no values, so it has no representation"
-  let ctors ← iv.ctors.mapM fun c => do return (c, ← paramCtorFields params c)
+  let mut ctors : List (Name × List (String × Expr)) := []
+  for c in iv.ctors do
+    if let some fs ← eraseParamFields (← paramCtorFields params c) then
+      ctors := ctors ++ [(c, fs)]
   let anyField := ctors.any fun (_, fs) => !fs.isEmpty
   let selfRec := ctors.any fun (_, fs) => fs.any fun (_, t) => mentionsAny [self] t
   let nameSyn ← nesSyn (shortName self)
   match ctors with
+  | [] =>
+      throwError "'{self}' is a void type: every constructor has a field that cannot be \
+        built, so it has no values"
+  | [(_, [])] =>
+      throwError "'{self}' is a unit type: it carries no information and is erased"
+  | [(_, [(_, t)])] =>
+      -- a newtype: the wrapper has no runtime representation
+      if selfRec then
+        `(Ty.recAlias ({ name := $nameSyn
+                       , body := $(← paramSelfTyOfExpr self params t)
+                       } : LeanRecAliasSchema Ty))
+      else
+        tyOfExpr [] t
   | [(_, fs)] =>
-      if !anyField then
-        throwError "'{self}' is a unit type: it carries no information and is erased"
       if selfRec then
         `(Ty.recObject ({ name := $nameSyn
                         , fields := $(← paramSelfFieldRowSyn self params fs)
@@ -195,7 +227,7 @@ meta def deriveTyBody (self : Name) (params : Array Expr) : MetaM Term := do
                      , fields := $(← paramFieldRowSyn fs) } : LeanRecordSchema Ty))
   | _ =>
       if !anyField then
-        match iv.ctors.map (fun c => ctorTag false self c) with
+        match ctors.map (fun c => ctorTag false self c.1) with
         | t1 :: t2 :: rest => do
             let restSyn ← rest.toArray.mapM nesSyn
             `(Ty.enum ({ name := $nameSyn
@@ -204,11 +236,11 @@ meta def deriveTyBody (self : Name) (params : Array Expr) : MetaM Term := do
         | _ => throwError "'{self}' has fewer than two constructors"
       else if selfRec then
         `(Ty.recTaggedUnion ({ name := $nameSyn
-                             , ctors := $(← paramRecCtorRowSyn self params iv.ctors)
+                             , ctors := $(← paramRecCtorRowSyn self params ctors)
                              } : LeanRecTaggedUnionSchema Ty))
       else
         `(Ty.taggedUnion ({ name := $nameSyn
-                          , ctors := $(← paramCtorRowSyn self params iv.ctors)
+                          , ctors := $(← paramCtorRowSyn self ctors)
                           } : LeanTaggedUnionSchema Ty))
 
 /-- `Ty → Ty → … → Ty`, with `n` arguments. -/

@@ -13,12 +13,15 @@ open NonEmpty.String
 
 Four decisions are baked into `Ty`:
 
-* **no unit types and no void types.**  A type with exactly one value carries no
-  information and is erased before it ever reaches `Ty`; a type with no values at all
-  has no runtime representation.  So there is no `Ty.unit` and no `Ty.void`, and no
-  unit-like or void-like shape can be built (an enum needs ≥ 2 constructors, a record
-  needs ≥ 1 field, `bitvec n` needs `n ≥ 1`, every member of a mutual family must be
-  inhabited, …).
+* **no unit types, no void types and no newtypes.**  A type with exactly one value
+  carries no information and is erased before it ever reaches `Ty`; a type with no
+  values at all has no runtime representation; and a one-field wrapper *is* its
+  field, so it is erased too.  So there is no `Ty.unit`, no `Ty.void` and no one-field
+  record: an enum needs ≥ 2 constructors, a record needs ≥ 2 fields, `bitvec n` needs
+  `n ≥ 1`, every member of a mutual family must be inhabited and none of them may be a
+  wrapper.  `structure Rose where kids : Array Rose` — a *recursive* wrapper — is not
+  an object either: it is the fixed point `Rose = Array Rose`, i.e. a JS array of
+  arrays of …, which is what `Ty.recAlias` denotes.
 
 * **leaves live in `PrimTy`.**  Every terminal type (`bool`, `nat`, `uint32`,
   `bitvec n`, `string`, …) is a constructor of `LakeJs.PrimTy`, and `Ty` embeds them
@@ -42,8 +45,12 @@ Four decisions are baked into `Ty`:
 | `structure Point where x, y`              | no      | no         | `Ty.record`                |
 | `inductive Option \| none \| some …`      | no      | no         | `Ty.taggedUnion`           |
 | `inductive MyList \| nil \| cons …`       | no      | yes        | `Ty.recTaggedUnion`        |
-| `structure Rose where kids : Array Rose`  | no      | yes        | `Ty.recObject`             |
+| `structure Tree where n; kids : Array Tree` | no    | yes        | `Ty.recObject`             |
+| `structure Rose where kids : Array Rose`  | no      | yes        | `Ty.recAlias`              |
 | a genuinely mutual block                  | yes     | yes        | `Ty.mutualRecursiveFamily` |
+
+A one-constructor, one-field declaration that is *not* recursive has no row at all:
+`structure Wrapper where x : Nat` is `Ty.nat`.
 
 They are disjoint: see `LakeJs.Schemas`.  `Option` and `Prod` are *derived*
 (`Ty.option`, `Ty.prod`), not primitive.
@@ -74,8 +81,9 @@ inductive Ty where
   /-- Non-mutual, non-recursive enum (no fields).  In JS: `"north" | "south"` or
       `0 | 1`. -/
   | enum : LeanEnumSchema → Ty
-  /-- Non-mutual, non-recursive single-constructor record.  In JS:
-      `{ _x: …, _y: … }`. -/
+  /-- Non-mutual, non-recursive single-constructor record with ≥ 2 fields.  In JS:
+      `{ _x: …, _y: … }`.  A *one*-field record is a newtype: it is erased, and its
+      `Ty` is the field's own `Ty`. -/
   | record : LeanRecordSchema Ty → Ty
   /-- Non-mutual, non-recursive sum type with fields (`Option`, `Except`, …).
       In JS: `{ tag: …, _1: … }`. -/
@@ -83,10 +91,19 @@ inductive Ty where
   /-- Non-mutual recursive sum type (`MyList`, a tree, …).  In JS: `{ tag: …, … }`.
       The built-in `List` uses `Ty.list`; a user-written `MyList` uses this. -/
   | recTaggedUnion : LeanRecTaggedUnionSchema Ty → Ty
-  /-- Non-mutual recursive record (`structure Rose where kids : Array Rose`).
-      In JS: `{ _kids: […] }`. -/
+  /-- Non-mutual recursive record with ≥ 2 fields
+      (`structure Tree where n : Nat; kids : Array Tree`).
+      In JS: `{ _n: …, _kids: […] }`. -/
   | recObject : LeanRecObjectSchema Ty → Ty
-  /-- One member of a genuinely mutual recursive family.  *Which* member, and the
+  /-- Non-mutual recursive **newtype**, with the wrapper erased
+      (`structure Rose where kids : Array Rose`): the fixed point of the single
+      field's type.  In JS a `Rose` is just `[…]`, an array of arrays of …, with no
+      object wrapper — `[[], [[], []]]` is a `Rose`. -/
+  | recAlias : LeanRecAliasSchema Ty → Ty
+  /-- One member of a genuinely mutual recursive family.  A member that is a newtype
+      is an *alias member*: like `Ty.recAlias`, it has no object of its own, and a
+      value of it is a value of its single field (`famIsAliasMember`).  *Which*
+      member, and the
       proof that it exists, are fields of the schema (`fam.member`,
       `fam.h_member`) rather than extra arguments here: see `LeanMutualRecFamily`
       for why the kernel rules out `… → (member : Nat) → (h : member < fam.numMembers)
@@ -179,6 +196,8 @@ abbrev LeanTaggedUnion := LeanTaggedUnionSchema Ty
 abbrev LeanRecTaggedUnion := LeanRecTaggedUnionSchema Ty
 /-- The schema of a compiled non-mutual recursive Lean `structure`. -/
 abbrev LeanRecObject := LeanRecObjectSchema Ty
+/-- The schema of a compiled non-mutual recursive Lean newtype, wrapper erased. -/
+abbrev LeanRecAlias := LeanRecAliasSchema Ty
 /-- The schema of one member of a compiled genuinely mutual block. -/
 abbrev LeanMutualFamily := LeanMutualRecFamily Ty
 

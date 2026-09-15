@@ -92,17 +92,39 @@ example :
     rendered (myList.toTy)
       = some "(recTaggedUnion MyList nil{}|cons{hd:int tl:self})" := by decide
 
-/-- `structure Rose where v : Int; kids : Array Rose` -/
-def rose : SrcDecl :=
-  { block := [{ name := nes!"Rose"
-              , ctors := [ { tag := nes!"Rose.mk"
+/-- `structure Tree where v : Int; kids : Array Tree` — two fields, so a real object. -/
+def tree : SrcDecl :=
+  { block := [{ name := nes!"Tree"
+              , ctors := [ { tag := nes!"Tree.mk"
                            , fields := [(nes!"v", .ext .int), (nes!"kids", .array (.ref 0))] } ] }]
     member := 0 }
 
-example : classify rose = some .recObject := by decide
+example : classify tree = some .recObject := by decide
 example :
-    rendered (rose.toTy)
-      = some "(recObject Rose v:int kids:(array self))" := by decide
+    rendered (tree.toTy)
+      = some "(recObject Tree v:int kids:(array self))" := by decide
+
+/-- `structure Rose where kids : Array Rose` — one field, so a **newtype**: the wrapper
+    is erased and a `Rose` is just a JS array of arrays of … -/
+def rose : SrcDecl :=
+  { block := [{ name := nes!"Rose"
+              , ctors := [ { tag := nes!"Rose.mk"
+                           , fields := [(nes!"kids", .array (.ref 0))] } ] }]
+    member := 0 }
+
+example : classify rose = some .recAlias := by decide
+example : rendered (rose.toTy) = some "(recAlias Rose (array self))" := by decide
+
+/-- A **non-recursive** newtype has no shape at all: `structure Wrapper where x : Nat`
+    *is* `Nat`. -/
+def wrapperNat : SrcDecl :=
+  { block := [{ name := nes!"Wrapper"
+              , ctors := [{ tag := nes!"Wrapper.mk", fields := [(nes!"x", .ext .nat)] }] }]
+    member := 0 }
+
+example : classify wrapperNat = none := by decide
+example : supported wrapperNat = true := by decide
+example : rendered (wrapperNat.toTy) = some "nat" := by decide
 
 /-- An infinitely branching constructor, `| lim : (Nat → Ord) → Ord`, is in the
     fragment: the family occurs in the *result* of the function. -/
@@ -134,6 +156,62 @@ def voidLike : SrcDecl :=
 example : classify voidLike = none := by decide
 example : rejected (voidLike.toTy) = some .voidMember := by decide
 
+/-! ## Erasing unit-like and void-like fields
+
+These examples are `RawDecl`s — the declaration as the front-end reads it, before
+erasure. -/
+
+/-- `structure UnitTree where val : Unit; kids : Array UnitTree`.  The `Unit` field is
+    unrepresentable and disappears, which leaves the one-field wrapper `Rose`, which is
+    erased in turn: the result is the same fixed point as `rose` above. -/
+def unitTree : RawDecl :=
+  { block := [{ name := nes!"Rose"
+              , ctors := [ { tag := nes!"Rose.mk"
+                           , fields := [ (nes!"val", .unitLike)
+                                       , (nes!"kids", .array (.ref 0)) ] } ] }]
+    member := 0 }
+
+example : unitTree.erase = rose := rfl
+example : unitTree.classify = some .recAlias := by decide
+example : rendered unitTree.toTy = some "(recAlias Rose (array self))" := by decide
+
+/-- Containers of erased types are rewritten rather than dropped:
+    `structure Counts where flags : Array Unit; opt : Option Unit; pair : Unit × Int` is
+    `{ _flags: number, _opt: boolean, _pair: number }`. -/
+def counts : RawDecl :=
+  { block := [{ name := nes!"Counts"
+              , ctors := [ { tag := nes!"Counts.mk"
+                           , fields := [ (nes!"flags", .array .unitLike)
+                                       , (nes!"opt", .option .unitLike)
+                                       , (nes!"pair", .prod .unitLike (.ext .int)) ] } ] }]
+    member := 0 }
+
+example : rendered counts.toTy
+    = some "(record Counts flags:nat opt:bool pair:int)" := by decide
+
+/-- A constructor with a void-like field can never be applied, so it disappears:
+    `inductive R | bad (x : Empty) (y : Int) | good (v : Int)` is not a tagged union
+    but the wrapper `R = Int`, erased to `Int`. -/
+def withVoidCtor : RawDecl :=
+  { block := [{ name := nes!"R"
+              , ctors := [ { tag := nes!"bad"
+                           , fields := [(nes!"x", .voidLike), (nes!"y", .ext .int)] }
+                         , { tag := nes!"good", fields := [(nes!"v", .ext .int)] } ] }]
+    member := 0 }
+
+example : rendered withVoidCtor.toTy = some "int" := by decide
+
+/-- A declaration all of whose fields are unit-like is itself unit-like, and is
+    rejected: `structure Both where a : Unit; b : Unit`. -/
+def allUnit : RawDecl :=
+  { block := [{ name := nes!"Both"
+              , ctors := [{ tag := nes!"Both.mk"
+                          , fields := [(nes!"a", .unitLike), (nes!"b", .unitLike)] }] }]
+    member := 0 }
+
+example : rejected allUnit.toTy = some .unitLikeMember := by decide
+example : rawSupported allUnit = false := by decide
+
 /-- A recursive declaration with no base constructor is not well-founded, so it has no
     values and is rejected: `inductive Bad | l (x : Bad) | r (x : Bad)`. -/
 def noBase : SrcDecl :=
@@ -145,13 +223,24 @@ def noBase : SrcDecl :=
 example : rejected (noBase.toTy) = some .notWellFounded := by decide
 example : supported noBase = false := by decide
 
-/-- `structure S where s : S` — an unguarded self occurrence in a record. -/
+/-- `structure S where s : S` — an unguarded self occurrence in a (one-field) record.
+    Erasing the wrapper would leave the equation `S = S`, which has no values. -/
 def unguarded : SrcDecl :=
   { block := [{ name := nes!"S"
               , ctors := [{ tag := nes!"S.mk", fields := [(nes!"s", .ref 0)] }] }]
     member := 0 }
 
 example : rejected (unguarded.toTy) = some .notWellFounded := by decide
+
+/-- The same with a second field: `structure S2 where n : Int; s : S2`.  Now it is a
+    recursive *record*, and it is rejected for the same reason. -/
+def unguarded2 : SrcDecl :=
+  { block := [{ name := nes!"S2"
+              , ctors := [{ tag := nes!"S2.mk"
+                          , fields := [(nes!"n", .ext .int), (nes!"s", .ref 0)] }] }]
+    member := 0 }
+
+example : rejected (unguarded2.toTy) = some .notWellFounded := by decide
 
 /-! ## Mutual blocks -/
 
@@ -164,7 +253,8 @@ def expStm : SrcBlock :=
                  , fields := [(nes!"ss", .array (.array (.ref 1)))] } ] }
   , { name := nes!"Stm"
     , ctors := [ { tag := nes!"Stm.ret"
-                 , fields := [(nes!"e", .prod (.ext .int) (.ref 0))] } ] } ]
+                 , fields := [ (nes!"e", .prod (.ext .int) (.ref 0))
+                             , (nes!"label", .ext .string) ] } ] } ]
 
 example : isGenuinelyMutual expStm = true := by decide
 example : classify { block := expStm, member := 0 } = some .mutualFamily := by decide
@@ -205,13 +295,75 @@ def wrapAlone : SrcDecl :=
         , ctors :=
             [{ tag := nes!"Wrap.mk"
              , fields :=
-                 [(nes!"inner"
-                  , .ext (.record { name := nes!"Inner", fields := .cons (nes!"v") .int .nil }))] }] } ]
+                 [ (nes!"inner"
+                   , .ext (.record { name := nes!"Inner"
+                                   , fields := .cons (nes!"v") .int
+                                                 (.cons (nes!"w") .int .nil) }))
+                 , (nes!"tag", .ext .string) ] }] } ]
     member := 0 }
 
 example :
     rendered (wrapAlone.toTy)
-      = some "(record Wrap inner:(record Inner v:int))" := by
+      = some "(record Wrap inner:(record Inner v:int w:int) tag:string)" := by
+  decide
+
+/-- With only the one field, `Wrap` is a newtype and disappears entirely: its `Ty` is
+    `Inner`'s own record. -/
+def wrapNewtype : SrcDecl :=
+  { block :=
+      [ { name := nes!"Wrap"
+        , ctors :=
+            [{ tag := nes!"Wrap.mk"
+             , fields :=
+                 [(nes!"inner"
+                  , .ext (.record { name := nes!"Inner"
+                                  , fields := .cons (nes!"v") .int
+                                                (.cons (nes!"w") .int .nil) }))] }] } ]
+    member := 0 }
+
+example : classify wrapNewtype = none := by decide
+example :
+    rendered (wrapNewtype.toTy) = some "(record Inner v:int w:int)" := by decide
+
+/-- A member of a genuinely mutual block may be a newtype, and then it is an **alias
+    member**: `Stm` here has one constructor with one field, so it has no object of its
+    own and a `Stm` simply *is* an `Exp`.  The block is accepted. -/
+def expStmAlias : SrcBlock :=
+  [ { name := nes!"Exp"
+    , ctors := [ { tag := nes!"Exp.lit", fields := [(nes!"n", .ext .int)] }
+               , { tag := nes!"Exp.block"
+                 , fields := [(nes!"ss", .array (.array (.ref 1)))] } ] }
+  , { name := nes!"Stm"
+    , ctors := [ { tag := nes!"Stm.ret", fields := [(nes!"e", .ref 0)] } ] } ]
+
+example : famIsAliasMember (blockShape expStmAlias) 1 = true := by decide
+example : classify { block := expStmAlias, member := 0 } = some .mutualFamily := by decide
+example : supported { block := expStmAlias, member := 0 } = true := by decide
+example :
+    ({ block := expStmAlias, member := 1 } : SrcDecl).toTy.toOption.isSome = true := by
+  decide
+
+/-- Two alias members whose occurrences are *unguarded* form a block with no values at
+    all (`A = B`, `B = A`), and that is rejected — by the inhabitation check, not by a
+    ban on newtypes. -/
+def aliasCycle : SrcBlock :=
+  [ { name := nes!"A", ctors := [{ tag := nes!"A.mk", fields := [(nes!"b", .ref 1)] }] }
+  , { name := nes!"B", ctors := [{ tag := nes!"B.mk", fields := [(nes!"a", .ref 0)] }] } ]
+
+example :
+    rejected (({ block := aliasCycle, member := 0 } : SrcDecl).toTy)
+      = some .familyIllFormed := by decide
+
+/-- Guarded, the same block is fine: `A = Array B` and `B = Array A`, i.e. nested JS
+    arrays, with `[]` as a value of either. -/
+def aliasCycleGuarded : SrcBlock :=
+  [ { name := nes!"A"
+    , ctors := [{ tag := nes!"A.mk", fields := [(nes!"b", .array (.ref 1))] }] }
+  , { name := nes!"B"
+    , ctors := [{ tag := nes!"B.mk", fields := [(nes!"a", .array (.ref 0))] }] } ]
+
+example :
+    ({ block := aliasCycleGuarded, member := 0 } : SrcDecl).toTy.toOption.isSome = true := by
   decide
 
 /-! ## Out of range -/

@@ -165,6 +165,199 @@ theorem isEmpty_append {α : Type} (xs ys : List α) :
     kindAvoids (.prod k₁ k₂) = (kindAvoids k₁ && kindAvoids k₂) := by
   simp [kindAvoids, FamFieldKind.requires, isEmpty_append]
 
+/-! ## Erasing unit-like and void-like types
+
+No `Ty` is unit-like or void-like, so a field of such a type has no translation — but
+that is not a reason to reject the declaration.  A unit-like field carries no
+information and is **erased**; a void-like field makes its constructor impossible, so
+the *constructor* is erased.  The same applies inside the built-in containers, where
+erasing the element type changes the container:
+
+| source type | erased to | why |
+| :-- | :-- | :-- |
+| `Array Unit`, `List Unit` | `Nat` | only the length is left |
+| `Array Empty`, `List Empty` | unit-like | only the empty one exists |
+| `Option Unit` | `Bool` | `none` or `some ()` |
+| `Option Empty` | unit-like | only `none` exists |
+| `Thunk Unit`, `Task Unit`, `α → Unit` | unit-like | the result is the only value |
+| `Thunk Empty`, `Task Empty`, `α → Empty` | void-like | cannot be produced |
+| `Unit × α` | `α` | the left component is determined |
+| `Empty × α` | void-like | cannot be produced |
+
+The *parameters* of `SrcTy.fn` are already `Ty`s, and no `Ty` is unit-like, so a
+unit-typed parameter never reaches the model: `Unit → α` arrives as the zero-parameter
+`Ty.nullary α`, which is what the front-end produces. -/
+
+/--
+The type of one field **before** erasure: the same grammar as `SrcTy`, plus the two
+leaves that have no `Ty` at all.  This is what the front-end reads off a Lean
+declaration; `RawTy.norm` turns it into a `SrcTy`, or reports that the field, or its
+whole constructor, disappears.
+-/
+inductive RawTy where
+  /-- A type not mentioning the block; already translated, so representable. -/
+  | ext (t : Ty)
+  /-- A **unit-like** type: exactly one value (`Unit`, `PUnit`, `True`, a
+      one-constructor field-less declaration, …).  It carries no information, so it
+      has no `Ty` and the field carrying it disappears. -/
+  | unitLike
+  /-- A **void-like** type: no values at all (`Empty`, `False`, a declaration with no
+      constructor).  A constructor with such a field can never be applied. -/
+  | voidLike
+  /-- An occurrence of member `member` of the block. -/
+  | ref (member : Nat)
+  /-- `Array _`. -/
+  | array (elem : RawTy)
+  /-- `List _`. -/
+  | list (elem : RawTy)
+  /-- `Option _`. -/
+  | option (elem : RawTy)
+  /-- `Thunk _`. -/
+  | thunk (val : RawTy)
+  /-- `Task _`. -/
+  | task (val : RawTy)
+  /-- A promise. -/
+  | promise (val : RawTy)
+  /-- A function; its parameters never mention the block, and are already `Ty`s. -/
+  | fn (params : List Ty) (ret : RawTy)
+  /-- A pair. -/
+  | prod (fst snd : RawTy)
+
+/-- The result of erasing unit-like and void-like types from a field type. -/
+inductive NormTy where
+  /-- Unit-like: exactly one value, so the field disappears. -/
+  | erased
+  /-- Void-like: no values, so the enclosing constructor disappears. -/
+  | void
+  /-- Representable, as this (erased) source type. -/
+  | keep (s : SrcTy)
+  deriving Inhabited
+
+/-- Erase unit-like and void-like types from a field type, rewriting the containers
+    that survive with a different element type (`Array Unit` is a `Nat`). -/
+def RawTy.norm : RawTy → NormTy
+  | .ext t     => .keep (.ext t)
+  | .unitLike  => .erased
+  | .voidLike  => .void
+  | .ref i     => .keep (.ref i)
+  | .array t   =>
+      match t.norm with
+      | .void   => .erased
+      | .erased => .keep (.ext .nat)
+      | .keep s => .keep (.array s)
+  | .list t    =>
+      match t.norm with
+      | .void   => .erased
+      | .erased => .keep (.ext .nat)
+      | .keep s => .keep (.list s)
+  | .option t  =>
+      match t.norm with
+      | .void   => .erased
+      | .erased => .keep (.ext .bool)
+      | .keep s => .keep (.option s)
+  | .thunk t   =>
+      match t.norm with
+      | .void   => .void
+      | .erased => .erased
+      | .keep s => .keep (.thunk s)
+  | .task t    =>
+      match t.norm with
+      | .void   => .void
+      | .erased => .erased
+      | .keep s => .keep (.task s)
+  | .promise t =>
+      match t.norm with
+      | .void   => .void
+      | .erased => .erased
+      | .keep s => .keep (.promise s)
+  | .fn ps r   =>
+      match r.norm with
+      | .void   => .void
+      | .erased => .erased
+      | .keep s => .keep (.fn ps s)
+  | .prod a b  =>
+      match a.norm, b.norm with
+      | .void, _        => .void
+      | _, .void        => .void
+      | .erased, .erased => .erased
+      | .erased, .keep s => .keep s
+      | .keep s, .erased => .keep s
+      | .keep x, .keep y => .keep (.prod x y)
+
+/-- One constructor before erasure. -/
+structure RawCtor where
+  tag : NonEmptyString
+  fields : List (NonEmptyString × RawTy)
+
+/-- One member of the block before erasure. -/
+structure RawMember where
+  name : NonEmptyString
+  ctors : List RawCtor
+
+/-- A `mutual` block before erasure. -/
+abbrev RawBlock := List RawMember
+
+/-- A block before erasure, together with the member being translated. -/
+structure RawDecl where
+  block : RawBlock
+  member : Nat
+
+/-- Erase the fields of one constructor; `none` when a field is void-like, which makes
+    the constructor itself impossible. -/
+def eraseFields :
+    List (NonEmptyString × RawTy) → Option (List (NonEmptyString × SrcTy))
+  | [] => some []
+  | (n, t) :: rest =>
+      match t.norm, eraseFields rest with
+      | .void, _        => none
+      | _, none         => none
+      | .erased, some r => some r
+      | .keep s, some r => some ((n, s) :: r)
+
+/-- Erase one constructor: `none` when it can never be applied. -/
+def RawCtor.erase (c : RawCtor) : Option SrcCtor :=
+  (eraseFields c.fields).map fun fs => { tag := c.tag, fields := fs }
+
+/-- Erase one member: impossible constructors go, and so do unit-like fields.  A
+    member all of whose constructors disappear is void-like, and a member left with one
+    field-less constructor is unit-like; both are rejected by the translation, which is
+    where those two cases belong — as is the one left with a single one-field
+    constructor, which is a newtype and is erased in turn. -/
+def RawMember.erase (m : RawMember) : SrcMember :=
+  { name := m.name, ctors := m.ctors.filterMap RawCtor.erase }
+
+/-- Erase a whole block, member by member. -/
+def eraseBlock (b : RawBlock) : SrcBlock := b.map RawMember.erase
+
+/-- Erase a declaration.  Everything downstream — the shapes, the observables and the
+    translation — reads the *erased* declaration, which is an ordinary `SrcDecl`. -/
+def RawDecl.erase (d : RawDecl) : SrcDecl :=
+  { block := eraseBlock d.block, member := d.member }
+
+@[simp] theorem eraseBlock_length (b : RawBlock) : (eraseBlock b).length = b.length := by
+  simp [eraseBlock]
+
+/-- Every `SrcTy` is already erased: the embedding into `RawTy` normalises to itself. -/
+def SrcTy.toRaw : SrcTy → RawTy
+  | .ext t     => .ext t
+  | .ref i     => .ref i
+  | .array t   => .array t.toRaw
+  | .list t    => .list t.toRaw
+  | .option t  => .option t.toRaw
+  | .thunk t   => .thunk t.toRaw
+  | .task t    => .task t.toRaw
+  | .promise t => .promise t.toRaw
+  | .fn ps r   => .fn ps r.toRaw
+  | .prod a b  => .prod a.toRaw b.toRaw
+
+theorem norm_toRaw (s : SrcTy) : s.toRaw.norm = .keep s := by
+  induction s with
+  | ext t | ref i => rfl
+  | array t ih | list t ih | option t ih | thunk t ih | task t ih | promise t ih =>
+      simp [SrcTy.toRaw, RawTy.norm, ih]
+  | fn ps r ih => simp [SrcTy.toRaw, RawTy.norm, ih]
+  | prod a b iha ihb => simp [SrcTy.toRaw, RawTy.norm, iha, ihb]
+
 /-! ## The shape of a block
 
 `FamShape` is the common currency: the mutual schema is indexed by it, and the
@@ -204,8 +397,17 @@ def mentionsForeign (m : SrcMember) (self : Nat) : Bool :=
 /-- Does some constructor of the member carry a field? -/
 def memberHasFields (m : SrcMember) : Bool := m.ctors.any (fun c => !c.fields.isEmpty)
 
-/-- The four observables of the denoted member.  For a genuinely mutual block both
-    `isMutual` and `isRecursive` are `true`, as in `familyDescriptor`. -/
+/-- Is the member a **newtype**: exactly one constructor, carrying exactly one field?
+    Read on the *erased* member, so a declaration becomes a wrapper as soon as its
+    other fields are unit-like. -/
+def memberIsWrapper (m : SrcMember) : Bool :=
+  match m.ctors with
+  | [c] => c.fields.length == 1
+  | _   => false
+
+/-- The five observables of the denoted member of an **erased** declaration.  For a
+    genuinely mutual block both `isMutual` and `isRecursive` are `true`, as in
+    `familyDescriptor`. -/
 def descriptor (d : SrcDecl) : Option ShapeDescriptor :=
   match d.block[d.member]? with
   | none   => none
@@ -214,22 +416,31 @@ def descriptor (d : SrcDecl) : Option ShapeDescriptor :=
       some { isMutual := mut_
            , isRecursive := mut_ || memberMentions m d.member
            , numCtors := m.ctors.length
-           , hasFields := memberHasFields m }
+           , hasFields := memberHasFields m
+           , isWrapper := memberIsWrapper m }
+
+/-- The observables of a declaration as the front-end reads it, i.e. after erasure. -/
+def RawDecl.descriptor (d : RawDecl) : Option ShapeDescriptor := Source.descriptor d.erase
 
 /--
-**The classification algorithm.**  There is only one, and it is a function of the
-four observables alone: `ShapeDescriptor.class?`.  `none` means "not representable":
-the member index is out of range, the member is *void* (no constructors) or the
-member is *unit-like* (one constructor, no fields).
+**The classification algorithm**, on an already-erased declaration.  There is only
+one, and it is a function of the five observables alone: `ShapeDescriptor.class?`.
+`none` means "no shape of its own": the member index is out of range, the member is
+*void* (no constructors), the member is *unit-like* (one constructor, no fields), or
+the member is a non-recursive *wrapper*, in which case its `Ty` is its single field's
+`Ty`.
 -/
 def classify (d : SrcDecl) : Option ShapeClass :=
   match descriptor d with
   | none => none
   | some desc =>
-      if desc.isMutual then some desc.class?
+      if desc.isMutual then desc.class?
       else if desc.numCtors = 0 then none
       else if desc.numCtors = 1 && !desc.hasFields then none
-      else some desc.class?
+      else desc.class?
+
+/-- The classification of a declaration as the front-end reads it, erasure included. -/
+def RawDecl.classify (d : RawDecl) : Option ShapeClass := Source.classify d.erase
 
 /-- The classification of a member that is *not* part of a genuine mutual block —
     the same function of the same observables, with `isMutual := false`. -/
@@ -238,10 +449,11 @@ def singleClass (self : Nat) (m : SrcMember) : Option ShapeClass :=
     { isMutual := false
       isRecursive := memberMentions m self
       numCtors := m.ctors.length
-      hasFields := memberHasFields m }
+      hasFields := memberHasFields m
+      isWrapper := memberIsWrapper m }
   if desc.numCtors = 0 then none
   else if desc.numCtors = 1 && !desc.hasFields then none
-  else some desc.class?
+  else desc.class?
 
 theorem classify_eq_singleClass (d : SrcDecl) (m : SrcMember)
     (hm : d.block[d.member]? = some m) (hmut : isGenuinelyMutual d.block = false) :
@@ -253,11 +465,12 @@ theorem classify_eq_mutual (d : SrcDecl) (m : SrcMember)
     classify d = some .mutualFamily := by
   simp [classify, descriptor, hm, hmut, ShapeDescriptor.class?]
 
-/-! ## Unit-like and void-like declarations are exactly the `none`s
+/-! ## Unit-like, void-like and wrapper declarations are exactly the `none`s
 
-The two `none` cases above are the only ones a *well-formed* declaration can hit: a
-member with no constructor has no values, and a member with one field-less
-constructor has exactly one value, and both are erased before `Ty`. -/
+The `none` cases above are the only ones a *well-formed* declaration can hit: a member
+with no constructor has no values; a member with one field-less constructor has
+exactly one value; and a non-recursive member with one constructor carrying one field
+is its field.  All three are erased before `Ty`. -/
 
 theorem classify_eq_none_of_void (d : SrcDecl) (m : SrcMember)
     (hm : d.block[d.member]? = some m) (hmut : isGenuinelyMutual d.block = false)
@@ -269,6 +482,28 @@ theorem classify_eq_none_of_unitLike (d : SrcDecl) (m : SrcMember) (c : SrcCtor)
     (h : m.ctors = [c]) (hf : c.fields = []) :
     classify d = none := by
   simp [classify, descriptor, hm, h, hmut, memberHasFields, hf]
+
+/-- A **newtype** that is not recursive has no shape of its own: it is erased into its
+    single field's type. -/
+theorem classify_eq_none_of_wrapper (d : SrcDecl) (m : SrcMember) (c : SrcCtor)
+    (f : NonEmptyString × SrcTy)
+    (hm : d.block[d.member]? = some m) (hmut : isGenuinelyMutual d.block = false)
+    (h : m.ctors = [c]) (hf : c.fields = [f])
+    (hrec : memberMentions m d.member = false) :
+    classify d = none := by
+  simp [classify, descriptor, hm, h, hmut, hrec, memberHasFields,
+    memberIsWrapper, hf, ShapeDescriptor.class?]
+
+/-- A **recursive** newtype is a `recAlias`: the wrapper is erased, but the fixed point
+    it leaves behind is a shape. -/
+theorem classify_eq_recAlias (d : SrcDecl) (m : SrcMember) (c : SrcCtor)
+    (f : NonEmptyString × SrcTy)
+    (hm : d.block[d.member]? = some m) (hmut : isGenuinelyMutual d.block = false)
+    (h : m.ctors = [c]) (hf : c.fields = [f])
+    (hrec : memberMentions m d.member = true) :
+    classify d = some .recAlias := by
+  simp [classify, descriptor, hm, h, hmut, hrec, memberHasFields,
+    memberIsWrapper, hf, ShapeDescriptor.class?]
 
 end LakeJs.Source
 
