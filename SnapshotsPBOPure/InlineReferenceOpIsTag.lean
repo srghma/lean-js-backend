@@ -1,4 +1,3 @@
--- @js_export: List, Cons, Nil, extern1, extern2, extern3, fn$p, test1, test2, test3, test4, test5, test6
 inductive MyList (α : Type) where
   | Cons : α → MyList α → MyList α
   | Nil  : MyList α

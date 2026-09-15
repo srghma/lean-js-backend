@@ -11,11 +11,11 @@ arguments as the widest member.
 
 mutual
 
-partial def test1 : Nat → Bool
+def test1 : Nat → Bool
   | 0 => true
   | n + 1 => test2 n
 
-partial def test2 : Nat → Bool
+def test2 : Nat → Bool
   | 0 => false
   | n + 1 => test1 n
 
@@ -23,13 +23,19 @@ end
 
 mutual
 
-partial def test3 (n acc : Nat) : Nat :=
-  if n == 0 then acc else test4 (n - 1) (acc + 1) 2
+def test3 (n acc : Nat) : Nat :=
+  match n with
+  | 0 => acc
+  | n + 1 => test4 n (acc + 1) 2
 
-partial def test4 (n acc k : Nat) : Nat :=
-  if n == 0 then acc else test5 (n - 1) (acc + k)
+def test4 (n acc k : Nat) : Nat :=
+  match n with
+  | 0 => acc
+  | n + 1 => test5 n (acc + k)
 
-partial def test5 (n acc : Nat) : Nat :=
-  if n == 0 then acc else test3 (n - 1) (acc + 3)
+def test5 (n acc : Nat) : Nat :=
+  match n with
+  | 0 => acc
+  | n + 1 => test3 n (acc + 3)
 
 end

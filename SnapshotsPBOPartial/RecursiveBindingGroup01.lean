@@ -2,7 +2,7 @@ import Init.Data.Int.Basic
 
 structure T1 where
   bar : Int
-  foo : Int
+  foo : Int -- not possible even with Thunk
 deriving Inhabited
 
 structure T2 where
