@@ -3,24 +3,28 @@ version = "0.1.0"
 defaultTargets = ["LakeJs"]
 testDriver = "LakeJsTest"
 
-[[require]]
-name = "NonEmpty"
-git = "https://github.com/srghma/lean-nonempty.git"
-rev = "main"
-
-[[require]]
-name = "spec"
-git = "https://github.com/srghma/lean-spec.git"
-rev = "main"
+# [[require]]
+# name = "NonEmpty"
+# git = "https://github.com/srghma/lean-nonempty.git"
+# rev = "main"
+#
+# [[require]]
+# name = "spec"
+# git = "https://github.com/srghma/lean-spec.git"
+# rev = "main"
 
 [[require]]
 name = "aesop"
 scope = "leanprover-community"
-rev = "v4.34.0-rc2"
+rev = "v4.28.0"
 
 [[lean_lib]]
 name = "LakeJs"
 roots = ["LakeJs"]
+
+[[lean_lib]]
+name = "NonEmpty"
+globs = ["NonEmpty.*"]
 
 [[lean_lib]]
 name = "SnapshotsPBOPure"

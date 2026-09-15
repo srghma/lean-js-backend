@@ -1,4 +1,3 @@
-const test1 = [2.5, 3.5, 3.5, -0.5, 0.5, -2.5, NaN];
 const nan = NaN;
 const numValues = (op) => [
   op(1.5)(1.0),
@@ -9,6 +8,7 @@ const numValues = (op) => [
   op(-1.5)(-1.0),
   op(1.0)(NaN),
 ];
+const test1 = [2.5, 3.5, 3.5, -0.5, 0.5, -2.5, NaN];
 const test2 = [0.5, -0.5, 1.5, 3.5, -3.5, -0.5, NaN];
 const test3 = [false, false, false, false, false, false, false];
 const test4 = [true, true, true, true, true, true, true];

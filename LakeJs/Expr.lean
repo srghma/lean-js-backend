@@ -1,0 +1,92 @@
+module
+public import LakeJs.Ty
+public import LakeJs.Externs
+@[expose] public section
+
+abbrev Ctx := List Ty
+
+-- Variable index in context
+inductive Var : Ctx → Ty → Type
+  | head : ∀ {Γ τ}, Var (τ :: Γ) τ
+  | tail : ∀ {Γ τ1 τ2}, Var Γ τ1 → Var (τ2 :: Γ) τ1
+
+-- Membership notation: Γ ∋ τ
+infix:40 " ∋ " => Var
+
+-- Macro to expand a natural number literal into nested Var.tail / Var.head
+syntax "var_get_elem" (ppSpace term) : term
+macro_rules | `(term| var_get_elem $n) => match n.1.toNat with
+| 0     => `(term| Var.head)
+| n + 1 => `(term| Var.tail (var_get_elem $(Lean.quote n)))
+
+-- Sugar: ♯0 expands to Var.head, ♯1 expands to Var.tail Var.head, etc.
+macro "v♯" n:term:90 : term => `(var_get_elem $n)
+
+inductive Term : Ctx → Ty → Type
+  | var : ∀ {Γ τ}, Γ ∋ τ → Term Γ τ
+  -- Lambda
+  | lam : ∀ {Γ τ1 τ2}, Term (τ1 :: Γ) τ2 → Term Γ (τ1 ⇒ τ2)
+  | ap : ∀ {Γ τ1 τ2}, Term Γ (τ1 ⇒ τ2) → Term Γ τ1 → Term Γ τ2
+
+-- Notation
+prefix:100 "ƛ " => Term.lam
+infixl:70 " ⬝ " => Term.ap
+
+macro "♯" n:term:90 : term => `(Term.var (v♯ $n))
+
+namespace Term
+
+-- Shortcut for Church Numeral Type: (α ⇒ α) ⇒ α ⇒ α
+abbrev NatTy (α : Ty) : Ty := (α ⇒ α) ⇒ α ⇒ α
+
+-- 1. Identity Function: ƛx. x
+-- Type: τ ⇒ τ  (in empty context [])
+def id {τ : Ty} : Term [] (τ ⇒ τ) :=
+  ƛ ♯0
+
+-- 2. Constant Function: ƛx. ƛy. x
+-- Type: τ1 ⇒ τ2 ⇒ τ1  (in empty context [])
+def const {τ1 τ2 : Ty} : Term [] (τ1 ⇒ τ2 ⇒ τ1) :=
+  ƛ (ƛ ♯1)
+
+-- 3. Church Numerals
+-- Zero: ƛf. ƛx. x
+def zero {α : Ty} : Term [] (NatTy α) :=
+  ƛ (ƛ ♯0)
+
+-- One: ƛf. ƛx. f x
+def one {α : Ty} : Term [] (NatTy α) :=
+  ƛ (ƛ (♯1 ⬝ ♯0))
+
+-- Two: ƛf. ƛx. f (f x)
+def two {α : Ty} : Term [] (NatTy α) :=
+  ƛ (ƛ (♯1 ⬝ (♯1 ⬝ ♯0)))
+
+-- 4. Church Successor: ƛn. ƛf. ƛx. f (n f x)
+def succ {α : Ty} : Term [] (NatTy α ⇒ NatTy α) :=
+  ƛ (             -- n is ♯2 (NatTy α)
+    ƛ (           -- f is ♯1 (α ⇒ α)
+      ƛ (         -- x is ♯0 (α)
+        ♯1 ⬝ ((♯2 ⬝ ♯1) ⬝ ♯0)
+      )
+    )
+  )
+
+-- 5. Terms with Free Variables
+
+-- A term with 2 free variables: (♯1 ⬝ ♯0)
+-- Context has 2 types: Γ = [α, α ⇒ β]
+--   - ♯0 has type α       (free var 0)
+--   - ♯1 has type α ⇒ β   (free var 1)
+def freeTerm {α β : Ty} : Term [α, α ⇒ β] β :=
+  ♯1 ⬝ ♯0
+
+-- A term with 1 free variable: ƛy. (y ⬝ ♯1)
+-- Top context has 1 type: Γ = [α] (free var x0)
+-- Inside ƛ, context becomes: (α ⇒ β) :: [α]
+--   - ♯0 is bound variable y of type α ⇒ β
+--   - ♯1 is free variable x0 of type α
+def boundAndFree {α β : Ty} : Term [α] ((α ⇒ β) ⇒ β) :=
+  ƛ (♯0 ⬝ ♯1)
+
+end Term
