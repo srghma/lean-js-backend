@@ -1,0 +1,542 @@
+module
+
+public import LakeJs.Expr
+public meta import LakeJs.Expr
+public import LakeJs.RecSchema
+public meta import LakeJs.RecSchema
+public import LakeJs.StringSliceMethods
+public meta import LakeJs.StringSliceMethods
+public import LakeJs.NumberPreds
+public meta import LakeJs.NumberPreds
+public import Lean.Elab.Term
+public meta import Lean.Elab.Term
+public meta import Lean.Parser.Extra
+
+@[expose] public section
+
+variable {js : List Nat}
+
+/-!
+# `[JS_EXPR| … ]` — concrete syntax for the terminating language
+
+```lean
+def lean_array_mk : Expr 1 js ∅ :=
+  [JS_EXPR| fold(listFamily, #0, { nil:  ()          => [],
+                                  cons: (head, rest) => [head, ...rest] }) ]
+```
+
+The grammar is the JavaScript expression grammar **minus** function values and
+application — they are what would make `Expr` Turing-complete — **plus** the two
+structural eliminators.
+
+* `fold(family, scrutinee, { tag: (fields…) => body, … })` is `Expr.foldEnum`: a
+  catamorphism over a compiled Lean value.  The parameters of a branch are the
+  constructor's fields, in order, with every **recursive** field replaced by the
+  result of folding it.  A trailing fourth argument is the value used when the tag
+  matches no branch (`undefined` by default).
+
+  The number of parameters of a branch is checked against the family at elaboration
+  time — `Branches.consTagArity` carries `fam.ctorNumFields tag = p` as a proof
+  obligation discharged by `decide`.
+
+* `e.reduceRight((acc, item) => body, init)` and `e.reduce(…)` are `Expr.foldArray`.
+
+There is deliberately **no** way to write `(x) => …` on its own, and no way to apply
+anything: a binder exists only as a branch of a fold.  That is what makes every
+`Expr` terminate.
+
+Everything else is ordinary JavaScript expression syntax: `#i` is a hole, an
+identifier is a binder parameter if one is in scope and an opaque
+`Expr.unsafeGlobal` otherwise (`true`, `false`, `undefined`, `null`, `NaN` and
+`Infinity` excepted),
+`mkEnum(family, "tag", …)` builds a compiled constructor, and `isTag`, `isArray`,
+`getField` test and project.
+-/
+
+/-- The `i`-th hole of an `Expr n js g`. -/
+def Expr.freeVar (i : Nat) {n : Nat} (h : i < n := by decide) : Expr n js g := .var ⟨i, h⟩
+
+/-- The `k`-th of the `p` binder parameters in scope, seen from a body of type
+    `Expr n js g`.  Parameters occupy the last `p` indices. -/
+def Expr.paramVar (p k : Nat) {n : Nat} (h : p ≤ n ∧ k < p := by decide) : Expr n js g :=
+  .var ⟨n - p + k, by have := h.1; have := h.2; omega⟩
+
+/-- A branch whose arity is stated explicitly, and checked against the family by
+    `decide`.  This is what the quotation emits, so that writing the wrong number of
+    parameters for a constructor is a compile-time error rather than a silent
+    renumbering of de Bruijn indices. -/
+def Branches.consTagArity (fam : LeanRecFamily) (tag : String) (p : Nat)
+    (body : Expr (n + p) js g) (tail : Branches fam n js g)
+    (h_ar : fam.ctorNumFields tag = p := by decide)
+    (h : fam.hasCtor tag := by decide) : Branches fam n js g :=
+  Branches.consTag fam tag (h_ar ▸ body) tail h
+
+/-! ## Grammar -/
+
+declare_syntax_cat js_expr
+/-- An element of an array literal. -/
+declare_syntax_cat js_arg
+/-- A property of an object literal. -/
+declare_syntax_cat js_prop
+/-- One branch of a `fold(…)`. -/
+declare_syntax_cat js_case
+
+syntax:max "#" noWs num : js_expr
+syntax:max num : js_expr
+/-- A `BigInt` literal, `1n`.  The `n` suffix must be adjacent to the digits, and a
+    bigint is a *different type* from a number: `1n === 1` is `false`, and mixing the
+    two in arithmetic is a `TypeError`. -/
+syntax:max (name := jsBigIntLit) num noWs &"n" : js_expr
+syntax:max scientific : js_expr
+syntax:max str : js_expr
+syntax:max ident : js_expr
+syntax:max "(" js_expr ")" : js_expr
+syntax:max "[" js_arg,* "]" : js_expr
+syntax:max "{" js_prop,* "}" : js_expr
+syntax:max "mkEnum" "(" term "," str ("," js_expr)* ")" : js_expr
+syntax:max "isTag" "(" js_expr "," str ")" : js_expr
+syntax:max "isArray" "(" js_expr ")" : js_expr
+syntax:max "isNullish" "(" js_expr ")" : js_expr
+syntax:max "getField" "(" js_expr "," num ")" : js_expr
+syntax:max "fold" "(" term "," js_expr "," "{" js_case,* "}" ("," js_expr)? ")" : js_expr
+
+/-- `let` as an **expression**: the immediately invoked arrow `((x) => body)(rhs)`,
+    which is the canonical form because it is what `Expr.renderAux` emits, so a
+    rendered `letIn` reads back as one. -/
+syntax:max "(" "(" ident ")" " => " js_expr ")" "(" js_expr ")" : js_expr
+/-- The same binder in keyword form, `let x = rhs in body`.  Sugar: not JavaScript,
+    but unambiguous inside the quotation. -/
+syntax:20 "let " ident " = " js_expr " in " js_expr:20 : js_expr
+
+syntax js_expr : js_arg
+syntax "..." js_expr : js_arg
+
+syntax ident ": " js_expr : js_prop
+syntax str ": " js_expr : js_prop
+/-- A computed key, `{[e]: v}`: the key is an expression, converted to a string when
+    the literal is evaluated. -/
+syntax "[" js_expr "]" ": " js_expr : js_prop
+/-- An object spread, `{...o}`: the own enumerable properties of `o`, at this
+    position. -/
+syntax "..." js_expr : js_prop
+
+syntax ident ": " "(" ident,* ")" " => " js_expr : js_case
+syntax str ": " "(" ident,* ")" " => " js_expr : js_case
+
+syntax:max ident noWs "(" "(" ident "," ident ")" " => " js_expr "," js_expr ")" : js_expr
+syntax:90 js_expr:90 noWs ".reduceRight" "(" "(" ident "," ident ")" " => " js_expr ","
+  js_expr ")" : js_expr
+syntax:90 js_expr:90 noWs ".reduce" "(" "(" ident "," ident ")" " => " js_expr ","
+  js_expr ")" : js_expr
+syntax:90 js_expr:90 noWs "." ident : js_expr
+syntax:90 js_expr:90 noWs "[" js_expr "]" : js_expr
+
+/-- A call: either a primitive method on a receiver, `s.toUpperCase()`, or one of the
+    static primitives `String(x)` and `Object.keys/values/entries(o)`.  A receiver that
+    is an identifier is lexed together with the method name, so that form is a call on
+    a dotted identifier and is split apart by the translator. -/
+syntax:max ident noWs "(" js_expr,* ")" : js_expr
+syntax:90 js_expr:90 noWs "." ident noWs "(" js_expr,* ")" : js_expr
+/-- `s.at(i)` needs a rule of its own: `at` is a Lean keyword, so it is not lexed as
+    an identifier and the general method-call rule above cannot match it. -/
+syntax:90 js_expr:90 noWs "." "at" noWs "(" js_expr,* ")" : js_expr
+/-- `s.repeat(k)` and `a.with(i, v)`: `repeat` and `with` are Lean keywords too. -/
+syntax:90 js_expr:90 noWs "." "repeat" noWs "(" js_expr,* ")" : js_expr
+syntax:90 js_expr:90 noWs "." "with" noWs "(" js_expr,* ")" : js_expr
+
+/-- A method taking a one-parameter callback: `a.map(x => x + 1)`.  As with `reduce`,
+    a receiver that is an identifier is lexed together with the method name, so that
+    form gets a rule of its own. -/
+syntax:max ident noWs "(" ident " => " js_expr ")" : js_expr
+syntax:90 js_expr:90 noWs "." ident noWs "(" ident " => " js_expr ")" : js_expr
+
+syntax:75 "!" js_expr:75 : js_expr
+syntax:75 "-" js_expr:75 : js_expr
+syntax:75 "~" js_expr:75 : js_expr
+syntax:75 "typeof " js_expr:75 : js_expr
+syntax:75 "void " js_expr:75 : js_expr
+
+-- `**` binds tighter than `*` and is **right**-associative: `2 ** 3 ** 2` is
+-- `2 ** (3 ** 2)`.
+syntax:72 js_expr:73 " ** " js_expr:72 : js_expr
+syntax:70 js_expr:70 " * " js_expr:71 : js_expr
+syntax:70 js_expr:70 " / " js_expr:71 : js_expr
+syntax:70 js_expr:70 " % " js_expr:71 : js_expr
+syntax:65 js_expr:65 " + " js_expr:66 : js_expr
+syntax:65 js_expr:65 " - " js_expr:66 : js_expr
+syntax:60 js_expr:60 " << " js_expr:61 : js_expr
+syntax:60 js_expr:60 " >> " js_expr:61 : js_expr
+syntax:60 js_expr:60 " >>> " js_expr:61 : js_expr
+syntax:55 js_expr:55 " < " js_expr:56 : js_expr
+syntax:55 js_expr:55 " <= " js_expr:56 : js_expr
+syntax:55 js_expr:55 " > " js_expr:56 : js_expr
+syntax:55 js_expr:55 " >= " js_expr:56 : js_expr
+syntax:50 js_expr:50 " === " js_expr:51 : js_expr
+syntax:50 js_expr:50 " !== " js_expr:51 : js_expr
+syntax:50 js_expr:50 " == " js_expr:51 : js_expr
+syntax:50 js_expr:50 " != " js_expr:51 : js_expr
+syntax:45 js_expr:45 " & " js_expr:46 : js_expr
+syntax:44 js_expr:44 " ^ " js_expr:45 : js_expr
+syntax:43 js_expr:43 " | " js_expr:44 : js_expr
+syntax:40 js_expr:41 " && " js_expr:40 : js_expr
+syntax:35 js_expr:36 " || " js_expr:35 : js_expr
+syntax:33 js_expr:34 " ?? " js_expr:33 : js_expr
+syntax:20 js_expr:21 " ? " js_expr:20 " : " js_expr:20 : js_expr
+
+/-- A terminating JavaScript expression.  The number of holes comes from the expected
+    type; use `[JS_EXPR(n)| … ]` when it is not known. -/
+syntax "[JS_EXPR|" js_expr "]" : term
+/-- A terminating JavaScript expression with exactly `n` holes and no opaque names. -/
+syntax "[JS_EXPR" "(" num ")" "|" js_expr "]" : term
+/-- A terminating JavaScript expression with exactly `n` holes, over the opaque names
+    `g`. -/
+syntax "[JS_EXPR" "(" num ")" "," term "|" js_expr "]" : term
+
+/-! ## Translation -/
+
+open Lean in
+mutual
+
+/-- Translate a `js_expr` to a term of type `Expr n js g`.  `scope` lists the binder
+    parameters currently in scope, outermost first. -/
+public meta partial def jsExprToTerm (stx : TSyntax `js_expr) (scope : List String)
+    (allowBool : Bool := true) : MacroM (TSyntax `term) := do
+  -- `1n`: the `noWs` in its grammar rule cannot be written in a quotation pattern, so
+  -- this one node is recognised by its kind.
+  if stx.raw.isOfKind ``jsBigIntLit then
+    let i : TSyntax `num := ⟨stx.raw[0]⟩
+    return ← `(Expr.bigintLit (Int.ofNat $i))
+  match stx with
+  | `(js_expr| #$i:num) => `(Expr.freeVar $i)
+  | `(js_expr| $n:num) => `(Expr.num $n)
+  | `(js_expr| $q:scientific) => `(Expr.numLit (JSNumber.finite ($q : Rat)))
+  | `(js_expr| $s:str) => `(Expr.str $s)
+  | `(js_expr| ($e:js_expr)) => jsExprToTerm e scope
+  -- `let`, in its two spellings: the IIFE the renderer emits, and the keyword sugar.
+  | `(js_expr| (($x:ident) => $body:js_expr)($rhs:js_expr)) => do
+      let rhsT ← jsExprToTerm rhs scope
+      let bodyT ← jsExprToTerm body (scope ++ [x.getId.toString])
+      `(Expr.letIn $rhsT $bodyT)
+  | `(js_expr| let $x:ident = $rhs:js_expr in $body:js_expr) => do
+      let rhsT ← jsExprToTerm rhs scope
+      let bodyT ← jsExprToTerm body (scope ++ [x.getId.toString])
+      `(Expr.letIn $rhsT $bodyT)
+  | `(js_expr| $id:ident) => do
+      -- `a.b.c` is lexed as one dotted identifier, so member accesses are split here.
+      jsPathToTerm (id.getId.components.map (·.toString)) scope
+  | `(js_expr| [ $args,* ]) => do `(Expr.arr $(← jsArgsToTerm args.getElems scope))
+  | `(js_expr| { $props,* }) => do
+      let mut acc ← `(ObjProps.nil)
+      for prop in props.getElems.reverse do
+        match prop with
+        | `(js_prop| $k:ident : $v:js_expr) =>
+            acc ← `(ObjProps.cons (NonEmptyString.ofLit $(quote k.getId.toString))
+                      $(← jsExprToTerm v scope) $acc)
+        | `(js_prop| $k:str : $v:js_expr) =>
+            acc ← `(ObjProps.cons (NonEmptyString.ofLit $k) $(← jsExprToTerm v scope) $acc)
+        | `(js_prop| [$k:js_expr] : $v:js_expr) =>
+            acc ← `(ObjProps.computed $(← jsExprToTerm k scope) $(← jsExprToTerm v scope) $acc)
+        | `(js_prop| ...$e:js_expr) =>
+            acc ← `(ObjProps.spread $(← jsExprToTerm e scope) $acc)
+        | _ => Macro.throwErrorAt prop "unsupported object property"
+      `(Expr.obj $acc)
+  | `(js_expr| mkEnum($fam:term, $tag:str $[, $fields:js_expr]*)) => do
+      let mut vec ← `(ExprVec.nil)
+      for f in fields.reverse do
+        vec ← `(ExprVec.cons $(← jsExprToTerm f scope) $vec)
+      `(Expr.mkEnum $fam $tag $vec)
+  | `(js_expr| getField($o:js_expr, $i:num)) => do
+      `(Expr.getField $(← jsExprToTerm o scope) $i)
+  | `(js_expr| fold($fam:term, $scrut:js_expr, { $branches,* } $[, $dflt:js_expr]?)) => do
+      let mut acc ← `(Branches.nil)
+      for b in branches.getElems.reverse do
+        let (tag, params, body) ← match b with
+          | `(js_case| $c:ident : ($[$ps:ident],*) => $body:js_expr) =>
+              pure ((⟨Syntax.mkStrLit c.getId.toString⟩ : StrLit), ps, body)
+          | `(js_case| $c:str : ($[$ps:ident],*) => $body:js_expr) =>
+              pure (c, ps, body)
+          | _ => Macro.throwErrorAt b "unsupported fold branch"
+        let names := params.toList.map (·.getId.toString)
+        let bodyT ← jsExprToTerm body (scope ++ names)
+        acc ← `(Branches.consTagArity $fam $tag $(quote names.length) $bodyT $acc)
+      let dfltT ← match dflt with
+        | some d => jsExprToTerm d scope
+        | none   => `(Expr.undefined)
+      `(Expr.foldEnum $fam $(← jsExprToTerm scrut scope) $acc $dfltT)
+  -- `xs.reduceRight(…)`: Lean lexes `xs.reduceRight` as a single dotted identifier,
+  -- so the receiver and the method have to be split apart here.
+  | `(js_expr| $id:ident(($acc:ident, $item:ident) => $body, $init)) => do
+      let comps := id.getId.components.map (·.toString)
+      let method := comps.getLast!
+      let dir ←
+        if method == "reduceRight" then `(FoldDir.right)
+        else if method == "reduce" then `(FoldDir.left)
+        else Macro.throwErrorAt id s!"'{method}' is not a fold: only 'reduce' and 'reduceRight' are"
+      let recv ← jsPathToTerm (comps.dropLast) scope
+      let names := [acc.getId.toString, item.getId.toString]
+      `(Expr.foldArray $dir $recv $(← jsExprToTerm init scope)
+          $(← jsExprToTerm body (scope ++ names)))
+  | `(js_expr| $(a).reduceRight(($acc:ident, $item:ident) => $body, $init)) =>
+      jsFoldArray `(FoldDir.right) a acc item body init scope
+  | `(js_expr| $(a).reduce(($acc:ident, $item:ident) => $body, $init)) =>
+      jsFoldArray `(FoldDir.left) a acc item body init scope
+  | `(js_expr| $o:js_expr.$f:ident) => do
+      -- `e.a.b` is lexed with `a.b` as one dotted identifier, so it is split here.
+      let mut acc ← jsExprToTerm o scope
+      for comp in f.getId.components.map (·.toString) do
+        acc ← `(Expr.prop $acc (NonEmptyString.ofLit $(quote comp)))
+      return acc
+  | `(js_expr| $o:js_expr[$i:js_expr]) => do
+      `(Expr.index $(← jsExprToTerm o scope) $(← jsExprToTerm i scope))
+  -- a one-parameter callback, `a.map(x => …)`; the dotted-identifier receiver form
+  -- has to be split apart, exactly as `reduce` above.
+  | `(js_expr| $id:ident($x:ident => $body)) => do
+      let comps := id.getId.components.map (·.toString)
+      if comps.length ≤ 1 then
+        Macro.throwErrorAt stx "a callback needs a receiver"
+      else
+        jsCallback (← jsPathToTerm comps.dropLast scope) comps.getLast! x body scope stx
+  | `(js_expr| $(o).$m:ident($x:ident => $body)) => do
+      jsCallback (← jsExprToTerm o scope) (m.getId.toString) x body scope stx
+  | `(js_expr| $o:js_expr.$m:ident($args,*)) => do
+      jsCall (← jsExprToTerm o scope) (m.getId.toString) args.getElems scope stx
+  | `(js_expr| $(o).at($args,*)) => do
+      jsCall (← jsExprToTerm o scope) "at" args.getElems scope stx
+  | `(js_expr| $(o).repeat($args,*)) => do
+      jsCall (← jsExprToTerm o scope) "repeat" args.getElems scope stx
+  | `(js_expr| $(o).with($args,*)) => do
+      jsCall (← jsExprToTerm o scope) "with" args.getElems scope stx
+  | `(js_expr| $id:ident($args,*)) => do
+      let comps := id.getId.components.map (·.toString)
+      let full := String.intercalate "." comps
+      match full, args.getElems with
+      | "String", #[a] => do `(Expr.unary .toStr $(← jsExprToTerm a scope))
+      | "BigInt", #[a] => do `(Expr.unary .toBigInt $(← jsExprToTerm a scope))
+      | "Math.floor", #[a] => do `(Expr.unary .mathFloor $(← jsExprToTerm a scope))
+      | "Math.ceil",  #[a] => do `(Expr.unary .mathCeil  $(← jsExprToTerm a scope))
+      | "Math.trunc", #[a] => do `(Expr.unary .mathTrunc $(← jsExprToTerm a scope))
+      | "Math.round", #[a] => do `(Expr.unary .mathRound $(← jsExprToTerm a scope))
+      | "Math.abs",   #[a] => do `(Expr.unary .mathAbs   $(← jsExprToTerm a scope))
+      | "Math.sign",  #[a] => do `(Expr.unary .mathSign  $(← jsExprToTerm a scope))
+      | "Math.min", #[a, b] => do
+          `(Expr.binop .mathMin $(← jsExprToTerm a scope) $(← jsExprToTerm b scope))
+      | "Math.max", #[a, b] => do
+          `(Expr.binop .mathMax $(← jsExprToTerm a scope) $(← jsExprToTerm b scope))
+      -- The boolean members of the numeric library are derived forms
+      -- (`LakeJs.NumberPreds`), so they are `BExpr`s wrapped back into an `Expr`.
+      | "Number.isNaN", #[a] => do
+          `(Expr.bexpr (Expr.numberIsNaN $(← jsExprToTerm a scope)))
+      | "Number.isFinite", #[a] => do
+          `(Expr.bexpr (Expr.numberIsFinite $(← jsExprToTerm a scope)))
+      | "Number.isInteger", #[a] => do
+          `(Expr.bexpr (Expr.numberIsInteger $(← jsExprToTerm a scope)))
+      | "Object.keys", #[a] => do `(Expr.unary .objKeys $(← jsExprToTerm a scope))
+      | "Object.values", #[a] => do `(Expr.unary .objValues $(← jsExprToTerm a scope))
+      | "Object.entries", #[a] => do `(Expr.unary .objEntries $(← jsExprToTerm a scope))
+      | _, as =>
+          if comps.length ≤ 1 then
+            Macro.throwErrorAt stx s!"'{full}' is not a primitive of this language"
+          else
+            jsCall (← jsPathToTerm comps.dropLast scope) comps.getLast! as scope stx
+  | `(js_expr| -$a:js_expr) => do `(Expr.unary .minus $(← jsExprToTerm a scope))
+  | `(js_expr| ~$a:js_expr) => do `(Expr.unary .tilde $(← jsExprToTerm a scope))
+  | `(js_expr| typeof $a:js_expr) => do `(Expr.unary .typeof $(← jsExprToTerm a scope))
+  | `(js_expr| void $a:js_expr) => do `(Expr.unary .voidOp $(← jsExprToTerm a scope))
+  | `(js_expr| $a:js_expr ?? $b:js_expr) => binop `(.nullish) a b scope
+  | `(js_expr| $a:js_expr ** $b:js_expr) => binop `(.pow) a b scope
+  | `(js_expr| $a:js_expr * $b:js_expr) => binop `(.times) a b scope
+  | `(js_expr| $a:js_expr / $b:js_expr) => binop `(.divide) a b scope
+  | `(js_expr| $a:js_expr % $b:js_expr) => binop `(.mod) a b scope
+  | `(js_expr| $a:js_expr + $b:js_expr) => binop `(.plus) a b scope
+  | `(js_expr| $a:js_expr - $b:js_expr) => binop `(.minus) a b scope
+  | `(js_expr| $a:js_expr << $b:js_expr) => binop `(.lsh) a b scope
+  | `(js_expr| $a:js_expr >> $b:js_expr) => binop `(.rsh) a b scope
+  | `(js_expr| $a:js_expr >>> $b:js_expr) => binop `(.ursh) a b scope
+  | `(js_expr| $a:js_expr & $b:js_expr) => binop `(.bitAnd) a b scope
+  | `(js_expr| $a:js_expr ^ $b:js_expr) => binop `(.bitXor) a b scope
+  | `(js_expr| $a:js_expr | $b:js_expr) => binop `(.bitOr) a b scope
+  | `(js_expr| $c:js_expr ? $t:js_expr : $e:js_expr) => do
+      `(Expr.cond $(← jsBExprToTerm c scope) $(← jsExprToTerm t scope)
+                   $(← jsExprToTerm e scope))
+  -- everything left over is boolean-valued — unless we got here *from* the boolean
+  -- translator, in which case nothing handles this syntax and delegating again would
+  -- loop forever
+  | stx =>
+      if allowBool then do `(Expr.bexpr $(← jsBExprToTerm stx scope))
+      else Macro.throwErrorAt stx "unsupported expression in [JS_EXPR| … ]"
+where
+  binop (op : MacroM (TSyntax `term)) (a b : TSyntax `js_expr) (scope : List String) :
+      MacroM (TSyntax `term) := do
+    `(Expr.binop $(← op) $(← jsExprToTerm a scope) $(← jsExprToTerm b scope))
+  /-- `recv.name(args…)` for one of the primitive methods. -/
+  jsCall (recv : TSyntax `term) (name : String) (args : Array (TSyntax `js_expr))
+      (scope : List String) (stx : TSyntax `js_expr) : MacroM (TSyntax `term) := do
+    let arg (i : Nat) : MacroM (TSyntax `term) := jsExprToTerm args[i]! scope
+    match name, args.size with
+    | "toUpperCase", 0 => `(Expr.unary .strUpper $recv)
+    | "toLowerCase", 0 => `(Expr.unary .strLower $recv)
+    | "trim",        0 => `(Expr.unary .strTrim $recv)
+    | "trimStart",   0 => `(Expr.unary .strTrimStart $recv)
+    | "trimEnd",     0 => `(Expr.unary .strTrimEnd $recv)
+    | "split",       1 => do `(Expr.binop .strSplit $recv $(← arg 0))
+    | "indexOf",     1 => do `(Expr.binop .strIndexOf $recv $(← arg 0))
+    | "lastIndexOf", 1 => do `(Expr.binop .strLastIndexOf $recv $(← arg 0))
+    | "at",          1 => do `(Expr.binop .strAt $recv $(← arg 0))
+    | "slice",       1 => do `(Expr.binop .strSliceFrom $recv $(← arg 0))
+    | "charAt",      1 => do `(Expr.binop .strCharAt $recv $(← arg 0))
+    | "codePointAt", 1 => do `(Expr.binop .strCodePointAt $recv $(← arg 0))
+    | "includes",    1 => do `(Expr.bexpr (BExpr.binop .strIncludes $recv $(← arg 0)))
+    | "startsWith",  1 => do `(Expr.bexpr (BExpr.binop .strStartsWith $recv $(← arg 0)))
+    | "endsWith",    1 => do `(Expr.bexpr (BExpr.binop .strEndsWith $recv $(← arg 0)))
+    -- derived forms: `LakeJs.ArrayMethods`, `LakeJs.IndexedMethods`,
+    -- `LakeJs.StringSliceMethods`
+    | "entries",     0 => `(Expr.entriesA $recv)
+    | "keys",        0 => `(Expr.keysA $recv)
+    | "toReversed",  0 => `(Expr.toReversedA $recv)
+    | "flat",        0 => `(Expr.flatA $recv)
+    | "toSorted",    0 => `(Expr.toSortedNumA $recv)
+    | "fill",        1 => do `(Expr.fillA $recv $(← arg 0))
+    | "with",        2 => do `(Expr.withA $recv $(← arg 0) $(← arg 1))
+    | "slice",       2 => do `(Expr.sliceS $recv $(← arg 0) $(← arg 1))
+    | "substring",   2 => do `(Expr.substringS $recv $(← arg 0) $(← arg 1))
+    | "toSpliced",   k =>
+        if k < 2 then
+          Macro.throwErrorAt stx "'toSpliced' needs a start and a delete count"
+        else do
+          let mut items ← `(ExprList.nil)
+          for a in (args.toList.drop 2).reverse do
+            items ← `(ExprList.cons $(← jsExprToTerm a scope) $items)
+          `(Expr.toSplicedA $recv $(← arg 0) $(← arg 1) (Expr.arr $items))
+    | "join",        1 =>
+        match args[0]! with
+        | `(js_expr| $s:str) => `(Expr.joinA $recv $s)
+        | _ => Macro.throwErrorAt stx "'join' needs a literal string separator"
+    | "replaceAll",  2 =>
+        match args[1]! with
+        | `(js_expr| $r:str) => do `(Expr.replaceAllS $recv $(← arg 0) $r)
+        | _ => Macro.throwErrorAt stx "'replaceAll' needs a literal replacement"
+    | "repeat",      1 =>
+        match args[0]! with
+        | `(js_expr| $k:num) => `(Expr.repeatS $recv $k)
+        | _ => Macro.throwErrorAt stx "'repeat' needs a literal count"
+    | "padStart",    2 =>
+        match args[0]!, args[1]! with
+        | `(js_expr| $k:num), `(js_expr| $p:str) => `(Expr.padStartS $recv $k $p)
+        | _, _ => Macro.throwErrorAt stx "'padStart' needs a literal width and pad"
+    | "padEnd",      2 =>
+        match args[0]!, args[1]! with
+        | `(js_expr| $k:num), `(js_expr| $p:str) => `(Expr.padEndS $recv $k $p)
+        | _, _ => Macro.throwErrorAt stx "'padEnd' needs a literal width and pad"
+    | _, k =>
+        Macro.throwErrorAt stx s!"'{name}' with {k} argument(s) is not a primitive method"
+  /-- `recv.name(x => body)` for one of the methods that take a callback.  The
+      callback is a *binder*, not a function value: it is consumed by the method. -/
+  jsCallback (recv : TSyntax `term) (name : String) (x : Ident)
+      (body : TSyntax `js_expr) (scope : List String) (stx : TSyntax `js_expr) :
+      MacroM (TSyntax `term) := do
+    let b ← jsExprToTerm body (scope ++ [x.getId.toString])
+    match name with
+    | "map"           => `(Expr.mapA $recv $b)
+    | "filter"        => `(Expr.filterA $recv $b)
+    | "every"         => `(Expr.everyA $recv $b)
+    | "some"          => `(Expr.someA $recv $b)
+    | "find"          => `(Expr.findA $recv $b)
+    | "findLast"      => `(Expr.findLastA $recv $b)
+    | "findIndex"     => `(Expr.findIndexA $recv $b)
+    | "findLastIndex" => `(Expr.findLastIndexA $recv $b)
+    | "flatMap"       => `(Expr.flatMapA $recv $b)
+    | _ =>
+        Macro.throwErrorAt stx
+          s!"'{name}' is not a method of this language that takes a callback"
+  jsFoldArray (dir : MacroM (TSyntax `term)) (a : TSyntax `js_expr) (acc item : Ident)
+      (body init : TSyntax `js_expr) (scope : List String) : MacroM (TSyntax `term) := do
+    let names := [acc.getId.toString, item.getId.toString]
+    `(Expr.foldArray $(← dir) $(← jsExprToTerm a scope) $(← jsExprToTerm init scope)
+        $(← jsExprToTerm body (scope ++ names)))
+
+/-- Translate a dotted identifier path `a.b.c` to a term: the head names a binder
+    parameter or an opaque global, the rest are member accesses. -/
+public meta partial def jsPathToTerm (comps : List String) (scope : List String) :
+    MacroM (TSyntax `term) := do
+  let p := scope.length
+  let name := comps.headD "undefined"
+  let base ←
+    if name == "true" then `(Expr.bexpr BExpr.tt)
+    else if name == "false" then `(Expr.bexpr BExpr.ff)
+    else if name == "undefined" then `(Expr.undefined)
+    else if name == "null" then `(Expr.null)
+    else if name == "NaN" then `(Expr.numLit JSNumber.nan)
+    else if name == "Infinity" then `(Expr.numLit JSNumber.posInf)
+    else match scope.findIdx? (· == name) with
+      | some k => `(Expr.paramVar $(quote p) $(quote k))
+      | none   => `(Expr.unsafeGlobal (NonEmptyString.ofLit $(quote name)) (by decide))
+  let mut acc := base
+  for f in comps.drop 1 do
+    acc ← `(Expr.prop $acc (NonEmptyString.ofLit $(quote f)))
+  return acc
+
+/-- Translate a `js_expr` used in boolean position to a term of type `BExpr n`. -/
+public meta partial def jsBExprToTerm (stx : TSyntax `js_expr) (scope : List String) :
+    MacroM (TSyntax `term) := do
+  match stx with
+  | `(js_expr| ($e:js_expr)) => jsBExprToTerm e scope
+  | `(js_expr| $id:ident) =>
+      let name := id.getId.toString
+      if name == "true" then `(BExpr.tt)
+      else if name == "false" then `(BExpr.ff)
+      else do `(BExpr.truthy $(← jsExprToTerm stx scope))
+  | `(js_expr| !$a:js_expr) => do `(BExpr.not $(← jsBExprToTerm a scope))
+  | `(js_expr| $a:js_expr && $b:js_expr) => do
+      `(BExpr.and $(← jsBExprToTerm a scope) $(← jsBExprToTerm b scope))
+  | `(js_expr| $a:js_expr || $b:js_expr) => do
+      `(BExpr.or $(← jsBExprToTerm a scope) $(← jsBExprToTerm b scope))
+  | `(js_expr| isTag($o:js_expr, $t:str)) => do
+      `(BExpr.isTag $(← jsExprToTerm o scope) (NonEmptyString.ofLit $t))
+  | `(js_expr| isArray($o:js_expr)) => do
+      `(BExpr.isArray $(← jsExprToTerm o scope))
+  -- `isNullish(e)` is JavaScript's own `e == null`, which is `true` exactly for
+  -- `null` and `undefined`; see `LakeJs.Nullish`.
+  | `(js_expr| isNullish($o:js_expr)) => do
+      `(BExpr.binop .eq $(← jsExprToTerm o scope) Expr.null)
+  | `(js_expr| $a:js_expr === $b:js_expr) => cmp `(.strictEq) a b scope
+  | `(js_expr| $a:js_expr !== $b:js_expr) => cmp `(.strictNeq) a b scope
+  | `(js_expr| $a:js_expr == $b:js_expr) => cmp `(.eq) a b scope
+  | `(js_expr| $a:js_expr != $b:js_expr) => cmp `(.neq) a b scope
+  | `(js_expr| $a:js_expr < $b:js_expr) => cmp `(.lt) a b scope
+  | `(js_expr| $a:js_expr <= $b:js_expr) => cmp `(.le) a b scope
+  | `(js_expr| $a:js_expr > $b:js_expr) => cmp `(.gt) a b scope
+  | `(js_expr| $a:js_expr >= $b:js_expr) => cmp `(.ge) a b scope
+  | stx => do `(BExpr.truthy $(← jsExprToTerm stx scope (allowBool := false)))
+where
+  cmp (op : MacroM (TSyntax `term)) (a b : TSyntax `js_expr) (scope : List String) :
+      MacroM (TSyntax `term) := do
+    `(BExpr.binop $(← op) $(← jsExprToTerm a scope) $(← jsExprToTerm b scope))
+
+/-- Translate an array literal to a term of type `ExprList n`. -/
+public meta partial def jsArgsToTerm (args : Array (TSyntax `js_arg)) (scope : List String) :
+    MacroM (TSyntax `term) := do
+  let mut acc ← `(ExprList.nil)
+  for a in args.reverse do
+    match a with
+    | `(js_arg| ...$e:js_expr) => acc ← `(ExprList.spread $(← jsExprToTerm e scope) $acc)
+    | `(js_arg| $e:js_expr)    => acc ← `(ExprList.cons $(← jsExprToTerm e scope) $acc)
+    | _ => Macro.throwErrorAt a "unsupported array element"
+  return acc
+
+end
+
+open Lean in
+macro_rules
+  | `([JS_EXPR| $e:js_expr]) => jsExprToTerm e []
+
+open Lean in
+macro_rules
+  | `([JS_EXPR($n:num)| $e:js_expr]) => do
+      `(($(← jsExprToTerm e []) : Expr $n [] ∅))
+
+open Lean in
+macro_rules
+  | `([JS_EXPR($n:num), $g:term| $e:js_expr]) => do
+      `(($(← jsExprToTerm e []) : Expr $n [] $g))
+
+end

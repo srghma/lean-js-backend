@@ -1,0 +1,1902 @@
+module
+
+public import LakeJs.JsOlean
+public import LakeJs.JsPrims
+public import LakeJs.Eval
+public import LakeJs.Passes
+public import LakeJs.Render
+public import LakeJs.RenderMini
+public import LakeJs.Dump
+
+@[expose] public section
+
+variable {js : List Nat}
+
+/-!
+# From `saveBase` LCNF to `Expr`, and from `Expr` to a JavaScript file
+
+This is the backend proper.  It takes what `LakeJs.JsOlean` read out of the `.olean`
+files — the **`saveBase`** phase of Lean's own compiler, the last one that still has
+the types — and turns each requested declaration into an `Expr`, the *total*
+JavaScript expression language of this development.
+
+## What the translation does
+
+LCNF is already A-normal: a declaration is a chain of `let`s ending in a `return`, a
+`cases`, or a jump.  The translation walks that chain keeping a map from LCNF
+variables to the `Expr` that computes them, and **substitutes** rather than emitting
+`Expr.letIn`: the right-hand sides are then in the hands of the partial evaluator,
+which is what turns
+
+```
+let _x.1 := 2; let _x.2 := Int.ofNat _x.1; let _x.3 := Int.add _x.2 x; …
+```
+
+into `2n + x`.  Every `let` of LCNF is a *call*, and this language has no calls, so a
+call only survives if `LakeJs.JsPrims` knows the constant: the dictionary there is
+exactly the set of Lean constants this backend can compile, and anything else is
+reported as an error rather than silently mistranslated.
+
+## Calls: there is no application node, so a call is **inlined**
+
+`Expr` has no application node, but that does not mean a call has to be rejected.  A
+call whose callee is known and *not* recursive can be translated by translating the
+callee's body with its parameters bound to the translations of the arguments — the
+same substitution the `let`s already get.  Three kinds of callee are handled that
+way:
+
+* another **top-level** declaration read out of the `.olean` files (`convLetValue`'s
+  `.const` case).  A nullary one that the output file defines itself stays a
+  reference to that global; anything else is inlined;
+* a **local function** (`Code.fun`), applied through `LetValue.fvar`;
+* a **join point** (`Code.jp`), jumped to by `Code.jmp`.
+
+The callee of an inlined call is remembered in `ConvCtx.activeDecls` /
+`ConvCtx.activeFuns` while its body is being translated, so a **recursive** call —
+direct or mutual — is detected and reported rather than unfolded forever.  Recursion
+is exactly what this total language cannot express; everything else about a call is
+just substitution.
+
+## What is not supported yet
+
+`Expr` is total by construction — no application node, no recursion by name — so the
+declarations this backend accepts are the **total, IO-free** ones whose calls all
+bottom out in the dictionary:
+
+* a recursive call, direct or mutual, and a recursive join point (a loop),
+* a function used as a *value* (passed to or returned by something), as opposed to
+  being applied: this language has no function values,
+* a call to a constant with no compiled body (an `extern`) that the dictionary does
+  not know,
+* anything `partial`, and anything in `IO`.
+
+A constructor of an arbitrary inductive, and a `cases` on one, *are* translated: the
+layout the object gets, and the tag test and field read that take it apart again, are
+read off the configuration (`LakeJs/Config.lean`, `LakeJs/Layout.lean`).  Two
+configurations restrict what can be taken apart, and say so:
+
+* with `charRepr := .jsString`, the code point of a *computed* `Char`, because there
+  is no `codePointAt` node,
+* with `listRepr := .jsArray`, a `cases` that reads the *tail* of a list, because
+  there is no array `slice` node.
+
+Each of those is an `Except.error` naming the declaration and what stopped it.
+-/
+
+namespace Lean.Compiler.JS
+
+open Lean.Compiler.LCNF
+
+namespace Backend
+
+/-! ## Names -/
+
+/-- Is `c` allowed in a JavaScript identifier? -/
+def isIdentChar (c : Char) : Bool := c.isAlphanum || c == '_' || c == '$'
+
+/-- A JavaScript identifier for a Lean name: `Array.append ↦ Array_append`. -/
+def jsIdent (n : Name) : String :=
+  let cs := (n.toStringWithSep "_" false).toList.map fun c => if isIdentChar c then c else '_'
+  match cs with
+  | [] => "_x"
+  | c :: _ => if c.isDigit then "_" ++ String.ofList cs else String.ofList cs
+
+/-- The `NEString` of a JavaScript identifier. -/
+def jsNEIdent (n : Name) : NEString := NonEmptyString.ofStringD (jsIdent n)
+
+/-- A JavaScript identifier for a binder name, falling back on `_a{i}`. -/
+def jsParamName (binderName : Name) (i : Nat) : String :=
+  let base := binderName.eraseMacroScopes
+  let s := jsIdent base
+  if s.isEmpty || s == "_x" then s!"_a{i}" else s
+
+/-! ## The globals index -/
+
+/-- The declarations of an output file, resolved against what was loaded. -/
+def resolveRoots (d : JsOleanData) (c : OutputContent) : Except String (Array Name) := do
+  let mut out := #[]
+  for n in c.roots do
+    match d.resolve? n with
+    | some n' => out := out.push n'
+    | none => throw s!"no compiled declaration named '{n}'"
+  return out
+
+/-- The globals an output file may mention: the JavaScript names of the declarations
+    it defines.  Nothing else can appear in an `Expr` over this index — that is the
+    point of the index being part of the type. -/
+def globalsOf (roots : Array Name) : Finset NEString :=
+  (roots.toList.map jsNEIdent).toFinset
+
+/-! ## The translation -/
+
+variable {g : Finset NEString}
+
+/-- A compiled declaration: a JavaScript function of `params.size` arguments. -/
+structure JsFun (js : List Nat) (g : Finset NEString) where
+  /-- The Lean declaration this came from. -/
+  name : Name
+  /-- Its JavaScript name. -/
+  jsName : String
+  /-- The names of its parameters. -/
+  params : Array String
+  /-- Its body, with one free de Bruijn hole per parameter. -/
+  body : JsExpr params.size js g
+  /-- What LCNF `saveBase` says about those holes: the type of each parameter, as a
+      type of the lattice the optimizer reads (`tyOfLCNFType`).  This is the
+      environment the optimizer is started from (`Expr.optimizeAllTy`); a parameter
+      whose representation the translation cannot pin down is `Ty.unknown`, which
+      says nothing and therefore enables nothing. -/
+  paramTys : TyEnv params.size := fun _ => Ty.unknown
+
+/-- Is this parameter computationally relevant?  Types and proofs are dropped, so a
+    Lean declaration and its JavaScript counterpart can have different arities. -/
+def isRelevantParam (p : Param) : Bool := !p.type.isErased && !p.type.isSort
+
+/-- The translation state: what each LCNF variable was translated to. -/
+abbrev VarMap (n : Nat) (js : List Nat) (g : Finset NEString) := Std.HashMap FVarId (JsExpr n js g)
+
+variable {n : Nat}
+
+/-- A local function (`Code.fun`) or join point (`Code.jp`): its parameters, its
+    body, and the variable map that was in scope where it was defined — its free
+    variables mean what they meant *there*, not at the call site. -/
+structure LocalFun (n : Nat) (js : List Nat) (g : Finset NEString) where
+  /-- The name it was given in the source, for error messages. -/
+  binderName : Name
+  /-- Its parameters. -/
+  params : Array Param
+  /-- Its body. -/
+  body : Code
+  /-- What its free variables were bound to where it was defined. -/
+  env : VarMap n js g
+
+/-- Everything the translation of one declaration carries around. -/
+structure ConvCtx (n : Nat) (js : List Nat) (g : Finset NEString) where
+  /-- What each LCNF variable in scope was translated to. -/
+  ρ : VarMap n js g
+  /-- The configuration: which JavaScript value each Lean type becomes.  It is
+      carried in the context so that every part of the translation sees the same
+      one; see `LakeJs.Config`. -/
+  cfg : JsConfig := {}
+  /-- The local functions and join points in scope. -/
+  funs : Std.HashMap FVarId (LocalFun n js g) := {}
+  /-- The local functions and join points that are **shared** rather than inlined:
+      the expression that names the function (a de Bruijn variable bound by a
+      `letIn`), together with the callee's LCNF parameters, which say which
+      arguments of a jump are computationally relevant.  See `shouldShareFun`. -/
+  shared : Std.HashMap FVarId (JsExpr n js g × Array Param) := {}
+  /-- The join points in scope as **labels** of the object language: each LCNF join
+      point compiled to an `Expr.jp` is remembered with the *level* of its label —
+      the length of the label context inside its continuation, i.e. the number of
+      join points enclosing a jump to it, counted from the outside — together with
+      the callee's LCNF parameters, which say which arguments of a jump are
+      computationally relevant.  The de Bruijn index of the label at a jump is
+      `js.length - level`, so the entry does not change as the translation enters
+      further join points.  See `ConvCtx.pushLabel`. -/
+  labels : Std.HashMap FVarId (Nat × Array Param) := {}
+  /-- The top-level declarations whose body is currently being inlined; a call to one
+      of them is a recursive call. -/
+  activeDecls : List Name := []
+  /-- The local functions and join points currently being inlined. -/
+  activeFuns : List FVarId := []
+  /-- The declarations this file emits as JavaScript functions of their own because
+      they are **recursive**: a call to one of them is compiled to an `extApply` of the
+      global it is emitted under instead of being inlined.  This is the one place
+      recursion is allowed to survive into the generated file; see the note on
+      `Expr.extApply`, which the engine never looks inside. -/
+  recFuns : Std.HashSet Name := {}
+
+/-- How deep a chain of inlined calls may get before the translation gives up.  Cycle
+    detection already makes inlining terminate; this only keeps a pathological
+    non-recursive nest from exploding. -/
+def maxInlineDepth : Nat := 64
+
+/-- Weaken every expression of a variable map under a binder of arity `p`. -/
+def VarMap.weaken (p : Nat) (ρ : VarMap n js g) : VarMap (n + p) js g :=
+  ρ.fold (init := {}) fun acc k e => acc.insert k (e.weaken p)
+
+/-- Weaken a local function under a binder of arity `p`: only what it captured
+    mentions variables. -/
+def LocalFun.weaken (p : Nat) (f : LocalFun n js g) : LocalFun (n + p) js g :=
+  { binderName := f.binderName, params := f.params, body := f.body
+    env := VarMap.weaken p f.env }
+
+/-- Weaken the shared-function map under a binder of arity `p`. -/
+def SharedMap.weaken (p : Nat) (s : Std.HashMap FVarId (JsExpr n js g × Array Param)) :
+    Std.HashMap FVarId (JsExpr (n + p) js g × Array Param) :=
+  s.fold (init := {}) fun acc k (e, ps) => acc.insert k (e.weaken p, ps)
+
+/-- Weaken a whole translation context under a binder of arity `p` — what happens on
+    the way into the branch of a `cases`, which binds the fields of a
+    constructor. -/
+def ConvCtx.weaken (p : Nat) (ctx : ConvCtx n js g) : ConvCtx (n + p) js g :=
+  { ρ := VarMap.weaken p ctx.ρ
+    cfg := ctx.cfg
+    funs := ctx.funs.fold (init := {}) fun acc k f => acc.insert k (f.weaken p)
+    shared := SharedMap.weaken p ctx.shared
+    labels := ctx.labels
+    activeDecls := ctx.activeDecls, activeFuns := ctx.activeFuns
+    recFuns := ctx.recFuns }
+
+/-! ### Going under a join point
+
+The continuation of an `Expr.jp` lives in a *larger label context*, so everything the
+translation carries — the expressions a variable is bound to, the environments the
+local functions captured, the shared callees — has to be weakened into it.  Nothing
+moves: `Expr.weakenLabel` renames no variable and folds nothing, it only records that
+one more label is in scope. -/
+
+/-- Weaken every expression of a variable map under a join point of arity `a`. -/
+def VarMap.pushLabel (a : Nat) (ρ : VarMap n js g) : VarMap n (a :: js) g :=
+  ρ.fold (init := {}) fun acc k e => acc.insert k (e.weakenLabel a)
+
+/-- Weaken a local function under a join point of arity `a`. -/
+def LocalFun.pushLabel (a : Nat) (f : LocalFun n js g) : LocalFun n (a :: js) g :=
+  { binderName := f.binderName, params := f.params, body := f.body
+    env := VarMap.pushLabel a f.env }
+
+/-- Weaken the shared-function map under a join point of arity `a`. -/
+def SharedMap.pushLabel (a : Nat) (s : Std.HashMap FVarId (JsExpr n js g × Array Param)) :
+    Std.HashMap FVarId (JsExpr n (a :: js) g × Array Param) :=
+  s.fold (init := {}) fun acc k (e, ps) => acc.insert k (e.weakenLabel a, ps)
+
+/-- Move a whole translation context into the continuation of a join point of arity
+    `a`: one more label is in scope, and everything the context holds is weakened
+    into that larger label context.  The new label itself is registered by the caller
+    (`convCode`'s `Code.jp` case), which knows which LCNF variable names it. -/
+def ConvCtx.pushLabel (a : Nat) (ctx : ConvCtx n js g) : ConvCtx n (a :: js) g :=
+  { ρ := VarMap.pushLabel a ctx.ρ
+    cfg := ctx.cfg
+    funs := ctx.funs.fold (init := {}) fun acc k f => acc.insert k (f.pushLabel a)
+    shared := SharedMap.pushLabel a ctx.shared
+    labels := ctx.labels
+    activeDecls := ctx.activeDecls, activeFuns := ctx.activeFuns
+    recFuns := ctx.recFuns }
+
+/-- The fields of a compiled constructor, read off an array from `start`; a missing
+    one is `undefined`, which cannot happen — the caller checks the arity. -/
+def exprVecFrom (es : Array (JsExpr n js g)) (start : Nat) : (k : Nat) → ExprVec n js g k
+  | 0 => .nil
+  | k + 1 => .cons (es[start]?.getD .undefined) (exprVecFrom es (start + 1) k)
+
+/-- Is reading this expression twice about as cheap as reading it once?  A variable,
+    a literal or a global name can be duplicated freely, and so can a field read off
+    one of those — `t._1` is a load, and naming it would cost a closure and a call,
+    which is more than the second load.  Anything that *computes* has to be named
+    before it is used more than once. -/
+def isAtomicExpr : JsExpr n js g → Bool
+  | .var _ | .unsafeGlobal .. | .numLit _ | .bigintLit _ | .str _
+  | .undefined | .null => true
+  | .prop o _ | .getField o _ => isAtomicExpr o
+  | .index o i => isAtomicExpr o && isAtomicExpr i
+  | _ => false
+
+def lookupVar (ρ : VarMap n js g) (fv : FVarId) : Except String (JsExpr n js g) :=
+  match ρ[fv]? with
+  | some e => .ok e
+  | none => .error s!"unbound variable '{fv.name}'"
+
+/-! ## How compiled data is laid out
+
+The *shape* of a constructor value is decided in one place, `layoutOf`, and used
+twice: by the renderer, which prints `leanEnum` and `foldEnum` nodes, and here, where
+a `cases` on a recursive type is compiled into a tag test and field reads.  The two
+have to agree, which is why they read the same record. -/
+
+/-- The layout the configuration asks for, filled in with what the `.olean` files say
+    about the constructors the file mentions. -/
+def layoutOf (cfg : JsConfig) (d : JsOleanData) : JsDataLayout :=
+  let ctors := d.ctors.toArray.map fun (_, ci) =>
+    ({ tag := ci.tag, idx := ci.cidx, fields := ci.fieldNames.map toString } : JsCtorLayout)
+  let listTags :=
+    if cfg.listRepr == .jsArray then
+      match d.ctors[``List.nil]?, d.ctors[``List.cons]? with
+      | some nilI, some consI => #[nilI.tag, consI.tag]
+      | _, _ => #[]
+    else #[]
+  { ctorRepr := cfg.ctorRepr, fieldNaming := cfg.fieldNaming, enumRepr := cfg.enumRepr
+    listRepr := cfg.listRepr, ctors, listTags }
+
+/-- Is every constructor of this type nullary?  Such a type is an *enum*, which
+    `JsEnumRepr.smallInt` represents by the constructor's index. -/
+def isEnumType (d : JsOleanData) (typeName : Name) : Bool :=
+  match d.types[typeName]? with
+  | some ti => !ti.ctors.isEmpty && ti.ctors.all fun c =>
+      match d.ctors[c]? with
+      | some ci => ci.numFields == 0
+      | none => false
+  | none => false
+
+/-! ## The types of the holes
+
+`saveBase` is the phase of Lean's compiler that still carries the **types** of every
+binder, which is the reason this backend reads it rather than a later phase.  A
+parameter of a compiled declaration is a de Bruijn hole of the `Expr` the body is
+translated to, and what is known about that hole is its type: `tyOfLCNFType` turns
+the LCNF type of a parameter into a `Ty` of the lattice of `LakeJs.TyData`, and
+`convDecl` collects those into the `TyEnv` the optimizer is started from
+(`Expr.optimizeTy`, `Expr.optimizeAllTy`).  That is what lets the engine decide
+`Array.isArray(x)`, `typeof x`, `x ?? y` and `x.tag === "c"` for a *variable* `x`,
+which are exactly the nodes no amount of constant folding can settle.
+
+The translation of a type is **deliberately partial**: every case whose JavaScript
+value is not pinned down by the configuration answers `Ty.unknown`, which tells the
+optimizer nothing and so can make it do nothing wrong.  A wrong answer here would be
+a miscompilation, so a representation that depends on something this function cannot
+see — a trivial structure (unwrapped to its one field), a unit-like type (erased to
+`undefined`), a constructor laid out as an array or a small integer, a function type,
+a type variable — is left unknown. -/
+
+/-- The type of a Lean numeric type in the representation the configuration asks
+    for: a `BigInt`, or a number — and a number that is a non-negative integer when
+    every value of the Lean type is one. -/
+def numTyOf (repr : JsNumRepr) (nonNeg : Bool) : Ty :=
+  match repr with
+  | .bigint => Ty.bigint
+  | .num => if nonNeg then Ty.nat else Ty.number
+
+/-- Is every value of this Lean numeric type a non-negative integer?  `Int`, `Float`
+    and the signed fixed-width types are not. -/
+def isNonNegNumType (tn : Name) : Bool :=
+  tn == ``Nat || tn == ``UInt8 || tn == ``UInt16 || tn == ``UInt32 || tn == ``UInt64 ||
+    tn == ``USize
+
+/-- The runtime tags of every constructor of an inductive, when the `.olean` data has
+    all of them. -/
+def ctorTagsOf? (d : JsOleanData) (tn : Name) : Option (Array String) := do
+  let ti ← d.types[tn]?
+  if ti.ctors.isEmpty then none
+  else ti.ctors.mapM fun c => (d.ctors[c]?).map (·.tag)
+
+/-- The type of a value of an inductive type, when its values really are the
+    constructor objects of the object language: a union of `Ty.ctor` atoms, one per
+    constructor.  Everything the configuration lays out some other way — a trivial
+    structure, a unit-like type, an enum as a small integer, a positional array, a
+    `List` as a JavaScript array — is `Ty.unknown`, except the enum-as-integer case,
+    whose values are the constructor indices. -/
+def tyOfInductive (cfg : JsConfig) (d : JsOleanData) (tn : Name) : Ty :=
+  match d.types[tn]? with
+  | none => Ty.unknown
+  | some ti =>
+    if ti.trivialFieldIdx?.isSome then Ty.unknown
+    else if isEnumType d tn && cfg.enumRepr == .smallInt then Ty.nat
+    else if ti.ctors.size == 1 &&
+        (match d.ctors[ti.ctors[0]!]? with | some ci => ci.numFields == 0 | none => true) then
+      -- A single nullary constructor carries nothing: the value is `undefined`.
+      Ty.unknown
+    else
+      let l := layoutOf cfg d
+      match ctorTagsOf? d tn with
+      | none => Ty.unknown
+      | some tags =>
+        if tags.all (fun t => l.isObjectOnly t ||
+            (cfg.ctorRepr == .taggedObject && !l.isListTag t)) then
+          tags.foldl (init := Ty.never) (fun t s => Ty.join t (Ty.ctor s))
+        else Ty.unknown
+
+/-- The type of a value of the Lean type whose head constant is `tn`. -/
+def tyOfTypeName (cfg : JsConfig) (d : JsOleanData) (tn : Name) : Ty :=
+  if tn == ``Bool || tn == ``Decidable then Ty.bool
+  else if tn == ``String then Ty.str
+  else if tn == ``Array then Ty.arr
+  else if tn == ``Char then
+    match cfg.charRepr with
+    | .jsString => Ty.str
+    | .codePoint => numTyOf cfg.natRepr true
+  else if tn == ``List then
+    if cfg.listRepr == .jsArray then Ty.arr else tyOfInductive cfg d tn
+  else
+    match cfg.numReprOf? tn with
+    | some r => numTyOf r (isNonNegNumType tn)
+    | none => tyOfInductive cfg d tn
+
+/-- **What `saveBase` says about a hole.**  The LCNF type of a binder, as a type of
+    the lattice the optimizer reads; `Ty.unknown` whenever the representation is not
+    pinned down by the configuration alone. -/
+def tyOfLCNFType (cfg : JsConfig) (d : JsOleanData) (type : Lean.Expr) : Ty :=
+  if type.isErased || type.isSort then Ty.unknown
+  else
+    match type.getAppFn with
+    | .const tn _ => tyOfTypeName cfg d tn
+    | _ => Ty.unknown
+
+/-- A JavaScript number literal — a tag index or a length, never a Lean `Nat`, so it
+    does not follow `natRepr`. -/
+def jsNum (k : Nat) : JsExpr n js g := .numLit (JSNumber.ofNat k)
+
+/-- The test "`scrut` was built by `ci`", in the layout the configuration asks for. -/
+def tagTestOf (cfg : JsConfig) (d : JsOleanData) (ci : JsCtorInfo) (scrut : JsExpr n js g) :
+    Except String (JsBExpr n js g) :=
+  let l := layoutOf cfg d
+  if l.isObjectOnly ci.tag then
+    -- `Option` is a tagged object whatever the configuration says.
+    .ok (.isTag scrut (NonEmptyString.ofStringD ci.tag))
+  else if l.isListNil ci.tag then
+    .ok (.binop .strictEq (.prop scrut (.ofLit "length")) (jsNum 0))
+  else if l.isListCons ci.tag then
+    .ok (.binop .strictNeq (.prop scrut (.ofLit "length")) (jsNum 0))
+  else if isEnumType d ci.induct && cfg.enumRepr == .smallInt then
+    .ok (.binop .strictEq scrut (jsNum ci.cidx))
+  else
+    match cfg.ctorRepr with
+    | .positionalArray => .ok (.binop .strictEq (.index scrut (jsNum 0)) (.str ci.tag))
+    | .taggedInt => .ok (.binop .strictEq (.prop scrut (.ofLit "tag")) (jsNum ci.cidx))
+    | .taggedObject => .ok (.isTag scrut (NonEmptyString.ofStringD ci.tag))
+
+/-- Field `j` of `scrut`, which was built by `ci`, in the layout the configuration
+    asks for. -/
+def fieldOf (cfg : JsConfig) (d : JsOleanData) (ci : JsCtorInfo) (scrut : JsExpr n js g)
+    (j : Nat) : Except String (JsExpr n js g) :=
+  let l := layoutOf cfg d
+  if l.isObjectOnly ci.tag then
+    match cfg.fieldNaming with
+    | .positional => .ok (.getField scrut j)
+    | .declared => .ok (.prop scrut (NonEmptyString.ofStringD (l.fieldName ci.tag j)))
+  else if l.isListCons ci.tag then
+    if j == 0 then .ok (.index scrut (jsNum 0))
+    else
+      .error ("the tail of a list cannot be read with `listRepr := .jsArray`: " ++
+        "this language has no array `slice` node")
+  else if l.isListNil ci.tag then
+    .error s!"the constructor '{ci.name}' has no fields"
+  else
+    match cfg.ctorRepr, cfg.fieldNaming with
+    | .positionalArray, _ => .ok (.index scrut (jsNum (j + 1)))
+    | _, .positional => .ok (.getField scrut j)
+    | _, .declared =>
+      .ok (.prop scrut (NonEmptyString.ofStringD (l.fieldName ci.tag j)))
+
+/-- `true` when a `cases` on `typeName` is a two-way test on a JavaScript boolean:
+    `Bool` itself, and `Decidable`, which Lean's own compiler also represents by a
+    boolean. -/
+def isBooleanCases (typeName : Name) : Bool :=
+  typeName == ``Bool || typeName == ``Decidable
+
+/-- The alternative of `c` for `ctorName`, or the default one. -/
+def findAlt? (alts : Array Alt) (ctorName : Name) : Option Alt :=
+  (alts.find? fun a => match a with | .alt n .. => n == ctorName | .default _ => false)
+    |>.orElse fun _ => alts.find? fun a => match a with | .default _ => true | _ => false
+
+/-- The body of an alternative. -/
+def altCode : Alt → Code
+  | .alt _ _ k => k
+  | .default k => k
+
+/-! ## Sharing a join point instead of inlining it
+
+A join point (`Code.jp`) is what LCNF uses for the continuation that every branch of
+a `cases` jumps to, so *inlining* one at each jump copies that continuation once per
+branch — and a nest of `cases` copies it once per path, which is exponential in the
+depth of the nest.
+
+A **join point** that is jumped to more than once is therefore compiled *once*, as
+the object language's own `Expr.jp`, and every jump to it becomes an `Expr.jmp`: the
+arity of the continuation and the fact that it cannot jump to itself are then facts
+of the type rather than conditions checked here.  A **local function** used more than
+once is compiled once as an `Expr.funVal` bound by an `Expr.letIn`, and applied with
+`Expr.extApply`.  One used once is still inlined, which is what lets the partial
+evaluator see through it.  Nothing about totality changes, and a callee that is
+recursive is not shared (it is still rejected by the inlining path).
+-/
+
+/-- How often `fv` occurs in these arguments. -/
+def argUses (fv : FVarId) (args : Array Arg) : Nat :=
+  args.foldl (init := 0) fun acc a =>
+    match a with
+    | .fvar x => if x == fv then acc + 1 else acc
+    | _ => acc
+
+/-- How often `fv` occurs in the right-hand side of an LCNF `let`. -/
+def letValueUses (fv : FVarId) (v : LetValue) : Nat :=
+  match v with
+  | .fvar x args => (if x == fv then 1 else 0) + argUses fv args
+  | .const _ _ args => argUses fv args
+  | .proj _ _ x => if x == fv then 1 else 0
+  | _ => 0
+
+/-- How often `fv` is used in `code`: as the target of a jump, as the callee of an
+    application, as an argument, as a discriminant or as the returned value. -/
+partial def codeUses (fv : FVarId) (code : Code) : Nat :=
+  match code with
+  | .let decl k => letValueUses fv decl.value + codeUses fv k
+  | .fun decl k | .jp decl k => codeUses fv decl.value + codeUses fv k
+  | .jmp x args => (if x == fv then 1 else 0) + argUses fv args
+  | .cases c =>
+    (if c.discr == fv then 1 else 0) +
+      c.alts.foldl (init := 0) fun acc a => acc + codeUses fv (altCode a)
+  | .return x => if x == fv then 1 else 0
+  | .unreach _ => 0
+
+/-! ## Self tail recursion: the loop
+
+A declaration that calls **itself in tail position** is the one shape of recursion the
+object language has a node for: `Expr.loop` (`EXPR-DROP-LAM-CALL-PLAN.md` §2.2).  The
+functions below find the self calls; `convTail` translates the body in tail position,
+turning each of them into a `TailExpr.next`, and `convDecl` wraps the result in a
+loop over the declaration's own parameters.  If any of that fails — a self call that
+is *not* in tail position, a shape `convTail` does not handle — the declaration is
+compiled exactly as before, so the loop is an improvement and never a restriction. -/
+
+/-- Does this right-hand side call `self`, or jump to a local callee whose body
+    does (`selfFuns`)? -/
+def letValueCallsSelf (self : Name) (selfFuns : Std.HashSet FVarId) (v : LetValue) : Bool :=
+  match v with
+  | .const nm _ _ => nm == self
+  | .fvar x _ => selfFuns.contains x
+  | _ => false
+
+/-- Does this code call `self` anywhere, directly or through a local callee whose
+    body does? -/
+partial def codeCallsSelf (self : Name) (selfFuns : Std.HashSet FVarId) : Code → Bool
+  | .let decl k => letValueCallsSelf self selfFuns decl.value || codeCallsSelf self selfFuns k
+  | .fun decl k | .jp decl k =>
+      codeCallsSelf self selfFuns decl.value || codeCallsSelf self selfFuns k
+  | .jmp x _ => selfFuns.contains x
+  | .cases c => c.alts.any fun a => codeCallsSelf self selfFuns (altCode a)
+  | .return _ | .unreach _ => false
+
+/-- Does this loop body ever go round again?  A `loop` whose body never says `next`
+    is a loop that runs once, and compiling one would be worse than not making a loop
+    at all. -/
+def tailHasNext {n a : Nat} {js : List Nat} : TailExpr n js g a → Bool
+  | .ret _ => false
+  | .next _ => true
+  | .ite _ t e => tailHasNext t || tailHasNext e
+  | .bind _ k => tailHasNext k
+
+/-- Should this local function or join point be shared rather than inlined?  It pays
+    off exactly when it is used more than once, and it is only *possible* when it is
+    not recursive — a recursive one has no translation at all, and saying so is the
+    inlining path's job. -/
+def shouldShareFun (decl : FunDecl) (k : Code) : Bool :=
+  1 < codeUses decl.fvarId k && codeUses decl.fvarId decl.value == 0
+
+/-- How big the body of a callee that takes arguments has to be before sharing it
+    beats inlining it. -/
+def smallSharedBody : Nat := 12
+
+/-- The same, for a callee that takes none.  It is much lower: inlining such a callee
+    cannot specialise anything, since every copy is the same expression, so the only
+    reason not to share is that the call would be longer than the body. -/
+def smallSharedConst : Nat := 4
+
+/-- Is this compiled callee worth sharing?  Inlining a *small* callee that takes
+    arguments is usually better than calling it: the arguments are often known at the
+    call site, and then the partial evaluator folds the whole body away — which it
+    cannot do as well once the body is a function value.  A callee that takes no
+    argument gains nothing from
+    being inlined, since every copy would be the same expression, so it is shared as
+    soon as it is bigger than the call that replaces it. -/
+def worthSharing (e : JsExpr n js g) : Bool :=
+  match e with
+  | .funVal 0 b => smallSharedConst ≤ b.size
+  | .funVal _ b => smallSharedBody ≤ b.size
+  | _ => false
+
+/-- The same question for a **join point**, whose body is not wrapped in a node: is
+    naming this continuation better than copying it at each jump?  The thresholds are
+    the ones sharing a function value uses, for the same reasons. -/
+def worthNaming (arity : Nat) (b : JsExpr n js g) : Bool :=
+  if arity == 0 then smallSharedConst ≤ b.size else smallSharedBody ≤ b.size
+
+/-- Bind the fields an alternative names to given expressions; a field with no
+    expression — an erased one, or one of a constructor whose value carries nothing —
+    is bound to `undefined`. -/
+def bindAlt (ctx : ConvCtx n js g) (a : Alt) (vals : Array (JsExpr n js g)) : ConvCtx n js g :=
+  match a with
+  | .default _ => ctx
+  | .alt _ ps _ =>
+    { ctx with ρ := ps.zipIdx.foldl (init := ctx.ρ) fun ρ (p, i) =>
+        ρ.insert p.fvarId (vals[i]?.getD .undefined) }
+
+/-- A `Char` whose code point is known, as the one-character string that represents
+    it when `charRepr := .jsString`.  LCNF has no character literal — `'a'` arrives as
+    the natural number `97` with LCNF type `Char` — so this is where the two meet;
+    anything that is not a literal is left alone. -/
+def charLitOfCodePoint (e : JsExpr n js g) : JsExpr n js g :=
+  match intLitOf? e with
+  | some k =>
+    if 0 ≤ k && k < 0x110000 && !(0xd800 ≤ k && k ≤ 0xdfff) then
+      .str (String.singleton (Char.ofNat k.toNat))
+    else
+      .str (String.singleton (Char.ofNat 0))
+  | none => e
+
+/-- Fit a translated value to the LCNF type of the binding it is bound to.  The only
+    case today is the one above: a `Char` in the string representation. -/
+def coerceToLCNFType (cfg : JsConfig) (type : Lean.Expr) (e : JsExpr n js g) : JsExpr n js g :=
+  if cfg.charRepr == .jsString && type.isConstOf ``Char then charLitOfCodePoint e else e
+
+/-- How many calls deep the translation currently is. -/
+def ConvCtx.depth (ctx : ConvCtx n js g) : Nat := ctx.activeDecls.length + ctx.activeFuns.length
+
+/-- `a.toList`: the compiled `List` of a JavaScript array, as a fold of the array
+    from the right into a chain of `List.cons` — `Array.toList` is an `extern`, so
+    there is no body to inline, but the value it computes is a `foldArray`. -/
+def arrayToListExpr? (d : JsOleanData) (arr : JsExpr n js g) : Option (JsExpr n js g) := do
+  let fam ← d.families[``List]?
+  let ciCons ← d.ctors[``List.cons]?
+  let ciNil ← d.ctors[``List.nil]?
+  let csCons ← fam.findCtor? ciCons.tag
+  let csNil ← fam.findCtor? ciNil.tag
+  if hc : fam.allCtors.contains csCons = true then
+    if hn : fam.allCtors.contains csNil = true then
+      let nilE : JsExpr n js g :=
+        .leanEnum (.mk fam csNil (exprVecFrom #[] 0 csNil.numFields) hn)
+      -- In the body of the fold the accumulator is `#n` and the item is `#(n+1)`.
+      let acc : JsExpr (n + 2) js g := .var ⟨n, by omega⟩
+      let item : JsExpr (n + 2) js g := .var ⟨n + 1, by omega⟩
+      let consE : JsExpr (n + 2) js g :=
+        .leanEnum (.mk fam csCons (exprVecFrom #[item, acc] 0 csCons.numFields) hc)
+      some (.foldArray .right arr nilE consE)
+    else none
+  else none
+
+/-- `l.toArray`: the JavaScript array of a compiled `List`, as the catamorphism
+    `nil ↦ []`, `cons x xs ↦ [x, ...xs]` over the list — the recursive field arrives
+    already converted, which is exactly what a `foldEnum` branch receives.
+
+    `Array` is a one-field structure in Lean but *not* a trivial one for the
+    compiler — an array is a JavaScript array here, not an object wrapping a list —
+    so `Array.mk` and `Array.toList` are conversions rather than nothing at all. -/
+def listToArrayExpr? (d : JsOleanData) (listE : JsExpr n js g) : Option (JsExpr n js g) := do
+  let fam ← d.families[``List]?
+  let ciCons ← d.ctors[``List.cons]?
+  let ciNil ← d.ctors[``List.nil]?
+  let csCons ← fam.findCtor? ciCons.tag
+  let csNil ← fam.findCtor? ciNil.tag
+  if hc : fam.allCtors.contains csCons = true then
+    if hn : fam.allCtors.contains csNil = true then
+      if hcf : csCons.numFields = 2 then
+        if hnf : csNil.numFields = 0 then
+          let consBody : JsExpr (n + 2) js g :=
+            .arr (.cons (.var ⟨n, by omega⟩) (.spread (.var ⟨n + 1, by omega⟩) .nil))
+          let nilBody : JsExpr n js g := .arr .nil
+          let bs : Branches fam n js g :=
+            .cons csNil hn (hnf ▸ nilBody) (.cons csCons hc (hcf ▸ consBody) .nil)
+          some (.foldEnum fam listE bs (.arr .nil))
+        else none
+      else none
+    else none
+  else none
+
+/-! ## Which declarations have to stay functions
+
+A call is normally *inlined*: the callee's body is translated with its parameters
+bound to the arguments, which is what turns a chain of tiny Lean definitions into one
+JavaScript expression.  A **recursive** callee cannot be treated that way — unfolding
+it would never stop — so a declaration that can reach itself is instead emitted as a
+JavaScript function of its own and *called*, through `Expr.extApply` of the global it is
+emitted under.
+
+This is the only recursion the generated file contains, and it stays outside the
+object language proper: `Expr.extApply` is inert, the engine never looks inside it, and
+the totality of `Expr` is untouched (see the note on `Expr.extApply`).
+-/
+
+/-! ## What the translation refuses: a declaration Lean did not prove terminating
+
+`EXPR-DROP-LAM-CALL-PLAN.md` §2.0.  `Lean.Compiler.LCNF.Decl.safe` is `false` exactly
+when the Lean declaration was tagged `partial` or `unsafe`.  Such a declaration has no
+termination proof behind it, so putting its body — or a call to it — inside a term of
+the *total* object language would make the optimizer's termination theorem a statement
+about something the generated program does not do.  It is therefore refused, and
+refused **wherever the translation touches it**: as a root of an output file, as a
+recursive declaration the file has to emit, and as the callee of any call the
+translation would otherwise inline or emit.
+-/
+
+/-- Refuse a `partial` or `unsafe` declaration of a module being compiled, naming it.
+    An `unsafe` implementation Lean itself chose for a library function it *did* prove
+    terminating is not refused (`JsOleanData.localUnsafe` says which is which). -/
+def checkTotal (d : JsOleanData) (decl : Decl) : Except String Unit :=
+  if !d.localUnsafe.contains decl.name then .ok () else
+    .error s!"'{decl.name}' is `partial` or `unsafe`: the JavaScript backend compiles only declarations Lean proved terminating"
+
+/-- The same refusal for a callee, which also says who wanted it: what a user sees for
+    a total declaration that calls a `partial` helper names the helper. -/
+def checkTotalCallee (d : JsOleanData) (caller : Name) (decl : Decl) : Except String Unit :=
+  if !d.localUnsafe.contains decl.name then .ok () else
+  if caller == decl.name then checkTotal d decl else
+    .error s!"'{caller}' calls '{decl.name}', which is `partial` or `unsafe`: the JavaScript backend compiles only declarations Lean proved terminating"
+
+/-- The declarations a declaration calls, as far as the loader read them. -/
+def calleesOf (d : JsOleanData) (n : Name) : Array Name :=
+  match d.decls[n]? with
+  | none => #[]
+  | some decl => (declRefs decl).1.toArray
+
+/-- Every declaration reachable from `start` by calls. -/
+partial def reachableDecls (d : JsOleanData) (start : Array Name) : Std.HashSet Name :=
+  go start.toList {}
+where
+  go : List Name → Std.HashSet Name → Std.HashSet Name
+    | [], seen => seen
+    | n :: rest, seen =>
+      if seen.contains n then go rest seen
+      else go ((calleesOf d n).toList ++ rest) (seen.insert n)
+
+/-- Can `n` reach itself?  Directly recursive, mutually recursive, or recursive
+    through a helper — all three answer `true`. -/
+def isRecursiveDecl (d : JsOleanData) (n : Name) : Bool :=
+  (reachableDecls d (calleesOf d n)).contains n
+
+/-- The declarations an output file has to emit as JavaScript functions of their own:
+    everything reachable from its roots that is recursive and has a compiled body.
+    They are sorted by name, so a file does not depend on hash order. -/
+def recursiveDecls (d : JsOleanData) (roots : Array Name) : Array Name :=
+  let reach := (reachableDecls d roots).toArray
+  let recs := reach.filter fun n =>
+    match d.decls[n]? with
+    | some decl => (match decl.value with | .code _ => true | _ => false) &&
+        isRecursiveDecl d n
+    | none => false
+  recs.qsort (fun a b => toString a < toString b)
+
+/-- Apply a translated callee to translated arguments.
+
+    The object language has **no β rule** — that is what keeps `Expr.optimize` total —
+    so a `funVal` that the translation itself built and then applies would stay in the
+    output as a redex the optimizer refuses to contract
+    (`EXPR-DROP-LAM-CALL-PLAN.md` §2.4, cases E/F).  It is contracted **here**
+    instead, where a β step is nothing but running the body in an environment of the
+    arguments, which is what the engine's own binder rules do.  If the arity does not
+    match, or the engine reports an error on the body, the application is built as it
+    was.  Anything whose callee is not a `funVal` — a parameter of arrow type, a
+    dictionary field, the result of another application — is a real `extApply`. -/
+def applyExpr {n : Nat} {js : List Nat} (fn : JsExpr n js g) (as : Array (JsExpr n js g)) :
+    JsExpr n js g :=
+  let residual : JsExpr n js g := .extApply fn (ExprList.ofItems as.toList)
+  match fn with
+  | .funVal k body =>
+    if as.size = k then
+      match Expr.evalX body (Env.extend (p := k) Env.id as.toList) with
+      | .ok e => e
+      | .error _ => residual
+    else residual
+  | _ => residual
+
+mutual
+
+/-- What an LCNF variable *is*, as an expression.
+
+    A variable is usually bound to a value by `ctx.ρ`, but it can also name a local
+    function or a join point, and a function is a value here: it becomes a `funVal`,
+    whose body is translated once and optimized on the spot — the engine never looks
+    optimized once, on the spot, so a shared body is small before anything copies
+    it. -/
+partial def convValue {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (fv : FVarId) : Except String (JsExpr n js g) := do
+  match ctx.ρ[fv]? with
+  | some e => return e
+  | none =>
+    match ctx.shared[fv]? with
+    | some (e, _) => return e
+    | none =>
+    if ctx.labels.contains fv then
+      .error "a join point is used as a value: it can only be jumped to"
+    match ctx.funs[fv]? with
+    | some f =>
+      if ctx.activeFuns.contains fv then
+        .error (s!"the local function '{f.binderName}' is recursive: " ++
+          "this language has no recursion")
+      if ctx.depth ≥ maxInlineDepth then
+        .error s!"inlining '{f.binderName}': more than {maxInlineDepth} nested calls"
+      convLamBody d roots ctx f.env ctx.funs f.params f.body
+        ctx.activeDecls (fv :: ctx.activeFuns)
+    | none => .error s!"unbound variable '{fv.name}'"
+
+/-- The translations of the computationally relevant arguments of a call; types and
+    erased arguments are dropped. -/
+partial def convArgsM {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (args : Array Arg) : Except String (Array (JsExpr n js g)) :=
+  args.foldlM (init := #[]) fun acc a =>
+    match a with
+    | .erased | .type _ => .ok acc
+    | .fvar fv => do return acc.push (← convValue d roots ctx fv)
+
+/-- The body of a callee, translated under its own parameters: the relevant ones
+    occupy the last `(params.filter isRelevantParam).size` de Bruijn indices, which
+    is the convention every binder of `Expr` follows.  This is what both a function
+    value (`convLamBody`) and a join point (`convCode`'s `Code.jp` case) are built
+    out of — the two differ only in the node they wrap it in. -/
+partial def convParamsBody {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name)
+    (ctx : ConvCtx n js g)
+    (baseρ : VarMap n js g) (baseFuns : Std.HashMap FVarId (LocalFun n js g))
+    (params : Array Param) (body : Code)
+    (activeDecls : List Name) (activeFuns : List FVarId) :
+    Except String (JsExpr (n + (params.filter isRelevantParam).size) js g) := do
+  let ps := params.filter isRelevantParam
+  let k := ps.size
+  let mut ρ : VarMap (n + k) js g := VarMap.weaken k baseρ
+  let funs : Std.HashMap FVarId (LocalFun (n + k) js g) :=
+    baseFuns.fold (init := {}) fun acc key f => acc.insert key (f.weaken k)
+  for p in params do
+    ρ := ρ.insert p.fvarId .undefined
+  for j in [0 : ps.size] do
+    if hj : j < k then
+      ρ := ρ.insert ps[j]!.fvarId (.var ⟨n + j, by omega⟩)
+  convCode d roots
+    ({ ρ, cfg := ctx.cfg, funs, shared := SharedMap.weaken k ctx.shared,
+       labels := ctx.labels, activeDecls, activeFuns, recFuns := ctx.recFuns } :
+      ConvCtx (n + k) js g) body
+
+/-- A function value: `params` are still to be given, so the result is a `funVal` of
+    the relevant ones with `body` translated underneath them.
+
+    The body is optimized here, so that a callee that is going to be shared is small
+    before anything else looks at it. -/
+partial def convLamBody {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (baseρ : VarMap n js g) (baseFuns : Std.HashMap FVarId (LocalFun n js g))
+    (params : Array Param) (body : Code)
+    (activeDecls : List Name) (activeFuns : List FVarId) :
+    Except String (JsExpr n js g) := do
+  let bodyE ←
+    convParamsBody d roots ctx baseρ baseFuns params body activeDecls activeFuns
+  let bodyE := match bodyE.optimize with | .ok v => v | .error _ => bodyE
+  return .funVal (params.filter isRelevantParam).size bodyE
+
+/-- A call to a known callee — a top-level declaration, a local function or a join
+    point — whose parameters are `params` and whose body is `body`.
+
+    The call need not be saturated.  The parameters that *are* given are bound to the
+    arguments, as the `let`s of LCNF are; if parameters are left over the result is a
+    `funVal` over them, and if arguments are left over the result is an `extApply` of
+    what the
+    saturated part produced. -/
+partial def convCallee {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (baseρ : VarMap n js g) (baseFuns : Std.HashMap FVarId (LocalFun n js g))
+    (params : Array Param) (body : Code) (args : Array Arg)
+    (activeDecls : List Name) (activeFuns : List FVarId) :
+    Except String (JsExpr n js g) := do
+  let given := min args.size params.size
+  let mut ρ := baseρ
+  let mut funs := baseFuns
+  for i in [0 : given] do
+    let p := params[i]!
+    match args[i]! with
+    | .erased | .type _ => ρ := ρ.insert p.fvarId .undefined
+    | .fvar fv =>
+      match ctx.ρ[fv]?, ctx.funs[fv]? with
+      | some e, _ => ρ := ρ.insert p.fvarId e
+      | none, some f => funs := funs.insert p.fvarId f
+      | none, none => .error s!"unbound variable '{fv.name}'"
+  let inner : JsExpr n js g ←
+    if given < params.size then
+      convLamBody d roots ctx ρ funs (params.extract given params.size) body
+        activeDecls activeFuns
+    else
+      convCode d roots
+        ({ ρ, cfg := ctx.cfg, funs, shared := ctx.shared, activeDecls, activeFuns,
+           recFuns := ctx.recFuns } :
+          ConvCtx n js g) body
+  if args.size > params.size then
+    let extra ← convArgsM d roots ctx (args.extract params.size args.size)
+    return applyExpr inner extra
+  else
+    return inner
+
+/-- A call to a declaration this file emits as a JavaScript function of its own: a
+    **recursive** one.  Its JavaScript function takes the computationally relevant
+    parameters, in order, so the relevant arguments are what the call passes.
+
+    The call need not be saturated here either: missing arguments η-expand into a
+    `funVal`, surplus ones become an `extApply` of the result. -/
+partial def convGlobalCall {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name)
+    (ctx : ConvCtx n js g) (declName : Name) (args : Array Arg) :
+    Except String (JsExpr n js g) := do
+  let some decl := d.decls[declName]?
+    | .error s!"'{declName}' has no compiled body"
+  checkTotalCallee d (ctx.activeDecls.head?.getD declName) decl
+  let nm := jsNEIdent declName
+  if h : nm ∈ g then
+    let fn : JsExpr n js g := .unsafeGlobal nm h
+    let params := decl.params
+    let given := min args.size params.size
+    let mut es : Array (JsExpr n js g) := #[]
+    for i in [0 : given] do
+      if isRelevantParam params[i]! then
+        match args[i]! with
+        | .erased | .type _ => es := es.push .undefined
+        | .fvar fv => es := es.push (← convValue d roots ctx fv)
+    let relTotal := (params.filter isRelevantParam).size
+    let missing := relTotal - es.size
+    let base : JsExpr n js g :=
+      if relTotal == 0 then
+        -- No relevant parameter at all: the declaration is emitted as a *value*.
+        fn
+      else if missing == 0 then
+        .extApply fn (ExprList.ofItems es.toList)
+      else
+        -- Partially applied: `(p₀, …) => f(a₀, …, p₀, …)`.
+        let vars : List (JsExpr (n + missing) js g) :=
+          (List.range missing).map fun j =>
+            if hj : n + j < n + missing then .var ⟨n + j, hj⟩ else .undefined
+        .funVal missing
+          (.extApply (fn.weaken missing)
+            (ExprList.ofItems ((es.map (·.weaken missing)).toList ++ vars)))
+    if args.size > params.size then
+      let extra ← convArgsM d roots ctx (args.extract params.size args.size)
+      return .extApply base (ExprList.ofItems extra.toList)
+    else
+      return base
+  else
+    .error s!"'{declName}' is not declared in the globals index"
+
+/-- A constructor application of a general inductive type: the compiled value
+    `{ tag: "cons", _1: …, _2: … }` of `Expr.leanEnum`, indexed by the
+    recursion-aware schema of the type. -/
+partial def convGeneralCtor {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name)
+    (ctx : ConvCtx n js g) (ci : JsCtorInfo) (fields : Array Arg) :
+    Except String (JsExpr n js g) := do
+  let some fam := d.families[ci.induct]?
+    | .error s!"constructor '{ci.name}': no schema could be read for '{ci.induct}'"
+  let some cs := fam.findCtor? ci.tag
+    | .error (s!"constructor '{ci.name}': '{ci.tag}' is not a constructor of the " ++
+        s!"schema of '{ci.induct}'")
+  if cs.numFields != fields.size then
+    .error (s!"constructor '{ci.name}' is applied to {fields.size} fields but has " ++
+      s!"{cs.numFields}")
+  let es ← fields.mapM fun a =>
+    match a with
+    | .erased | .type _ => .ok (.undefined : JsExpr n js g)
+    | .fvar fv => convValue d roots ctx fv
+  if h : fam.allCtors.contains cs = true then
+    return .leanEnum (.mk fam cs (exprVecFrom es 0 cs.numFields) h)
+  else
+    .error s!"constructor '{ci.name}': '{ci.tag}' is not in the schema of '{ci.induct}'"
+
+/-- A constructor application.  `Bool` and `Decidable` are JavaScript booleans, a
+    unit type is `undefined`, a trivial structure *is* its single field, and
+    everything else is a tagged object. -/
+partial def convCtor {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (ci : JsCtorInfo) (args : Array Arg) : Except String (JsExpr n js g) := do
+  let cfg := ctx.cfg
+  if ci.induct == ``Char && cfg.charRepr == .jsString then
+    -- A `Char` is a one-character string: the constructor's one field is the code
+    -- point, and a string can only be built from a code point that is known.
+    let fields := args.extract ci.numParams args.size
+    let e ← match fields[0]? with
+      | some (Arg.fvar fv) => convValue d roots ctx fv
+      | _ => .error "a `Char` with no value"
+    -- The field is often an arithmetic expression (`UInt32.ofNatLT 0xFFFF`), so it
+    -- is folded first: what matters is whether its *value* is known.
+    let e := match e.optimize with | .ok v => v | .error _ => e
+    match intLitOf? e with
+    | some k =>
+      if 0 ≤ k && k < 0x110000 && !(0xd800 ≤ k && k ≤ 0xdfff) then
+        return .str (String.singleton (Char.ofNat k.toNat))
+      else
+        return .str (String.singleton (Char.ofNat 0))
+    | none =>
+      .error ("a computed `Char` cannot be compiled with `charRepr := .jsString`: " ++
+        "this language has no `String.fromCodePoint`")
+  if ci.name == ``Array.mk then
+    -- An array *is* a JavaScript array, not an object holding a list: building one
+    -- from its list is a conversion.
+    let fields := args.extract ci.numParams args.size
+    match fields[0]? with
+    | some (Arg.fvar fv) =>
+      let l ← convValue d roots ctx fv
+      match listToArrayExpr? d l with
+      | some e => return e
+      | none => .error "'Array.mk': no schema could be read for 'List'"
+    | _ => return .arr .nil
+  if ci.induct == ``Bool then
+    return .bexpr (if ci.name == ``Bool.true then .tt else .ff)
+  if ci.induct == ``Decidable then
+    -- A `Decidable` is a boolean at runtime, here as in Lean's own compiler.
+    return .bexpr (if ci.name == ``Decidable.isTrue then .tt else .ff)
+  if ci.numFields == 0 then
+    -- `Unit.unit`, `PUnit.unit`, and any other nullary constructor of a type with a
+    -- single constructor: there is nothing to store.
+    match d.types[ci.induct]? with
+    | some ti => if ti.ctors.size == 1 then return .undefined
+    | none => pure ()
+  let fields := args.extract ci.numParams args.size
+  match d.types[ci.induct]? >>= (·.trivialFieldIdx?) with
+  | some idx =>
+    match fields[idx]? with
+    | some (.fvar fv) => convValue d roots ctx fv
+    | _ => .error s!"constructor '{ci.name}': its one relevant field is not a value"
+  | none => convGeneralCtor d roots ctx ci fields
+
+
+/-- The right-hand side of an LCNF `let`. -/
+partial def convLetValue {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (v : LetValue) : Except String (JsExpr n js g) := do
+  match v with
+  | .erased => return .undefined
+  | .lit (.nat v) => return numLitIn ctx.cfg.natRepr v
+  | .lit (.str s) => return .str s
+  | .lit (.uint8 v) => return numLitIn (ctx.cfg.fixedWidthRepr 8 false) v.toNat
+  | .lit (.uint16 v) => return numLitIn (ctx.cfg.fixedWidthRepr 16 false) v.toNat
+  | .lit (.uint32 v) => return numLitIn (ctx.cfg.fixedWidthRepr 32 false) v.toNat
+  | .lit (.uint64 v) => return numLitIn ctx.cfg.uint64Repr v.toNat
+  | .lit (.usize v) => return numLitIn ctx.cfg.usizeRepr v.toNat
+  | .fvar fv args =>
+    if args.isEmpty then convValue d roots ctx fv
+    else convApp d roots ctx fv args
+  | .proj typeName idx fv =>
+    let obj ← convValue d roots ctx fv
+    if typeName == ``Char && ctx.cfg.charRepr == .jsString then
+      -- The one field of a `Char` is its code point, and a `Char` is a string here:
+      -- reading the field back is only possible for a character that is known — so
+      -- the character is folded first, exactly as a primitive's arguments are.
+      match Expr.optBest obj with
+      | .str t =>
+        match t.toList with
+        | [c] => return numLitIn (ctx.cfg.fixedWidthRepr 32 false) (c.toNat : Int)
+        | _ => .error "a `Char` that is not one character"
+      | _ =>
+        -- Not a known character: read the code point off the string itself.
+        match convertRepr .num (ctx.cfg.fixedWidthRepr 32 false) (codePointAt0 obj) with
+        | some e => return e
+        | none => .error "the code point of a computed `Char` cannot be taken here"
+    if typeName == ``Array && idx == 0 then
+      -- `a.toList` of a JavaScript array: the fold that rebuilds the list.
+      match arrayToListExpr? d obj with
+      | some e => return e
+      | none => .error "'Array.toList': no schema could be read for 'List'"
+    match d.types[typeName]? >>= (·.trivialFieldIdx?) with
+    | some i => if i == idx then return obj
+                else .error s!"projection {idx} of the trivial structure '{typeName}'"
+    | none =>
+      match d.types[typeName]? >>= (fun ti => ti.ctors[0]?) >>= (d.ctors[·]?) with
+      | some ci => fieldOf ctx.cfg d ci obj idx
+      | none => return .getField obj idx
+  | .const declName _ args =>
+    let as ← convArgsM d roots ctx args
+    -- The arguments are folded *here*, before the dictionary is consulted.  Several
+    -- primitives are correct only when they can see the value of an argument — the
+    -- code point of a `Char`, the digits of a `Float` — and the value is often
+    -- spelled out as a chain of LCNF `let`s that only folding turns into a literal.
+    -- Folding it later, as part of optimizing the whole declaration, would be too
+    -- late: the primitive would already have emitted a method call on what the
+    -- evaluator's model says is a value with no such method.
+    let as := as.map Expr.optBest
+    match jsPrim? ctx.cfg declName as with
+    | some e => return e
+    | none =>
+      if declName == ``Array.toList || declName == ``Array.toListImpl then
+        match as[0]? >>= arrayToListExpr? d with
+        | some e => return e
+        | none => pure ()
+      match d.ctors[declName]? with
+      | some ci => convCtor d roots ctx ci args
+      | none =>
+        if ctx.recFuns.contains declName then
+          convGlobalCall d roots ctx declName args
+        else if as.isEmpty && roots.contains declName then
+          let nm := jsNEIdent declName
+          if h : nm ∈ g then return .unsafeGlobal nm h
+          else .error s!"'{declName}' is not declared in the globals index"
+        else
+          inlineDecl d roots ctx declName args
+
+/-- A call to a top-level declaration that the dictionary does not know: translate
+    the callee's body with its parameters bound to the arguments.  A callee that is
+    already being inlined is a recursive call, which this language cannot
+    express. -/
+partial def inlineDecl {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (declName : Name) (args : Array Arg) : Except String (JsExpr n js g) := do
+  let some decl := d.decls[declName]?
+    | .error <|
+        if args.all (fun a => match a with | .fvar _ => false | _ => true) then
+          s!"'{declName}' is not a known primitive"
+        else
+          s!"call to '{declName}': there is no application node, and it is " ++
+          "not a known primitive"
+  let .code body := decl.value
+    | .error (s!"'{declName}' has no compiled body (it is an `extern` or a " ++
+        "constant), and it is not a known primitive")
+  checkTotalCallee d (ctx.activeDecls.head?.getD declName) decl
+  if ctx.activeDecls.contains declName then
+    .error s!"'{declName}' is recursive: this language has no recursion"
+  if ctx.depth ≥ maxInlineDepth then
+    .error s!"inlining '{declName}': more than {maxInlineDepth} nested calls"
+  convCallee d roots ctx {} {} decl.params body args
+    (declName :: ctx.activeDecls) ctx.activeFuns
+
+/-- A `cases` on a **recursive** inductive type, as a chain of tag tests.
+
+    A `cases` on such a type is not a catamorphism — it looks at the outermost
+    constructor only — so it cannot be a `foldEnum`, whose branches receive every
+    recursive field already folded.  What it *is* is a chain of
+    `x.tag === "cons" ? … : …` with the fields read off by `x._1`, `x._2`, …, which
+    adds no recursion at all: the sub-values are passed along untouched.
+
+    The discriminant is named by a `letIn` so that it is evaluated once however many
+    tags are tested; the partial evaluator drops the binding again when the value is
+    known. -/
+partial def convTagCases {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (c : Cases) (discr : JsExpr n js g) : Except String (JsExpr n js g) := do
+  if isAtomicExpr discr then
+    -- Naming it would cost an IIFE and buy nothing: reading it twice is reading a
+    -- variable or a literal twice.
+    let dflt : JsExpr n js g ←
+      match c.alts.find? (fun a => match a with | .default _ => true | _ => false) with
+      | some (.default k) => convCode d roots ctx k
+      | _ => .ok .undefined
+    return (← convTagBranches d roots ctx c.alts 0 discr dflt)
+  let ctxW := ctx.weaken 1
+  let scrut : JsExpr (n + 1) js g := .var ⟨n, Nat.lt_succ_self n⟩
+  let dflt : JsExpr (n + 1) js g ←
+    match c.alts.find? (fun a => match a with | .default _ => true | _ => false) with
+    | some (.default k) => convCode d roots ctxW k
+    | _ => .ok .undefined
+  let chain ← convTagBranches d roots ctxW c.alts 0 scrut dflt
+  return .letIn discr chain
+
+/-- The tag tests of `convTagCases`, one per `Alt.alt`, in order; `dflt` is what is
+    left when none of them matches. -/
+partial def convTagBranches {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (alts : Array Alt) (i : Nat) (scrut : JsExpr n js g) (dflt : JsExpr n js g) :
+    Except String (JsExpr n js g) := do
+  if h : i < alts.size then
+    match alts[i] with
+    | .default _ => convTagBranches d roots ctx alts (i + 1) scrut dflt
+    | .alt ctorName ps k =>
+      let some ci := d.ctors[ctorName]?
+        | .error s!"'{ctorName}' is not a known constructor"
+      if ci.numFields != ps.size then
+        .error (s!"the alternative for '{ctorName}' binds {ps.size} fields, but it " ++
+          s!"has {ci.numFields}")
+      let mut ρ := ctx.ρ
+      for (p, j) in ps.zipIdx do
+        ρ := ρ.insert p.fvarId (← fieldOf ctx.cfg d ci scrut j)
+      let body ← convCode d roots { ctx with ρ } k
+      let rest ← convTagBranches d roots ctx alts (i + 1) scrut dflt
+      let test ← tagTestOf ctx.cfg d ci scrut
+      return .cond test body rest
+  else
+    return dflt
+
+/-- A `cases` on a general inductive type, as a `foldEnum` over its schema — which is
+    a plain case analysis exactly when the type is **not recursive**, since then no
+    field of any constructor is folded.  A recursive type goes to `convTagCases`
+    instead. -/
+partial def convGeneralCases {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (c : Cases) (discr : JsExpr n js g) : Except String (JsExpr n js g) := do
+  let some fam := d.families[c.typeName]?
+    | .error s!"'cases' on '{c.typeName}': no schema could be read for it"
+  if fam.allCtors.any (fun cs => cs.numRecFields != 0) then
+    return (← convTagCases d roots ctx c discr)
+  let dflt ←
+    match c.alts.find? (fun a => match a with | .default _ => true | _ => false) with
+    | some (.default k) => convCode d roots ctx k
+    | _ => .ok (.undefined : JsExpr n js g)
+  let bs ← convBranches d roots ctx fam c.alts 0
+  return .foldEnum fam discr bs dflt
+
+/-- The branches of a `foldEnum`: one per `Alt.alt` of the `cases`, in order.  The
+    body of a branch is translated one binder deeper — the constructor's fields
+    occupy the last de Bruijn indices — so the context is weakened on the way in. -/
+partial def convBranches {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (fam : LeanRecFamily) (alts : Array Alt) (i : Nat) :
+    Except String (Branches fam n js g) := do
+  if h : i < alts.size then
+    match alts[i] with
+    | .default _ => convBranches d roots ctx fam alts (i + 1)
+    | .alt ctorName ps k =>
+      let some ci := d.ctors[ctorName]?
+        | .error s!"'{ctorName}' is not a known constructor"
+      let some cs := fam.findCtor? ci.tag
+        | .error s!"'{ctorName}' is not a constructor of the schema of '{ci.induct}'"
+      if cs.numFields != ps.size then
+        .error (s!"the alternative for '{ctorName}' binds {ps.size} fields, but it " ++
+          s!"has {cs.numFields}")
+      let ctxW := ctx.weaken cs.numFields
+      let ρ := Id.run do
+        let mut ρ := ctxW.ρ
+        for j in [0 : ps.size] do
+          if hj : j < cs.numFields then
+            ρ := ρ.insert ps[j]!.fvarId (.var ⟨n + j, by omega⟩)
+        return ρ
+      let body : JsExpr (n + cs.numFields) js g ←
+        convCode d roots ({ ctxW with ρ } : ConvCtx (n + cs.numFields) js g) k
+      let tail ← convBranches d roots ctx fam alts (i + 1)
+      if hm : fam.allCtors.contains cs = true then
+        return .cons cs hm body tail
+      else
+        .error s!"'{ctorName}' is not in the schema of '{ci.induct}'"
+  else
+    return .nil
+
+/-- An application of a local function or a jump to a join point: translate its body
+    with its parameters bound to the arguments. -/
+partial def convApp {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (fv : FVarId) (args : Array Arg) : Except String (JsExpr n js g) := do
+  -- A join point compiled to an `Expr.jp` is **jumped to**: the label is the one the
+  -- context remembers for it, and its de Bruijn index is how many join points have
+  -- been entered since it was bound.  That the label exists, and that the jump
+  -- carries the number of arguments it takes, are facts of the type of `Expr.jmp`.
+  if let some (lvl, ps) := ctx.labels[fv]? then
+    let mut es : Array (JsExpr n js g) := #[]
+    for i in [0 : ps.size] do
+      if isRelevantParam ps[i]! then
+        match args[i]? with
+        | some (.fvar a) => es := es.push (← convValue d roots ctx a)
+        | some _ => es := es.push .undefined
+        | none => .error "a jump to a join point that is missing an argument"
+    if args.size > ps.size then
+      .error "a jump to a join point with too many arguments"
+    let i := js.length - lvl
+    if h : i < js.length then
+      if harity : js[i] = es.size then
+        return .jmp ⟨i, h⟩ (ExprVec.cast harity.symm (exprVecFrom es 0 es.size))
+      else
+        .error "a jump to a join point with the wrong number of arguments"
+    else
+      .error "a jump to a join point that is not in scope"
+  -- A **shared** callee is called, not inlined: it was compiled once, as a `funVal`
+  -- bound by an enclosing `letIn`.
+  if let some (fn, ps) := ctx.shared[fv]? then
+    let mut es : Array (JsExpr n js g) := #[]
+    for i in [0 : ps.size] do
+      if isRelevantParam ps[i]! then
+        match args[i]? with
+        | some (.fvar a) => es := es.push (← convValue d roots ctx a)
+        | some _ => es := es.push .undefined
+        | none => .error "a jump to a join point that is missing an argument"
+    let base : JsExpr n js g := .extApply fn (ExprList.ofItems es.toList)
+    if args.size > ps.size then
+      let extra ← convArgsM d roots ctx (args.extract ps.size args.size)
+      return .extApply base (ExprList.ofItems extra.toList)
+    else
+      return base
+  let some f := ctx.funs[fv]?
+    | match ctx.ρ[fv]? with
+      | some e =>
+        -- A value is applied: a function that came from somewhere the translation
+        -- cannot see into (a parameter of the declaration being compiled, say) is
+        -- called rather than inlined.
+        let as ← convArgsM d roots ctx args
+        return applyExpr e as
+      | none => .error s!"unbound variable '{fv.name}'"
+  if ctx.activeFuns.contains fv then
+    .error (s!"the local function '{f.binderName}' is recursive: " ++
+      "this language has no recursion")
+  if ctx.depth ≥ maxInlineDepth then
+    .error s!"inlining '{f.binderName}': more than {maxInlineDepth} nested calls"
+  convCallee d roots ctx f.env ctx.funs f.params f.body args
+    ctx.activeDecls (fv :: ctx.activeFuns)
+
+/-- Translate a piece of LCNF code **in tail position** of a loop with `a` loop
+    variables: a call of `self` in tail position becomes `TailExpr.next`, everything
+    else is the ordinary translation under a `ret`.
+
+    A subtree that does not mention `self` at all is translated by `convCode` and
+    returned, so only the spine that leads to a self call is handled here.  Every
+    shape that is not understood is an error, and the caller falls back on compiling
+    the declaration as it did before. -/
+partial def convTail {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name)
+    (self : Name) (a : Nat) (selfFuns : Std.HashSet FVarId) (ctx : ConvCtx n js g)
+    (code : Code) : Except String (TailExpr n js g a) := do
+  if !codeCallsSelf self selfFuns code then
+    return .ret (← convCode d roots ctx code)
+  match code with
+  | .return fv => return .ret (← convValue d roots ctx fv)
+  | .unreach _ => return .ret .undefined
+  | .let decl k =>
+    let selfTail : Bool :=
+      match decl.value, k with
+      | .const nm _ _, .return rv => nm == self && rv == decl.fvarId
+      | _, _ => false
+    if selfTail then
+      let .const _ _ args := decl.value
+        | .error "a tail-recursive call that is not a call"
+      let some sd := d.decls[self]?
+        | .error s!"'{self}' has no compiled body"
+      if args.size != sd.params.size then
+        .error s!"the tail-recursive call of '{self}' is not saturated"
+      let mut es : Array (JsExpr n js g) := #[]
+      for i in [0 : sd.params.size] do
+        if isRelevantParam sd.params[i]! then
+          match args[i]? with
+          | some (.fvar x) => es := es.push (← convValue d roots ctx x)
+          | some _ => es := es.push .undefined
+          | none => .error s!"the tail-recursive call of '{self}' is missing an argument"
+      if h : es.size = a then
+        return .next (ExprVec.cast h (exprVecFrom es 0 es.size))
+      else
+        .error s!"the tail-recursive call of '{self}' passes {es.size} of {a} arguments"
+    else
+      if letValueCallsSelf self selfFuns decl.value then
+        .error s!"'{self}' calls itself where the call is not in tail position"
+      let v ← convLetValue d roots ctx decl.value
+      let v := coerceToLCNFType ctx.cfg decl.type v
+      convTail d roots self a selfFuns { ctx with ρ := ctx.ρ.insert decl.fvarId v } k
+  | .fun decl k | .jp decl k =>
+    -- A local callee is inlined, here as everywhere else; one whose body calls
+    -- `self` is inlined *in tail position*, which is what keeps the loop.
+    let f : LocalFun n js g :=
+      { binderName := decl.binderName, params := decl.params, body := decl.value
+        env := ctx.ρ }
+    let selfFuns :=
+      if codeCallsSelf self selfFuns decl.value then selfFuns.insert decl.fvarId else selfFuns
+    convTail d roots self a selfFuns { ctx with funs := ctx.funs.insert decl.fvarId f } k
+  | .jmp fv args =>
+    let some f := ctx.funs[fv]?
+      | .error "a jump in tail position to a join point that is not in scope"
+    if ctx.activeFuns.contains fv then
+      .error s!"the local function '{f.binderName}' is recursive: this language has no recursion"
+    if args.size != f.params.size then
+      .error "a jump in tail position that is not saturated"
+    let mut ρ := f.env
+    let mut funs := ctx.funs
+    for i in [0 : f.params.size] do
+      let p := f.params[i]!
+      match args[i]! with
+      | .erased | .type _ => ρ := ρ.insert p.fvarId .undefined
+      | .fvar x =>
+        match ctx.ρ[x]?, ctx.funs[x]? with
+        | some e, _ => ρ := ρ.insert p.fvarId e
+        | none, some lf => funs := funs.insert p.fvarId lf
+        | none, none => .error s!"unbound variable '{x.name}'"
+    convTail d roots self a selfFuns
+      { ctx with ρ, funs, activeFuns := fv :: ctx.activeFuns } f.body
+  | .cases c =>
+    let discr ← convValue d roots ctx c.discr
+    if isBooleanCases c.typeName then
+      let tName := if c.typeName == ``Bool then ``Bool.true else ``Decidable.isTrue
+      let fName := if c.typeName == ``Bool then ``Bool.false else ``Decidable.isFalse
+      let some tAlt := findAlt? c.alts tName
+        | .error s!"'cases' on '{c.typeName}' has no alternative for '{tName}'"
+      let some fAlt := findAlt? c.alts fName
+        | .error s!"'cases' on '{c.typeName}' has no alternative for '{fName}'"
+      let t ← convTail d roots self a selfFuns (bindAlt ctx tAlt #[]) (altCode tAlt)
+      let e ← convTail d roots self a selfFuns (bindAlt ctx fAlt #[]) (altCode fAlt)
+      return .ite (.truthy discr) t e
+    else if c.typeName == ``Nat then
+      let some zAlt := findAlt? c.alts ``Nat.zero
+        | .error "'cases' on 'Nat' has no alternative for 'Nat.zero'"
+      let some sAlt := findAlt? c.alts ``Nat.succ
+        | .error "'cases' on 'Nat' has no alternative for 'Nat.succ'"
+      let z ← convTail d roots self a selfFuns (bindAlt ctx zAlt #[]) (altCode zAlt)
+      let s ← convTail d roots self a selfFuns
+        (bindAlt ctx sAlt #[.binop .minus discr (numLitIn ctx.cfg.natRepr 1)]) (altCode sAlt)
+      return .ite (.binop .strictEq discr (numLitIn ctx.cfg.natRepr 0)) z s
+    else if c.typeName == ``Int then
+      let some oAlt := findAlt? c.alts ``Int.ofNat
+        | .error "'cases' on 'Int' has no alternative for 'Int.ofNat'"
+      let some nAlt := findAlt? c.alts ``Int.negSucc
+        | .error "'cases' on 'Int' has no alternative for 'Int.negSucc'"
+      let o ← convTail d roots self a selfFuns (bindAlt ctx oAlt #[discr]) (altCode oAlt)
+      let neg ← convTail d roots self a selfFuns
+        (bindAlt ctx nAlt
+          #[.binop .minus (negIn ctx.cfg.intRepr discr) (numLitIn ctx.cfg.intRepr 1)])
+        (altCode nAlt)
+      return .ite (.binop .le (numLitIn ctx.cfg.intRepr 0) discr) o neg
+    else
+      match d.types[c.typeName]? >>= (·.trivialFieldIdx?) with
+      | some idx =>
+        match c.alts[0]? with
+        | some (Alt.alt _ ps k) =>
+          let ρ := ps.zipIdx.foldl (init := ctx.ρ) fun ρ (p, i) =>
+            ρ.insert p.fvarId (if i == idx then discr else .undefined)
+          convTail d roots self a selfFuns { ctx with ρ } k
+        | some (Alt.default k) => convTail d roots self a selfFuns ctx k
+        | none => .error s!"'cases' on '{c.typeName}' has no alternatives"
+      | none => convTailTagCases d roots self a selfFuns ctx c discr
+
+/-- A `cases` in tail position, as a chain of tag tests: the tail-position twin of
+    `convTagCases`.  A scrutinee that is not cheap to read twice is named by
+    `TailExpr.bind`, which is the tail-position `letIn`. -/
+partial def convTailTagCases {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name)
+    (self : Name) (a : Nat) (selfFuns : Std.HashSet FVarId) (ctx : ConvCtx n js g)
+    (c : Cases) (discr : JsExpr n js g) : Except String (TailExpr n js g a) := do
+  if isAtomicExpr discr then
+    let dflt : TailExpr n js g a ←
+      match c.alts.find? (fun alt => match alt with | .default _ => true | _ => false) with
+      | some (.default k) => convTail d roots self a selfFuns ctx k
+      | _ => .ok (.ret .undefined)
+    convTailTagBranches d roots self a selfFuns ctx c.alts 0 discr dflt
+  else
+    let ctxW := ctx.weaken 1
+    let scrut : JsExpr (n + 1) js g := .var ⟨n, Nat.lt_succ_self n⟩
+    let dflt : TailExpr (n + 1) js g a ←
+      match c.alts.find? (fun alt => match alt with | .default _ => true | _ => false) with
+      | some (.default k) => convTail d roots self a selfFuns ctxW k
+      | _ => .ok (.ret .undefined)
+    let chain ← convTailTagBranches d roots self a selfFuns ctxW c.alts 0 scrut dflt
+    return .bind discr chain
+
+/-- The tag tests of `convTailTagCases`, one per `Alt.alt`, in order. -/
+partial def convTailTagBranches {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name)
+    (self : Name) (a : Nat) (selfFuns : Std.HashSet FVarId) (ctx : ConvCtx n js g)
+    (alts : Array Alt) (i : Nat) (scrut : JsExpr n js g) (dflt : TailExpr n js g a) :
+    Except String (TailExpr n js g a) := do
+  if h : i < alts.size then
+    match alts[i] with
+    | .default _ => convTailTagBranches d roots self a selfFuns ctx alts (i + 1) scrut dflt
+    | .alt ctorName ps k =>
+      let some ci := d.ctors[ctorName]?
+        | .error s!"'{ctorName}' is not a known constructor"
+      if ci.numFields != ps.size then
+        .error (s!"the alternative for '{ctorName}' binds {ps.size} fields, but it " ++
+          s!"has {ci.numFields}")
+      let mut ρ := ctx.ρ
+      for (p, j) in ps.zipIdx do
+        ρ := ρ.insert p.fvarId (← fieldOf ctx.cfg d ci scrut j)
+      let body ← convTail d roots self a selfFuns { ctx with ρ } k
+      let rest ← convTailTagBranches d roots self a selfFuns ctx alts (i + 1) scrut dflt
+      let test ← tagTestOf ctx.cfg d ci scrut
+      return .ite test body rest
+  else
+    return dflt
+
+/-- Translate a piece of LCNF code. -/
+partial def convCode {n : Nat} {js : List Nat} (d : JsOleanData) (roots : Array Name) (ctx : ConvCtx n js g)
+    (code : Code) : Except String (JsExpr n js g) := do
+  match code with
+  | .return fv => convValue d roots ctx fv
+  | .unreach _ => return .undefined
+  | .let decl k =>
+    let v ← convLetValue d roots ctx decl.value
+    let v := coerceToLCNFType ctx.cfg decl.type v
+    convCode d roots { ctx with ρ := ctx.ρ.insert decl.fvarId v } k
+  | .cases c =>
+    let discr ← convValue d roots ctx c.discr
+    if isBooleanCases c.typeName then
+      let tName := if c.typeName == ``Bool then ``Bool.true else ``Decidable.isTrue
+      let fName := if c.typeName == ``Bool then ``Bool.false else ``Decidable.isFalse
+      let some tAlt := findAlt? c.alts tName
+        | .error s!"'cases' on '{c.typeName}' has no alternative for '{tName}'"
+      let some fAlt := findAlt? c.alts fName
+        | .error s!"'cases' on '{c.typeName}' has no alternative for '{fName}'"
+      let t ← convCode d roots (bindAlt ctx tAlt #[]) (altCode tAlt)
+      let e ← convCode d roots (bindAlt ctx fAlt #[]) (altCode fAlt)
+      return .cond (.truthy discr) t e
+    else if c.typeName == ``Nat then
+      -- A `Nat` is a bigint, so `zero`/`succ` is a test against `0n`, and the field
+      -- of `succ` is the predecessor.
+      let some zAlt := findAlt? c.alts ``Nat.zero
+        | .error "'cases' on 'Nat' has no alternative for 'Nat.zero'"
+      let some sAlt := findAlt? c.alts ``Nat.succ
+        | .error "'cases' on 'Nat' has no alternative for 'Nat.succ'"
+      let z ← convCode d roots (bindAlt ctx zAlt #[]) (altCode zAlt)
+      let s ← convCode d roots
+        (bindAlt ctx sAlt
+          #[.binop .minus discr (numLitIn ctx.cfg.natRepr 1)]) (altCode sAlt)
+      return .cond (.binop .strictEq discr (numLitIn ctx.cfg.natRepr 0)) z s
+    else if c.typeName == ``Int then
+      -- An `Int` is a bigint: `ofNat n` is `n ≥ 0`, and `negSucc n` is `-n - 1`.
+      let some oAlt := findAlt? c.alts ``Int.ofNat
+        | .error "'cases' on 'Int' has no alternative for 'Int.ofNat'"
+      let some nAlt := findAlt? c.alts ``Int.negSucc
+        | .error "'cases' on 'Int' has no alternative for 'Int.negSucc'"
+      let o ← convCode d roots (bindAlt ctx oAlt #[discr]) (altCode oAlt)
+      let neg ← convCode d roots
+        (bindAlt ctx nAlt
+          #[.binop .minus (negIn ctx.cfg.intRepr discr) (numLitIn ctx.cfg.intRepr 1)])
+        (altCode nAlt)
+      return .cond (.binop .le (numLitIn ctx.cfg.intRepr 0) discr) o neg
+    else
+      match d.types[c.typeName]? >>= (·.trivialFieldIdx?) with
+      | some idx =>
+        -- A one-field structure: the value *is* the field, so `cases` is a binding.
+        match c.alts[0]? with
+        | some (Alt.alt _ ps k) =>
+          let ρ := ps.zipIdx.foldl (init := ctx.ρ) fun ρ (p, i) =>
+            ρ.insert p.fvarId (if i == idx then discr else .undefined)
+          convCode d roots { ctx with ρ } k
+        | some (Alt.default k) => convCode d roots ctx k
+        | none => .error s!"'cases' on '{c.typeName}' has no alternatives"
+      | none => convGeneralCases d roots ctx c discr
+  | .jp decl k =>
+    -- Inlining is the fallback, and it is a *thunk*: building it eagerly is the very
+    -- blow-up a join point is there to avoid.
+    let inlined : Unit → Except String (JsExpr n js g) := fun _ =>
+      let f : LocalFun n js g :=
+        { binderName := decl.binderName, params := decl.params, body := decl.value
+          env := ctx.ρ }
+      convCode d roots { ctx with funs := ctx.funs.insert decl.fvarId f } k
+    if shouldShareFun decl k then
+      -- Jumped to more than once: compile the continuation **once**, as the object
+      -- language's own `Expr.jp`, and every jump to it becomes an `Expr.jmp`.  The
+      -- arity and the non-recursiveness of the join point are then facts of the
+      -- type rather than conditions checked here.
+      match convParamsBody d roots ctx ctx.ρ ctx.funs decl.params decl.value
+              ctx.activeDecls (decl.fvarId :: ctx.activeFuns) with
+      | .error _ => inlined ()
+      | .ok jpBody =>
+        let arity := (decl.params.filter isRelevantParam).size
+        let jpBody := match jpBody.optimize with | .ok v => v | .error _ => jpBody
+        if worthNaming arity jpBody then
+          let ctxL := ctx.pushLabel arity
+          let bodyK : JsExpr n (arity :: js) g ← convCode d roots
+            ({ ctxL with
+               labels := ctxL.labels.insert decl.fvarId (js.length + 1, decl.params) } :
+              ConvCtx n (arity :: js) g) k
+          -- What `saveBase` says about the parameters of the join point: the
+          -- optimizer reads them off the node when it descends into its body.
+          let jpTys : List Ty :=
+            (decl.params.filter isRelevantParam).toList.map fun p => tyOfLCNFType ctx.cfg d p.type
+          return .jp arity jpTys jpBody bodyK
+        else
+          inlined ()
+    else
+      inlined ()
+  | .fun decl k =>
+    -- Inlining is the fallback, and it is a *thunk*: building it eagerly is the very
+    -- blow-up sharing is there to avoid.
+    let inlined : Unit → Except String (JsExpr n js g) := fun _ =>
+      let f : LocalFun n js g :=
+        { binderName := decl.binderName, params := decl.params, body := decl.value
+          env := ctx.ρ }
+      convCode d roots { ctx with funs := ctx.funs.insert decl.fvarId f } k
+    if shouldShareFun decl k then
+      -- Used more than once: compile the callee **once**, as a `funVal`, and bind it
+      -- with a `letIn`; every use of it becomes an `extApply`.  A callee the sharing
+      -- translation cannot build at all, and a small one, are still inlined.
+      match convLamBody d roots ctx ctx.ρ ctx.funs decl.params decl.value
+              ctx.activeDecls (decl.fvarId :: ctx.activeFuns) with
+      | .error _ => inlined ()
+      | .ok lamE =>
+        if worthSharing lamE then
+          let ctxW := ctx.weaken 1
+          let v : JsExpr (n + 1) js g := .var ⟨n, Nat.lt_succ_self n⟩
+          let bodyK ← convCode d roots
+            { ctxW with shared := ctxW.shared.insert decl.fvarId (v, decl.params) } k
+          return .letIn lamE bodyK
+        else
+          inlined ()
+    else
+      inlined ()
+  | .jmp fv args => convApp d roots ctx fv args
+
+end
+
+/-- A declaration that calls itself **in tail position** is a loop: its parameters
+    are the loop variables, started from themselves, and each tail call goes round
+    again (`EXPR-DROP-LAM-CALL-PLAN.md` §2.2).  The loop variables occupy the last `a`
+    de Bruijn indices of the body, as the parameters of every other binder of `Expr`
+    do, so the declaration's own parameters are bound to *those*.
+
+    The answer is `none` when the declaration is not of that shape — it does not call
+    itself, a self call is not in tail position, or `convTail` met a shape it does not
+    handle — and the caller then compiles it exactly as it did before. -/
+def convLoopBody? {js : List Nat} (d : JsOleanData) (roots : Array Name) (cfg : JsConfig)
+    (recFuns : Std.HashSet Name) (declName : Name) (allParams ps : Array Param) (a : Nat)
+    (code : Code) : Option (JsExpr a js g) :=
+  if !codeCallsSelf declName {} code then none
+  else
+    let ρL : VarMap (a + a) js g := Id.run do
+      let mut ρL : VarMap (a + a) js g := {}
+      for p in allParams do
+        ρL := ρL.insert p.fvarId .undefined
+      for i in [0 : ps.size] do
+        if hi : a + i < a + a then
+          ρL := ρL.insert ps[i]!.fvarId (.var ⟨a + i, hi⟩)
+      return ρL
+    match convTail d roots declName a {}
+        ({ ρ := ρL, cfg, activeDecls := [declName], recFuns } : ConvCtx (a + a) js g) code with
+    | .ok t =>
+      if tailHasNext t then
+        let init : ExprVec a js g a :=
+          exprVecFrom (Array.ofFn (n := a) fun i => (.var i : JsExpr a js g)) 0 a
+        -- What `saveBase` says about each loop variable: a loop variable is one of
+        -- the declaration's own parameters, carried round the loop, so it keeps the
+        -- LCNF type of that parameter on every iteration.  The optimizer reads these
+        -- off the node when it descends into the body (`Expr.evalX`).
+        let loopTys : List Ty := ps.toList.map fun p => tyOfLCNFType cfg d p.type
+        some (Expr.loop a loopTys init t)
+      else none
+    | .error _ => none
+
+/-- Translate one declaration. -/
+def convDecl (d : JsOleanData) (cfg : JsConfig) (roots : Array Name)
+    (recFuns : Std.HashSet Name) (g : Finset NEString) (decl : Decl) :
+    Except String (JsFun js g) := do
+  checkTotal d decl
+  let .code code := decl.value
+    | .error s!"'{decl.name}' has no body (it is an `extern` or a constant)"
+  let ps := decl.params.filter isRelevantParam
+  let params := ps.zipIdx.map fun (p, i) => jsParamName p.binderName i
+  let params := params.zipIdx.map fun (nm, i) =>
+    if (params.extract 0 i).contains nm then s!"{nm}_{i}" else nm
+  let ρ : VarMap params.size js g := Id.run do
+    let mut ρ : VarMap params.size js g := {}
+    -- An erased parameter — a type, a proof — has no JavaScript counterpart, but it
+    -- is still *in scope*: the body may name it where nothing looks at the value
+    -- (`Id.run`, a `Type` argument passed on to a call whose parameter is erased
+    -- too).  It is bound to `undefined` rather than left out, exactly as an erased
+    -- argument of an inlined call is.
+    for p in decl.params do
+      ρ := ρ.insert p.fvarId .undefined
+    for i in [0 : ps.size] do
+      if hi : i < params.size then
+        ρ := ρ.insert ps[i]!.fvarId (.var ⟨i, hi⟩)
+    return ρ
+  -- A self tail-recursive declaration is compiled as a `loop`; anything else is
+  -- compiled as it always was.
+  let loop? : Option (JsExpr params.size js g) :=
+    convLoopBody? (js := js) (g := g) d roots cfg recFuns decl.name decl.params ps
+      params.size code
+  -- What `saveBase` says about each parameter: this is the environment the optimizer
+  -- is started from, and the only thing that is known about a hole.
+  let paramTys : TyEnv params.size := fun i =>
+    match ps[i.val]? with
+    | some p => tyOfLCNFType cfg d p.type
+    | none => Ty.unknown
+  match loop? with
+  | some b =>
+    return { name := decl.name, jsName := jsIdent decl.name, params, body := b, paramTys }
+  | none =>
+    let body ← convCode d roots { ρ, cfg, activeDecls := [decl.name], recFuns } code
+    return { name := decl.name, jsName := jsIdent decl.name, params, body, paramTys }
+
+/-! ## Rendering a file -/
+
+/-- Is this the vector `#[#0, #1, …, #(k-1)]`, i.e. "the first `k` parameters, in
+    order"?  A `loop` started from such a vector can use the parameters themselves as
+    its loop variables, which is what lets a self tail-recursive declaration print as
+    `function f(n) { while (true) { … } }` rather than as a call of a closure. -/
+def isIdentityVec {n k : Nat} (v : ExprVec n js g k) : Bool :=
+  v.toList.zipIdx.all fun (e, j) =>
+    match e with
+    | .var i => i.val == j
+    | _ => false
+
+open Language.JavaScript.MiniAST in
+open LakeJs.Mini in
+/-- A compiled declaration, as a statement of the JavaScript MiniAST.  A declaration
+    that takes arguments is a **curried arrow**, `const f = (a) => (b) => …;`, and one
+    that takes none is the value itself, `const x = …;`.  Every function this backend
+    writes takes one argument — a `funVal` of `k` parameters and a top-level
+    declaration of `k` parameters alike — and every call it writes is curried to
+    match (`LakeJs.Mini.curriedArrow`, `LakeJs.Mini.curriedCall`).  The whole of the
+    output is built as a tree and laid out by the pretty printer, so nothing in a
+    generated file is assembled by string concatenation.
+
+    A declaration whose whole body is a `loop` started from its own parameters is
+    printed as a loop over those parameters — `const f = (a) => (b) => { while (true)
+    { … } }` — instead of as the immediately-applied closure `Expr.toMini` produces
+    for a `loop` in expression position.  The two are the same computation: the loop
+    variables are initialised to the parameters and then only ever assigned to, so the
+    parameter bindings can play the part of the loop variables. -/
+def miniFun (L : JsDataLayout) (f : JsFun js g) : MiniStatement :=
+  let names : Nat → MiniExpr := fun i => LakeJs.Mini.ident (f.params[i]?.getD s!"_p{i}")
+  let ps : List String := f.params.toList
+  let decl : MiniExpr → MiniStatement := fun e =>
+    .decl .const ⟨⟨.ident (jsName f.jsName), some e⟩, []⟩
+  if ps.isEmpty then
+    decl (Expr.toMini L names 0 f.body)
+  else
+    let fallback : MiniStatement :=
+      decl (LakeJs.Mini.curriedArrow ps (Expr.toMini L names 0 f.body))
+    match f.body with
+    | .loop k _ init body =>
+        if isIdentityVec init then
+          let n := f.params.size
+          let names' : Nat → MiniExpr := fun j =>
+            if n ≤ j && j < n + k then names (j - n) else names j
+          decl (LakeJs.Mini.curriedArrowStmts ps
+            [.while_ .true_ (.block (TailExpr.toMiniStmts L names' 0 n body))])
+        else fallback
+    | _ => fallback
+
+open Language.JavaScript.MiniAST in
+/-- `const f = (a) => (b) => …;`, as text. -/
+def renderFun (L : JsDataLayout) (f : JsFun js g) : String :=
+  printStatement (miniFun L f)
+
+/-! ## Dumping the tree a declaration was compiled to -/
+
+/-- How the parameters of a compiled declaration are written in a dump: the de Bruijn
+    hole `#i` is the JavaScript parameter `params[i]`. -/
+def renderParamLegend (params : Array String) (tys : TyEnv params.size) : String :=
+  if params.isEmpty then "parameters: none"
+  else
+    "parameters: " ++ String.intercalate ", "
+      (params.toList.zipIdx.map fun (p, i) =>
+        let ty := if h : i < params.size then (tys ⟨i, h⟩).render else "unknown"
+        s!"#{i} = {p} : {ty}")
+
+/-- One entry of the `-Expr.txt` file for a declaration at a single stage: its Lean
+    name, its JavaScript name, how its parameters are numbered, and its
+    `Expr`/`BExpr` tree. -/
+def dumpFun (f : JsFun js g) : String :=
+  s!"=== {f.name} ===\njs: {f.jsName}\n{renderParamLegend f.params f.paramTys}\n" ++
+    f.body.dump ++ "\n"
+
+/-- Optimise a compiled declaration with the partial evaluator of `LakeJs.Eval`,
+    started from the types `saveBase` gave its parameters. -/
+def optimizeFun (f : JsFun js g) : Except String (JsFun js g) :=
+  match Expr.optimizeAllTy f.paramTys f.body with
+  | .ok e => .ok { f with body := e }
+  | .error es => .error s!"'{f.name}': {OptError.renderAll es}"
+
+/-- A compiled declaration together with every intermediate tree the optimizer
+    pipeline went through on its body: what the translation produced, what the engine
+    made of it, and what common-subexpression elimination made of that.  `fn` is the
+    declaration as it will be printed, i.e. its body is the last stage of `trace`. -/
+structure TracedFun (js : List Nat) (g : Finset NEString) where
+  /-- The finished declaration, the one the JavaScript is printed from. -/
+  fn : JsFun js g
+  /-- Every stage the pipeline went through on `fn`'s body. -/
+  trace : OptTrace fn.params.size js g
+
+/-- Optimise a compiled declaration, keeping every intermediate stage of the
+    pipeline (`Expr.optimizeTrace`) so the `-Expr.txt` companion file can show them. -/
+def optimizeFunTraced (f : JsFun js g) : Except String (TracedFun js g) :=
+  match Expr.optimizeTraceTy f.paramTys f.body with
+  | .ok t => .ok { fn := { f with body := t.final }, trace := t }
+  | .error es => .error s!"'{f.name}': {OptError.renderAll es}"
+
+/-- The trees of one stage of the pipeline, as they appear in the `-Expr.txt` file.
+    A stage that left the tree exactly as it found it is reported as `unchanged`
+    rather than printed again. -/
+def dumpStage {n : Nat} (label : String) (prev : Option (JsExpr n js g))
+    (e : JsExpr n js g) : String :=
+  s!"-- {label}\n" ++ (if prev == some e then "  (unchanged)\n" else e.dump ++ "\n")
+
+/-- The entry of one declaration in the `-Expr.txt` file: its header, and then its
+    tree at every stage of the optimizer pipeline, in the order the passes ran. -/
+def dumpFunTraced (t : TracedFun js g) : String :=
+  let f := t.fn
+  let step : (Option (JsExpr f.params.size js g) × String) →
+      (String × JsExpr f.params.size js g) →
+      (Option (JsExpr f.params.size js g) × String) := fun (prev, acc) (label, e) =>
+    (some e, acc ++ dumpStage label prev e)
+  s!"=== {f.name} ===\njs: {f.jsName}\n{renderParamLegend f.params f.paramTys}\n" ++
+    (t.trace.stages.foldl (init := (none, "")) step).2
+
+/-- The JavaScript names of the functions a file really reaches: the roots, and
+    whatever they call, directly or through one another. -/
+def reachableNames (roots : Array Name) (funs : Array (JsFun js g)) : Array String :=
+  let rootNames : Array String := roots.map jsIdent
+  let init : Array String := funs.filterMap fun f =>
+    if rootNames.contains f.jsName then some f.jsName else none
+  let rec go (needed : Array String) (fuel : Nat) : Array String :=
+    match fuel with
+    | 0 => needed
+    | fuel + 1 =>
+      let grown := funs.foldl (init := needed) fun acc f =>
+        if acc.contains f.jsName then
+          funs.foldl (init := acc) fun acc' h =>
+            if acc'.contains h.jsName then acc'
+            else if Expr.usesGlobal (NonEmptyString.ofStringD h.jsName) f.body then
+              acc'.push h.jsName
+            else acc'
+        else acc
+      if grown.size == needed.size then needed else go grown fuel
+  go init funs.size
+
+/-- The functions of a file that are really reached: the roots, and whatever they
+    call, directly or through one another.  Everything else the loader pulled in is
+    dropped from the output. -/
+def keepReachable (roots : Array Name) (funs : Array (JsFun js g)) : Array (JsFun js g) :=
+  let needed := reachableNames roots funs
+  funs.filter (fun f => needed.contains f.jsName)
+
+/-- What compiling one output file produces: the JavaScript module, and the dump of
+    the `Expr`/`BExpr` tree of every declaration in it **at every stage of the
+    optimizer pipeline** — the tree the optimizer was handed, the tree the engine
+    left, and the tree common-subexpression elimination left, which is the one the
+    JavaScript is printed from. -/
+structure CompiledFile where
+  /-- The JavaScript module. -/
+  js : String
+  /-- The trees of each declaration, one entry per declaration and one block per
+      stage of the pipeline (`<Module>-Expr.txt`). -/
+  exprDump : String
+  deriving Inhabited
+
+/-- Compile one output file: the declarations it asks for, then its `export`
+    list or its run of `main`.  Every intermediate tree of each declaration is
+    collected along the way, so the dump and the JavaScript always describe the same
+    run of the compiler. -/
+def compileFile (d : JsOleanData) (cfg : JsConfig) (c : OutputContent) :
+    Except String CompiledFile := do
+  let roots ← resolveRoots d c
+  -- The recursive declarations the roots can reach are emitted as functions of their
+  -- own, before the roots: a call to one of them is an `extApply`, not an unfolding.
+  let recs := recursiveDecls d roots
+  let recFuns : Std.HashSet Name := recs.foldl (init := {}) (·.insert ·)
+  let emitted := recs.filter (!roots.contains ·) ++ roots
+  let g := globalsOf emitted
+  -- The body of a declaration has no join point open at its top, so the label
+  -- context of everything this compiles is empty.
+  let mut funs : Array (TracedFun [] g) := #[]
+  -- A helper is emitted because something *could* reach it, which is not the same as
+  -- something reaching it: `Array.append` is reachable from an `Array.push` chain the
+  -- primitive dictionary replaces wholesale, and Lean's compiled implementation of it
+  -- is an `unsafe` fold the totality gate refuses.  A helper that cannot be compiled
+  -- is therefore *recorded* rather than fatal, and becomes an error only if the
+  -- finished file still calls it (below).  A root has no such excuse: if a root does
+  -- not compile, the file does not compile.
+  let mut failed : Array (Name × String) := #[]
+  for r in emitted do
+    let some decl := d.decls[r]?
+      | throw s!"'{r}' has no compiled (LCNF `saveBase`) body"
+    match convDecl d cfg emitted recFuns g decl >>= optimizeFunTraced with
+    | .ok f => funs := funs.push f
+    | .error e =>
+      if roots.contains r then throw s!"'{r}': {e}"
+      else failed := failed.push (r, e)
+  -- A recursive declaration is emitted because something *could* reach it; after the
+  -- optimizer has run, most of them are not reached any more — the call was folded
+  -- away, or it was only ever reachable through a primitive that replaced it.  Only
+  -- the ones the finished file really calls are written out.
+  let needed := reachableNames roots (funs.map (·.fn))
+  let reached := funs.filter (fun t => needed.contains t.fn.jsName)
+  -- Now that it is known what the file calls, a helper that did not compile matters
+  -- exactly when one of the kept functions names it.
+  for (r, e) in failed do
+    let nm := NonEmptyString.ofStringD (jsIdent r)
+    if reached.any (fun t => Expr.usesGlobal nm t.fn.body) then
+      throw s!"'{r}': {e}"
+  let mut out : Array Language.JavaScript.MiniAST.MiniModuleItem := #[]
+  let mut dumps : Array String := #[]
+  for t in reached do
+    dumps := dumps.push (dumpFunTraced t)
+    out := out.push (.stmt (miniFun (layoutOf cfg d) t.fn))
+  match c.entry? with
+  | some entry =>
+    out := out.push (.stmt (.expr (.call (LakeJs.Mini.ident (jsIdent entry)) [])))
+  | none =>
+    let names := roots.map jsIdent
+    if !c.exports.isEmpty then
+      out := out.push (.exportDecl (.locals
+        (names.toList.map fun nm => ⟨LakeJs.Mini.jsName nm, none⟩)))
+  return { js := Language.JavaScript.MiniAST.printProgram ⟨out.toList⟩
+           exprDump := exprDumpHeader ++ String.intercalate "\n" dumps.toList }
+where
+  /-- What the `-Expr.txt` file says about itself. -/
+  exprDumpHeader : String :=
+    "-- The Expr/BExpr tree of each compiled declaration at every stage of the\n\
+     -- optimizer pipeline: as it is handed to the optimizer, after the partial\n\
+     -- evaluator of LakeJs.Eval, and after the common-subexpression elimination of\n\
+     -- LakeJs.CSEDeep, which is the tree the JavaScript is printed from.  A stage\n\
+     -- that changed nothing is marked `(unchanged)`.  One node per line; `#i` is a\n\
+     -- de Bruijn variable, numbered by the `parameters:` legend of each declaration.\n\
+     -- configuration: " ++ cfg.describe ++ "\n\n"
+
+/-- Compile one output file to JavaScript. -/
+def compile (d : JsOleanData) (cfg : JsConfig) (c : OutputContent) : Except String String :=
+  (·.js) <$> compileFile d cfg c
+
+/-- The `Expr`/`BExpr` trees of one output file, at every stage of the pipeline. -/
+def exprDump (d : JsOleanData) (cfg : JsConfig) (c : OutputContent) : Except String String :=
+  (·.exprDump) <$> compileFile d cfg c
+
+/-- Compile one output file, throwing on failure. -/
+def compileFileOrThrow (d : JsOleanData) (cfg : JsConfig) (c : OutputContent) :
+    IO CompiledFile :=
+  match compileFile d cfg c with
+  | .ok s => return s
+  | .error e => throw (IO.userError e)
+
+/-- Compile one output file to JavaScript, throwing on failure. -/
+def compileOrThrow (d : JsOleanData) (cfg : JsConfig) (c : OutputContent) : IO String :=
+  match compile d cfg c with
+  | .ok s => return s
+  | .error e => throw (IO.userError e)
+
+end Backend
+
+end Lean.Compiler.JS
+
+end

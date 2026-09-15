@@ -1,0 +1,644 @@
+module
+
+public import LakeJs.Expr
+public import LakeJs.Layout
+public import LakeJs.Render
+public import LakeJs.MiniAST
+
+@[expose] public section
+
+-- `js`, the label context, is auto-bound per declaration: the traversals below
+-- recurse into the continuation of a `jp`, which lives in a larger label context.
+
+/-!
+# From `Expr`/`BExpr` to the JavaScript MiniAST
+
+`LakeJs.Render` turns the object language straight into text.  This module turns it
+into a **syntax tree** instead — `Language.JavaScript.MiniAST.MiniExpr` — which is then
+laid out by the Wadler-style pretty printer of `LakeJs.MiniAST`.  That is the path the
+backend takes: no generated file is assembled by string concatenation, so operator
+precedence, escaping and line breaking are decided in exactly one place.
+
+The translation follows `LakeJs.Render` node for node, with three differences that the
+tree makes possible:
+
+* **No defensive parentheses.**  The printer parenthesises from the precedence of the
+  nodes, so `a + b * c` comes out as written rather than as `(a + (b * c))`.
+* **The folds are statements.**  Where the text renderer spliced a hand-written
+  `(() => { … })()` into the output, here the loop is built from `MiniStatement`s —
+  `const`/`let` declarations, a `while`, a `for`, an assignment and a `return` — inside
+  an arrow function which is then called.
+* **Numbers and strings are values.**  A numeric literal becomes the number it denotes
+  (`Language.JavaScript.JSNumber`) and a string literal the characters it denotes, so
+  the printer, not the backend, decides how they are spelled.
+
+Variables are given by an environment `Nat → MiniExpr` from de Bruijn index to the tree
+that reads that variable — which is what lets a branch body be spliced into a loop with
+its fields replaced by `_n0._1` and its recursive position by the accumulator.
+-/
+
+namespace LakeJs.Mini
+
+open Language.JavaScript.MiniAST
+
+/-- The expressions of the JavaScript MiniAST. -/
+abbrev JsE := Language.JavaScript.MiniAST.MiniExpr
+
+/-- The statements of the JavaScript MiniAST. -/
+abbrev JsS := Language.JavaScript.MiniAST.MiniStatement
+
+/-- An identifier of the JavaScript MiniAST. -/
+abbrev JsName := Language.JavaScript.NEString
+
+/-- The name `s`; a placeholder if `s` is empty. -/
+def jsName (s : String) : JsName := Language.JavaScript.NEString.ofString! s
+
+/-- The identifier `s`. -/
+def ident (s : String) : JsE := .ident (jsName s)
+
+/-- A dotted name such as `Math.floor`, as a member access. -/
+def identPath (s : String) : JsE :=
+  match s.splitOn "." with
+  | [] => ident s
+  | root :: rest => rest.foldl (fun acc part => .dot acc (jsName part)) (ident root)
+
+/-- The literal for the natural number `k`. -/
+def num (k : Nat) : JsE := .number (Language.JavaScript.JSNumber.ofNat k)
+
+/-- `const nm = e;` -/
+def constDecl (nm : String) (e : JsE) : JsS := .decl .const ⟨⟨.ident (jsName nm), some e⟩, []⟩
+
+/-- `let nm = e;` -/
+def letDecl (nm : String) (e : JsE) : JsS := .decl .let_ ⟨⟨.ident (jsName nm), some e⟩, []⟩
+
+/-- `lhs = rhs;` -/
+def assignStmt (lhs rhs : JsE) : JsS := .expr (.assign lhs .assign rhs)
+
+/-- `(() => { body })()`, the one shape an expression has for a sequence of
+    statements. -/
+def iife (body : List JsS) : JsE := .call (.arrow [] (.block body)) []
+
+/-- A parameter named `s`. -/
+def param (s : String) : MiniParam := .plain (.ident (jsName s))
+
+/-! ## Curried functions and curried calls
+
+Every function this backend writes takes **one** argument: a function of `k`
+parameters is `k` nested arrows, `(a) => (b) => …`, and a call of it is `f(a)(b)`.
+A function of no parameters is `() => …` and a call with no arguments is `f()`. -/
+
+/-- `(p₀) => (p₁) => … => body`, one arrow per parameter; `() => body` when there is
+    no parameter. -/
+def curriedArrow : List String → JsE → JsE
+  | [],      body => .arrow [] (.expr body)
+  | [p],     body => .arrow [param p] (.expr body)
+  | p :: ps, body => .arrow [param p] (.expr (curriedArrow ps body))
+
+/-- `f(a)(b)`, one call per argument; `f()` when there is none. -/
+def curriedCall (f : JsE) : List JsE → JsE
+  | [] => .call f []
+  | as => as.foldl (fun acc a => .call acc [a]) f
+
+/-- `(p₀) => (p₁) => … => { stmts }`: the same, with a **block** for the innermost
+    body, which is what a declaration compiled to a `while` loop needs. -/
+def curriedArrowStmts : List String → List JsS → JsE
+  | [],      body => .arrow [] (.block body)
+  | [p],     body => .arrow [param p] (.block body)
+  | p :: ps, body => .arrow [param p] (.expr (curriedArrowStmts ps body))
+
+/-- `kind d₀, d₁, …;` — nothing at all when there is no declarator, since a
+    declaration declares at least one name. -/
+def declList (kind : Language.JavaScript.VarKind) : List MiniDeclarator → List JsS
+  | [] => []
+  | d :: ds => [.decl kind ⟨d, ds⟩]
+
+/-! ## Literals -/
+
+/-- The tree for an exact JavaScript number.  A number with a finite decimal spelling
+    is a numeric literal (negative ones written with a unary minus, which is how
+    JavaScript spells them); the remaining case — a rational whose denominator is not
+    a power of ten — is the division itself, exactly as `JSNumber.render` writes it. -/
+def ofNumber (a : JSNumber) : JsE :=
+  match a with
+  | .nan => ident "NaN"
+  | .posInf => ident "Infinity"
+  | .negInf => .unary .minus (ident "Infinity")
+  | .negZero => .unary .minus (num 0)
+  | .finite q =>
+    let division : JsE :=
+      let lit : JsE := .binary (.number (.decimal q.num.natAbs 0)) .divide
+        (.number (.decimal q.den 0))
+      if q.num < 0 then .unary .minus lit else lit
+    if (JSNumber.toLiteral? a).isSome then
+      match JSNumber.decExp? q.den with
+      | some k =>
+          let m := (JSNumber.scaled q k).natAbs
+          let lit : JsE := .number (.decimal m (-(k : Int)))
+          if q.num < 0 then .unary .minus lit else lit
+      | none => division
+    else division
+
+/-- The tree for a bigint literal, `1n`. -/
+def ofBigInt (v : Int) : JsE :=
+  let lit : JsE := .number (.bigint .decimal v.natAbs)
+  if v < 0 then .unary .minus lit else lit
+
+/-! ## The three functions every layout answers, as trees -/
+
+namespace Layout
+
+/-- The tag of `c` as a value: a string literal, or its index when the tags are
+    integers. -/
+def tagValue (l : JsDataLayout) (c : LeanRecCtorSchema) : JsE :=
+  match l.ctorRepr with
+  | .taggedInt => if l.isObjectOnly c.name then .string c.name else num (l.idxOf c.name)
+  | _ => .string c.name
+
+/-- The test "the value `cur` was built by `c`". -/
+def tagTest (l : JsDataLayout) (isEnum : Bool) (cur : JsE) (c : LeanRecCtorSchema) : JsE :=
+  if l.isListNil c.name then .binary (.dot cur (jsName "length")) .strictEq (num 0)
+  else if l.isListCons c.name then .binary (.dot cur (jsName "length")) .strictNeq (num 0)
+  else if isEnum && l.enumRepr == .smallInt && !l.isObjectOnly c.name then
+    .binary cur .strictEq (num (l.idxOf c.name))
+  else
+    match l.ctorRepr with
+    | .positionalArray =>
+        if l.isObjectOnly c.name then
+          .binary (.dot cur (jsName "tag")) .strictEq (tagValue l c)
+        else .binary (.index cur (num 0)) .strictEq (tagValue l c)
+    | _ => .binary (.dot cur (jsName "tag")) .strictEq (tagValue l c)
+
+/-- Field `j` of the value `cur`, which was built by `c`. -/
+def fieldAt (l : JsDataLayout) (cur : JsE) (c : LeanRecCtorSchema) (j : Nat) : JsE :=
+  if l.isListCons c.name then
+    if c.isRecField j then .call (.dot cur (jsName "slice")) [num 1] else .index cur (num 0)
+  else
+    match l.ctorRepr with
+    | .positionalArray =>
+        if l.isObjectOnly c.name then .dot cur (jsName (l.fieldName c.name j))
+        else .index cur (num (j + 1))
+    | _ => .dot cur (jsName (l.fieldName c.name j))
+
+/-- The value built by `c` from the given fields. -/
+def ctorValue (l : JsDataLayout) (isEnum : Bool) (c : LeanRecCtorSchema)
+    (fields : List JsE) : JsE :=
+  if l.isListNil c.name then .array []
+  else if l.isListCons c.name then
+    .array (fields.zipIdx.map fun (f, j) =>
+      if c.isRecField j then .elem (.spread f) else .elem f)
+  else if isEnum && l.enumRepr == .smallInt && !l.isObjectOnly c.name then
+    num (l.idxOf c.name)
+  else
+    let named : List MiniProperty := fields.zipIdx.map fun (f, j) =>
+      .keyValue (.ident (jsName (l.fieldName c.name j))) f
+    let tagProp : MiniProperty := .keyValue (.ident (jsName "tag")) (tagValue l c)
+    match l.ctorRepr with
+    | .positionalArray =>
+        if l.isObjectOnly c.name then .object (tagProp :: named)
+        else .array (.elem (tagValue l c) :: fields.map .elem)
+    | _ => .object (tagProp :: named)
+
+end Layout
+
+/-! ## Operators -/
+
+/-- The MiniAST operator a boolean binary operator of the object language prints as. -/
+def binOpBoolMini : BinOpBool → Option Language.JavaScript.BinOp
+  | .eq => some .eq | .strictEq => some .strictEq
+  | .neq => some .neq | .strictNeq => some .strictNeq
+  | .lt => some .lt | .le => some .le | .gt => some .gt | .ge => some .ge
+  | _ => none
+
+/-- The MiniAST operator a binary operator of the object language prints as. -/
+def binOpMini : BinOp → Option Language.JavaScript.BinOp
+  | .plus => some .plus | .minus => some .minus | .times => some .times
+  | .divide => some .divide | .mod => some .mod | .pow => some .exp
+  | .bitAnd => some .bitAnd | .bitOr => some .bitOr | .bitXor => some .bitXor
+  | .lsh => some .lsh | .rsh => some .rsh | .ursh => some .ursh
+  | .nullish => some .coalesce
+  | _ => none
+
+/-- The MiniAST operator a unary operator of the object language prints as. -/
+def unOpMini : UnOp → Option Language.JavaScript.UnaryOp
+  | .plus => some .plus | .minus => some .minus | .tilde => some .tilde
+  | .typeof => some .typeof | .voidOp => some .void
+  | _ => none
+
+/-- One of the three JavaScript syntaxes an opcode asks for, applied to the trees of
+    its operands. -/
+def applyBinSyntax (form : OpSyntax) (mop : Option Language.JavaScript.BinOp)
+    (a b : JsE) : JsE :=
+  match form, mop with
+  | .operator _, some op => .binary a op b
+  | .method m, _ => .call (.dot a (jsName m)) [b]
+  | .methodNat m k, _ => .call (.dot a (jsName m)) [num k, b]
+  | .call f, _ => .call (identPath f) [a, b]
+  | .operator t, none => .call (identPath t) [a, b]
+
+/-- One of the three JavaScript syntaxes an opcode asks for, applied to the tree of
+    its operand. -/
+def applyUnSyntax (form : OpSyntax) (mop : Option Language.JavaScript.UnaryOp)
+    (a : JsE) : JsE :=
+  match form, mop with
+  | .operator _, some op => .unary op a
+  | .method m, _ => .call (.dot a (jsName m)) []
+  | .methodNat m k, _ => .call (.dot a (jsName m)) [num k]
+  | .call f, _ => .call (identPath f) [a]
+  | .operator t, none => .call (identPath t) [a]
+
+/-! ## The translation -/
+
+/-- A ternary chain choosing, for each recursive constructor, the field to descend
+    into. -/
+def tagDispatch (L : JsDataLayout) (isEnum : Bool) (cur : JsE)
+    (ctors : List LeanRecCtorSchema) (dflt : JsE) : JsE :=
+  match ctors with
+  | [] => dflt
+  | [c] => Layout.fieldAt L cur c (c.recFieldIdxs.headD 0)
+  | c :: cs =>
+      .ternary (Layout.tagTest L isEnum cur c)
+        (Layout.fieldAt L cur c (c.recFieldIdxs.headD 0))
+        (tagDispatch L isEnum cur cs dflt)
+
+/-- The disjunction of the tag tests of `ctors`; `false` when there are none. -/
+def anyTagTest (L : JsDataLayout) (isEnum : Bool) (cur : JsE)
+    (ctors : List LeanRecCtorSchema) : JsE :=
+  match ctors with
+  | [] => .false_
+  | [c] => Layout.tagTest L isEnum cur c
+  | c :: cs => .binary (Layout.tagTest L isEnum cur c) .or (anyTagTest L isEnum cur cs)
+
+mutual
+
+/-- Translate an expression.  `L` is the layout of compiled Lean data, `names` gives
+    the tree reading each free de Bruijn index, and `d` is the nesting depth of
+    enclosing folds, which only serves to keep the generated loop variables apart. -/
+def Expr.toMini (L : JsDataLayout) (names : Nat → JsE) (d : Nat) {n : Nat} :
+    Expr n js g → JsE
+  | .var i => names i.val
+  | .unsafeGlobal s _ => ident s.val
+  | .bexpr b => BExpr.toMini L names d b
+  | .numLit v => ofNumber v
+  | .bigintLit v => ofBigInt v
+  | .str v => .string v
+  | .undefined => ident "undefined"
+  | .null => .null
+  | .obj props => .object (ObjProps.toMini L names d props)
+  | .arr elems => .array ((ExprList.toMini L names d elems).map .elem)
+  | .prop o name => .dot (Expr.toMini L names d o) (jsName name.val)
+  | .index o i => .index (Expr.toMini L names d o) (Expr.toMini L names d i)
+  | .unary op a => applyUnSyntax op.syntaxForm (unOpMini op) (Expr.toMini L names d a)
+  | .binop op a b =>
+      applyBinSyntax op.syntaxForm (binOpMini op)
+        (Expr.toMini L names d a) (Expr.toMini L names d b)
+  -- The test of a `?:` is *coerced* by JavaScript, so it is a condition position.
+  | .cond c t e =>
+      .ternary (BExpr.toMiniTest L names d c) (Expr.toMini L names d t)
+        (Expr.toMini L names d e)
+  | .leanEnum e => LeanEnum.toMini L names d e
+  | .getField o i =>
+      match L.ctorRepr with
+      | .positionalArray => .index (Expr.toMini L names d o) (num (i + 1))
+      | _ => .dot (Expr.toMini L names d o) (jsName ("_" ++ toString (i + 1)))
+  | .foldArray dir a i b =>
+      let p0 := s!"_p{n}"
+      let p1 := s!"_p{n + 1}"
+      let names' : Nat → JsE := fun j =>
+        if j == n then ident p0 else if j == n + 1 then ident p1 else names j
+      .call (.dot (Expr.toMini L names d a) (jsName dir.method))
+        [.arrow [param p0, param p1] (.expr (Expr.toMini L names' d b)),
+         Expr.toMini L names d i]
+  -- `let #n = rhs in body`, as the one shape an *expression* grammar has for naming
+  -- a value: an immediately invoked arrow.
+  | .letIn rhs body =>
+      let p0 := s!"_p{n}"
+      let names' : Nat → JsE := fun j => if j == n then ident p0 else names j
+      .call (.arrow [param p0] (.expr (Expr.toMini L names' d body)))
+        [Expr.toMini L names d rhs]
+  | .funVal k body =>
+      let names' : Nat → JsE := fun j =>
+        if n ≤ j && j < n + k then ident s!"_p{j}" else names j
+      curriedArrow ((List.range k).map fun j => s!"_p{n + j}")
+        (Expr.toMini L names' d body)
+  -- A curried call, `f(a)(b)`, to match the curried function it calls.  A call whose
+  -- arguments contain a **spread** cannot be curried — how many arguments `f(...xs)`
+  -- passes is not known until it runs — so that one call is written as it stands.
+  | .extApply fn args =>
+      if args.hasNoSpread then
+        curriedCall (Expr.toMini L names d fn) (ExprList.toMini L names d args)
+      else .call (Expr.toMini L names d fn) (ExprList.toMini L names d args)
+  -- A join point is an arrow bound to a label name, and a jump calls that name.  The
+  -- label is named by its *level* — the number of join points enclosing the one that
+  -- binds it — which is read off the label context, so entering a term never renames
+  -- a label.
+  | .jp a _ body k =>
+      let lbl := s!"_j{js.length}"
+      let names' : Nat → JsE := fun j =>
+        if n ≤ j && j < n + a then ident s!"_p{j}" else names j
+      .call (.arrow [param lbl] (.expr (Expr.toMini L names d k)))
+        [curriedArrow ((List.range a).map fun j => s!"_p{n + j}")
+          (Expr.toMini L names' d body)]
+  | .jmp i args =>
+      curriedCall (ident s!"_j{js.length - 1 - i.val}") (ExprVec.toMiniFields L names d args)
+  -- A loop, as the `while (true)` the plan defines it to be
+  -- (`EXPR-DROP-LAM-CALL-PLAN.md` §2.2): the loop variables are `let`-bound to the
+  -- initial values — under the same `_p{index}` convention every other binder uses —
+  -- and the body becomes *statements*, which is what `TailExpr.toMiniStmts` is for.
+  | .loop k _ ini body =>
+      let names' : Nat → JsE := fun j =>
+        if n ≤ j && j < n + k then ident s!"_p{j}" else names j
+      let decls : List MiniDeclarator :=
+        (ExprVec.toMiniFields L names d ini).zipIdx.map fun (e, j) =>
+          ⟨.ident (jsName s!"_p{n + j}"), some e⟩
+      iife (declList .let_ decls
+        ++ [.while_ .true_ (.block (TailExpr.toMiniStmts L names' d n body))])
+  | .foldEnum fam scrut bs dflt =>
+      let isEnum := fam.isEnumLike
+      if fam.allCtors.all (fun c => c.numRecFields == 0) then
+        -- No constructor of the family has a recursive field, so the fold is a plain
+        -- case analysis: name the value once and test its tag.  A scrutinee that is
+        -- already a name is tested where it stands.
+        if scrut.isCheapName then
+          let cur := Expr.toMini L names d scrut
+          Branches.toMiniCases L names d n cur
+            (fun c j => Layout.fieldAt L cur c j) (fun _ => true)
+            (Expr.toMini L names d dflt) bs
+        else
+          let cur := s!"_c{d}"
+          .call (.arrow [param cur]
+              (.expr (Branches.toMiniCases L names d n (ident cur)
+                (fun c j => Layout.fieldAt L (ident cur) c j) (fun _ => true)
+                (Expr.toMini L names d dflt) bs)))
+            [Expr.toMini L names d scrut]
+      else if Branches.isPushFold fam bs then
+        -- The fold builds an array from the front: walk the value forwards and
+        -- `push`, no stack and no quadratic spreading.
+        let cur := s!"_c{d}"
+        let out := s!"_o{d}"
+        let baseCases :=
+          Branches.toMiniCases L names d n (ident cur)
+            (fun c j => Layout.fieldAt L (ident cur) c j)
+            (fun c => c.numRecFields == 0) (Expr.toMini L names d dflt) bs
+        iife
+          ([constDecl out (.array []), letDecl cur (Expr.toMini L names d scrut)]
+            ++ Branches.toMiniPushLoop L names d n cur out bs
+            ++ [.return_ (some (.call (.dot (ident out) (jsName "concat")) [baseCases]))])
+      else if fam.isLinear then
+        -- A linear family (a list, a chain of nodes): walk the value onto a stack
+        -- with a `while` loop, then fold the stack backwards with a `for` loop.
+        let cur := s!"_c{d}"
+        let stk := s!"_stk{d}"
+        let acc := s!"_a{d}"
+        let idx := s!"_i{d}"
+        let node := s!"_n{d}"
+        let recTags := fam.allCtors.filter (fun c => c.numRecFields == 1)
+        let cond := anyTagTest L isEnum (ident cur) recTags
+        let stepExpr := tagDispatch L isEnum (ident cur) recTags (ident "undefined")
+        let baseCases :=
+          Branches.toMiniCases L names d n (ident cur)
+            (fun c j => Layout.fieldAt L (ident cur) c j)
+            (fun c => c.numRecFields == 0) (Expr.toMini L names d dflt) bs
+        let stepCases :=
+          Branches.toMiniCases L names d n (ident node)
+            (fun c j => if c.isRecField j then ident acc else Layout.fieldAt L (ident node) c j)
+            (fun c => c.numRecFields == 1) (ident acc) bs
+        iife
+          [constDecl stk (.array []),
+           letDecl cur (Expr.toMini L names d scrut),
+           .while_ cond
+             (.block [.expr (.call (.dot (ident stk) (jsName "push")) [ident cur]),
+                      assignStmt (ident cur) stepExpr]),
+           letDecl acc baseCases,
+           .for_ (.decl .let_ ⟨⟨.ident (jsName idx),
+                   some (.binary (.dot (ident stk) (jsName "length")) .minus (num 1))⟩, []⟩)
+             (some (.binary (ident idx) .ge (num 0)))
+             (some (.postfix (ident idx) .decr))
+             (.block [constDecl node (.index (ident stk) (ident idx)),
+                      assignStmt (ident acc) stepCases]),
+           .return_ (some (ident acc))]
+      else
+        -- Several recursive fields per constructor: an immediately invoked *named*
+        -- function expression, the only shape an expression has for such a walk.
+        let fn := s!"_f{d}"
+        let v := s!"_v{d}"
+        let cases :=
+          Branches.toMiniCases L names d n (ident v)
+            (fun c j =>
+              if c.isRecField j then .call (ident fn) [Layout.fieldAt L (ident v) c j]
+              else Layout.fieldAt L (ident v) c j)
+            (fun _ => true) (Expr.toMini L names d dflt) bs
+        .call (.func false false (some (jsName fn)) [param v] [.return_ (some cases)])
+          [Expr.toMini L names d scrut]
+termination_by e => e.size
+decreasing_by all_goals (simp only [Expr.size]; omega)
+
+/-- The branches satisfying `keep` as a chain of tag tests over `cur`, ending in
+    `dflt`.  `fieldTree c j` is the tree of field `j` of constructor `c` — that is
+    where the recursive positions are replaced by the accumulator or by a recursive
+    call. -/
+def Branches.toMiniCases {fam : LeanRecFamily} (L : JsDataLayout) (names : Nat → JsE)
+    (d n : Nat) (cur : JsE) (fieldTree : LeanRecCtorSchema → Nat → JsE)
+    (keep : LeanRecCtorSchema → Bool) (dflt : JsE) : Branches fam n js g → JsE
+  | .nil => dflt
+  | .cons c _ body t =>
+      if keep c then
+        let names' : Nat → JsE := fun j => if j < n then names j else fieldTree c (j - n)
+        .ternary (Layout.tagTest L fam.isEnumLike cur c)
+          (Expr.toMini L names' (d + 1) body)
+          (Branches.toMiniCases L names d n cur fieldTree keep dflt t)
+      else
+        Branches.toMiniCases L names d n cur fieldTree keep dflt t
+termination_by bs => bs.size
+decreasing_by all_goals (simp only [Branches.size]; omega)
+
+/-- The `while` loop of the array-building fold: for the (single) recursive
+    constructor, push the items of its branch body and step to the recursive field. -/
+def Branches.toMiniPushLoop {fam : LeanRecFamily} (L : JsDataLayout) (names : Nat → JsE)
+    (d n : Nat) (cur out : String) : Branches fam n js g → List JsS
+  | .nil => []
+  | .cons c _ body t =>
+      if c.numRecFields == 1 then
+        let names' : Nat → JsE := fun j =>
+          if j < n then names j else Layout.fieldAt L (ident cur) c (j - n)
+        let items := Expr.toMiniPushItems L names' (d + 1) body
+        let push : List JsS :=
+          if items.isEmpty then []
+          else [.expr (.call (.dot (ident out) (jsName "push")) items)]
+        [.while_ (Layout.tagTest L fam.isEnumLike (ident cur) c)
+          (.block (push ++
+            [assignStmt (ident cur)
+              (Layout.fieldAt L (ident cur) c (c.recFieldIdxs.headD 0))]))]
+      else
+        Branches.toMiniPushLoop L names d n cur out t
+termination_by bs => bs.size
+decreasing_by all_goals (simp only [Branches.size]; omega)
+
+/-- The items pushed by one step of the array-building loop: the branch body must be
+    an array literal, and its trailing spread — the folded tail — is dropped. -/
+def Expr.toMiniPushItems (L : JsDataLayout) (names : Nat → JsE) (d : Nat) {n : Nat} :
+    Expr n js g → List JsE
+  | .arr elems => ExprList.toMiniPushItems L names d elems
+  | _ => []
+termination_by e => e.size
+decreasing_by all_goals (simp only [Expr.size]; omega)
+
+/-- The items of `[items…, ...rest]`, without the trailing spread of the
+    accumulator. -/
+def ExprList.toMiniPushItems (L : JsDataLayout) (names : Nat → JsE) (d : Nat) {n : Nat} :
+    ExprList n js g → List JsE
+  | .nil => []
+  | .spread _ .nil => []
+  | .cons e t => Expr.toMini L names d e :: ExprList.toMiniPushItems L names d t
+  | .spread e t => .spread (Expr.toMini L names d e) :: ExprList.toMiniPushItems L names d t
+termination_by l => l.size
+decreasing_by all_goals (simp only [ExprList.size]; omega)
+
+/-- Translate a boolean expression whose **value** is used: the result is a
+    JavaScript boolean. -/
+def BExpr.toMini (L : JsDataLayout) (names : Nat → JsE) (d : Nat) {n : Nat} :
+    BExpr n js g → JsE
+  | .tt => .true_
+  | .ff => .false_
+  | .truthy e => .unary .not (.unary .not (Expr.toMini L names d e))
+  -- `!x` is a boolean whatever `x` is, so its operand is a condition position.
+  | .not c => .unary .not (BExpr.toMiniTest L names d c)
+  -- `a && b` is *not*: it is `a` when `a` is falsy, so both operands have to be
+  -- booleans already.
+  | .and c e => .binary (BExpr.toMini L names d c) .and (BExpr.toMini L names d e)
+  | .or c e => .binary (BExpr.toMini L names d c) .or (BExpr.toMini L names d e)
+  | .binop op a b =>
+      applyBinSyntax op.syntaxForm (binOpBoolMini op)
+        (Expr.toMini L names d a) (Expr.toMini L names d b)
+  | .isArray e => .call (.dot (ident "Array") (jsName "isArray")) [Expr.toMini L names d e]
+  | .isTag o t =>
+      .binary (.dot (Expr.toMini L names d o) (jsName "tag")) .strictEq (.string t.val)
+termination_by b => b.size
+decreasing_by all_goals (simp only [BExpr.size]; omega)
+
+/-- A boolean expression in a **condition position** — the test of a `?:`, the operand
+    of `!`, and, recursively, the operands of a `&&` or `||` that is itself in one.
+    JavaScript coerces the value there, so the `!!` that makes a `BExpr` a boolean is
+    redundant and is left out. -/
+def BExpr.toMiniTest (L : JsDataLayout) (names : Nat → JsE) (d : Nat) {n : Nat} :
+    BExpr n js g → JsE
+  | .truthy e => Expr.toMini L names d e
+  | .not c => .unary .not (BExpr.toMiniTest L names d c)
+  | .and c e => .binary (BExpr.toMiniTest L names d c) .and (BExpr.toMiniTest L names d e)
+  | .or c e => .binary (BExpr.toMiniTest L names d c) .or (BExpr.toMiniTest L names d e)
+  -- The nodes that already *are* booleans are translated exactly as `BExpr.toMini`
+  -- translates them.
+  | .tt => .true_
+  | .ff => .false_
+  | .binop op a b =>
+      applyBinSyntax op.syntaxForm (binOpBoolMini op)
+        (Expr.toMini L names d a) (Expr.toMini L names d b)
+  | .isArray e => .call (.dot (ident "Array") (jsName "isArray")) [Expr.toMini L names d e]
+  | .isTag o t =>
+      .binary (.dot (Expr.toMini L names d o) (jsName "tag")) .strictEq (.string t.val)
+termination_by b => b.size
+decreasing_by all_goals (simp only [BExpr.size]; omega)
+
+/-- The elements of an array literal or the arguments of a call; a spread element is
+    the `...e` expression. -/
+def ExprList.toMini (L : JsDataLayout) (names : Nat → JsE) (d : Nat) {n : Nat} :
+    ExprList n js g → List JsE
+  | .nil => []
+  | .cons e t => Expr.toMini L names d e :: ExprList.toMini L names d t
+  | .spread e t => .spread (Expr.toMini L names d e) :: ExprList.toMini L names d t
+termination_by l => l.size
+decreasing_by all_goals (simp only [ExprList.size]; omega)
+
+/-- The properties of an object literal. -/
+def ObjProps.toMini (L : JsDataLayout) (names : Nat → JsE) (d : Nat) {n : Nat} :
+    ObjProps n js g → List MiniProperty
+  | .nil => []
+  | .cons p v t =>
+      .keyValue (.ident (jsName p.val)) (Expr.toMini L names d v) :: ObjProps.toMini L names d t
+  | .computed k v t =>
+      .keyValue (.computed (Expr.toMini L names d k)) (Expr.toMini L names d v) :: ObjProps.toMini L names d t
+  | .spread s t =>
+      .spread (Expr.toMini L names d s) :: ObjProps.toMini L names d t
+termination_by ps => ps.size
+decreasing_by all_goals (simp only [ObjProps.size]; omega)
+
+/-- The body of a loop, as JavaScript **statements**.
+
+`base` is the de Bruijn index of the loop's first loop variable, so the loop variable
+`j` is the JavaScript variable `_p{base + j}` — which is how a `next` knows what to
+assign to.  The assignment is **simultaneous**: the new values are computed into
+`const`s first, so a loop that reads one loop variable while another is being updated
+does not see the new value.  `ret` is a `return`, which leaves the arrow the loop is
+wrapped in, and a `bind` is a `const` in a block of its own.  This follows
+`TailExpr.renderAux` (`LakeJs.Render`) statement for statement. -/
+def TailExpr.toMiniStmts (L : JsDataLayout) (names : Nat → JsE) (d base : Nat)
+    {m k : Nat} {js : List Nat} : TailExpr m js g k → List JsS
+  | .ret e => [.return_ (some (Expr.toMini L names d e))]
+  | .next as =>
+      if k == 0 then [.continue_ none]
+      else
+        let vals : List MiniDeclarator :=
+          (ExprVec.toMiniFields L names d as).zipIdx.map fun (e, j) =>
+            ⟨.ident (jsName s!"_u{base + j}"), some e⟩
+        let assigns : List JsS := (List.range k).map fun j =>
+          assignStmt (names (base + j)) (ident s!"_u{base + j}")
+        [.block (declList .const vals ++ assigns ++ [.continue_ none])]
+  | .ite c t e =>
+      [.if_ (BExpr.toMiniTest L names d c)
+        (.block (TailExpr.toMiniStmts L names d base t))
+        (some (.block (TailExpr.toMiniStmts L names d base e)))]
+  | .bind rhs t =>
+      let p0 := s!"_p{m}"
+      let names' : Nat → JsE := fun j => if j == m then ident p0 else names j
+      [.block (constDecl p0 (Expr.toMini L names d rhs)
+        :: TailExpr.toMiniStmts L names' d base t)]
+termination_by t => t.size
+decreasing_by all_goals (simp only [TailExpr.size]; omega)
+
+/-- The fields of a constructor, in order. -/
+def ExprVec.toMiniFields (L : JsDataLayout) (names : Nat → JsE) (d : Nat) {n k : Nat} :
+    ExprVec n js g k → List JsE
+  | .nil => []
+  | .cons e t => Expr.toMini L names d e :: ExprVec.toMiniFields L names d t
+termination_by v => v.size
+decreasing_by all_goals (simp only [ExprVec.size]; omega)
+
+/-- An applied Lean constructor, in the layout the file is compiled with. -/
+def LeanEnum.toMini (L : JsDataLayout) (names : Nat → JsE) (d : Nat) {n : Nat} :
+    LeanEnum n js g → JsE
+  | .mk fam c f _ =>
+      Layout.ctorValue L fam.isEnumLike c (ExprVec.toMiniFields L names d f)
+termination_by e => e.size
+decreasing_by all_goals (simp only [LeanEnum.size]; omega)
+
+end
+
+/-- The default tree of de Bruijn index `i` in an expression with `nfree` holes:
+    an unfilled hole prints as `#i`, which is deliberately not valid JavaScript. -/
+def varTree (nfree i : Nat) : JsE :=
+  if i < nfree then ident s!"#{i}" else ident s!"_p{i}"
+
+/-- The MiniAST of an `Expr`, in a given layout. -/
+def Expr.toMiniWith {n : Nat} (L : JsDataLayout) (e : Expr n js g) : JsE :=
+  Expr.toMini L (varTree n) 0 e
+
+/-- The MiniAST of a `BExpr`, in a given layout. -/
+def BExpr.toMiniWith {n : Nat} (L : JsDataLayout) (b : BExpr n js g) : JsE :=
+  BExpr.toMini L (varTree n) 0 b
+
+/-- The JavaScript text of an `Expr`, laid out by the pretty printer. -/
+def Expr.printWith {n : Nat} (L : JsDataLayout) (e : Expr n js g) : String :=
+  printExpr (Expr.toMiniWith L e)
+
+/-- The JavaScript text of a `BExpr`, laid out by the pretty printer. -/
+def BExpr.printWith {n : Nat} (L : JsDataLayout) (b : BExpr n js g) : String :=
+  printExpr (BExpr.toMiniWith L b)
+
+/-- The JavaScript text of an `Expr` in the default layout. -/
+def Expr.print {n : Nat} (e : Expr n js g) : String := Expr.printWith JsDataLayout.standard e
+
+/-- The JavaScript text of a `BExpr` in the default layout. -/
+def BExpr.print {n : Nat} (b : BExpr n js g) : String := BExpr.printWith JsDataLayout.standard b
+
+end LakeJs.Mini
+
+end

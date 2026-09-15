@@ -1,0 +1,306 @@
+module
+
+public import LakeJs.Backend
+public import LakeJs.JsOlean
+public import LakeJs.Output
+
+@[expose] public section
+
+variable {js : List Nat}
+
+/-!
+# The command line of the JavaScript backend
+
+The command line is parsed into a `CliCommand`, which is a *description of what to
+produce* rather than a bag of options:
+
+```
+inductive CliCommand where
+  | help
+  | compile (modules) (outputs : NonEmptyArray OutputFileAndWhatItShouldContain)
+```
+
+* `--help` anywhere on the command line means `help`, whatever else is there;
+* otherwise every output file is described by an `OutputFileAndWhatItShouldContain`:
+  the file to write and whether it is a library (`OnlyExports`, a non-empty list of
+  declarations, ending in `export {…};`) or a program (`OnlyEntry`, ending in a run
+  of `main`). Both alternatives are non-empty by construction, so "produce a file
+  with nothing in it" cannot be expressed.
+
+As in a program built by `lake`, the entry point of a program is always the
+declaration called `main`, and it must have one of the types Lake accepts for it, so
+`--entry` takes no argument.
+
+Usage:
+
+```
+lakejs [options] <Module.Name>...
+
+  -o, --out <file>       write the next output to <file> (`-` is stdout); each -o
+                         starts a new output file
+  --export <decl>        the current output file exports <decl> (repeatable)
+  --entry                the current output file is a program: it runs `main`
+  -h, --help             show this message
+```
+
+Beside every output file that is a real file the compiler also writes
+`<file-without-.js>-Expr.txt`: the `Expr`/`BExpr` tree of every declaration in that
+output, one node per line, at **every stage of the optimizer pipeline** — as it is
+handed to the optimizer, after the partial evaluator of `LakeJs.Eval`, and after the
+common-subexpression elimination of `LakeJs.CSEDeep`, which is the tree the
+JavaScript is printed from.  A stage that changed nothing is marked `(unchanged)`.
+
+The modules are read from their `.olean` files on `LEAN_PATH`, so the usual way to run
+this on a Lake project is `lake env lakejs …`.
+-/
+
+namespace Lean.Compiler.JS
+
+/-- What the `lakejs` driver was asked to do. -/
+inductive CliCommand where
+  /-- `--help` was given: print the usage message. -/
+  | help
+  /-- Compile `modules` with configuration `cfg`, producing each of `outputs`.  The
+      configuration is global to the run: every output file of one command line is
+      generated with the same representation of Lean data. -/
+  | compile (modules : NonEmptyArray Name)
+            (cfg : JsConfig)
+            (outputs : NonEmptyArray OutputFileAndWhatItShouldContain)
+  deriving Repr, Inhabited
+
+def cliUsage : String :=
+"lakejs — compile Lean modules to JavaScript
+
+Usage:
+  lakejs [options] <Module.Name>...
+
+Options:
+  -o, --out <file>     write the next output to <file> (`-` is stdout); each -o
+                       starts a new output file.  Unless it is stdout, the
+                       Expr/BExpr tree of everything in it, at every stage of the
+                       optimizer pipeline, is written to
+                       <file without .js>-Expr.txt as well
+  --export <decl>      the current output file exports <decl> (repeatable);
+                       `--export=<decl>` is also accepted
+  --entry              the current output file is a program: it runs `main` at the
+                       end. The entry point is always `main`, as for `lake`, and it
+                       must have one of the types Lake accepts for it:
+                       `IO Unit`, `IO UInt32`, `List String -> IO Unit` or
+                       `List String -> IO UInt32`
+  -h, --help           show this message
+
+Representation (global to the run; see LakeJs.Config for the whole table):
+  --preset=<p>         default | pbo | faithful — a whole configuration at once,
+                       which later options may still override
+  --nat=<r>            num (default) | bigint
+  --int=<r>            num (default) | bigint
+  --usize=<r>          bigint (default) | num
+  --uint64=<r>         bigint (default) | num
+  --int64=<r>          bigint (default) | num
+  --char=<r>           string (default) | codepoint
+  --ctor=<r>           object (default) | array | int — {tag: \"cons\", _1, _2},
+                       [\"cons\", a, b], or {tag: 1, _1, _2}
+  --fields=<r>         positional (default) | declared
+  --enum=<r>           tagged (default) | int — an inductive all of whose
+                       constructors are nullary
+  --list=<r>           chain (default) | array
+  --nat-sub-guard      emit the truncation guard of Nat subtraction (the default)
+  --no-nat-sub-guard   do not emit it: a subtraction that underflows then produces a
+                       negative number instead of 0
+  --divmod-guard       emit Lean's `= 0` guard on division and modulo (the default)
+  --no-divmod-guard    do not emit it: a division by zero then produces
+                       Infinity/NaN instead of 0
+
+  A guard is never emitted where the operands rule the case out (a literal non-zero
+  divisor, a subtraction of 0).
+
+  UInt8/16/32 and Int8/16/32 are always numbers, Float and Float32 are always
+  numbers (no Math.fround), Bool a boolean, String a string, Array an array, and
+  Option always a constructor object."
+
+/-- An output file under construction while the command line is being read. -/
+structure PendingOutput where
+  file    : String
+  exports : Array Name := #[]
+  isEntry : Bool := false
+
+def PendingOutput.finish (p : PendingOutput) :
+    Except String OutputFileAndWhatItShouldContain :=
+  match NonEmptyArray.ofArray? p.exports, p.isEntry with
+  | some names, false => .ok ⟨p.file, .onlyExports names⟩
+  | none, true => .ok ⟨p.file, .onlyEntry⟩
+  | some _, true =>
+    .error s!"output '{p.file}': --export and --entry cannot be combined"
+  | none, false =>
+    .error s!"output '{p.file}': nothing to put in it (pass --export or --entry)"
+
+/-- Split `--flag=value` into its two halves. -/
+def splitEq (a : String) : String × Option String :=
+  match a.splitOn "=" with
+  | [] => (a, none)
+  | [x] => (x, none)
+  | x :: rest => (x, some (String.intercalate "=" rest))
+
+/-- Apply one representation option to a configuration.  The value of a knob is
+    checked here, so an unknown one is a command-line error rather than a silent
+    default. -/
+def applyKnob (cfg : JsConfig) (flag val : String) : Except String JsConfig :=
+  let numRepr : Except String JsNumRepr :=
+    match val with
+    | "num" | "number" => .ok .num
+    | "bigint" => .ok .bigint
+    | _ => .error s!"{flag}: expected 'num' or 'bigint', got '{val}'"
+  match flag with
+  | "--preset" =>
+    match val with
+    | "default" => .ok {}
+    | "pbo" => .ok JsConfig.presetPBO
+    | "faithful" => .ok JsConfig.presetFaithful
+    | _ => .error s!"--preset: expected 'default', 'pbo' or 'faithful', got '{val}'"
+  | "--nat" => do return { cfg with natRepr := ← numRepr }
+  | "--int" => do return { cfg with intRepr := ← numRepr }
+  | "--usize" => do return { cfg with usizeRepr := ← numRepr }
+  | "--uint64" => do return { cfg with uint64Repr := ← numRepr }
+  | "--int64" => do return { cfg with int64Repr := ← numRepr }
+  | "--char" =>
+    match val with
+    | "string" => .ok { cfg with charRepr := .jsString }
+    | "codepoint" => .ok { cfg with charRepr := .codePoint }
+    | _ => .error s!"--char: expected 'string' or 'codepoint', got '{val}'"
+  | "--ctor" =>
+    match val with
+    | "object" => .ok { cfg with ctorRepr := .taggedObject }
+    | "array" => .ok { cfg with ctorRepr := .positionalArray }
+    | "int" => .ok { cfg with ctorRepr := .taggedInt }
+    | _ => .error s!"--ctor: expected 'object', 'array' or 'int', got '{val}'"
+  | "--fields" =>
+    match val with
+    | "positional" => .ok { cfg with fieldNaming := .positional }
+    | "declared" => .ok { cfg with fieldNaming := .declared }
+    | _ => .error s!"--fields: expected 'positional' or 'declared', got '{val}'"
+  | "--enum" =>
+    match val with
+    | "tagged" => .ok { cfg with enumRepr := .tagged }
+    | "int" => .ok { cfg with enumRepr := .smallInt }
+    | _ => .error s!"--enum: expected 'tagged' or 'int', got '{val}'"
+  | "--list" =>
+    match val with
+    | "chain" => .ok { cfg with listRepr := .ctorChain }
+    | "array" => .ok { cfg with listRepr := .jsArray }
+    | _ => .error s!"--list: expected 'chain' or 'array', got '{val}'"
+  | _ => .error s!"unknown option '{flag}'"
+
+/-- Parse a command line into a `CliCommand`. -/
+def parseCli (args : List String) : Except String CliCommand := do
+  if args.any (fun a => a == "--help" || a == "-h") then
+    return .help
+  let mut modules : Array Name := #[]
+  let mut outputs : Array PendingOutput := #[]
+  let mut cfg : JsConfig := {}
+  let mut rest := args
+  while true do
+    match rest with
+    | [] => break
+    | a :: as =>
+      rest := as
+      let (flag, inlineVal) := splitEq a
+      match flag with
+      | "-o" | "--out" =>
+        match inlineVal, as with
+        | some v, _ => outputs := outputs.push { file := v }
+        | none, v :: as' => outputs := outputs.push { file := v }; rest := as'
+        | none, [] => MonadExcept.throw "missing argument for --out"
+      | "--export" =>
+        let (name, as') ←
+          match inlineVal, as with
+          | some v, _ => pure (v, as)
+          | none, v :: as' => pure (v, as')
+          | none, [] => .error "missing argument for --export"
+        rest := as'
+        match outputs.back? with
+        | none => MonadExcept.throw "--export must follow an --out"
+        | some cur =>
+          outputs := outputs.set! (outputs.size - 1)
+            { cur with exports := cur.exports.push name.toName }
+      | "--entry" =>
+        if inlineVal.isSome then
+          MonadExcept.throw
+            "--entry takes no argument: the entry point of a program is always `main`"
+        match outputs.back? with
+        | none => MonadExcept.throw "--entry must follow an --out"
+        | some cur =>
+          outputs := outputs.set! (outputs.size - 1) { cur with isEntry := true }
+      | "--nat-sub-guard" => cfg := { cfg with natSubGuard := true }
+      | "--no-nat-sub-guard" => cfg := { cfg with natSubGuard := false }
+      | "--divmod-guard" => cfg := { cfg with divModZeroGuard := true }
+      | "--no-divmod-guard" => cfg := { cfg with divModZeroGuard := false }
+      | "--preset" | "--nat" | "--int" | "--usize" | "--uint64" | "--int64"
+      | "--char" | "--ctor" | "--fields" | "--enum" | "--list" =>
+        let (val, as') ←
+          match inlineVal, as with
+          | some v, _ => pure (v, as)
+          | none, v :: as' => pure (v, as')
+          | none, [] => .error s!"missing argument for {flag}"
+        rest := as'
+        cfg ← applyKnob cfg flag val
+      | _ =>
+        if a.startsWith "-" then
+          MonadExcept.throw s!"unknown option '{a}'"
+        else
+          modules := modules.push a.toName
+  let some modules' := NonEmptyArray.ofArray? modules
+    | .error "no module given"
+  let finished ← outputs.mapM PendingOutput.finish
+  let some outputs' := NonEmptyArray.ofArray? finished
+    | .error "no output requested (pass -o FILE with --export or --entry)"
+  return .compile modules' cfg outputs'
+
+/-- Read the `.olean` files a command needs: the modules it names, and everything the
+    outputs it asks for can reach. This is the whole of the IO the compiler does, and
+    it happens **once** per command, however many output files it produces. -/
+def CliCommand.load (cmd : CliCommand) : IO JsOleanData := do
+  match cmd with
+  | .help => return {}
+  | .compile modules _ outputs =>
+    loadJsOlean modules.toArray (outputs.toArray.map (·.whatShouldContain))
+
+/-- The file the `Expr`/`BExpr` trees of an output go to: `gcd.js` is
+    accompanied by `gcd-Expr.txt`.  Nothing is written beside stdout. -/
+def exprDumpFileFor (outputFile : String) : Option String :=
+  if outputFile == "-" then none
+  else
+    let base :=
+      if outputFile.endsWith ".js" then (outputFile.dropEnd 3).toString else outputFile
+    some (base ++ "-Expr.txt")
+
+/-- Run a parsed command line: read the `.olean` files once, then generate each
+    requested file from what was read.  Beside every output file that is a real file
+    the `Expr`/`BExpr` tree of each declaration, at every stage of the optimizer
+    pipeline, is written too, as `<file>-Expr.txt`. -/
+def runCli (cmd : CliCommand) : IO UInt32 := do
+  match cmd with
+  | .help =>
+    IO.println cliUsage
+    return 0
+  | .compile _ cfg outputs =>
+    let olean ← cmd.load
+    for out in outputs.toList do
+      let res ← Backend.compileFileOrThrow olean cfg out.whatShouldContain
+      if out.outputFile == "-" then IO.print res.js
+      else
+        IO.FS.writeFile out.outputFile res.js
+        if let some dumpFile := exprDumpFileFor out.outputFile then
+          IO.FS.writeFile dumpFile res.exprDump
+    return 0
+
+/-- The `lakejs` entry point: parse the arguments and run them. -/
+def cliMain (args : List String) : IO UInt32 := do
+  match parseCli args with
+  | .error e =>
+    IO.eprintln s!"lakejs: {e}\n\n{cliUsage}"
+    return 1
+  | .ok cmd => runCli cmd
+
+end Lean.Compiler.JS
+
+end
