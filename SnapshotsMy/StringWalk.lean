@@ -22,6 +22,7 @@ def test1 (s : String) (c : Char) : Nat :=
     omega
   go 0 0
 
+/-- The same walk, answering with the position of the first occurrence. -/
 def test2 (s : String) (c : Char) : String.Pos.Raw :=
   let rec go (p : String.Pos.Raw) : String.Pos.Raw :=
     if String.Pos.Raw.atEnd s p then p
