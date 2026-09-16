@@ -1,55 +1,98 @@
-// @inline Snapshot.RecursionSchemes01.cata arity=2
-// @inline Snapshot.RecursionSchemes01.functorExprF.map arity=2
-const $ExprF = (tag, _1, _2) => ({
-  tag,
-  _1,
-  _2,
-});
-const Add = (value0, value1) => $ExprF("Add", value0, value1);
-const Mul = (value0, value1) => $ExprF("Mul", value0, value1);
-const Lit = (value0) => $ExprF("Lit", value0);
-const functorExprF = {
-  map: (f) => (m) => {
-    if (m.tag === "Add") {
-      return $ExprF("Add", f(m._1), f(m._2));
-    }
-    if (m.tag === "Mul") {
-      return $ExprF("Mul", f(m._1), f(m._2));
-    }
-    if (m.tag === "Lit") {
-      return $ExprF("Lit", m._1);
-    }
-    throw new Error("UNREACHABLE");
-  },
+const test2 = (v0) => {
+  const v1 = (v1) => {
+    const v2 = bump(v1);
+    return eval$(v2);
+  };
+  return cata(v1, v0);
 };
-const test1 = /* #__PURE__ */ (() => {
-  const go = (v) => {
-    if (v.tag === "Add") {
-      return (go(v._1) + go(v._2)) | 0;
+const test1 = (v0) => {
+  const v1 = eval$;
+  return cata(v1, v0);
+};
+const mapExprF = (v0, v1) => {
+  if (v1.tag === 0) {
+    const v2 = v1._1;
+    return { tag: 0, _1: v2 };
+  } else {
+    if (v1.tag === 1) {
+      const v2 = v1._1;
+      const v3 = v1._2;
+      const v4 = v0(v2);
+      const v5 = v0(v3);
+      return { tag: 1, _1: v4, _2: v5 };
+    } else {
+      const v2 = v1._1;
+      const v3 = v1._2;
+      const v4 = v0(v2);
+      const v5 = v0(v3);
+      return { tag: 2, _1: v4, _2: v5 };
     }
-    if (v.tag === "Mul") {
-      return (go(v._1) * go(v._2)) | 0;
+  }
+};
+const instFunctorExprF_map = mapExprF;
+const instFunctorExprF_mapConst = (v0, v1) => {
+  const v2 = Function_const(v0);
+  return mapExprF(v2, v1);
+};
+const eval$ = (v0) => {
+  if (v0.tag === 0) {
+    return v0._1;
+  } else {
+    if (v0.tag === 1) {
+      const v1 = v0._1;
+      const v2 = v0._2;
+      return v1 + v2;
+    } else {
+      const v1 = v0._1;
+      const v2 = v0._2;
+      return v1 * v2;
     }
-    if (v.tag === "Lit") {
-      return v._1;
+  }
+};
+const cataMap = (v0, v1) => {
+  if (v1.tag === 0) {
+    const v2 = v1._1;
+    return { tag: 0, _1: v2 };
+  } else {
+    if (v1.tag === 1) {
+      const v2 = v1._1;
+      const v3 = v1._2;
+      const v4 = cata(v0, v2);
+      const v5 = cata(v0, v3);
+      return { tag: 1, _1: v4, _2: v5 };
+    } else {
+      const v2 = v1._1;
+      const v3 = v1._2;
+      const v4 = cata(v0, v2);
+      const v5 = cata(v0, v3);
+      return { tag: 2, _1: v4, _2: v5 };
     }
-    throw new Error("UNREACHABLE");
-  };
-  return go;
-})();
-const test2 = /* #__PURE__ */ (() => {
-  const go = (v) => {
-    if (v.tag === "Add") {
-      return (go(v._1) + go(v._2)) | 0;
-    }
-    if (v.tag === "Mul") {
-      return (go(v._1) * go(v._2)) | 0;
-    }
-    if (v.tag === "Lit") {
-      return (v._1 + 1) | 0;
-    }
-    throw new Error("UNREACHABLE");
-  };
-  return go;
-})();
-export { $ExprF, Add, Lit, Mul, functorExprF, test1, test2 };
+  }
+};
+const cata = (v0, v1) => {
+  const v2 = v1;
+  const v3 = cataMap(v0, v2);
+  return v0(v3);
+};
+const bump = (v0) => {
+  if (v0.tag === 0) {
+    const v1 = v0._1;
+    const v2 = 1;
+    const v3 = v2;
+    const v4 = v1 + v3;
+    return { tag: 0, _1: v4 };
+  } else {
+    return v0;
+  }
+};
+export {
+  test2,
+  test1,
+  mapExprF,
+  instFunctorExprF_map,
+  instFunctorExprF_mapConst,
+  eval$,
+  cataMap,
+  cata,
+  bump,
+};

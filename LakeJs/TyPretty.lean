@@ -2,136 +2,118 @@ module
 
 public import LakeJs.Ty
 
-open NonEmpty.String
-
 @[expose] public section
 
 /-!
 # Printing a `Ty`
 
-`Ty` cannot `deriving Repr`: its schemas hold rows, which are inductive families
-indexed by their shape, and the derive handlers do not cover those.  So the printer is
-written by hand, as an ordinary structural recursion over `Ty` and over every row type
-of `LakeJs.Schemas`, and it backs the `Repr` and `ToString` instances.
-
-It lives in its own module rather than in `LakeJs.Ty`: the *definition* of the type
-language and the *rendering* of it are independent concerns, and a consumer that only
-builds types (`LakeJs.Externs`, say) has no reason to depend on the printer.
+A one-line rendering, for debugging and error messages, and the `Repr` and `ToString`
+instances it backs.  It lives in its own module rather than in `LakeJs.Ty`: the
+*definition* of the type language and the *rendering* of it are independent concerns.
 -/
-
 
 mutual
 
-/-- A one-line rendering of a type, for debugging and error messages. -/
+/-- A one-line rendering of a closed type, for debugging and error messages. -/
 def Ty.pretty : Ty → String
   | .prim p         => p.pretty
+  | .typeParam      => "typeParam"
+  | .shape s        => Ty.prettyShape s
+  | .enum n         => "(enum " ++ toString n ++ ")"
+  | .record fs      => "(record " ++ Ty.prettyList fs ++ ")"
+  | .taggedUnion l  => "(taggedUnion " ++ Ty.prettyCtors l ++ ")"
+  | .recTaggedUnion l => "(recTaggedUnion " ++ RTy.prettyCtors l ++ ")"
+  | .recObject fs   => "(recObject " ++ RTy.prettyList fs ++ ")"
+  | .recAlias b     => "(recAlias " ++ RTy.pretty b ++ ")"
+  | .mutualRecursiveFamily ms i =>
+      "(family#" ++ toString i ++ " " ++ FamMember.prettyList ms ++ ")"
+
+/-- The shared type formers, over closed types. -/
+def Ty.prettyShape : Shape Ty → String
   | .fn args ret    => "(fn [" ++ Ty.prettyList args ++ "] " ++ Ty.pretty ret ++ ")"
+  | .fn_returnsProd args r1 rs =>
+      "(fn [" ++ Ty.prettyList args ++ "] ["
+        ++ Ty.pretty r1 ++ (if rs.isEmpty then "" else "," ++ Ty.prettyList rs) ++ "])"
   | .array t        => "(array " ++ Ty.pretty t ++ ")"
   | .list t         => "(list " ++ Ty.pretty t ++ ")"
   | .task t         => "(task " ++ Ty.pretty t ++ ")"
   | .promise t      => "(promise " ++ Ty.pretty t ++ ")"
   | .thunk t        => "(thunk " ++ Ty.pretty t ++ ")"
-  | .enum s =>
-      "(enum " ++ s.name.toString ++ " "
-        ++ String.intercalate "|" (s.tags.map (·.toString)) ++ ")"
-  | .record { name := n, fields := fs, .. } =>
-      "(record " ++ n.toString ++ " " ++ Ty.prettyFields fs ++ ")"
-  | .taggedUnion { name := n, ctors := cs, .. } =>
-      "(taggedUnion " ++ n.toString ++ " " ++ Ty.prettyCtors cs ++ ")"
-  | .recTaggedUnion { name := n, ctors := cs, .. } =>
-      "(recTaggedUnion " ++ n.toString ++ " " ++ Ty.prettyRecCtors cs ++ ")"
-  | .recObject { name := n, fields := fs, .. } =>
-      "(recObject " ++ n.toString ++ " " ++ Ty.prettySelfFields fs ++ ")"
-  | .recAlias { name := n, body := b } =>
-      "(recAlias " ++ n.toString ++ " " ++ Ty.prettySelf b ++ ")"
-  | .mutualRecursiveFamily fam =>
-      "(mutual " ++ fam.name.toString ++ "#" ++ toString fam.member ++ ")"
 
-/-- The parameter types of a function type. -/
+/-- A list of closed types, separated by spaces. -/
 def Ty.prettyList : List Ty → String
   | []      => ""
   | [t]     => Ty.pretty t
   | t :: ts => Ty.pretty t ++ " " ++ Ty.prettyList ts
 
-/-- The fields of a record or of one constructor. -/
-def Ty.prettyFields {ks : FieldShape} : FieldRow Ty ks → String
-  | .nil           => ""
-  | .cons k v .nil => k.toString ++ ":" ++ Ty.pretty v
-  | .cons k v rest => k.toString ++ ":" ++ Ty.pretty v ++ " " ++ Ty.prettyFields rest
+/-- The constructors of a closed layout, separated by `|`. -/
+def Ty.prettyCtors : List (List Ty) → String
+  | []      => ""
+  | [c]     => "(" ++ Ty.prettyList c ++ ")"
+  | c :: cs => "(" ++ Ty.prettyList c ++ ")|" ++ Ty.prettyCtors cs
 
-/-- The constructors of a tagged union. -/
-def Ty.prettyCtors {cs : TaggedUnionShape} : CtorRow Ty cs → String
-  | .nil               => ""
-  | .cons t fs .nil    => t.toString ++ "{" ++ Ty.prettyFields fs ++ "}"
-  | .cons t fs rest    =>
-      t.toString ++ "{" ++ Ty.prettyFields fs ++ "}|" ++ Ty.prettyCtors rest
+/-- A one-line rendering of a type inside a recursive declaration. -/
+def RTy.pretty : RTy → String
+  | .self i         => "self#" ++ toString i
+  | .prim p         => p.pretty
+  | .typeParam      => "typeParam"
+  | .shape s        => RTy.prettyShape s
+  | .enum n         => "(enum " ++ toString n ++ ")"
+  | .record fs      => "(record " ++ RTy.prettyList fs ++ ")"
+  | .taggedUnion l  => "(taggedUnion " ++ RTy.prettyCtors l ++ ")"
+  | .recTaggedUnion l => "(recTaggedUnion " ++ RTy.prettyCtors l ++ ")"
+  | .recObject fs   => "(recObject " ++ RTy.prettyList fs ++ ")"
+  | .recAlias b     => "(recAlias " ++ RTy.pretty b ++ ")"
+  | .mutualRecursiveFamily ms i =>
+      "(family#" ++ toString i ++ " " ++ FamMember.prettyList ms ++ ")"
 
-/-- One field type of a recursive declaration. -/
-def Ty.prettySelf {u a : Bool} : SelfTy Ty u a → String
-  | .self         => "self"
-  | .ty t         => Ty.pretty t
-  | .array s      => "(array " ++ Ty.prettySelf s ++ ")"
-  | .list s       => "(list " ++ Ty.prettySelf s ++ ")"
-  | .option s     => "(option " ++ Ty.prettySelf s ++ ")"
-  | .thunk s      => "(thunk " ++ Ty.prettySelf s ++ ")"
-  | .task s       => "(task " ++ Ty.prettySelf s ++ ")"
-  | .promise s    => "(promise " ++ Ty.prettySelf s ++ ")"
-  | .fn ps r      => "(fn [" ++ Ty.prettyList ps ++ "] " ++ Ty.prettySelf r ++ ")"
-  | .prod x y     => "(prod " ++ Ty.prettySelf x ++ " " ++ Ty.prettySelf y ++ ")"
+/-- The shared type formers, over types that may mention `.self`. -/
+def RTy.prettyShape : Shape RTy → String
+  | .fn args ret    => "(fn [" ++ RTy.prettyList args ++ "] " ++ RTy.pretty ret ++ ")"
+  | .fn_returnsProd args r1 rs =>
+      "(fn [" ++ RTy.prettyList args ++ "] ["
+        ++ RTy.pretty r1 ++ (if rs.isEmpty then "" else "," ++ RTy.prettyList rs) ++ "])"
+  | .array t        => "(array " ++ RTy.pretty t ++ ")"
+  | .list t         => "(list " ++ RTy.pretty t ++ ")"
+  | .task t         => "(task " ++ RTy.pretty t ++ ")"
+  | .promise t      => "(promise " ++ RTy.pretty t ++ ")"
+  | .thunk t        => "(thunk " ++ RTy.pretty t ++ ")"
 
-/-- The fields of a recursive declaration or of one of its constructors. -/
-def Ty.prettySelfFields {fs : SelfFieldShape} : SelfFieldRow Ty fs → String
-  | .nil           => ""
-  | .cons k v .nil => k.toString ++ ":" ++ Ty.prettySelf v
-  | .cons k v rest => k.toString ++ ":" ++ Ty.prettySelf v ++ " " ++ Ty.prettySelfFields rest
+/-- A list of types, separated by spaces. -/
+def RTy.prettyList : List RTy → String
+  | []      => ""
+  | [t]     => RTy.pretty t
+  | t :: ts => RTy.pretty t ++ " " ++ RTy.prettyList ts
 
-/-- The constructors of a recursive tagged union. -/
-def Ty.prettyRecCtors {cs : RecTaggedUnionShape} : RecCtorRow Ty cs → String
-  | .nil            => ""
-  | .cons t fs .nil => t.toString ++ "{" ++ Ty.prettySelfFields fs ++ "}"
-  | .cons t fs rest =>
-      t.toString ++ "{" ++ Ty.prettySelfFields fs ++ "}|" ++ Ty.prettyRecCtors rest
+/-- The constructors of a layout, separated by `|`. -/
+def RTy.prettyCtors : List (List RTy) → String
+  | []      => ""
+  | [c]     => "(" ++ RTy.prettyList c ++ ")"
+  | c :: cs => "(" ++ RTy.prettyList c ++ ")|" ++ RTy.prettyCtors cs
 
-/-- One field type of a member of a mutual family. -/
-def Ty.prettyFamTy {k : FamFieldKind} : FamTy Ty k → String
-  | .ty t          => Ty.pretty t
-  | .memberRef i   => "#" ++ toString i
-  | .array f       => "(array " ++ Ty.prettyFamTy f ++ ")"
-  | .list f        => "(list " ++ Ty.prettyFamTy f ++ ")"
-  | .option f      => "(option " ++ Ty.prettyFamTy f ++ ")"
-  | .thunk f       => "(thunk " ++ Ty.prettyFamTy f ++ ")"
-  | .task f        => "(task " ++ Ty.prettyFamTy f ++ ")"
-  | .promise f     => "(promise " ++ Ty.prettyFamTy f ++ ")"
-  | .fn ps r       => "(fn [" ++ Ty.prettyList ps ++ "] " ++ Ty.prettyFamTy r ++ ")"
-  | .prod x y      => "(prod " ++ Ty.prettyFamTy x ++ " " ++ Ty.prettyFamTy y ++ ")"
+/-- One member of a mutual family. -/
+def FamMember.pretty : FamMember → String
+  | .ctors l => "{" ++ RTy.prettyCtors l ++ "}"
+  | .alias b => "{= " ++ RTy.pretty b ++ "}"
 
-/-- The fields of one constructor of a family member. -/
-def Ty.prettyFamFields {fs : FamFieldShape} : FamFieldRow Ty fs → String
-  | .nil => ""
-  | .cons k v rest => k.toString ++ ":" ++ Ty.prettyFamTy v ++ " " ++ Ty.prettyFamFields rest
-
-/-- The constructors of one family member. -/
-def Ty.prettyFamCtors {cs : List FamCtorShape} : FamCtorRow Ty cs → String
-  | .nil => ""
-  | .cons t fs rest =>
-      t.toString ++ "{" ++ Ty.prettyFamFields fs ++ "}|" ++ Ty.prettyFamCtors rest
-
-/-- The members of a family. -/
-def Ty.prettyFamMembers {ms : FamShape} : FamMemberRow Ty ms → String
-  | .nil => ""
-  | .cons n cs rest =>
-      n.toString ++ "(" ++ Ty.prettyFamCtors cs ++ ") " ++ Ty.prettyFamMembers rest
+/-- The members of a mutual family, separated by spaces. -/
+def FamMember.prettyList : List FamMember → String
+  | []      => ""
+  | [m]     => FamMember.pretty m
+  | m :: ms => FamMember.pretty m ++ " " ++ FamMember.prettyList ms
 
 end
 
-/-- The full rendering of a mutual family, members included. -/
-def LeanMutualRecFamily.pretty (fam : LeanMutualFamily) : String :=
-  "(mutual " ++ fam.name.toString ++ " " ++ Ty.prettyFamMembers fam.members ++ ")"
+instance : ToString Ty where
+  toString := Ty.pretty
 
 instance : Repr Ty where
-  reprPrec t _ := Std.Format.text t.pretty
+  reprPrec t _ := Ty.pretty t
 
-instance : ToString Ty where
-  toString t := t.pretty
+instance : ToString RTy where
+  toString := RTy.pretty
+
+instance : Repr RTy where
+  reprPrec t _ := RTy.pretty t
 
 end

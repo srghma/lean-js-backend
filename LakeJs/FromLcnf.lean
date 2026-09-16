@@ -1,0 +1,1434 @@
+import Lean
+import Lean.Compiler.LCNF
+import LakeJs.Lookup
+import LakeJs.TyPretty
+import LakeJs.Simp
+import LakeJs.EmitJs
+import LakeJs.ExternTable
+import LakeJs.Totality
+
+/-!
+# From what the `.olean` stores to a `Term`
+
+The backend reads the **`saveBase` LCNF phase** out of the `.olean` files — not
+`Lean.IR`, and not `saveMono`.  Both of those have already thrown the types away: by
+then a `Nat`, a `UInt32`, a `Char` and a one-field structure all look alike, and the
+choice of JavaScript representation, which is what an optimiser wants to work against,
+can no longer be made.  `base` still carries the LCNF type of every binder, so this
+translation can build a *typed* `Term`.
+
+What the translation does, in one paragraph.  A declaration's parameters become the
+parameters of a `Term.lamN`.  If the declaration calls itself, the whole body becomes a
+`Term.loop` whose loop variables are copies of those parameters, and a self-call in tail
+position becomes `Body.cont` — that, and only that, is how recursion survives into the
+output, which is why the output only ever contains `while`.  A self-call that is *not*
+in tail position is refused, with a message saying so, rather than being turned into a
+recursive JavaScript function.
+
+A *mutually* tail-recursive group is compiled the same way, into a single loop shared by
+all of its members (`LakeJs.Compile.transGroup` assembles it): the loop's first variable
+is the tag of the member that is running and the rest are the argument slots, and
+`Ctx'.group` is what tells this translation that a tail call to another member of the
+group is a `Body.cont` of that shared loop rather than a JavaScript call.
+
+Join points are inlined at their jumps (LCNF join points are not recursive, so this
+terminates), because a jump in the middle of a join point may be the tail call of the
+enclosing loop, and a JavaScript function call could not be one.
+
+## Three things every reference goes through
+
+* a call of a function Lean implements with `@[extern]` becomes `Term.extern`, which
+  carries the catalogue entry (`LakeJs.Externs`) and therefore the *type* of the runtime
+  function, rather than a bare name;
+* an operation the backend prints inline becomes `Term.prim`, whose `JsPrim` is indexed
+  by the types of its arguments, so it is applied to exactly the arguments it takes — a
+  constant like `instDecidableEqString` used as a *value* is eta-expanded into
+  `(v0, v1) => v0 === v1` rather than printed as a call of no arguments;
+* anything else becomes `Term.global`, an index into the module's signature: the name
+  must be one the module declares or imports, and it is used at the type the signature
+  gives it.
+
+## Instances are unboxed
+
+A class instance is not a record at run time.  A declaration of the module whose result
+is a class with fields `f₁ … f_k` is emitted as `k` declarations, `inst_f₁ … inst_f_k`
+(`LakeJs.Compile`), and this translation resolves a *projection* of it straight to the
+field it names.  A parameter whose type is such a class is likewise split into one
+parameter per field, so a function that depends on an instance it cannot see takes the
+instance's fields as ordinary arguments.  Where a whole instance is genuinely needed as
+one value — it is handed to a function of another module — the fields are packed back
+into a record on the spot.
+-/
+
+namespace LakeJs.FromLcnf
+
+open Lean Lean.Compiler.LCNF
+open LakeJs.EmitJs
+
+/-- Is this LCNF type the type of a value that carries *nothing* at run time — a type
+    argument or a proof?  Such a binder is **dropped**: it is not given a `Ty` and no
+    parameter, argument or `let` is emitted for it, which is why `Ty` has no erased
+    type and `Term` no erased literal. -/
+def isErasedLcnfTy : Expr → Bool
+  | .sort _ => true
+  | .mdata _ e => isErasedLcnfTy e
+  -- a *type family* (`Nat → Type`) is as much a compile-time value as a type is
+  | .forallE _ _ b _ => isErasedLcnfTy b
+  | e => e.getAppFn.constName? == some ``lcErased
+
+/-- Is this LCNF parameter dropped? -/
+def isErasedParam (p : Param) : Bool := isErasedLcnfTy p.type
+
+/-- Is this LCNF argument dropped? -/
+def isErasedArgForm : Arg → Bool
+  | .type _ => true
+  | .erased => true
+  | .fvar _ => false
+
+/-! ## Types
+
+Every Lean type a compiled declaration mentions is modelled, or the declaration is
+refused: there is no longer an "unmodelled type" to fall back on.  That means this
+translation has to do two things the old one did not.
+
+* **A parameterised declaration is modelled at its instantiation.**  `Except Nat String`
+  is read by instantiating `Except`'s constructors with `Nat` and `String` and turning
+  the result into a `Ty.taggedUnion [[.nat], [.string]]`.  `Option Nat` and
+  `Except Nat String` are therefore different types, and each is a finite tree.
+* **A mutual block is modelled as a family.**  The bodies of *all* the members are read
+  at once, and `RTy.self i` inside them is member `i`, so a member never points outside
+  its family.
+
+The shape a declaration gets is the shape it has: no field, one field, several fields,
+one constructor or several, recursive or not — see `LakeJs.Ty`.  A single-constructor
+declaration with a single runtime field is a **newtype**: the wrapper is erased, and its
+`Ty` is the field's own `Ty`.
+
+Two things are still refused rather than guessed: an inductive *family* with indices,
+and a recursive declaration that occurs inside another recursive declaration's body
+(the type language has one `.self` binder per recursive shape, and the inner one
+shadows the outer).  A value whose Lean type is a **type parameter** of the enclosing
+declaration is `Ty.typeParam` — parametric, and provably impossible to take apart.
+-/
+
+/-- The runtime tag of a constructor: its position in its type's declaration order. -/
+def ctorIdx (env : Environment) (n : Name) : Nat :=
+  match env.find? n with
+  | some (.ctorInfo ci) => ci.cidx
+  | _ => 0
+
+/-- Strip `n` leading `∀` binders off a type, whatever is under them. -/
+def stripForalls : Nat → Expr → Expr
+  | 0, e => e
+  | k + 1, .forallE _ _ b _ => stripForalls k b
+  | _, e => e
+
+/-- Drop every remaining `∀` binder: `∀ x y, P` becomes `P`. -/
+partial def resultOfForalls : Expr → Expr
+  | .forallE _ _ b _ => resultOfForalls b
+  | .mdata _ e => resultOfForalls e
+  | e => e
+
+/-- Is this LCNF type the type of a **proof**?  A proof carries nothing at run time, so
+    the field or parameter it fills is dropped — exactly as LCNF drops it, which is what
+    keeps the field numbers of a layout and the argument numbers of a constructor
+    application the same.
+
+    The test is the one that can be made without elaborating: the head constant's own
+    type, with the arguments the occurrence gives it stripped off, ends in `Prop`.  That
+    covers `n < 3`, `a = b`, `xs ≠ []`, `p ∧ q` and every other proposition a field can
+    have; a head that is not a constant is not a proposition here. -/
+partial def isPropTyIn (env : Environment) (binders : Array Expr) (e : Expr) : Bool :=
+  match e with
+  | .forallE _ a b _ => isPropTyIn env (binders.push a) b
+  | .mdata _ e => isPropTyIn env binders e
+  | e =>
+    let e := e.headBeta
+    match e.getAppFn with
+    | .const c _ =>
+      (match env.find? c with
+       | none => false
+       | some info =>
+         match resultOfForalls (stripForalls e.getAppNumArgs info.type) with
+         | .sort .zero => true
+         | _ => false)
+    | .bvar i =>
+      -- the field's type is a *parameter* applied to arguments, as in `Subtype`'s
+      -- `property : p val`: it is a proof exactly when that parameter is a predicate
+      (match binders[binders.size - 1 - i]? with
+       | some t => resultOfForalls t == Expr.sort .zero
+       | none => false)
+    | .lam .. => isPropTyIn env binders e.headBeta
+    | _ => false
+
+/-- `isPropTyIn`, outside any binder. -/
+def isPropTy (env : Environment) (e : Expr) : Bool := isPropTyIn env #[] e
+
+/-- Is this parameter or field dropped — a type, a proof, or a value LCNF has already
+    erased? -/
+def isErasedFieldTy (env : Environment) (e : Expr) : Bool :=
+  isErasedLcnfTy e || isPropTy env e
+
+/-- Is a binder of this type a **compile-time** thing — a type, a type family or a
+    proof?  Such a binder carries nothing at run time, so the field or parameter it
+    stands for is dropped.
+
+    This is the test for a *kernel* type, where an erased binder still has its original
+    type.  It deliberately does **not** treat `lcErased` as compile-time: a binder whose
+    type the translation could not read still holds a runtime value, of the type the
+    caller chooses (`Ty.typeParam`) — the `State` field of
+    `structure Unfold where State : Type; seed : State; …` is dropped, and `seed`,
+    whose type is that field, is not. -/
+def isTypeOrProofTy (env : Environment) (binders : Array Expr) (e : Expr) : Bool :=
+  let rec isSortLike : Expr → Bool
+    | .sort _ => true
+    | .mdata _ e => isSortLike e
+    | .forallE _ _ b _ => isSortLike b
+    | _ => false
+  isSortLike e || isPropTyIn env binders e
+
+/-- How many fields of this constructor survive to run time: the ones that are neither
+    a type nor a proof.  It is the number of arguments LCNF passes to the constructor,
+    and the number of entries the layout of its type has for it. -/
+def runtimeFieldCount (env : Environment) (ci : ConstructorVal) : Nat :=
+  let rec skip : Nat → Expr → Array Expr → Expr × Array Expr
+    | 0, e, bs => (e, bs)
+    | k + 1, .forallE _ a b _, bs => skip k b (bs.push a)
+    | _, e, bs => (e, bs)
+  let (t, bs) := skip ci.numParams ci.type #[]
+  let rec go : Nat → Expr → Array Expr → Nat → Nat
+    | 0, _, _, acc => acc
+    | k + 1, .forallE _ a b _, bs, acc =>
+        go k b (bs.push a) (if isTypeOrProofTy env bs a then acc else acc + 1)
+    | _, _, _, acc => acc
+  go ci.numFields t bs 0
+
+/-- Is this declaration a **newtype** — one constructor with one runtime field?  Such a
+    declaration has no wrapper at run time: its `Ty` is the field's own `Ty`, building
+    one is its field and reading its field is the value itself. -/
+def isNewtypeInduct (env : Environment) (n : Name) : Bool :=
+  match env.find? n with
+  | some (.inductInfo iv) =>
+    iv.all.length == 1 && !iv.isUnsafe &&
+      (match iv.ctors with
+       | [cn] =>
+         (match env.find? cn with
+          | some (.ctorInfo ci) => runtimeFieldCount env ci == 1
+          | _ => false)
+       | _ => false)
+  | _ => false
+
+/-- Where the `i`-th field of a single-constructor declaration sits in its layout.
+    LCNF numbers the fields of a projection as the declaration does — the types and
+    proofs among them included — and a layout numbers only the fields that survive to
+    run time, so `structure Unfold where State : Type; seed : State; …` has its `seed`
+    at declaration index 1 and at layout index 0.  `none` if the field itself carries
+    nothing, and so has no layout entry at all. -/
+def runtimeFieldIndex (env : Environment) (sname : Name) (i : Nat) : Option Nat :=
+  match env.find? sname with
+  | some (.inductInfo iv) =>
+    match iv.ctors with
+    | [cn] =>
+      match env.find? cn with
+      | some (.ctorInfo ci) =>
+        let rec skip : Nat → Expr → Array Expr → Expr × Array Expr
+          | 0, e, bs => (e, bs)
+          | k + 1, .forallE _ a b _, bs => skip k b (bs.push a)
+          | _, e, bs => (e, bs)
+        let (t, bs) := skip ci.numParams ci.type #[]
+        let rec go : Nat → Expr → Array Expr → Nat → Nat → Option Nat
+          | 0, _, _, _, _ => none
+          | k + 1, .forallE _ a b _, bs, here, seen =>
+            let erased := isTypeOrProofTy env bs a
+            if here == i then (if erased then none else some seen)
+            else go k b (bs.push a) (here + 1) (if erased then seen else seen + 1)
+          | _, _, _, _, _ => none
+        go ci.numFields t bs 0 0
+      | _ => none
+    | _ => none
+  | _ => none
+
+/-- Is this constructor the constructor of a newtype? -/
+def isNewtypeCtor (env : Environment) (cn : Name) : Bool :=
+  match env.find? cn with
+  | some (.ctorInfo ci) => isNewtypeInduct env ci.induct
+  | _ => false
+
+/-- The recursive declaration whose body is being read: its members, in declaration
+    order (one member unless it is a mutual block), and the type arguments they are
+    instantiated at.  An occurrence of member `i` inside the body is `RTy.self i`. -/
+structure SelfScope where
+  /-- The members of the declaration, in declaration order. -/
+  members : List Name
+  /-- The type arguments the family is instantiated at. -/
+  args : Array Expr
+
+/-- The position of a name among the members of a scope. -/
+def SelfScope.idxOf? (sc : SelfScope) (n : Name) : Option Nat :=
+  sc.members.idxOf? n
+
+/-- Instantiate the first `k` `∀` binders of a type with the arguments given. -/
+def instParams : Nat → Array Expr → Expr → Except String Expr
+  | 0, _, e => .ok e
+  | k + 1, args, .forallE _ _ b _ =>
+    match args[0]? with
+    | some a => instParams k (args.extract 1 args.size) (b.instantiate1 a)
+    | none => .error "a type constructor is applied to fewer arguments than it takes"
+  | _, _, _ => .error "a type constructor has fewer parameters than it is applied to"
+
+/-- How deep a type may be expanded before the translation gives up.  Expansion only
+    ever descends into the *fields* of a declaration, and a recursive occurrence is
+    `RTy.self`, so ordinary types are nowhere near this; a type whose expansion does not
+    stop (a non-uniformly recursive one) is refused instead of looping. -/
+def tyFuel : Nat := 64
+
+mutual
+
+/-- The `RTy` of an LCNF type, inside the recursive declaration `self` — or outside any,
+    when `self` is `none`, in which case no `RTy.self` is produced. -/
+partial def toRTyIn (env : Environment) (self : Option SelfScope) (blocked : List Name)
+    (fuel : Nat) (e : Expr) : Except String RTy := do
+  if fuel == 0 then
+    throw "a type is too deeply nested for the backend to read"
+  match e with
+  | .forallE _ a b _ =>
+      -- a binder that carries nothing at run time is no JavaScript parameter, so it is
+      -- no parameter of the function type either
+      if isTypeOrProofTy env #[] a then
+        toRTyIn env self blocked fuel (b.instantiate1 (.const ``lcAny []))
+      else
+        let a' ← toRTyIn env self blocked fuel a
+        let b' ← toRTyIn env self blocked fuel
+          (b.instantiate1 (.const ``lcAny []))
+        return .fn [a'] b'
+  | .mdata _ e => toRTyIn env self blocked fuel e
+  | .app .. =>
+      -- a type-level application: beta-reduce it, and read a head that is a type
+      -- variable as one
+      let e' := e.headBeta
+      if e' != e then toRTyIn env self blocked (fuel - 1) e'
+      else if !e.getAppFn.isConst then return .typeParam
+      else toRTyAppIn env self blocked fuel e
+  | .lam .. => return .typeParam
+  | .bvar _ | .fvar _ | .mvar _ =>
+      -- a type variable: the value has a type the *caller* chooses, so the compiled
+      -- code can only pass it on
+      return .typeParam
+  | .sort _ => throw "a type used as a value is erased, so it has no runtime type"
+  | e => toRTyAppIn env self blocked fuel e
+
+/-- The `RTy` of a type whose head is a constant, applied to arguments. -/
+partial def toRTyAppIn (env : Environment) (self : Option SelfScope) (blocked : List Name)
+    (fuel : Nat) (e : Expr) : Except String RTy := do
+  if fuel == 0 then
+    throw "a type is too deeply nested for the backend to read"
+  let args := e.getAppArgs
+  match e.getAppFn.constName? with
+  | none => return .typeParam
+  | some n =>
+      match n with
+      | ``Nat => return .prim .nat
+      | ``Int => return .prim .int
+      | ``Bool => return .prim .bool
+      | ``String => return .prim .string
+      | ``Char => return .prim .char
+      | ``Float => return .prim .float
+      | ``Float32 => return .prim .float32
+      | ``UInt8 => return .prim .uint8
+      | ``UInt16 => return .prim .uint16
+      | ``UInt32 => return .prim .uint32
+      | ``UInt64 => return .prim .uint64
+      | ``USize => return .prim .usize
+      | ``Int8 => return .prim .int8
+      | ``Int16 => return .prim .int16
+      | ``Int32 => return .prim .int32
+      | ``Int64 => return .prim .int64
+      | ``ISize => return .prim .isize
+      | ``ByteArray => return .prim .byteArray
+      | ``FloatArray => return .prim .floatArray
+      -- `Ordering` is built and matched as data (`Ordering.lt`, …): three
+      -- constructors, none with a field
+      | ``Ordering => return .enum 3
+      -- `Unit` has one value, which is `{ tag: 0 }`: a one-constructor enum
+      | ``Unit | ``PUnit => return .enum 1
+      -- both constructors of `Decidable` carry nothing but a proof, so a `Decidable` is
+      -- the boolean it decides — which is also how a `cases` on one is compiled
+      | ``Decidable => return .prim .bool
+      | ``lcErased | ``lcAny => return .typeParam
+      | ``Array => match args[0]? with
+        | some α => return .array (← toRTyIn env self blocked fuel α)
+        | none => throw "`Array` without an element type"
+      | ``List => match args[0]? with
+        | some α => return .list (← toRTyIn env self blocked fuel α)
+        | none => throw "`List` without an element type"
+      | ``Thunk => match args[0]? with
+        | some α => return .thunk (← toRTyIn env self blocked fuel α)
+        | none => throw "`Thunk` without a value type"
+      | ``Task => match args[0]? with
+        | some α => return .task (← toRTyIn env self blocked fuel α)
+        | none => throw "`Task` without a value type"
+      | _ => toDeclRTy env self blocked fuel n args
+
+/-- The `RTy` of a declaration applied to type arguments: an occurrence of the recursive
+    declaration being read, the shape of an inductive read off its constructors, or the
+    unfolding of a type synonym. -/
+partial def toDeclRTy (env : Environment) (self : Option SelfScope) (blocked : List Name)
+    (fuel : Nat) (n : Name) (args : Array Expr) : Except String RTy := do
+  if fuel == 0 then
+    throw "a type is too deeply nested for the backend to read"
+  match self with
+  | some sc =>
+    match sc.idxOf? n with
+    | some i =>
+        if sc.args.size ≤ args.size && sc.args == args.extract 0 sc.args.size then
+          return .self i
+        else
+          throw s!"`{n}` occurs inside itself at other type arguments, \
+            which the backend does not model"
+    | none => pure ()
+  | none => pure ()
+  if blocked.contains n then
+    throw s!"`{n}` occurs inside a recursive declaration nested in it, which the \
+      backend does not model"
+  match env.find? n with
+  | some (.inductInfo iv) => toInductiveRTy env self blocked fuel iv args
+  | some (.defnInfo dv) =>
+      -- a type synonym: unfold it and read what it stands for
+      if (resultOfForalls dv.type).isSort then
+        toRTyIn env self blocked (fuel - 1) (dv.value.beta args)
+      else
+        throw s!"`{n}` is not a type the backend models"
+  | _ => throw s!"`{n}` is not a type the backend models"
+
+/-- The shape of an inductive declaration, read off its constructors at the type
+    arguments it is applied to. -/
+partial def toInductiveRTy (env : Environment) (self : Option SelfScope)
+    (blocked : List Name) (fuel : Nat) (iv : InductiveVal) (args : Array Expr) :
+    Except String RTy := do
+  if iv.isUnsafe then
+    throw s!"`{iv.name}` is an unsafe inductive"
+  if iv.numIndices != 0 then
+    throw s!"`{iv.name}` is an indexed family, whose layout depends on its indices"
+  if (resultOfForalls iv.type) == .sort .zero then
+    throw s!"`{iv.name}` is a proposition, which carries nothing at run time"
+  if args.size < iv.numParams then
+    throw s!"`{iv.name}` is applied to fewer type arguments than it takes"
+  let params := args.extract 0 iv.numParams
+  if iv.all.length > 1 then
+    -- a mutual block: every member is read at once, and `.self i` is member `i`
+    let sc : SelfScope := { members := iv.all, args := params }
+    let blocked' := blocked ++ (match self with | some s => s.members | none => [])
+    let ms ← iv.all.mapM fun m => do
+      match env.find? m with
+      | some (.inductInfo miv) => do
+          let l ← miv.ctors.mapM fun cn =>
+            ctorFieldsRTy env (some sc) blocked' (fuel - 1) cn params
+          match l with
+          | [[f]] => return FamMember.alias f
+          | _ => return FamMember.ctors l
+      | _ => throw s!"`{m}` is a member of a mutual block the backend cannot read"
+    match iv.all.idxOf? iv.name with
+    | some i => return .mutualRecursiveFamily ms i
+    | none => throw s!"`{iv.name}` is not a member of its own mutual block"
+  else
+    -- a recursive declaration opens a `.self` scope; a non-recursive one is read in the
+    -- scope it is used in, so an `Option Tree` inside `Tree` keeps pointing at `Tree`
+    let sc : Option SelfScope :=
+      if iv.isRec then some { members := [iv.name], args := params } else self
+    -- a recursive declaration opens a *new* `.self` scope, so the one it is nested in
+    -- becomes unreachable: the type language has one `.self` binder per recursive
+    -- shape, and the inner one shadows the outer.  An occurrence of the outer one is
+    -- refused where it happens, which is rare; nesting itself is not.
+    let blocked' :=
+      if iv.isRec then blocked ++ (match self with | some s => s.members | none => [])
+      else blocked
+    let l ← iv.ctors.mapM fun cn => ctorFieldsRTy env sc blocked' (fuel - 1) cn params
+    let recursive := iv.isRec && l.any fun fs => fs.any RTy.hasSelf
+    if recursive then
+      match l with
+      | [[f]] => return .recAlias f
+      | [fs] => return .recObject fs
+      | _ => return .recTaggedUnion l
+    else
+      match l with
+      | [[f]] => return f                         -- a newtype: the wrapper is erased
+      | [fs] => return (if fs.isEmpty then .enum 1 else .record fs)
+      | _ =>
+        if l.all (·.isEmpty) then return .enum l.length else return .taggedUnion l
+
+/-- The types of the runtime fields of one constructor, in declaration order, with the
+    type parameters instantiated and the fields that carry nothing at run time dropped —
+    exactly the fields LCNF passes to the constructor. -/
+partial def ctorFieldsRTy (env : Environment) (self : Option SelfScope)
+    (blocked : List Name) (fuel : Nat) (cn : Name) (params : Array Expr) :
+    Except String (List RTy) := do
+  match env.find? cn with
+  | some (.ctorInfo ci) => do
+      let t ← instParams ci.numParams params ci.type
+      go ci.numFields t []
+  | _ => throw s!"`{cn}` is not a constructor"
+where
+  /-- Collect the next `k` binder types, dropping the ones that carry nothing. -/
+  go : Nat → Expr → List RTy → Except String (List RTy)
+    | 0, _, acc => .ok acc.reverse
+    | k + 1, .forallE _ a b _, acc =>
+        let b' := b.instantiate1 (.const ``lcAny [])
+        if isTypeOrProofTy env #[] a then go k b' acc
+        else do
+          let t ← toRTyIn env self blocked fuel a
+          go k b' (t :: acc)
+    | _, _, _ => .error s!"`{cn}` has fewer fields than its declaration says"
+
+end
+
+/-- The `Ty` of an LCNF type: a closed type, mentioning no recursive declaration it is
+    not part of. -/
+def toTy (env : Environment) (e : Expr) : Except String Ty := do
+  let r ← toRTyIn env none [] tyFuel e
+  match LakeJs.Layout.instRTy (fun _ => none) r with
+  | some t => return t
+  | none => throw "a type escapes the recursive declaration it belongs to"
+
+/-- Strip `n` parameters off a function type, to find what it answers with. -/
+def stripArrows : Nat → Ty → Ty
+  | 0, ty => ty
+  | n + 1, .fn _ ret => stripArrows n ret
+  | _, ty => ty
+
+
+/-! ## Primitives -/
+
+/-- A primitive together with the types it is applied at. -/
+structure SomePrim where
+  /-- The types of its arguments. -/
+  {σs : List Ty}
+  /-- What it answers with. -/
+  {τ : Ty}
+  /-- The operation. -/
+  op : JsPrim σs τ
+
+/-- The Lean declarations the backend prints inline, and the primitive it prints for
+    them — at the types of the call it is looking at, since `JsPrim` carries them. -/
+def primFor (n : Name) (argTys : List Ty) (ret : Ty) : Option SomePrim :=
+  let arg (i : Nat) : Ty := argTys[i]?.getD Ty.typeParam
+  let elemOf : Ty → Ty := fun t => match t with | .array α => α | _ => Ty.typeParam
+  match n with
+  | ``Nat.add => some ⟨.add .nat⟩
+  | ``Nat.mul => some ⟨.mul .nat⟩
+  | ``Nat.sub => some ⟨.natSub⟩
+  | ``Nat.div => some ⟨.div .nat⟩
+  | ``Nat.mod => some ⟨.mod .nat⟩
+  | ``Nat.pred => some ⟨.natSub⟩
+  | ``Nat.beq | ``Nat.decEq | ``instDecidableEqNat => some ⟨.beq .nat⟩
+  | ``Nat.ble | ``Nat.decLe => some ⟨.le .nat⟩
+  | ``Nat.blt | ``Nat.decLt => some ⟨.lt .nat⟩
+  | ``Int.add => some ⟨.add .int⟩
+  | ``Int.sub => some ⟨.sub .int⟩
+  | ``Int.mul => some ⟨.mul .int⟩
+  | ``Int.decEq => some ⟨.beq .int⟩
+  | ``Int.decLt => some ⟨.lt .int⟩
+  | ``Int.decLe => some ⟨.le .int⟩
+  | ``Int.ofNat => some ⟨.cast .nat .int⟩
+  | ``Int.toNat => some ⟨.cast .int .nat⟩
+  | ``Int.natAbs => some ⟨.natAbs⟩
+  | ``Bool.and => some ⟨.and⟩
+  | ``Bool.or => some ⟨.or⟩
+  | ``Bool.not => some ⟨.not⟩
+  | ``String.append => some ⟨.strAppend⟩
+  | ``String.push => some ⟨.strAppend⟩
+  | ``String.length => some ⟨.strLength⟩
+  | ``String.decEq | ``instDecidableEqString => some ⟨.beq .string⟩
+  | ``instDecidableEqBool => some ⟨.beq .bool⟩
+  | ``instDecidableEqChar => some ⟨.beq .char⟩
+  | ``Array.size => some ⟨.arraySize (elemOf (arg 0))⟩
+  | ``Array.push => some ⟨.arrayPush (elemOf (arg 0))⟩
+  | ``Array.getInternal => some ⟨.arrayGet (elemOf (arg 0))⟩
+  | ``Array.mkEmpty | ``Array.emptyWithCapacity =>
+      some ⟨.arrayEmpty (match ret with | .array α => α | _ => Ty.typeParam)⟩
+  | ``UInt8.add | ``UInt16.add | ``UInt32.add | ``UInt64.add | ``USize.add =>
+      some ⟨.add (arg 0)⟩
+  | ``UInt8.sub | ``UInt16.sub | ``UInt32.sub | ``UInt64.sub | ``USize.sub =>
+      some ⟨.sub (arg 0)⟩
+  | ``UInt32.mul | ``UInt64.mul => some ⟨.mul (arg 0)⟩
+  | ``UInt32.decEq | ``UInt64.decEq => some ⟨.beq (arg 0)⟩
+  | ``Float.add => some ⟨.add .float⟩
+  | ``Float.sub => some ⟨.sub .float⟩
+  | ``Float.mul => some ⟨.mul .float⟩
+  | ``Float.div => some ⟨.div .float⟩
+  | ``Float.decLt => some ⟨.lt .float⟩
+  | ``Float.decLe => some ⟨.le .float⟩
+  | ``Decidable.decide => some ⟨.cast (arg 0) ret⟩
+  | ``toString => some ⟨.toStr (arg 0)⟩
+  | _ => none
+
+/-! ## Class instances
+
+A class instance is unboxed: a declaration whose result is a class with fields
+`f₁ … f_k` becomes `k` declarations, and a parameter of such a class becomes `k`
+parameters.  `InstPlan` is what the translation needs to know about one of them. -/
+
+/-- The fields a class instance is unboxed into. -/
+structure InstPlan where
+  /-- The name and type of each runtime field, in the order the constructor has them.
+      The name is the *class field's* name, which is what the constant the field is
+      unboxed into is called (`instToStringExpr_toString`); it is not a name in the
+      emitted data, which is positional. -/
+  fields : List (String × Ty)
+  deriving Inhabited
+
+/-- How many values an unboxed instance is. -/
+def InstPlan.size (p : InstPlan) : Nat := p.fields.length
+
+/-- The types of the fields, in order. -/
+def InstPlan.tys (p : InstPlan) : List Ty := p.fields.map (·.2)
+
+/-- The type of the instance as **one** value, where it has to be passed as one: a
+    record of its fields.  A class with a single field is a newtype, so that type is the
+    field's own type — there is no wrapper at run time. -/
+def InstPlan.boxedTy (p : InstPlan) : Ty :=
+  match p.tys with
+  | [t] => t
+  | ts => .record ts
+
+/-- The JavaScript name the `i`-th field of instance `base` is bound to. -/
+def instFieldName (base : String) (field : String) : String := base ++ "_" ++ field
+
+/-! ## The translation state -/
+
+/-- What the translation of one declaration needs to know. -/
+structure Ctx' where
+  /-- The environment the `.olean` files were read into. -/
+  env : Environment
+  /-- The declaration being compiled, when it may call itself. -/
+  self : Option Name
+  /-- How many parameters it has. -/
+  selfArity : Nat := 0
+  /-- The mutually recursive group being compiled into **one** dispatch loop: every
+      member of the group, with the tag that selects it inside the loop.  A tail call
+      to any of them is a `Body.cont` of that loop, so a mutually tail-recursive group
+      costs no JavaScript stack at all. -/
+  group : Std.HashMap Name Nat := {}
+  /-- How many argument slots the merged loop has: the arity of its widest member.
+      Loop variable `0` is the tag and loop variable `i + 1` is argument `i`. -/
+  groupSlots : Nat := 0
+  /-- The declarations of this module, which are referred to by name. -/
+  compiled : NameSet := {}
+  /-- The declarations of this module that are class instances, and the fields they are
+      unboxed into. -/
+  instOf : Std.HashMap Name InstPlan := {}
+  /-- Which declarations of this module have had a parameter split into the fields of an
+      instance, and how. -/
+  paramPlan : Std.HashMap Name (List (Option InstPlan)) := {}
+  /-- The JavaScript name each declaration was given, where it is not `jsName` of it:
+      `LakeJs.Compile` hands out one name per declaration, so that two Lean names that
+      `jsName` spells alike — and a name that clashes with the constant an instance is
+      unboxed into — stay two names in the output. -/
+  jsNames : Std.HashMap Name String := {}
+
+/-- Where a local binder is.  A binder of a class type is *several* binders — one per
+    field of the instance — and a local that is just a nullary instance of the module is
+    no binder at all, since its fields are top-level declarations. -/
+inductive Binding where
+  /-- One binder, at this absolute depth. -/
+  | one (depth : Nat)
+  /-- A binder that was dropped: it stood for a type or a proof, which carries nothing
+      at run time, so there is no JavaScript variable for it and every argument
+      position that uses it is dropped too. -/
+  | erased
+  /-- An instance split into one binder per field, at these absolute depths. -/
+  | split (plan : InstPlan) (depths : List Nat)
+  /-- A nullary instance of this module: its fields are the declarations
+      `base_f₁ … base_f_k`. -/
+  | instGlobal (base : String) (plan : InstPlan)
+  deriving Inhabited
+
+/-- Where each local binder is. -/
+abbrev VarMap := Std.HashMap FVarId Binding
+
+/-- The join points in scope, to be inlined at their jumps. -/
+abbrev JpMap := Std.HashMap FVarId (Array Param × Code)
+
+/-! ## Branches Lean marked unreachable
+
+Every expression the backend emits is a *value*, so there is nothing to put in a branch
+Lean proved impossible — no `throw`, no `undefined`.  Such a branch is therefore
+**dropped** before the dispatch is built: the tag it tests is never tested, and control
+reaches a sibling branch instead.  That is faithful precisely because the branch cannot
+be taken, and it keeps every term pure and reorderable. -/
+
+/-- Is this block unreachable — does every path through it end in `.unreach`?  A
+    binding in front of an unreachable block is dead, and a `cases` all of whose
+    branches are unreachable is itself unreachable; a jump is unreachable when the join
+    point it goes to is. -/
+partial def codeIsUnreach (jps : JpMap) : Code → Bool
+  | .unreach _ => true
+  | .let _ k | .fun _ k => codeIsUnreach jps k
+  | .jp d k => codeIsUnreach (jps.insert d.fvarId (d.params, d.value)) k
+  | .cases cs => cs.alts.all fun a => codeIsUnreach jps a.getCode
+  | .jmp f _ =>
+      match jps[f]? with
+      | some (_, body) => codeIsUnreach jps body
+      | none => false
+  | .return _ => false
+
+/-- The alternatives worth compiling: the ones that are not unreachable.  If they all
+    are, the list is left alone, and the declaration is refused when the first of them
+    is translated — a function that can never answer is not a value either. -/
+def liveAlts (jps : JpMap) (alts : List Alt) : List Alt :=
+  let live := alts.filter fun a => !codeIsUnreach jps a.getCode
+  if live.isEmpty then alts else live
+
+/-- A term of some type in context `Γ`. -/
+abbrev Res (Sg : Sig) (Γ : Ctx) := Except String (SomeTerm Sg Γ)
+
+/-- The term of the variable at absolute depth `d`. -/
+def varAtDepth {Sg : Sig} (Γ : Ctx) (d : Nat) : Except String (SomeTerm Sg Γ) :=
+  let len := Γ.length
+  if d < len then
+    let i := len - 1 - d
+    match Ctx.get? Γ i with
+    | none => .error s!"variable at depth {d} is out of scope"
+    | some τ =>
+      match Var.at? Γ i τ with
+      | some v => .ok ⟨τ, .var v⟩
+      | none => .error s!"variable at depth {d} has a type the backend cannot compare"
+  else
+    .error s!"variable at depth {d} is out of scope (context has {len})"
+
+/-- Read a term at another type.  Where the two types are known to agree, the term is
+    unchanged; where they are not — the LCNF type was a user-defined type, a proof or an
+    erased value, all of which `Ty` sees as one opaque runtime value — the term is
+    wrapped in `JsPrim.cast`, which prints as the term itself.  Nothing is inserted into
+    the output either way; what changes is only which `Ty` the backend ascribes. -/
+def coerce {Sg : Sig} (σ : Ty) {Γ : Ctx} (t : SomeTerm Sg Γ) : Term Sg Γ σ :=
+  match Term.coerce? σ t.2 with
+  | some t' => t'
+  | none => .prim (.cast t.1 σ) (.cons t.2 .nil)
+
+/-- Build a spine of the given types, reading each argument at the type its parameter
+    has.  There is no value to invent for a missing argument — nothing is erased into
+    an `undefined` any more — so a call with too few arguments has no spine. -/
+def mkSpine? {Sg : Sig} {Γ : Ctx} :
+    (σs : List Ty) → List (SomeTerm Sg Γ) → Option (Spine Sg Γ σs)
+  | [], _ => some .nil
+  | σ :: σs, t :: ts => (mkSpine? σs ts).map (Spine.cons (coerce σ t))
+  | _ :: _, [] => none
+
+/-- `mkSpine?`, with the failure reported. -/
+def mkSpine {Sg : Sig} {Γ : Ctx} (σs : List Ty) (ts : List (SomeTerm Sg Γ)) :
+    Except String (Spine Sg Γ σs) :=
+  match mkSpine? σs ts with
+  | some sp => .ok sp
+  | none => .error s!"a call is given fewer arguments ({ts.length}) than the function takes ({σs.length})"
+
+/-- The value that fills an argument slot of a merged dispatch loop that the member
+    entering the loop does not have: the members of a group need not all take the same
+    number of arguments, and the slots the shorter ones do not use are never read.
+
+    It is `0`, read at the slot's type — a pure, total value, so the term stays pure and
+    reorderable; nothing is thrown and nothing is `undefined`. -/
+def padValue {Sg : Sig} {Γ : Ctx} (σ : Ty) : Term Sg Γ σ :=
+  coerce σ ⟨Ty.nat, .lit (.nat 0)⟩
+
+/-- A spine of the given types, with the slots no argument was given for filled by
+    `padValue`.  This is only for the argument slots of a merged dispatch loop. -/
+def mkSpinePad {Sg : Sig} {Γ : Ctx} :
+    (σs : List Ty) → List (SomeTerm Sg Γ) → Spine Sg Γ σs
+  | [], _ => .nil
+  | σ :: σs, [] => .cons (padValue σ) (mkSpinePad σs [])
+  | σ :: σs, t :: ts => .cons (coerce σ t) (mkSpinePad σs ts)
+
+/-- A spine of arguments whose types are read off the arguments themselves. -/
+def spineOfTerms {Sg : Sig} {Γ : Ctx} :
+    List (SomeTerm Sg Γ) → Σ σs : List Ty, Spine Sg Γ σs
+  | [] => ⟨[], .nil⟩
+  | t :: ts =>
+    let rest := spineOfTerms ts
+    ⟨t.1 :: rest.1, .cons t.2 rest.2⟩
+
+/-! ### Reading and building values
+
+The data operations of `Term` (`Term.ctor`, `Term.proj`, `Term.tagOf`, `Term.caseTag`)
+ask for the evidence that the type involved really has that constructor, that field or
+those tags — evidence a `Ty` provides through its layout (`LakeJs.Layout`).  They are
+now the *only* data operations there are: the unchecked ones are gone, and so is the
+`Ty.dynamic` they lived at, so the smart constructors below either build a checked
+operation or **refuse** the declaration.
+
+There is one case in which a type has no layout and the access is still right: a
+**newtype**, whose single constructor and single field are erased.  Building it is the
+field itself and reading its field is the value itself — no `{ tag: 0, _1: … }` is
+emitted for it, and nothing is read out of one. -/
+
+/-- Field `j` of constructor `i` of `s`.  When the type of `s` has a layout with that
+    field, this is the *checked* `Term.proj`, and the type of the result is the type the
+    layout gives the field.  When it has no layout at all, the only access that can be
+    right is field `0` of constructor `0` — the field of an erased newtype — which is
+    the value itself, read at the type the wrapper stood for. -/
+def projAt {Sg : Sig} {Γ : Ctx} (s : SomeTerm Sg Γ) (i j : Nat) :
+    Except String (SomeTerm Sg Γ) :=
+  match h : s.1.fieldTy? i j with
+  | some fty => .ok ⟨fty, .proj s.2 i j h⟩
+  | none =>
+    if s.1.isTagged then
+      .error s!"a value of type `{s.1}` has no field {j} of constructor {i}"
+    else if i == 0 && j == 0 then
+      match s.1.aliasUnfold? with
+      | some u => .ok ⟨u, coerce u s⟩
+      | none => .ok s
+    else
+      .error s!"a value of type `{s.1}` has no field {j} of constructor {i}"
+
+/-- Field `j` of constructor `i` of `s`, read at the type `ty`. -/
+def projAtTy {Sg : Sig} {Γ : Ctx} (ty : Ty) (s : SomeTerm Sg Γ) (i j : Nat) :
+    Except String (Term Sg Γ ty) := do
+  return coerce ty (← projAt s i j)
+
+/-- The runtime tag of `s`: the checked `Term.tagOf`.  A value whose type has no
+    constructors has no tag, and a dispatch on one is refused. -/
+def tagAt {Sg : Sig} {Γ : Ctx} (s : SomeTerm Sg Γ) :
+    Except String (Term Sg Γ (.prim .nat)) :=
+  if h : s.1.isTagged = true then .ok (.tagOf s.2 h)
+  else .error s!"a value of type `{s.1}` has no runtime tag to dispatch on"
+
+/-- Constructor `i` of `ty`, applied to these fields: the *checked* `Term.ctor`.  A type
+    with no layout has only one constructor that can be right — the erased wrapper of a
+    newtype, which is its field. -/
+def ctorAt {Sg : Sig} {Γ : Ctx} (ty : Ty) (i : Nat) (vals : List (SomeTerm Sg Γ)) :
+    Except String (SomeTerm Sg Γ) :=
+  match h : ty.ctorFields? i with
+  | some fs =>
+      if fs.length == vals.length then
+        match mkSpine? fs vals with
+        | some sp => .ok ⟨ty, .ctor i fs h sp⟩
+        | none => .error s!"constructor {i} of `{ty}` is given a field of the wrong type"
+      else
+        .error s!"constructor {i} of `{ty}` takes {fs.length} fields, not {vals.length}"
+  | none =>
+    if ty.isTagged then
+      .error s!"`{ty}` has no constructor {i}"
+    else
+      match i, vals with
+      | 0, [v] => .ok ⟨ty, coerce ty v⟩
+      | _, _ => .error s!"`{ty}` has no constructor {i}"
+
+/-- A reference to a top-level declaration of the signature.  A name the signature does
+    not declare is an error: the translation may not invent one.  A name it declares at
+    another type is read at the type wanted here, with the reinterpretation recorded as a
+    `JsPrim.cast`. -/
+def globalTerm {Sg : Sig} {Γ : Ctx} (nm : String) (τ : Ty) : Except String (Term Sg Γ τ) :=
+  match GlobalRef.find? Sg nm τ with
+  | some r => .ok (.global r)
+  | none =>
+    match GlobalRef.findAny? Sg nm with
+    | some ⟨σ, r⟩ => .ok (.prim (.cast σ τ) (.cons (.global r) .nil))
+    | none => .error s!"the module signature has no declaration named `{nm}`"
+
+/-- A loop body that never continues is an ordinary term. -/
+def bodyToTerm? {Sg : Sig} {Γ : Ctx} {σs : List Ty} {τ : Ty} :
+    Body Sg Γ σs τ → Option (Term Sg Γ τ)
+  | .ret t => some t
+  | .cont _ => none
+  | .letB e b => (bodyToTerm? b).map (Term.letE e)
+  | .iteB c t e =>
+    match bodyToTerm? t, bodyToTerm? e with
+    | some a, some b => some (.ite c a b)
+    | _, _ => none
+
+/-- The words a JavaScript module may not bind to a declaration: the keywords, the two
+    identifiers a module — which is always strict — may not bind (`eval`, `arguments`),
+    and the literals.  A Lean declaration called `eval` is real (`RecursionSchemes01`
+    has one), and `const eval = …` is a syntax error in a module, so such a name gets a
+    `$`. -/
+def jsReservedWords : List String :=
+  [ "arguments", "await", "break", "case", "catch", "class", "const", "continue",
+    "debugger", "default", "delete", "do", "else", "enum", "eval", "export", "extends",
+    "false", "finally", "for", "function", "if", "implements", "import", "in",
+    "instanceof", "interface", "let", "new", "null", "package", "private", "protected",
+    "public", "return", "static", "super", "switch", "this", "throw", "true", "try",
+    "typeof", "var", "void", "while", "with", "yield",
+    "Infinity", "NaN", "undefined" ]
+
+/-- The JavaScript name of a compiled declaration.  It is only the *base* name: two Lean
+    names can map to the same one, and `LakeJs.Compile` gives each declaration a name
+    that no other declaration of the module has, starting from this one. -/
+def jsName (n : Name) : String :=
+  let s := n.toString
+  let s := s.map fun ch =>
+    if ch.isAlphanum || ch == '_' || ch == '$' then ch else '_'
+  let s := match s.toList with
+    | [] => "_"
+    | c :: _ => if c.isDigit then "_" ++ s else s
+  if jsReservedWords.contains s then s ++ "$" else s
+
+/-- The JavaScript name this compilation gave `n`: the one `LakeJs.Compile` handed out,
+    and `jsName n` for anything it did not name. -/
+def Ctx'.js (c : Ctx') (n : Name) : String := c.jsNames[n]?.getD (jsName n)
+
+/-- Pack an unboxed instance back into one value: `{ tag: 0, _1: …, _2: … }`, a record
+    of its fields.  A class with a *single* field is a newtype, and packing it is the
+    field itself — the wrapper does not exist at run time. -/
+def boxInst {Sg : Sig} {Γ : Ctx} (fields : List (SomeTerm Sg Γ)) :
+    Except String (SomeTerm Sg Γ) :=
+  match fields with
+  | [v] => .ok v
+  | fs => ctorAt (.record (fs.map (·.1))) 0 fs
+
+/-- Read field `i` out of an instance that was packed by `boxInst`. -/
+def unboxInstField {Sg : Sig} {Γ : Ctx} (plan : InstPlan) (t : SomeTerm Sg Γ)
+    (i : Nat) (fty : Ty) : Except String (Term Sg Γ fty) :=
+  if plan.fields.length == 1 then .ok (coerce fty t) else projAtTy fty t 0 i
+
+/-- The fields of a nullary instance of this module, as references to the declarations
+    they were unboxed into. -/
+def instGlobalFields {Sg : Sig} {Γ : Ctx} (base : String) (plan : InstPlan) :
+    Except String (List (SomeTerm Sg Γ)) :=
+  plan.fields.mapM fun (f, ty) => do
+    let t ← globalTerm (instFieldName base f) ty
+    return ⟨ty, t⟩
+
+/-- Is this argument one that is dropped: a type, an erased value, or a binder that
+    was itself dropped? -/
+def isErasedArg (vm : VarMap) : Arg → Bool
+  | .type _ => true
+  | .erased => true
+  | .fvar f => match vm[f]? with | some .erased => true | _ => false
+
+/-! ## The translation itself -/
+
+mutual
+
+/-- An LCNF argument, as one value.  A binder that was split into the fields of an
+    instance is packed back into a record here, which is the only place a `Term` ever
+    rebuilds one. -/
+partial def transArg {Sg : Sig} (Γ : Ctx) (vm : VarMap) (a : Arg) : Res Sg Γ :=
+  match a with
+  | .erased => .error "an erased argument has no value to translate"
+  | .type _ => .error "a type argument has no value to translate"
+  | .fvar f =>
+    match vm[f]? with
+    | some .erased => .error "an erased binder has no value to translate"
+    | some (.one d) => varAtDepth Γ d
+    | some (.split _ ds) => do
+        let fields ← ds.mapM fun d => varAtDepth (Sg := Sg) Γ d
+        boxInst fields
+    | some (.instGlobal base plan) => do
+        let fields ← instGlobalFields (Sg := Sg) (Γ := Γ) base plan
+        boxInst fields
+    | none => .error "a variable is used outside the binder that introduces it"
+
+/-- An argument, as the list of values it is when the parameter it is passed to has been
+    split into the fields of an instance. -/
+partial def transArgSplit {Sg : Sig} (Γ : Ctx) (vm : VarMap) (plan : InstPlan) (a : Arg) :
+    Except String (List (SomeTerm Sg Γ)) :=
+  match a with
+  | .erased | .type _ =>
+      .error "an instance parameter is given an erased argument"
+  | .fvar f =>
+    match vm[f]? with
+    | some .erased => .error "an instance parameter is given an erased binder"
+    | some (.split _ ds) => ds.mapM fun d => varAtDepth (Sg := Sg) Γ d
+    | some (.instGlobal base p) => instGlobalFields (Sg := Sg) (Γ := Γ) base p
+    | some (.one d) => do
+        let t ← varAtDepth (Sg := Sg) Γ d
+        plan.fields.zipIdx.mapM fun ((_, ty), i) => do
+          return (⟨ty, ← unboxInstField plan t i ty⟩ : SomeTerm Sg Γ)
+    | none => .error "a variable is used outside the binder that introduces it"
+
+/-- A list of LCNF arguments, with the erased ones dropped. -/
+partial def transArgs {Sg : Sig} (Γ : Ctx) (vm : VarMap) :
+    List Arg → Except String (List (SomeTerm Sg Γ))
+  | [] => .ok []
+  | a :: rest =>
+    if isErasedArg vm a then transArgs Γ vm rest
+    else do
+      let t ← transArg Γ vm a
+      let ts ← transArgs Γ vm rest
+      return t :: ts
+
+/-- The arguments of a call to a declaration of this module, with every parameter that
+    was split into the fields of an instance expanded into those fields. -/
+partial def transArgsPlanned {Sg : Sig} (Γ : Ctx) (vm : VarMap) :
+    List (Option InstPlan) → List Arg → Except String (List (SomeTerm Sg Γ))
+  | _, [] => .ok []
+  | [], args => transArgs Γ vm args
+  | p :: ps, a :: args =>
+    -- the plans are one per Lean parameter, so a dropped argument drops its plan too
+    if isErasedArg vm a then transArgsPlanned Γ vm ps args
+    else do
+      let here ← match p with
+        | none => do let t ← transArg Γ vm a; pure [t]
+        | some plan => transArgSplit Γ vm plan a
+      let rest ← transArgsPlanned Γ vm ps args
+      return here ++ rest
+
+/-- Apply a term to arguments, one parameter list at a time.  An extern is curried — its
+    type is `σ ⇒ τ ⇒ …` — so this is what saturates it; `LakeJs.EmitJs` then prints the
+    saturated application as one call of the runtime function. -/
+partial def applyCurried {Sg : Sig} {Γ : Ctx}
+    (f : SomeTerm Sg Γ) (args : List (SomeTerm Sg Γ)) : SomeTerm Sg Γ :=
+  match f.1, args with
+  | _, [] => f
+  | .fn ps ret, _ =>
+      let n := ps.length
+      let taken := args.take (max n 1)
+      let rest := args.drop (max n 1)
+      let fn : Term Sg Γ (.fn ps ret) := coerce (.fn ps ret) f
+      match mkSpine? ps (taken.take n) with
+      | some sp => applyCurried ⟨ret, .apN fn sp⟩ rest
+      | none => f
+  | _, _ => f
+
+/-- The value of an LCNF `let`, at the type the `let` gives it. -/
+partial def transLetValue {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (ty : Ty) :
+    LetValue → Res Sg Γ
+  | .erased => .error "an erased `let` is dropped before it reaches here"
+  | .lit (.nat n) =>
+      match ty with
+      | .prim .int => .ok ⟨Ty.int, .lit (.int (Int.ofNat n))⟩
+      | _ => .ok ⟨Ty.nat, .lit (.nat n)⟩
+  | .lit (.str s) => .ok ⟨Ty.string, .lit (.str s)⟩
+  | .lit (.uint8 v) => .ok ⟨Ty.nat, .lit (.nat v.toNat)⟩
+  | .lit (.uint16 v) => .ok ⟨Ty.nat, .lit (.nat v.toNat)⟩
+  | .lit (.uint32 v) => .ok ⟨Ty.nat, .lit (.nat v.toNat)⟩
+  | .lit (.uint64 v) => .ok ⟨Ty.nat, .lit (.nat v.toNat)⟩
+  | .lit (.usize v) => .ok ⟨Ty.nat, .lit (.nat v.toNat)⟩
+  | .proj sname idx f => do
+      -- a projection of a binder that was split into an instance's fields is that field
+      match vm[f]? with
+      | some (.split _ ds) =>
+          match ds[idx]? with
+          | some d => varAtDepth Γ d
+          | none => .error "a projection reaches past the fields of an instance"
+      | some (.instGlobal base plan) =>
+          match plan.fields[idx]? with
+          | some (nm, fty) => do
+              let t ← globalTerm (Sg := Sg) (Γ := Γ) (instFieldName base nm) fty
+              return ⟨fty, t⟩
+          | none => .error "a projection reaches past the fields of an instance"
+      | _ => do
+          let s ← transArg Γ vm (.fvar f)
+          -- LCNF projects out of a structure, which has one constructor.  A structure
+          -- with a single runtime field is a newtype: it has no wrapper at run time, so
+          -- reading its field is reading the value itself.
+          if isNewtypeInduct c.env sname then
+            return ⟨ty, coerce ty s⟩
+          match runtimeFieldIndex c.env sname idx with
+          | some j => return ⟨ty, ← projAtTy ty s 0 j⟩
+          | none =>
+            .error s!"a projection reads field {idx} of `{sname}`, which carries \
+              nothing at run time"
+  | .fvar f args => do
+      let fn ← transArg Γ vm (.fvar f)
+      let ts ← transArgs Γ vm args.toList
+      let sp := spineOfTerms ts
+      let fn' : Term Sg Γ (.fn sp.1 ty) := coerce (.fn sp.1 ty) fn
+      return ⟨ty, .apN fn' sp.2⟩
+  | .const n _ args => transConst c Γ vm ty n args.toList
+
+/-- A call of a named declaration: a primitive, an extern, a constructor, the projection
+    of an unboxed instance, or a call of a declaration of the signature. -/
+partial def transConst {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (ty : Ty)
+    (n : Name) (args : List Arg) : Res Sg Γ := do
+  let runtimeArgs := args.filter (!isErasedArg vm ·)
+  let tyArgs : List Ty := args.filterMap fun a => match a with
+    | .type e => (toTy c.env e).toOption
+    | _ => none
+  -- a projection function of a class, applied to an instance the backend has unboxed
+  match projectionOfUnboxed? c Γ vm ty n args with
+  | some r => return (← r)
+  | none => pure ()
+  -- a nullary instance of this module, used as one value
+  match c.instOf[n]? with
+  | some plan =>
+      if (c.paramPlan[n]?.getD []).isEmpty && runtimeArgs.isEmpty then
+        let fields ← instGlobalFields (Sg := Sg) (Γ := Γ) (c.js n) plan
+        return ← boxInst fields
+  | none => pure ()
+  let ts ← transArgs Γ vm runtimeArgs
+  let argTys := ts.map (·.1)
+  -- a call of a compiled declaration passes the parameters that survive to run time:
+  -- the emitted function has one JavaScript parameter for each of those, and none for
+  -- the types and proofs, which are dropped on both sides
+  let named : List Arg → Res Sg Γ := fun given => do
+    let plans := c.paramPlan[n]?.getD []
+    let tsNamed ← if plans.isEmpty then transArgs Γ vm given
+                  else transArgsPlanned Γ vm plans given
+    transNamed c Γ ty n tsNamed
+  match primFor n argTys ty with
+  | some p =>
+      if ts.length == p.σs.length then
+        return ⟨p.τ, .prim p.op (← mkSpine p.σs ts)⟩
+      else if ts.isEmpty then
+        -- the primitive is used as a value: eta-expand it, so that what the output holds
+        -- is a function of the right arity rather than a call with none
+        let Γ' := p.σs.reverse ++ Γ
+        let vars ← (List.range p.σs.length).mapM fun j =>
+          varAtDepth (Sg := Sg) Γ' (Γ.length + j)
+        return ⟨.fn p.σs p.τ, .lamN (.prim p.op (← mkSpine p.σs vars))⟩
+      else
+        named args
+  | none =>
+    if n == ``Decidable.isTrue then
+      return ⟨Ty.bool, .lit (.bool true)⟩
+    else if n == ``Decidable.isFalse then
+      return ⟨Ty.bool, .lit (.bool false)⟩
+    else if n == ``Bool.true then
+      return ⟨Ty.bool, .lit (.bool true)⟩
+    else if n == ``Bool.false then
+      return ⟨Ty.bool, .lit (.bool false)⟩
+    else if n == ``Nat.zero then
+      return ⟨Ty.nat, .lit (.nat 0)⟩
+    else if n == ``Nat.succ then
+      match ts.reverse.head? with
+      | some a =>
+          let one : Term Sg Γ Ty.nat := .lit (.nat 1)
+          return ⟨Ty.nat, .prim (.add .nat) (.cons (coerce Ty.nat a) (.cons one .nil))⟩
+      | none => return ⟨Ty.nat, .lit (.nat 1)⟩
+    else if n == ``Int.negSucc then
+      match ts.reverse.head? with
+      | some a =>
+          let minusOne : Term Sg Γ Ty.int := .lit (.int (-1))
+          return ⟨Ty.int, .prim (.sub .int) (.cons minusOne (.cons (coerce Ty.int a) .nil))⟩
+      | none => return ⟨Ty.int, .lit (.int (-1))⟩
+    else
+    match c.env.find? n with
+    | some (.ctorInfo ci) =>
+        -- the fields are what follows the type parameters; a field that carries nothing
+        -- at run time is dropped, here and in the layout alike
+        let tsAll ← transArgs Γ vm (args.drop ci.numParams)
+        -- a newtype has no wrapper: building one is its field
+        match tsAll with
+        | [v] =>
+            if isNewtypeInduct c.env ci.induct then return ⟨ty, coerce ty v⟩
+            else ctorAt ty ci.cidx tsAll
+        | _ => ctorAt ty ci.cidx tsAll
+    | _ =>
+      match externFor? n (tyArgs[0]?.getD Ty.typeParam) (tyArgs[1]?.getD Ty.typeParam) with
+      | some ⟨eTy, e⟩ => return applyCurried ⟨eTy, .extern e⟩ ts
+      | none => named args
+
+/-- A call of a declaration of the signature, with the arguments already translated. -/
+partial def transNamed {Sg : Sig} (c : Ctx') (Γ : Ctx) (ty : Ty)
+    (n : Name) (ts : List (SomeTerm Sg Γ)) : Res Sg Γ := do
+  if ts.isEmpty then
+    let t ← globalTerm (Sg := Sg) (Γ := Γ) (c.js n) ty
+    return ⟨ty, t⟩
+  else
+    let sp := spineOfTerms ts
+    let f ← globalTerm (Sg := Sg) (Γ := Γ) (c.js n) (.fn sp.1 ty)
+    return ⟨ty, .apN f sp.2⟩
+
+/-- A call of a class's projection function whose instance argument the backend has
+    unboxed: the call *is* the field, applied to whatever else the call passes. -/
+partial def projectionOfUnboxed? {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (_ty : Ty)
+    (n : Name) (args : List Arg) : Option (Res Sg Γ) :=
+  match c.env.getProjectionFnInfo? n with
+  | none => none
+  | some pi =>
+    if !pi.fromClass then none
+    else
+      match args[pi.numParams]? with
+      | some (.fvar f) =>
+        let plan? : Option (InstPlan × Except String (SomeTerm Sg Γ)) :=
+          match vm[f]? with
+          | some (.split plan ds) =>
+            match ds[pi.i]? with
+            | some d => some (plan, varAtDepth Γ d)
+            | none => none
+          | some (.instGlobal base plan) =>
+            match plan.fields[pi.i]? with
+            | some (nm, fty) =>
+              some (plan, do
+                let t ← globalTerm (Sg := Sg) (Γ := Γ) (instFieldName base nm) fty
+                return ⟨fty, t⟩)
+            | none => none
+          | _ => none
+        match plan? with
+        | none => none
+        | some (_, field) =>
+          some do
+            let fieldTerm ← field
+            let rest := args.drop (pi.numParams + 1) |>.filter (!isErasedArg vm ·)
+            let ts ← transArgs Γ vm rest
+            return applyCurried fieldTerm ts
+      | _ => none
+
+/-- A local function: a `Term.lamN` whose body is a block that cannot continue a loop. -/
+partial def transFun {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (d : FunDecl) : Res Sg Γ := do
+  -- a parameter that carries nothing at run time is dropped, here and at every call
+  let ps := d.params.toList.filter (!isErasedParam ·)
+  let dropped := d.params.toList.filter isErasedParam
+  let ptys ← ps.mapM fun p => toTy c.env p.type
+  let ret ← toTy c.env d.type
+  let base := Γ.length
+  let vm0 := dropped.foldl (init := vm) fun m p => m.insert p.fvarId .erased
+  let vm' := ps.zipIdx.foldl (init := vm0) fun m (p, i) => m.insert p.fvarId (.one (base + i))
+  let body ← transBody { c with self := none, group := {} } (ptys.reverse ++ Γ) vm' jps [] ret d.value
+  match bodyToTerm? body with
+  | some t => return ⟨.fn ptys ret, .lamN t⟩
+  | none => .error "a local function cannot continue the loop of the declaration it is in"
+
+/-- A block of LCNF code, as the body of the loop of the declaration being compiled.
+    `σs` are the loop variables and `τ` the answer. -/
+partial def transBody {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) : Code → Except String (Body Sg Γ σs τ)
+  | .return f => do
+      let t ← transArg Γ vm (.fvar f)
+      return .ret (coerce τ t)
+  | .unreach _ =>
+      .error "the declaration has a branch Lean marked unreachable, and the backend \
+has no value to put there: every expression it emits is a pure value, so there is no \
+`throw` to fall back on"
+  | .jp d k => transBody c Γ vm (jps.insert d.fvarId (d.params, d.value)) σs τ k
+  | .jmp f args =>
+      match jps[f]? with
+      | none => .error "a jump to a join point that is not in scope"
+      | some (ps, body) => transJmp c Γ vm jps σs τ ps.toList args.toList body
+  | .fun d k => do
+      let fn ← transFun c Γ vm jps d
+      let rest ← transBody c (fn.1 :: Γ) (vm.insert d.fvarId (.one Γ.length)) jps σs τ k
+      return .letB fn.2 rest
+  | .let d k => do
+      match d.value, k with
+      | .const n _ args, .return r =>
+        if r != d.fvarId || σs.length == 0 then
+          transLet c Γ vm jps σs τ d k
+        else if c.self == some n then
+          -- a tail call of a self-recursive declaration: go round its loop again
+          let plans := c.paramPlan[n]?.getD []
+          let ts ← if plans.isEmpty then transArgs Γ vm args.toList
+                   else transArgsPlanned Γ vm plans args.toList
+          return .cont (← mkSpine σs (ts.take σs.length))
+        else
+          match c.group[n]? with
+          | some tag =>
+            -- a tail call to a member of the merged group: go round the *shared* loop
+            -- again, with that member's tag and its arguments in the argument slots
+            let ts ← transArgs Γ vm args.toList
+            let tagTerm : SomeTerm Sg Γ := ⟨Ty.nat, .lit (.nat tag)⟩
+            return .cont (mkSpinePad σs (tagTerm :: ts.take c.groupSlots))
+          | none => transLet c Γ vm jps σs τ d k
+      | _, _ => transLet c Γ vm jps σs τ d k
+  | .cases cs => transCases c Γ vm jps σs τ cs
+
+/-- An ordinary `let`, with no tail call in it.  A `let` that merely names a nullary
+    instance of this module binds nothing: the instance is its fields, which are
+    top-level declarations. -/
+partial def transLet {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) (d : LetDecl) (k : Code) : Except String (Body Sg Γ σs τ) := do
+  match d.value with
+  | .const n _ args =>
+    match c.instOf[n]? with
+    | some plan =>
+        if (c.paramPlan[n]?.getD []).isEmpty
+            && (args.toList.filter (!isErasedArg vm ·)).isEmpty then
+          transBody c Γ (vm.insert d.fvarId (.instGlobal (c.js n) plan)) jps σs τ k
+        else
+          transLetPlain c Γ vm jps σs τ d k
+    | none => transLetPlain c Γ vm jps σs τ d k
+  | _ => transLetPlain c Γ vm jps σs τ d k
+
+/-- A `let` that does bind a value. -/
+partial def transLetPlain {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) (d : LetDecl) (k : Code) : Except String (Body Sg Γ σs τ) := do
+  -- a `let` that binds a type or a proof binds nothing at run time: it is dropped, and
+  -- so is every argument position that mentions it
+  if isErasedLcnfTy d.type || d.value matches .erased then
+    return ← transBody c Γ (vm.insert d.fvarId .erased) jps σs τ k
+  let ty ← toTy c.env d.type
+  let v ← transLetValue (Sg := Sg) c Γ vm ty d.value
+  let rest ← transBody c (v.1 :: Γ) (vm.insert d.fvarId (.one Γ.length)) jps σs τ k
+  return .letB v.2 rest
+
+/-- Inline a join point at one of its jumps: bind its parameters to the arguments, then
+    translate its body. -/
+partial def transJmp {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) (ps : List Param) (args : List Arg) (body : Code) :
+    Except String (Body Sg Γ σs τ) := do
+  match ps, args with
+  | [], _ => transBody c Γ vm jps σs τ body
+  | p :: ps', a :: args' =>
+    if isErasedParam p || isErasedArg vm a then
+      transJmp c Γ (vm.insert p.fvarId .erased) jps σs τ ps' args' body
+    else do
+      let t ← transArg Γ vm a
+      let rest ← transJmp c (t.1 :: Γ) (vm.insert p.fvarId (.one Γ.length)) jps σs τ ps' args' body
+      return .letB t.2 rest
+  | _, [] => .error "a jump passes fewer arguments than the join point has parameters"
+
+/-- A `cases`, as a chain of tests.  `Nat` and `Bool` are tested as a number and as a
+    boolean; every other type is tested on its runtime tag. -/
+partial def transCases {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) (cs : Cases) : Except String (Body Sg Γ σs τ) := do
+  let alts := liveAlts jps cs.alts.toList
+  if cs.typeName == ``Nat then
+    transNatCases c Γ vm jps σs τ cs.discr alts
+  else if cs.typeName == ``Int then
+    transIntCases c Γ vm jps σs τ cs.discr alts
+  else if cs.typeName == ``Bool || cs.typeName == ``Decidable then
+    transBoolCases c Γ vm jps σs τ cs.discr alts
+  else
+    transTagCases c Γ vm jps σs τ cs.discr alts
+
+/-- The alternative of a constructor, if the list has one. -/
+partial def findAlt (alts : List Alt) (nm : Name) : Option Alt :=
+  alts.find? fun a => match a with
+    | .alt n _ _ => n == nm
+    | .default _ => false
+
+/-- The default alternative, if the list has one. -/
+partial def findDefault (alts : List Alt) : Option Code :=
+  alts.findSome? fun a => match a with
+    | .default k => some k
+    | .alt .. => none
+
+/-- `cases` on a `Nat`: `n === 0`, and the successor branch binds `n - 1`. -/
+partial def transNatCases {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) (discr : FVarId) (alts : List Alt) :
+    Except String (Body Sg Γ σs τ) := do
+  match alts with
+  | [.default k] => transBody c Γ vm jps σs τ k
+  | [.alt n ps k] =>
+    -- the only branch that can be taken: no test, and the successor branch still binds
+    -- the predecessor
+    if n == ``Nat.succ then
+      let d ← transArg Γ vm (.fvar discr)
+      let pred : Term Sg Γ Ty.nat :=
+        .prim .natSub (.cons (coerce Ty.nat d) (.cons (.lit (.nat 1)) .nil))
+      let vm' := match ps.toList with
+        | [p] => vm.insert p.fvarId (.one Γ.length)
+        | _ => vm
+      return .letB pred (← transBody c (Ty.nat :: Γ) vm' jps σs τ k)
+    else
+      transBody c Γ vm jps σs τ k
+  | _ =>
+    let dflt := findDefault alts
+    let zeroCode : Option Code := match findAlt alts ``Nat.zero with
+      | some (.alt _ _ k) => some k
+      | _ => dflt
+    let z : Body Sg Γ σs τ ← match zeroCode with
+      | some k => transBody c Γ vm jps σs τ k
+      | none => .error "a `cases` on `Nat` has no branch for one of its shapes and no default"
+    let d ← transArg Γ vm (.fvar discr)
+    let dNat := coerce Ty.nat d
+    let pred : Term Sg Γ Ty.nat := .prim .natSub (.cons dNat (.cons (.lit (.nat 1)) .nil))
+    let s : Body Sg (Ty.nat :: Γ) σs τ ← match findAlt alts ``Nat.succ with
+      | some (.alt _ ps k) =>
+          let vm' := match ps.toList with
+            | [p] => vm.insert p.fvarId (.one Γ.length)
+            | _ => vm
+          transBody c (Ty.nat :: Γ) vm' jps σs τ k
+      | _ => match dflt with
+        | some k => transBody c (Ty.nat :: Γ) vm jps σs τ k
+        | none => .error "a `cases` on `Nat` has no branch for one of its shapes and no default"
+    let test : Term Sg Γ (.prim .bool) :=
+      .prim (.beq .nat) (.cons dNat (.cons (.lit (.nat 0)) .nil))
+    return .iteB test z (.letB pred s)
+
+/-- `cases` on an `Int`: its two constructors are told apart by the sign.
+    `Int.ofNat n` binds `n = v`, and `Int.negSucc n` binds `n = -1 - v` — an `Int` is a
+    JavaScript number, so neither branch builds anything. -/
+partial def transIntCases {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) (discr : FVarId) (alts : List Alt) :
+    Except String (Body Sg Γ σs τ) := do
+  -- the value the branch of `ctor` binds: the `Nat` its field holds
+  let fieldOf (ctor : Name) (d : SomeTerm Sg Γ) : Term Sg Γ Ty.nat :=
+    let v := coerce Ty.int d
+    if ctor == ``Int.negSucc then
+      coerce Ty.nat ⟨Ty.int, .prim (.sub .int) (.cons (.lit (.int (-1))) (.cons v .nil))⟩
+    else
+      coerce Ty.nat ⟨Ty.int, v⟩
+  let branchOf (ctor : Name) (ps : List Param) (k : Code) :
+      Except String (Body Sg Γ σs τ) := do
+    let d ← transArg Γ vm (.fvar discr)
+    match ps.filter (!isErasedParam ·) with
+    | [pv] =>
+        let vm' := vm.insert pv.fvarId (.one Γ.length)
+        return .letB (fieldOf ctor d) (← transBody c (Ty.nat :: Γ) vm' jps σs τ k)
+    | _ => transBody c Γ vm jps σs τ k
+  match alts with
+  | [.default k] => transBody c Γ vm jps σs τ k
+  | [.alt n ps k] => branchOf n ps.toList k
+  | _ =>
+    let dflt := findDefault alts
+    let branch (nm : Name) : Except String (Body Sg Γ σs τ) :=
+      match findAlt alts nm with
+      | some (.alt _ ps k) => branchOf nm ps.toList k
+      | _ => match dflt with
+        | some k => transBody c Γ vm jps σs τ k
+        | none => .error "a `cases` on `Int` has no branch for one of its shapes and no default"
+    let neg ← branch ``Int.negSucc
+    let pos ← branch ``Int.ofNat
+    let d ← transArg Γ vm (.fvar discr)
+    let test : Term Sg Γ (.prim .bool) :=
+      .prim (.lt .int) (.cons (coerce Ty.int d) (.cons (.lit (.int 0)) .nil))
+    return .iteB test neg pos
+
+/-- `cases` on a `Bool`. -/
+partial def transBoolCases {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) (discr : FVarId) (alts : List Alt) :
+    Except String (Body Sg Γ σs τ) := do
+  match alts with
+  | [.default k] => return ← transBody c Γ vm jps σs τ k
+  | [.alt _ _ k] => return ← transBody c Γ vm jps σs τ k
+  | _ => pure ()
+  let dflt := findDefault alts
+  let code (nm nm' : Name) : Option Code :=
+    match findAlt alts nm, findAlt alts nm' with
+    | some (.alt _ _ k), _ => some k
+    | _, some (.alt _ _ k) => some k
+    | _, _ => dflt
+  let branch (k? : Option Code) : Except String (Body Sg Γ σs τ) :=
+    match k? with
+    | some k => transBody c Γ vm jps σs τ k
+    | none => .error "a `cases` has no branch for one of its constructors and no default"
+  let t ← branch (code ``Bool.true ``Decidable.isTrue)
+  let f ← branch (code ``Bool.false ``Decidable.isFalse)
+  let d ← transArg Γ vm (.fvar discr)
+  let test := coerce (.prim .bool) d
+  return .iteB test t f
+
+/-- `cases` on any other type: a chain of tests on the runtime tag, with the fields of
+    each constructor bound to projections of the scrutinee.  A case that has neither a
+    branch for the constructor it meets nor a default branch is *refused*: there is no
+    `throw` to fall back on, since every expression the backend emits is a value. -/
+partial def transTagCases {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) (discr : FVarId) :
+    List Alt → Except String (Body Sg Γ σs τ)
+  | [] => .error "a `cases` with no branch at all cannot be compiled to a value"
+  | [.default k] => transBody c Γ vm jps σs τ k
+  | [.alt n ps k] => transAltBody c Γ vm jps σs τ discr n ps.toList 0 k
+  | .default k :: _ => transBody c Γ vm jps σs τ k
+  | .alt n ps k :: rest => do
+      let body ← transAltBody c Γ vm jps σs τ discr n ps.toList 0 k
+      let others ← transTagCases c Γ vm jps σs τ discr rest
+      let d ← transArg Γ vm (.fvar discr)
+      let idx := ctorIdx c.env n
+      let test : Term Sg Γ (.prim .bool) :=
+        .prim (.beq .nat) (.cons (← tagAt d) (.cons (.lit (.nat idx)) .nil))
+      return .iteB test body others
+
+/-- The body of one branch: each field of the constructor is bound to a projection of
+    the scrutinee, then the branch itself is translated.  A field that carries nothing
+    at run time is dropped, so the field numbers here are the ones the layout uses. -/
+partial def transAltBody {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
+    (σs : List Ty) (τ : Ty) (discr : FVarId) (ctor : Name) (ps : List Param) (i : Nat)
+    (k : Code) : Except String (Body Sg Γ σs τ) := do
+  match ps with
+  | [] => transBody c Γ vm jps σs τ k
+  | p :: ps' =>
+      if isErasedParam p then
+        transAltBody c Γ (vm.insert p.fvarId .erased) jps σs τ discr ctor ps' i k
+      else
+        let d ← transArg Γ vm (.fvar discr)
+        let fld ← if isNewtypeCtor c.env ctor then pure d
+                  else projAt d (ctorIdx c.env ctor) i
+        let vm' := vm.insert p.fvarId (.one Γ.length)
+        let rest ← transAltBody c (fld.1 :: Γ) vm' jps σs τ discr ctor ps' (i + 1) k
+        return .letB fld.2 rest
+
+end
+
+end LakeJs.FromLcnf

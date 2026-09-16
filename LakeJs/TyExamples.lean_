@@ -31,13 +31,13 @@ elaborate:
 def bad : Ty := .bitvec 0   -- error: `decide` proved `0 < 0` is false
 ```
 
-Every terminal type is a `PrimTy`, and `Ty.nat`, `Ty.bitvec n`, … are abbreviations
+Every terminal type is a `LeanPrimTy`, and `Ty.nat`, `Ty.bitvec n`, … are abbreviations
 for `Ty.prim`: -/
 def bv32 : Ty := .bitvec 32
 
 example : (Ty.bitvec 32) = Ty.prim (.bitvec 32) := rfl
-example : PrimTy.isNumberConfigurable (.bitvec 16) = false := by decide
-example : PrimTy.isNumberConfigurable .nat = true := by decide
+example : LeanPrimTy.isNumberConfigurable (.bitvec 16) = false := by decide
+example : LeanPrimTy.isNumberConfigurable .nat = true := by decide
 
 /-! ## Enum — `inductive Direction | north | south | east | west` -/
 

@@ -6,7 +6,7 @@ Deterministic JavaScript AST and Wadler-style pretty printer.
 
 namespace Language.JavaScript.Doc
 
-/-- A document. -/
+/-- A docment. -/
 inductive Doc where
   /-- The empty document. -/
   | nil

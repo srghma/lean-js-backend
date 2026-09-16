@@ -50,7 +50,7 @@ A declaration is translatable when
   `structure Rose where kids : Array Rose` is a JS array of arrays of …, not
   `{ _kids: […] }`.  A newtype *member of a mutual block* is the same thing one level
   up: an alias member, whose value is its field's value;
-* every field type is a primitive (`PrimTy`), a built-in container of a translatable
+* every field type is a primitive (`LeanPrimTy`), a built-in container of a translatable
   type (`Array`, `List`, `Option`, `Prod`, `Thunk`, `Task`), a non-dependent function
   of translatable types, or another translatable declaration.
 
@@ -79,7 +79,7 @@ meta def shortName (n : Name) : String :=
 /-- Syntax for a `NonEmptyString` literal. -/
 meta def nesSyn (s : String) : MetaM Term := `(NonEmptyString.mk $(quote s) (by decide))
 
-/-- Syntax for a `Ty` abbreviation of a `PrimTy`, e.g. `"nat"` ↦ `Ty.nat`. -/
+/-- Syntax for a `Ty` abbreviation of a `LeanPrimTy`, e.g. `"nat"` ↦ `Ty.nat`. -/
 meta def tyIdent (s : String) : Term := mkIdent ((Name.mkSimple "Ty").str s)
 
 /-- The name of field `i` of a constructor: its binder name when the declaration gives
@@ -92,7 +92,7 @@ meta def fieldName (i : Nat) (n : Name) : String :=
 meta def ctorTag (inFamily : Bool) (typeName ctorName : Name) : String :=
   if inFamily then shortName typeName ++ "." ++ shortName ctorName else shortName ctorName
 
-/-- The `PrimTy` that a nullary constant denotes, if any. -/
+/-- The `LeanPrimTy` that a nullary constant denotes, if any. -/
 meta def primOfConst? (c : Name) : Option String :=
   match c with
   | ``Bool => some "bool"

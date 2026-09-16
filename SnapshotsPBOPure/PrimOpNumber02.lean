@@ -11,16 +11,16 @@
 @[inline] def testNe [BEq α] (noInline : α → α → Bool) (a b : α) (expected : Bool) : Bool :=
   (a != b) == noInline a b && (a != b) == expected
 
-@[inline] def testLt [DecidableRel (@LT.lt α _)] (noInline : α → α → Bool) (a b : α) (expected : Bool) : Bool :=
+@[inline] def testLt [LT α] [DecidableRel (· < · : α → α → Prop)] (noInline : α → α → Bool) (a b : α) (expected : Bool) : Bool :=
   decide (a < b) == noInline a b && decide (a < b) == expected
 
-@[inline] def testGt [DecidableRel (@GT.gt α _)] (noInline : α → α → Bool) (a b : α) (expected : Bool) : Bool :=
+@[inline] def testGt [LT α] [DecidableRel (· > · : α → α → Prop)] (noInline : α → α → Bool) (a b : α) (expected : Bool) : Bool :=
   decide (a > b) == noInline a b && decide (a > b) == expected
 
-@[inline] def testLe [DecidableRel (@LE.le α _)] (noInline : α → α → Bool) (a b : α) (expected : Bool) : Bool :=
+@[inline] def testLe [LE α] [DecidableRel (· ≤ · : α → α → Prop)] (noInline : α → α → Bool) (a b : α) (expected : Bool) : Bool :=
   decide (a <= b) == noInline a b && decide (a <= b) == expected
 
-@[inline] def testGe [DecidableRel (@GE.ge α _)] (noInline : α → α → Bool) (a b : α) (expected : Bool) : Bool :=
+@[inline] def testGe [LE α] [DecidableRel (· ≥ · : α → α → Prop)] (noInline : α → α → Bool) (a b : α) (expected : Bool) : Bool :=
   decide (a >= b) == noInline a b && decide (a >= b) == expected
 
 @[inline] def testMul [BEq α] [HMul α α α] (noInline : α → α → α) (a b expected : α) : Bool :=

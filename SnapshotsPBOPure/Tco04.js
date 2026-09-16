@@ -1,39 +1,42 @@
-const $test2test1 = ($test2test1$b$copy, $test2test1$a0$copy) => {
-  let $test2test1$b = $test2test1$b$copy,
-    $test2test1$a0 = $test2test1$a0$copy,
-    $test2test1$c = true,
-    $test2test1$r;
-  while ($test2test1$c) {
-    if ($test2test1$b === 0) {
-      const m = $test2test1$a0;
-      if (m === 2) {
-        $test2test1$c = false;
-        $test2test1$r = m;
+const _mut$test1 = (v0, v1) => {
+  let v2 = v0, v3 = v1, c$2 = true, r$2;
+  while (c$2) {
+    if (v2 === 0) {
+      const v4 = 1;
+      const v5 = v4;
+      const v6 = Int_instDecidableEq(v3, v5);
+      if (v6) {
+        c$2 = false;
+        r$2 = v3;
+        continue;
+      } else {
+        const v7 = v3 - v5;
+        const t$2$0 = 1;
+        const t$2$1 = v7;
+        v2 = t$2$0;
+        v3 = t$2$1;
         continue;
       }
-      $test2test1$b = 1;
-      $test2test1$a0 = (m - 2) | 0;
-      continue;
-    }
-    if ($test2test1$b === 1) {
-      const n = $test2test1$a0;
-      if (n === 1) {
-        $test2test1$c = false;
-        $test2test1$r = n;
+    } else {
+      const v4 = 2;
+      const v5 = v4;
+      const v6 = Int_instDecidableEq(v3, v5);
+      if (v6) {
+        c$2 = false;
+        r$2 = v3;
+        continue;
+      } else {
+        const v7 = v3 - v5;
+        const t$2$0 = 0;
+        const t$2$1 = v7;
+        v2 = t$2$0;
+        v3 = t$2$1;
         continue;
       }
-      const $0 = (n - 1) | 0;
-      if ($0 === 2) {
-        $test2test1$c = false;
-        $test2test1$r = $0;
-        continue;
-      }
-      $test2test1$b = 1;
-      $test2test1$a0 = ($0 - 2) | 0;
     }
   }
-  return $test2test1$r;
+  return r$2;
 };
-const test1 = (n) => $test2test1(1, n);
-const test2 = (m) => $test2test1(0, m);
+const test1 = (v0) => _mut$test1(0, v0);
+const test2 = (v0) => _mut$test1(1, v0);
 export { test1, test2 };
