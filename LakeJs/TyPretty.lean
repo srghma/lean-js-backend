@@ -4,6 +4,10 @@ public import LakeJs.Ty
 
 @[expose] public section
 
+namespace LakeJs.TyPretty
+
+open LakeJs.Ty
+
 /-!
 # Printing a `Ty`
 
@@ -116,4 +120,4 @@ instance : ToString RTy where
 instance : Repr RTy where
   reprPrec t _ := RTy.pretty t
 
-end
+end LakeJs.TyPretty

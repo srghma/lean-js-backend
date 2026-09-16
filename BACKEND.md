@@ -60,7 +60,7 @@ Two deliberate exceptions keep the check useful rather than absolute:
 * An `opaque` or `@[extern]` declaration of the standard library — `String.hash`,
   `String.Internal.append` — is a *primitive of the runtime*: it has no Lean body
   because the platform implements it, not because it might not terminate. Such a call is
-  printed as a call of the corresponding `Externs` constructor (`$lean_string_append`);
+  printed as a call of the corresponding `LeanPureExtern` constructor (`$lean_string_append`);
   a runtime prelude defining those names is not part of this iteration.
 
 ## Why no `Term` can be an Omega
@@ -172,12 +172,12 @@ fully applied, it eta-expands it (`Bool.beq` becomes `(v0, v1) => v0 === v1`) in
 printing a name.
 
 The functions Lean implements with `@[extern]` are a second closed catalogue:
-`LakeJs/Externs.lean` is an inductive `Externs : Ty → Type` with one constructor per
-extern, and `Term.extern : Externs τ → Term Sg Γ τ` puts it in the language. Two
+`LakeJs/LeanPureExtern.lean` is an inductive `LeanPureExtern : Ty → Type` with one constructor per
+extern, and `Term.extern : LeanPureExtern τ → Term Sg Γ τ` puts it in the language. Two
 generated files carry the metadata (`python3 scripts/gen-externs-meta.py` rebuilds both;
 do not edit them by hand):
 
-* `LakeJs/ExternsMeta.lean` — `Externs.cName` and `Externs.arity` for all 593
+* `LakeJs/ExternsMeta.lean` — `LeanPureExtern.cName` and `LeanPureExtern.arity` for all 593
   constructors;
 * `LakeJs/ExternTable.lean` — `externTable`, a lookup from the Lean name to the
   constructor, and `externFor?`.
@@ -191,7 +191,7 @@ const v15 = $lean_uint64_xor(v12, v14);
 
 An extern that is *not* saturated prints as a curried wrapper, so the arity of the
 emitted call always matches the arity of the runtime function. Any other known standard
-library function the backend wants to optimise is added as a `JsPrim` or an `Externs`
+library function the backend wants to optimise is added as a `JsPrim` or an `LeanPureExtern`
 constructor — never as a string.
 
 ## Instances are unboxed

@@ -1,6 +1,12 @@
-import MiniAST
-import LakeJs.Expr
-import LakeJs.ExternsMeta
+module
+
+public import MiniAST
+public import LakeJs.Expr
+public import LakeJs.ExternsMeta
+
+@[expose] public section
+
+namespace LakeJs.EmitJs
 
 /-!
 # Printing a `Term` as JavaScript
@@ -25,7 +31,6 @@ const test = (test$a0$copy) => {
 ```
 -/
 
-namespace LakeJs.EmitJs
 
 open Language.JavaScript
 open Language.JavaScript.MiniAST
@@ -50,7 +55,7 @@ def loopFlag (depth : Nat) : String := "c$" ++ toString depth
 def loopRes (depth : Nat) : String := "r$" ++ toString depth
 
 /-- The name the runtime prelude binds an extern under. -/
-def externName {τ : Ty} (e : Externs τ) : String := "$" ++ e.cName
+def externName {τ : Ty} (e : LeanPureExtern τ) : String := "$" ++ e.cName
 
 /-- A number literal. -/
 def num (n : Nat) : MiniExpr := .number (JSNumber.ofNat n)
@@ -78,7 +83,7 @@ abbrev varIndex {Γ : Ctx} {τ : Ty} (v : Γ ∋ τ) : Nat := v.index
 /-- The curried wrapper of an extern used as a *value* rather than called:
     `(x0) => (x1) => $lean_nat_add(x0, x1)`, so that a partially applied extern still
     reaches the runtime function with all of its arguments at once. -/
-def externValue (depth : Nat) {τ : Ty} (e : Externs τ) : MiniExpr :=
+def externValue (depth : Nat) {τ : Ty} (e : LeanPureExtern τ) : MiniExpr :=
   let n := e.arity
   let names := (List.range n).map fun i => depthName (depth + i)
   let call : MiniExpr := .call (var (externName e)) (names.map var)

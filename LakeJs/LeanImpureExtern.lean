@@ -1,8 +1,13 @@
 module
+
 public import LakeJs.Ty
--- `.option` and `.prod` below are the layouts of `Option` and `Prod` (in `LakeJs.Ty`).
 
 @[expose] public section
+
+namespace LakeJs.LeanImpureExtern
+
+open LakeJs.Ty
+
 
 inductive LeanPureExtern : List Ty → Ty → Type where
 -- # Lean Init/Prelude runtime extern functions mapped to `Ty`
@@ -1389,3 +1394,5 @@ inductive LeanPureExtern : List Ty → Ty → Type where
   | lean_sharecommon_eq             : LeanPureExtern [.shareCommonObject, .shareCommonObject] .bool
 -- | lean_sharecommon_hash  | opaque | ShareCommon.Object.hash       | (@& ShareCommon.Object) → UInt64                                                                            |
   | lean_sharecommon_hash           : LeanPureExtern [.shareCommonObject] .uint64
+
+end LakeJs.LeanImpureExtern

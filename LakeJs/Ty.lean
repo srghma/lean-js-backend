@@ -4,6 +4,10 @@ public import LakeJs.LeanPrimTy
 
 @[expose] public section
 
+namespace LakeJs.Ty
+
+open LakeJs.LeanPrimTy
+
 /-!
 # `Ty`: the types that can be compiled to JavaScript
 
@@ -624,4 +628,4 @@ end Ty
 
 infixr:70 " ⇒ " => Ty.arrow
 
-end
+end LakeJs.Ty

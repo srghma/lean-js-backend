@@ -1,4 +1,10 @@
-import LakeJs.FromLcnf
+module
+
+public import LakeJs.FromLcnf
+
+@[expose] public section
+
+namespace LakeJs.Compile
 
 /-!
 # The driver: an `.olean` in, a `.js` file out
@@ -20,7 +26,6 @@ import LakeJs.FromLcnf
 6. print it with `MiniAST` (`LakeJs.EmitJs`).
 -/
 
-namespace LakeJs.Compile
 
 open Lean Lean.Compiler.LCNF
 open LakeJs.FromLcnf

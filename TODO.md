@@ -162,9 +162,9 @@ inductive JsPrim : List Ty → Ty → Type where
   | cast (σ τ : Ty) : JsPrim [σ] τ
 ```
 
-should be removed because this is encoded javascript language (why? bc it allows such things like `beq (τ : Ty) : JsPrim [τ, τ] .bool` for any type.) and instead one should use `inductive Externs : List Ty → Ty → Type where` from Externs.lean (the lean @[extern] from lean4 code)
+should be removed because this is encoded javascript language (why? bc it allows such things like `beq (τ : Ty) : JsPrim [τ, τ] .bool` for any type.) and instead one should use `inductive LeanPureExtern : List Ty → Ty → Type where` from LeanPureExtern.lean (the lean @[extern] from lean4 code)
 
-the `Externs` should be handled on optimizer level and (if survives optimization then) on rendering level (TODO: make a list of lean_xxx externs which can never appear in Term and comment it out (if any))
+the `LeanPureExtern` should be handled on optimizer level and (if survives optimization then) on rendering level (TODO: make a list of lean_xxx externs which can never appear in Term and comment it out (if any))
 
 
 the fact that Term is a representation of Lean code and not Javascript will become important later when we will implement

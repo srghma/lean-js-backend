@@ -1,8 +1,12 @@
 module
+
 public import LakeJs.Ty
 public import LakeJs.Layout
-public import LakeJs.Externs
+public import LakeJs.LeanPureExtern
+
 @[expose] public section
+
+namespace LakeJs.Expr
 
 /-!
 # `Term`: the well-scoped, simply-typed core the backend compiles to
@@ -30,8 +34,8 @@ way it does:
   is used at is the type the signature gives it.  There is no way to build a call to an
   undeclared name, or to call a declared one at the wrong type.
 * **Every operation is applied at its own type.**  `JsPrim` is *indexed* by the list of
-  its argument types and by its result type, and `Externs` (the catalogue of the
-  functions Lean implements with `@[extern]`, in `LakeJs.Externs`) by its type, so
+  its argument types and by its result type, and `LeanPureExtern` (the catalogue of the
+  functions Lean implements with `@[extern]`, in `LakeJs.LeanPureExtern`) by its type, so
   `Term.prim` and `Term.extern` cannot be applied to the wrong number of arguments or to
   arguments of the wrong type.
 
@@ -206,8 +210,8 @@ inductive Term (Sg : Sig) : Ctx → Ty → Type
   /-- A reference to a top-level declaration of the module's signature. -/
   | global : ∀ {Γ τ}, GlobalRef Sg τ → Term Sg Γ τ
   /-- A function Lean implements with `@[extern]`, named by the catalogue
-      `LakeJs.Externs` and therefore carrying its own type. -/
-  | extern : ∀ {Γ τ}, Externs τ → Term Sg Γ τ
+      `LakeJs.LeanPureExtern` and therefore carrying its own type. -/
+  | extern : ∀ {Γ τ}, LeanPureExtern τ → Term Sg Γ τ
   /-- A primitive operation, printed inline, applied to exactly the arguments its type
       asks for. -/
   | prim : ∀ {Γ σs τ}, JsPrim σs τ → Spine Sg Γ σs → Term Sg Γ τ
@@ -385,3 +389,5 @@ def Alts.length {Sg : Sig} {Γ : Ctx} {τ : Ty} {tags : List Nat} (a : Alts Sg �
   match a with
   | .deflt _ => 1
   | .cons _ _ rest => rest.length + 1
+
+end LakeJs.Expr

@@ -1,14 +1,21 @@
+module
+
+public import RequestProject.FloatDecide
+public import RequestProject.JSFloat.Basic
+public import RequestProject.JSFloat32.Basic
+public import RequestProject.JsFloatArray
+public import Mathlib.Analysis.SpecialFunctions.Pow.Real
+
+@[expose] public section
+
+namespace LakeJs.FloatDecideTests
+
 /-
 Tests for the `float_decide` guard: it succeeds on floating point goals and refuses
 everything else.
 -/
-import RequestProject.FloatDecide
-import RequestProject.JSFloat.Basic
-import RequestProject.JSFloat32.Basic
-import RequestProject.JsFloatArray
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
-namespace FloatDecide.Tests
+
 
 /-! ### Accepted: genuine statements about the models -/
 
@@ -32,4 +39,4 @@ example : (1.0 : JSFloat).toBits = 0x3FF0000000000000 ∧ Real.pi = Real.pi := b
   fail_if_success float_decide
   exact ⟨by float_decide, rfl⟩
 
-end FloatDecide.Tests
+end LakeJs.FloatDecideTests

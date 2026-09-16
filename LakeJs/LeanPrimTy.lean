@@ -5,6 +5,8 @@ public import Init.Data.ToString.Basic
 
 @[expose] public section
 
+namespace LakeJs.LeanPrimTy
+
 /-!
 # `LeanPrimTy`: the terminal (leaf) types
 
@@ -133,4 +135,4 @@ def isNumberConfigurable : LeanPrimTy → Bool
 
 end LeanPrimTy
 
-end
+end LakeJs.LeanPrimTy

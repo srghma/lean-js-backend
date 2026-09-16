@@ -1,4 +1,10 @@
-import LakeJs.Lookup
+module
+
+public import LakeJs.Lookup
+
+@[expose] public section
+
+namespace LakeJs.Simp
 
 /-!
 # A peephole optimiser on `Term`
@@ -22,7 +28,6 @@ optimisation cannot silently produce an ill-typed program, because an ill-typed 
 is not a `Term`.
 -/
 
-namespace LakeJs.Simp
 
 /-- Is this spine the `n` parameters of an enclosing lambda, in order?  Inside
     `Term.lamN`, parameter `j` of `n` is de Bruijn index `n - 1 - j`. -/

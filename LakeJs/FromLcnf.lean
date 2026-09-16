@@ -1,11 +1,17 @@
-import Lean
-import Lean.Compiler.LCNF
-import LakeJs.Lookup
-import LakeJs.TyPretty
-import LakeJs.Simp
-import LakeJs.EmitJs
-import LakeJs.ExternTable
-import LakeJs.Totality
+module
+
+public import Lean
+public import Lean.Compiler.LCNF
+public import LakeJs.Lookup
+public import LakeJs.TyPretty
+public import LakeJs.Simp
+public import LakeJs.EmitJs
+public import LakeJs.ExternTable
+public import LakeJs.Totality
+
+@[expose] public section
+
+namespace LakeJs.FromLcnf
 
 /-!
 # From what the `.olean` stores to a `Term`
@@ -38,7 +44,7 @@ enclosing loop, and a JavaScript function call could not be one.
 ## Three things every reference goes through
 
 * a call of a function Lean implements with `@[extern]` becomes `Term.extern`, which
-  carries the catalogue entry (`LakeJs.Externs`) and therefore the *type* of the runtime
+  carries the catalogue entry (`LakeJs.LeanPureExtern`) and therefore the *type* of the runtime
   function, rather than a bare name;
 * an operation the backend prints inline becomes `Term.prim`, whose `JsPrim` is indexed
   by the types of its arguments, so it is applied to exactly the arguments it takes — a
@@ -60,7 +66,6 @@ one value — it is handed to a function of another module — the fields are pa
 into a record on the spot.
 -/
 
-namespace LakeJs.FromLcnf
 
 open Lean Lean.Compiler.LCNF
 open LakeJs.EmitJs

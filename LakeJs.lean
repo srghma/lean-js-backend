@@ -1,5 +1,24 @@
 module
 
+public import LakeJs.Compile
+public import LakeJs.Config
+public import LakeJs.EmitJs
+public import LakeJs.Expr
+public import LakeJs.ExternTable
+public import LakeJs.ExternsMeta
+public import LakeJs.FloatDecide
+public import LakeJs.FloatDecideTests
+public import LakeJs.FromLcnf
+public import LakeJs.Layout
+public import LakeJs.LeanImpureExtern
+public import LakeJs.LeanPrimTy
+public import LakeJs.LeanPureExtern
+public import LakeJs.Lookup
+public import LakeJs.Simp
+public import LakeJs.TermTotal
+public import LakeJs.Totality
+public import LakeJs.Ty
+
 def main (args : List String) : IO Unit := do
   let args := args.toArray
 

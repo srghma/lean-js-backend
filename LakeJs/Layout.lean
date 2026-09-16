@@ -4,6 +4,11 @@ public import LakeJs.Ty
 
 @[expose] public section
 
+namespace LakeJs.Layout
+
+open LakeJs.Ty
+open LakeJs.LeanPrimTy
+
 /-!
 # The runtime layout of a type
 
@@ -69,7 +74,8 @@ def RTy.hasSelfCtors : List (List RTy) → Bool
 
 end
 
-namespace LakeJs.Layout
+def _root_.LakeJs.Ty.RTy.hasSelf := RTy.hasSelf
+
 
 mutual
 
@@ -123,13 +129,11 @@ def selfRep (τ : Ty) : Nat → Option Ty := fun i => if i == 0 then some τ els
 def famRep (ms : List FamMember) : Nat → Option Ty := fun i =>
   if i < ms.length then some (.mutualRecursiveFamily ms i) else none
 
-end LakeJs.Layout
-
 /-- The layout of a type: one entry per constructor, each holding the types of that
     constructor's fields, with the recursive occurrences resolved — or `none` for a
     type that has no constructors at all (a scalar, a function, an array, a value of a
     type parameter) and for an alias, whose wrapper does not exist at run time. -/
-def Ty.layout? : Ty → Option ObjLayout
+def _root_.LakeJs.Ty.Ty.layout? : Ty → Option ObjLayout
   -- a cons list is the built-in recursive sum: `[]` is `{ tag: 0 }` and `x :: xs` is
   -- `{ tag: 1, _1: x, _2: xs }`
   | .list α => some [[], [α, .list α]]
@@ -148,31 +152,31 @@ def Ty.layout? : Ty → Option ObjLayout
     value of `Ty.recAlias b` — or of an alias member of a mutual family — is a value of
     `b` with the recursive occurrences resolved.  `none` for every other type, which is
     how the translation tells an alias from a type with a layout. -/
-def Ty.aliasUnfold? : Ty → Option Ty
-  | τ@(.recAlias b) => LakeJs.Layout.instRTy (LakeJs.Layout.selfRep τ) b
+def _root_.LakeJs.Ty.Ty.aliasUnfold? : Ty → Option Ty
+  | τ@(.recAlias b) => instRTy (selfRep τ) b
   | .mutualRecursiveFamily ms i =>
       match ms[i]? with
-      | some (.alias b) => LakeJs.Layout.instRTy (LakeJs.Layout.famRep ms) b
+      | some (.alias b) => instRTy (famRep ms) b
       | _ => none
   | _ => none
 
 /-- Is this type an alias — a newtype whose wrapper is erased? -/
-def Ty.isAlias (τ : Ty) : Bool := τ.aliasUnfold?.isSome
+def _root_.LakeJs.Ty.Ty.isAlias (τ : Ty) : Bool := τ.aliasUnfold?.isSome
 
 /-- Does this type describe an object with constructors? -/
-def Ty.isTagged (τ : Ty) : Bool := τ.layout?.isSome
+def _root_.LakeJs.Ty.Ty.isTagged (τ : Ty) : Bool := τ.layout?.isSome
 
 /-- How many constructors this type has. -/
-def Ty.numCtors? (τ : Ty) : Option Nat := τ.layout?.map (·.length)
+def _root_.LakeJs.Ty.Ty.numCtors? (τ : Ty) : Option Nat := τ.layout?.map (·.length)
 
 /-- The fields of constructor number `i` of `τ`, if `τ` has that many constructors. -/
-def Ty.ctorFields? (τ : Ty) (i : Nat) : Option FieldLayout :=
+def _root_.LakeJs.Ty.Ty.ctorFields? (τ : Ty) (i : Nat) : Option FieldLayout :=
   match τ.layout? with
   | none => none
   | some l => l[i]?
 
 /-- The type of field number `j` of constructor number `i` of `τ`. -/
-def Ty.fieldTy? (τ : Ty) (i j : Nat) : Option Ty :=
+def _root_.LakeJs.Ty.Ty.fieldTy? (τ : Ty) (i j : Nat) : Option Ty :=
   match τ.ctorFields? i with
   | none => none
   | some fs => fs[j]?
@@ -181,25 +185,25 @@ def Ty.fieldTy? (τ : Ty) (i j : Nat) : Option Ty :=
     is an object type, every tag is one of its constructors, and no tag is repeated.
     Exhaustiveness is not a condition because a case always has a default branch
     (`Alts.deflt`), so there is no way to fall off the end of one. -/
-def Ty.caseOk (σ : Ty) (tags : List Nat) : Bool :=
+def _root_.LakeJs.Ty.Ty.caseOk (σ : Ty) (tags : List Nat) : Bool :=
   match σ.numCtors? with
   | none => false
   | some n => tags.all (fun t => t < n) && decide tags.Nodup
 
 /-- A function type has no constructors, so nothing can be built at one. -/
-theorem Ty.ctorFields?_fn (params : List Ty) (ret : Ty) (i : Nat) :
+theorem _root_.LakeJs.Ty.Ty.ctorFields?_fn (params : List Ty) (ret : Ty) (i : Nat) :
     (Ty.fn params ret).ctorFields? i = none := rfl
 
 /-- A function type has no fields, so nothing can be read out of one. -/
-theorem Ty.fieldTy?_fn (params : List Ty) (ret : Ty) (i j : Nat) :
+theorem _root_.LakeJs.Ty.Ty.fieldTy?_fn (params : List Ty) (ret : Ty) (i j : Nat) :
     (Ty.fn params ret).fieldTy? i j = none := rfl
 
 /-- Nor can a case dispatch on a function. -/
-theorem Ty.caseOk_fn (params : List Ty) (ret : Ty) (tags : List Nat) :
+theorem _root_.LakeJs.Ty.Ty.caseOk_fn (params : List Ty) (ret : Ty) (tags : List Nat) :
     (Ty.fn params ret).caseOk tags = false := rfl
 
 /-- A scalar is not an object either: `n._1` is not emitted for a `Nat`. -/
-theorem Ty.ctorFields?_prim (p : LeanPrimTy) (i : Nat) :
+theorem _root_.LakeJs.Ty.Ty.ctorFields?_prim (p : LeanPrimTy) (i : Nat) :
     (Ty.prim p).ctorFields? i = none := rfl
 
 /-- **A value of a type parameter cannot be taken apart.**  `Ty.typeParam` is the type
@@ -208,15 +212,15 @@ theorem Ty.ctorFields?_prim (p : LeanPrimTy) (i : Nat) :
     data operations there are, now that the unchecked ones are gone — are unavailable
     at it, so a compiled module never reads a field of a value it knows nothing
     about. -/
-theorem Ty.ctorFields?_typeParam (i : Nat) : Ty.typeParam.ctorFields? i = none := rfl
+theorem _root_.LakeJs.Ty.Ty.ctorFields?_typeParam (i : Nat) : Ty.typeParam.ctorFields? i = none := rfl
 
 /-- Nor can a case dispatch on one. -/
-theorem Ty.caseOk_typeParam (tags : List Nat) : Ty.typeParam.caseOk tags = false := rfl
+theorem _root_.LakeJs.Ty.Ty.caseOk_typeParam (tags : List Nat) : Ty.typeParam.caseOk tags = false := rfl
 
 /-- An alias has no layout: its wrapper does not exist at run time, so there is no
     constructor to build and no field to read — a value of it *is* a value of the type
     it unfolds to. -/
-theorem Ty.ctorFields?_recAlias (b : RTy) (i : Nat) :
+theorem _root_.LakeJs.Ty.Ty.ctorFields?_recAlias (b : RTy) (i : Nat) :
     (Ty.recAlias b).ctorFields? i = none := rfl
 
 
@@ -225,7 +229,10 @@ theorem Ty.ctorFields?_recAlias (b : RTy) (i : Nat) :
 Each shape of the type language, and the layout it has.  These are `example`s, so they
 are checked whenever the module is built. -/
 
-namespace LakeJs.Layout.Examples
+namespace Examples
+
+open LakeJs.Ty.Ty
+open LakeJs.Ty.RTy
 
 /-- `inductive Dir | north | south` — two constructors, neither with a field. -/
 example : (Ty.enum 2).layout? = some [[], []] := rfl
@@ -279,6 +286,6 @@ example :
 /-- A value of a type parameter has no layout at all. -/
 example : Ty.typeParam.layout? = none := rfl
 
-end LakeJs.Layout.Examples
+end Examples
 
-end
+end LakeJs.Layout

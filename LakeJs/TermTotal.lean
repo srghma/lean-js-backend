@@ -1,6 +1,10 @@
 module
+
 public import LakeJs.Expr
+
 @[expose] public section
+
+namespace LakeJs.TermTotal
 
 /-!
 # Why a `Term` cannot diverge
@@ -255,3 +259,5 @@ theorem Alts.length_branches {Sg : Sig} {Γ : Ctx} {τ : Ty} :
   | _, .deflt _ => by simp [Alts.branches, Alts.length]
   | _, .cons _ _ rest => by
       simp [Alts.branches, Alts.length, Alts.length_branches rest]
+
+end LakeJs.TermTotal

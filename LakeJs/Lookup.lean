@@ -4,6 +4,8 @@ public import LakeJs.Expr
 
 @[expose] public section
 
+namespace LakeJs.Lookup
+
 /-!
 # Looking things up while building a `Term`
 
@@ -58,4 +60,4 @@ def Spine.ofList? {Sg : Sig} {Γ : Ctx} :
       | _, _ => none
   | _, _ => none
 
-end
+end LakeJs.Lookup

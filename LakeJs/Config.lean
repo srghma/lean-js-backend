@@ -4,6 +4,10 @@ public import Lean.Data.Name
 
 @[expose] public section
 
+open Lean
+
+namespace LakeJs.Config
+
 /-!
 | Lean | JavaScript | knob |
 | --- | --- | --- |
@@ -20,7 +24,6 @@ public import Lean.Data.Name
 | `Array α` | always a JavaScript array | — |
 -/
 
-namespace Lean.Compiler.JS
 
 /-- How a numeric Lean type is represented: as a JavaScript number, or as a
     `BigInt`. -/
@@ -103,3 +106,7 @@ def describe (cfg : JsConfig) : String :=
       "usize=" ++ reprName cfg.usizeRepr, "uint64=" ++ reprName cfg.uint64Repr,
       "int64=" ++ reprName cfg.int64Repr,
       ]
+
+end JsConfig
+
+end LakeJs.Config
