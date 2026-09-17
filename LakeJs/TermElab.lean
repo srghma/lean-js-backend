@@ -49,6 +49,8 @@ here reads.
 
 namespace LakeJs.TermElab
 
+open NonEmpty.ListCorrectByConstruction (NonEmptyList)
+
 open Lean
 open LakeJs
 open LakeJs.Surface
@@ -155,19 +157,43 @@ partial def tyStx (t : Ty) : MacroM (TSyntax `term) := do
   | .task a => do `(LakeJs.Ty.task $(← tyStx a))
   | .promise a => do `(LakeJs.Ty.promise $(← tyStx a))
   | .thunk a => do `(LakeJs.Ty.thunk $(← tyStx a))
-  | .enum n _ s => do
-      `(LakeJs.Ty.enum $(Lean.quote n) (by decide) $(← intStx s))
-  | .record fs => do `(LakeJs.Ty.record [$((← fs.mapM tyStx).toArray),*])
-  | .taggedUnion cs => do `(LakeJs.Ty.taggedUnion [$((← cs.mapM tyListStx).toArray),*])
-  | .recTaggedUnion cs => do `(LakeJs.Ty.recTaggedUnion [$((← cs.mapM rtyListStx).toArray),*])
-  | .recObject fs => do `(LakeJs.Ty.recObject [$((← fs.mapM rtyStx).toArray),*])
-  | .recAlias a => do `(LakeJs.Ty.recAlias $(← rtyStx a))
-  | .mutualRecursiveFamily ms i => do
-      `(LakeJs.Ty.mutualRecursiveFamily [$((← ms.mapM famStx).toArray),*] $(Lean.quote i))
+  | .lazy a => do `(LakeJs.Ty.lazy $(← tyStx a))
+  | .enum e => do
+      `(LakeJs.Ty.enum ⟨$(Lean.quote e.extraConstructors), $(← intStx e.shift)⟩)
+  | .record fs => do `(LakeJs.Ty.record $(← tyA2Stx fs))
+  | .taggedUnion cs => do `(LakeJs.Ty.taggedUnion $(← tyTUStx cs))
+  | .recTaggedUnion ⟨cs⟩ => do `(LakeJs.Ty.recTaggedUnion ⟨$(← rtyTUStx cs)⟩)
+  | .recObject ⟨fs⟩ => do `(LakeJs.Ty.recObject ⟨$(← rtyA2Stx fs)⟩)
+  | .recAlias ⟨a⟩ => do `(LakeJs.Ty.recAlias ⟨$(← rtyStx a)⟩)
+  | .mutualRecursiveFamily f => do
+      `(LakeJs.Ty.mutualRecursiveFamily $(← familyStx f))
 
 /-- A list of closed types, as the Lean syntax of a list. -/
 partial def tyListStx (ts : List Ty) : MacroM (TSyntax `term) := do
   `([$((← ts.mapM tyStx).toArray),*])
+
+/-- The fields of a record of closed types, as Lean syntax. -/
+partial def tyA2Stx (fs : LeanRecordSchema Ty) : MacroM (TSyntax `term) := do
+  `(⟨$(← tyStx fs.fst), $(← tyStx fs.snd), $(← tyListStx fs.rest)⟩)
+
+/-- The fields of a constructor that has at least one, as Lean syntax. -/
+partial def tyNEStx (f : NonEmptyList Ty) : MacroM (TSyntax `term) := do
+  `(⟨$(← tyStx f.head), $(← tyListStx f.tail)⟩)
+
+/-- The constructors of a tagged union of closed types, as Lean syntax. -/
+partial def tyTUStx (c : LeanTaggedUnionSchema Ty) : MacroM (TSyntax `term) := do
+  match c with
+  | .payloadFirst f n r =>
+      `(LakeJs.LeanTaggedUnionSchema.payloadFirst $(← tyNEStx f) $(← tyListStx n)
+          [$((← r.mapM tyListStx).toArray),*])
+  | .skip rest => do `(LakeJs.LeanTaggedUnionSchema.skip $(← tyCPStx rest))
+
+/-- The constructors that follow a field-less one, as Lean syntax. -/
+partial def tyCPStx (c : CtorsWithPayload Ty) : MacroM (TSyntax `term) := do
+  match c with
+  | .here f r =>
+      `(LakeJs.CtorsWithPayload.here $(← tyNEStx f) [$((← r.mapM tyListStx).toArray),*])
+  | .skip rest => do `(LakeJs.CtorsWithPayload.skip $(← tyCPStx rest))
 
 /-- A type inside a recursive declaration, as Lean syntax. -/
 partial def rtyStx (t : Ty.RTy) : MacroM (TSyntax `term) := do
@@ -184,25 +210,61 @@ partial def rtyStx (t : Ty.RTy) : MacroM (TSyntax `term) := do
   | .task a => do `(LakeJs.Ty.RTy.task $(← rtyStx a))
   | .promise a => do `(LakeJs.Ty.RTy.promise $(← rtyStx a))
   | .thunk a => do `(LakeJs.Ty.RTy.thunk $(← rtyStx a))
-  | .enum n _ s => do
-      `(LakeJs.Ty.RTy.enum $(Lean.quote n) (by decide) $(← intStx s))
-  | .record fs => do `(LakeJs.Ty.RTy.record [$((← fs.mapM rtyStx).toArray),*])
-  | .taggedUnion cs => do `(LakeJs.Ty.RTy.taggedUnion [$((← cs.mapM rtyListStx).toArray),*])
-  | .recTaggedUnion cs => do `(LakeJs.Ty.RTy.recTaggedUnion [$((← cs.mapM rtyListStx).toArray),*])
-  | .recObject fs => do `(LakeJs.Ty.RTy.recObject [$((← fs.mapM rtyStx).toArray),*])
-  | .recAlias a => do `(LakeJs.Ty.RTy.recAlias $(← rtyStx a))
-  | .mutualRecursiveFamily ms i => do
-      `(LakeJs.Ty.RTy.mutualRecursiveFamily [$((← ms.mapM famStx).toArray),*] $(Lean.quote i))
+  | .lazy a => do `(LakeJs.Ty.RTy.lazy $(← rtyStx a))
+  | .enum e => do
+      `(LakeJs.Ty.RTy.enum ⟨$(Lean.quote e.extraConstructors), $(← intStx e.shift)⟩)
+  | .record fs => do `(LakeJs.Ty.RTy.record $(← rtyA2Stx fs))
+  | .taggedUnion cs => do `(LakeJs.Ty.RTy.taggedUnion $(← rtyTUStx cs))
+  | .recTaggedUnion ⟨cs⟩ => do `(LakeJs.Ty.RTy.recTaggedUnion ⟨$(← rtyTUStx cs)⟩)
+  | .recObject ⟨fs⟩ => do `(LakeJs.Ty.RTy.recObject ⟨$(← rtyA2Stx fs)⟩)
+  | .recAlias ⟨a⟩ => do `(LakeJs.Ty.RTy.recAlias ⟨$(← rtyStx a)⟩)
+  | .mutualRecursiveFamily f => do
+      `(LakeJs.Ty.RTy.mutualRecursiveFamily $(← familyStx f))
 
 /-- A list of types inside a recursive declaration, as the Lean syntax of a list. -/
 partial def rtyListStx (ts : List Ty.RTy) : MacroM (TSyntax `term) := do
   `([$((← ts.mapM rtyStx).toArray),*])
 
+/-- The fields of a record, as Lean syntax. -/
+partial def rtyA2Stx (fs : LeanRecordSchema Ty.RTy) : MacroM (TSyntax `term) := do
+  `(⟨$(← rtyStx fs.fst), $(← rtyStx fs.snd), $(← rtyListStx fs.rest)⟩)
+
+/-- The fields of a constructor that has at least one, as Lean syntax. -/
+partial def rtyNEStx (f : NonEmptyList Ty.RTy) : MacroM (TSyntax `term) := do
+  `(⟨$(← rtyStx f.head), $(← rtyListStx f.tail)⟩)
+
+/-- The constructors of a tagged union, as Lean syntax. -/
+partial def rtyTUStx (c : LeanTaggedUnionSchema Ty.RTy) : MacroM (TSyntax `term) := do
+  match c with
+  | .payloadFirst f n r =>
+      `(LakeJs.LeanTaggedUnionSchema.payloadFirst $(← rtyNEStx f) $(← rtyListStx n)
+          [$((← r.mapM rtyListStx).toArray),*])
+  | .skip rest => do `(LakeJs.LeanTaggedUnionSchema.skip $(← rtyCPStx rest))
+
+/-- The constructors that follow a field-less one, as Lean syntax. -/
+partial def rtyCPStx (c : CtorsWithPayload Ty.RTy) : MacroM (TSyntax `term) := do
+  match c with
+  | .here f r =>
+      `(LakeJs.CtorsWithPayload.here $(← rtyNEStx f) [$((← r.mapM rtyListStx).toArray),*])
+  | .skip rest => do `(LakeJs.CtorsWithPayload.skip $(← rtyCPStx rest))
+
 /-- A member of a mutual family, as Lean syntax. -/
 partial def famStx (m : Ty.FamMember) : MacroM (TSyntax `term) := do
   match m with
-  | .ctors cs => do `(LakeJs.Ty.FamMember.ctors [$((← cs.mapM rtyListStx).toArray),*])
-  | .alias t => do `(LakeJs.Ty.FamMember.alias $(← rtyStx t))
+  | .ctors cs => do `(LakeJs.LeanFamMemberSchema.ctors $(← rtyTUStx cs))
+  | .record fs => do `(LakeJs.LeanFamMemberSchema.record $(← rtyA2Stx fs))
+  | .alias t => do `(LakeJs.LeanFamMemberSchema.alias $(← rtyStx t))
+
+/-- A mutual family, as Lean syntax. -/
+partial def familyStx (f : LeanMutualRecFamily Ty.RTy) : MacroM (TSyntax `term) := do
+  match f with
+  | .selectedThenMore before current next after =>
+      `(LakeJs.LeanMutualRecFamily.selectedThenMore
+          [$((← before.mapM famStx).toArray),*] $(← famStx current) $(← famStx next)
+          [$((← after.mapM famStx).toArray),*])
+  | .selectedLast first before current =>
+      `(LakeJs.LeanMutualRecFamily.selectedLast $(← famStx first)
+          [$((← before.mapM famStx).toArray),*] $(← famStx current))
 
 end
 
@@ -319,6 +381,8 @@ partial def termStx (locals globals : List String) (t : STerm) :
       `(LakeJs.Expr.Term.proj $(← termStx locals globals e) $(Lean.quote i)
           $(Lean.quote j) rfl)
   | .tagOf e => do `(LakeJs.Expr.Term.tagOf $(← termStx locals globals e) rfl)
+  | .lazyMk e => do `(LakeJs.Expr.Term.lazyMk $(← termStx locals globals e))
+  | .lazyForce e => do `(LakeJs.Expr.Term.lazyForce $(← termStx locals globals e))
   | .caseTag s alts => do
       `(LakeJs.Expr.Term.caseTag $(← termStx locals globals s)
           $(← altsStx locals globals alts) rfl)
@@ -326,6 +390,17 @@ partial def termStx (locals globals : List String) (t : STerm) :
       let body ← bodyStx (binderNames slots ++ locals) globals b
       `(LakeJs.Expr.Term.loop (σs := [$((← (slots.map (·.2)).mapM tyStx).toArray),*])
           $(← spineStx locals globals inits) $body)
+  | .joinPoint n ps ret b r => do
+      let body ← termStx (binderNames ps ++ locals) globals b
+      let rest ← termStx (n :: locals) globals r
+      `(LakeJs.Expr.Term.joinPoint
+          (params := [$((← (ps.map (·.2)).mapM tyStx).toArray),*])
+          (σ := $(← tyStx ret)) $body $rest)
+  | .jump n args => do
+      match locals.idxOf? n with
+      | some i =>
+          `(LakeJs.Expr.Term.jump $(← varStx i) $(← spineStx locals globals args))
+      | none => Macro.throwError s!"`{n}` is not a join point of the context"
 
 /-- A written spine, as Lean syntax. -/
 partial def spineStx (locals globals : List String) (s : SSpine) :
@@ -357,6 +432,12 @@ partial def bodyStx (locals globals : List String) (b : SBody) :
   | .iteB c t e => do
       `(LakeJs.Expr.Body.iteB $(← termStx locals globals c)
           $(← bodyStx locals globals t) $(← bodyStx locals globals e))
+  | .joinPointB n ps ret b r => do
+      let body ← termStx (binderNames ps ++ locals) globals b
+      let rest ← bodyStx (n :: locals) globals r
+      `(LakeJs.Expr.Body.joinPointB
+          (params := [$((← (ps.map (·.2)).mapM tyStx).toArray),*])
+          (σ := $(← tyStx ret)) $body $rest)
 
 end
 

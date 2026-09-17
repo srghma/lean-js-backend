@@ -89,7 +89,8 @@ def isErasedLcnfTy : Expr → Bool
   | .forallE _ _ b _ => isErasedLcnfTy b
   | e => e.getAppFn.constName? == some ``lcErased
 
-/-- Is this LCNF parameter dropped? -/
+/-- Is this LCNF parameter dropped?  `isErasedParamIn` also drops one whose type is
+    unit-like, which needs the environment; this is the test that does not. -/
 def isErasedParam (p : Param) : Bool := isErasedLcnfTy p.type
 
 /-- Is this LCNF argument dropped? -/
@@ -200,21 +201,6 @@ def isTypeOrProofTy (env : Environment) (binders : Array Expr) (e : Expr) : Bool
     | _ => false
   isSortLike e || isPropTyIn env binders e
 
-/-- How many fields of this constructor survive to run time: the ones that are neither
-    a type nor a proof.  It is the number of arguments LCNF passes to the constructor,
-    and the number of entries the layout of its type has for it. -/
-def runtimeFieldCount (env : Environment) (ci : ConstructorVal) : Nat :=
-  let rec skip : Nat → Expr → Array Expr → Expr × Array Expr
-    | 0, e, bs => (e, bs)
-    | k + 1, .forallE _ a b _, bs => skip k b (bs.push a)
-    | _, e, bs => (e, bs)
-  let (t, bs) := skip ci.numParams ci.type #[]
-  let rec go : Nat → Expr → Array Expr → Nat → Nat
-    | 0, _, _, acc => acc
-    | k + 1, .forallE _ a b _, bs, acc =>
-        go k b (bs.push a) (if isTypeOrProofTy env bs a then acc else acc + 1)
-    | _, _, _, acc => acc
-  go ci.numFields t bs 0
 
 /-- Does the backend give this declaration a representation of its own, rather than
     reading one off its constructors?  `toRTyAppIn` answers these names with a `Ty` that
@@ -229,6 +215,89 @@ def hasPrimitiveLayout (n : Name) : Bool :=
   n == ``ByteArray || n == ``FloatArray ||
   n == ``Ordering || n == ``Unit || n == ``PUnit || n == ``Decidable ||
   n == ``Array || n == ``List
+
+/-- How deep a type may be expanded before the translation gives up.  Expansion only
+    ever descends into the *fields* of a declaration, and a recursive occurrence is
+    `RTy.self`, so ordinary types are nowhere near this; a type whose expansion does not
+    stop (a non-uniformly recursive one) is refused instead of looping. -/
+def tyFuel : Nat := 64
+
+/-- Skip `n` binders of a type, collecting them. -/
+def skipBinders : Nat → Expr → Array Expr → Expr × Array Expr
+  | 0, e, bs => (e, bs)
+  | k + 1, .forallE _ a b _, bs => skipBinders k b (bs.push a)
+  | _, e, bs => (e, bs)
+
+mutual
+
+/-- Is this a **unit-like** type: one whose values all carry the same nothing — a
+    declaration with exactly one constructor, none of whose fields survives to run time?
+    `Unit` and `PUnit` are the ones the source language spells; an empty `structure` is
+    one too.
+
+    The type language has no type for such a value, by design: it would be a type with
+    one value, which the schemas of `LakeJs.Schema` cannot express.  So the value is
+    *erased* — a parameter of this type is dropped, an argument at it is dropped, a
+    field of it is not part of the layout, and a function whose parameters are all
+    dropped this way is a `Ty.lazy`. -/
+partial def isUnitLikeTy (env : Environment) (e : Expr) : Bool :=
+  isUnitLikeTyFuel env tyFuel e
+
+/-- `isUnitLikeTy`, with a bound on how many type synonyms it unfolds. -/
+partial def isUnitLikeTyFuel (env : Environment) (fuel : Nat) (e : Expr) : Bool :=
+  if fuel == 0 then false else
+  match e with
+  | .mdata _ e => isUnitLikeTyFuel env fuel e
+  | _ =>
+    let b := e.headBeta
+    if b != e then isUnitLikeTyFuel env (fuel - 1) b else
+    match e.getAppFn.constName? with
+    | some n =>
+        if n == ``Unit || n == ``PUnit then true
+        else if hasPrimitiveLayout n then false
+        else match env.find? n with
+          | some (.inductInfo iv) =>
+              !iv.isUnsafe && iv.all.length == 1 && iv.numIndices == 0 &&
+                (match iv.ctors with
+                 | [cn] =>
+                     (match env.find? cn with
+                      | some (.ctorInfo ci) => runtimeFieldCount env ci == 0
+                      | _ => false)
+                 | _ => false)
+          -- a type synonym: what it stands for
+          | some (.defnInfo dv) =>
+              (resultOfForalls dv.type).isSort &&
+                isUnitLikeTyFuel env (fuel - 1) (dv.value.beta e.getAppArgs)
+          | _ => false
+    | none => false
+
+/-- Does a binder of this type carry nothing at run time — a type, a proof, or a value
+    of a unit-like type? -/
+partial def isErasedBinderTy (env : Environment) (binders : Array Expr) (e : Expr) : Bool :=
+  isTypeOrProofTy env binders e || isUnitLikeTy env e
+
+/-- How many fields of this constructor survive to run time: the ones that are neither
+    a type, a proof, nor a value of a unit-like type.  It is the number of arguments
+    LCNF passes to the constructor, and the number of entries the layout of its type has
+    for it. -/
+partial def runtimeFieldCount (env : Environment) (ci : ConstructorVal) : Nat :=
+  let (t, bs) := skipBinders ci.numParams ci.type #[]
+  countRuntimeFields env ci.numFields t bs 0
+
+/-- The worker of `runtimeFieldCount`. -/
+partial def countRuntimeFields (env : Environment) :
+    Nat → Expr → Array Expr → Nat → Nat
+  | 0, _, _, acc => acc
+  | k + 1, .forallE _ a b _, bs, acc =>
+      countRuntimeFields env k b (bs.push a)
+        (if isErasedBinderTy env bs a then acc else acc + 1)
+  | _, _, _, acc => acc
+
+end
+
+/-- Is this LCNF parameter dropped, a parameter of a unit-like type included? -/
+def isErasedParamIn (env : Environment) (p : Param) : Bool :=
+  isErasedParam p || isUnitLikeTy env p.type
 
 /-- Is this constructor a *conversion* rather than a constructor of a layout?  The
     backend represents an `Array` as a JavaScript array and a `String` as a JavaScript
@@ -274,7 +343,7 @@ def runtimeFieldIndex (env : Environment) (sname : Name) (i : Nat) : Option Nat 
         let rec go : Nat → Expr → Array Expr → Nat → Nat → Option Nat
           | 0, _, _, _, _ => none
           | k + 1, .forallE _ a b _, bs, here, seen =>
-            let erased := isTypeOrProofTy env bs a
+            let erased := isErasedBinderTy env bs a
             if here == i then (if erased then none else some seen)
             else go k b (bs.push a) (here + 1) (if erased then seen else seen + 1)
           | _, _, _, _, _ => none
@@ -311,11 +380,6 @@ def instParams : Nat → Array Expr → Expr → Except String Expr
     | none => .error "a type constructor is applied to fewer arguments than it takes"
   | _, _, _ => .error "a type constructor has fewer parameters than it is applied to"
 
-/-- How deep a type may be expanded before the translation gives up.  Expansion only
-    ever descends into the *fields* of a declaration, and a recursive occurrence is
-    `RTy.self`, so ordinary types are nowhere near this; a type whose expansion does not
-    stop (a non-uniformly recursive one) is refused instead of looping. -/
-def tyFuel : Nat := 64
 
 mutual
 
@@ -331,6 +395,11 @@ partial def toRTyIn (env : Environment) (self : Option SelfScope) (blocked : Lis
       -- no parameter of the function type either
       if isTypeOrProofTy env #[] a then
         toRTyIn env self blocked fuel (b.instantiate1 (.const ``lcAny []))
+      else if isUnitLikeTy env a then
+        -- the argument is the one value of a unit-like type, which carries nothing, so
+        -- what is left of the function is a JavaScript function of no arguments
+        let b' ← toRTyIn env self blocked fuel (b.instantiate1 (.const ``lcAny []))
+        return .lazy b'
       else
         let a' ← toRTyIn env self blocked fuel a
         let b' ← toRTyIn env self blocked fuel
@@ -383,9 +452,13 @@ partial def toRTyAppIn (env : Environment) (self : Option SelfScope) (blocked : 
       | ``FloatArray => return .prim .floatArray
       -- `Ordering` is built and matched as data (`Ordering.lt`, …): three
       -- constructors, none with a field
-      | ``Ordering => return .enum 3 (shift := -1)
-      -- `Unit` has one value, which is `{ tag: 0 }`: a one-constructor enum
-      | ``Unit | ``PUnit => return .enum 1 (shift := 0)
+      | ``Ordering => return .enum ⟨0, -1⟩
+      -- a type with a single value carries no information, and the type language has
+      -- no unit type: such a value is erased before a type is built
+      | ``Unit | ``PUnit =>
+          throw s!"`Unit` has a single value, which carries nothing at run time, so the \
+            type language has no type for it — it is erased where it is a parameter, an \
+            argument or a field, and this one (in `{e}`, inside {blocked}) is none of those"
       -- both constructors of `Decidable` carry nothing but a proof, so a `Decidable` is
       -- the boolean it decides — which is also how a `cases` on one is compiled
       | ``Decidable => return .prim .bool
@@ -463,11 +536,26 @@ partial def toInductiveRTy (env : Environment) (self : Option SelfScope)
           let l ← miv.ctors.mapM fun cn =>
             ctorFieldsRTy env (some sc) blocked' (fuel - 1) cn params
           match l with
-          | [[f]] => return FamMember.alias f
-          | _ => return FamMember.ctors l
+          | [[f]] => return LeanFamMemberSchema.alias f
+          | [fs] =>
+              match LeanRecordSchema.ofList? fs with
+              | some r => return LeanFamMemberSchema.record r
+              | none =>
+                  throw s!"`{miv.name}` has one constructor carrying nothing, so it has \
+                    a single value, which the type language does not model"
+          | _ =>
+              match LeanTaggedUnionSchema.ofList? l with
+              | some tu => return LeanFamMemberSchema.ctors tu
+              | none =>
+                  throw s!"`{miv.name}` is a member of a mutual block whose constructors \
+                    carry nothing, so it is an enum rather than a member of a family"
       | _ => throw s!"`{m}` is a member of a mutual block the backend cannot read"
     match iv.all.idxOf? iv.name with
-    | some i => return .mutualRecursiveFamily ms i
+    | some i =>
+        match LeanMutualRecFamily.ofMembers? ms i with
+        | some f => return .mutualRecursiveFamily f
+        | none =>
+            throw s!"`{iv.name}` is a `mutual` block of fewer than two members"
     | none => throw s!"`{iv.name}` is not a member of its own mutual block"
   else
     -- a recursive declaration opens a `.self` scope; a non-recursive one is read in the
@@ -485,19 +573,43 @@ partial def toInductiveRTy (env : Environment) (self : Option SelfScope)
     let recursive := iv.isRec && l.any fun fs => fs.any RTy.hasSelf
     if recursive then
       match l with
-      | [[f]] => return .recAlias f
-      | [fs] => return .recObject fs
-      | _ => return .recTaggedUnion l
+      | [[f]] => return .recAlias ⟨f⟩
+      | [fs] =>
+          match LeanRecordSchema.ofList? fs with
+          | some r => return .recObject ⟨r⟩
+          | none =>
+              throw s!"`{iv.name}` is recursive with a single constructor carrying \
+                nothing, so it has no values at run time"
+      | _ =>
+          match LeanTaggedUnionSchema.ofList? l with
+          | some tu => return .recTaggedUnion ⟨tu⟩
+          | none =>
+              throw s!"`{iv.name}` is recursive but none of its constructors carries a \
+                field, so it is an enum rather than a recursive type"
     else
       match l with
       | [[f]] => return f                         -- a newtype: the wrapper is erased
-      | [fs] => return (if fs.isEmpty then .enum 1 (shift := 0) else .record fs)
+      | [fs] =>
+          match LeanRecordSchema.ofList? fs with
+          | some r => return .record r
+          | none =>
+              throw s!"`{iv.name}` has a single constructor carrying nothing, so it has \
+                a single value, which the type language does not model"
       -- a declaration with no constructors at all has no values, and is refused above
       | [] => throw s!"`{iv.name}` has no constructors, so it has no values at run time"
       | c :: cs =>
         if (c :: cs).all (·.isEmpty) then
-          return .enum (c :: cs).length (by simp) 0
-        else return .taggedUnion (c :: cs)
+          -- a field-less sum: two constructors is a boolean, three or more an enum
+          match RTy.enumOrBool? (c :: cs).length 0 with
+          | some t => return t
+          | none =>
+              throw s!"`{iv.name}` has a single constructor, so it has a single value, \
+                which the type language does not model"
+        else
+          match LeanTaggedUnionSchema.ofList? (c :: cs) with
+          | some tu => return .taggedUnion tu
+          | none =>
+              throw s!"`{iv.name}` is not a shape the type language models"
 
 /-- The types of the runtime fields of one constructor, in declaration order, with the
     type parameters instantiated and the fields that carry nothing at run time dropped —
@@ -516,7 +628,7 @@ where
     | 0, _, acc => .ok acc.reverse
     | k + 1, .forallE _ a b _, acc =>
         let b' := b.instantiate1 (.const ``lcAny [])
-        if isTypeOrProofTy env #[] a then go k b' acc
+        if isErasedBinderTy env #[] a then go k b' acc
         else do
           let t ← toRTyIn env self blocked fuel a
           go k b' (t :: acc)
@@ -534,7 +646,11 @@ def toTy (env : Environment) (e : Expr) : Except String Ty := do
 
 /-- Strip `n` parameters off a function type, to find what it answers with. -/
 def stripArrows : Nat → Ty → Ty
+  | 0, .lazy ret => ret
   | 0, ty => ty
+  -- a delayed value is not a run-time parameter: it is what is left of one that was
+  -- dropped, so it is skipped without counting
+  | n + 1, .lazy ret => stripArrows (n + 1) ret
   | n + 1, .fn _ ret => stripArrows n ret
   | _, ty => ty
 
@@ -680,7 +796,12 @@ def InstPlan.tys (p : InstPlan) : List Ty := p.fields.map (·.2)
 def InstPlan.boxedTy (p : InstPlan) : Ty :=
   match p.tys with
   | [t] => t
-  | ts => .record ts
+  | ts =>
+    match LeanRecordSchema.ofList? ts with
+    | some r => .record r
+    -- a class with no runtime fields carries nothing to look at: what is passed is a
+    -- value the compiled code can only hand on, which is what `Ty.typeParam` is
+    | none => .typeParam
 
 /-- The JavaScript name the `i`-th field of instance `base` is bound to. -/
 def instFieldName (base : String) (field : String) : String := base ++ "_" ++ field
@@ -717,6 +838,12 @@ structure Ctx' where
   /-- Which declarations of this module have had a parameter split into the fields of an
       instance, and how. -/
   paramPlan : Std.HashMap Name (List (Option InstPlan)) := {}
+  /-- Which parameters of each declaration were **dropped as unit-like**: one flag per
+      LCNF parameter, in order.  A call must drop exactly the arguments the callee
+      dropped, and that is a property of the *callee*, not of the argument: a unit value
+      handed to a parameter whose type is a type variable is passed like any other
+      value, since the function it goes to was compiled once, for every type. -/
+  unitParams : Std.HashMap Name (List Bool) := {}
   /-- The JavaScript name each declaration was given, where it is not `jsName` of it:
       `LakeJs.Compile` hands out one name per declaration, so that two Lean names that
       `jsName` spells alike — and a name that clashes with the constant an instance is
@@ -733,6 +860,12 @@ inductive Binding where
       at run time, so there is no JavaScript variable for it and every argument
       position that uses it is dropped too. -/
   | erased
+  /-- A binder that held the one value of a **unit-like** type.  It is dropped as a
+      binder — no JavaScript variable is bound for it — but, unlike a type or a proof,
+      it is a value: where the code hands it to a function that was compiled for every
+      type, and so does take it, the opaque constant `0` is handed over
+      (`FromLcnf.unitValue`), which nothing can look inside. -/
+  | unitValue
   /-- An instance split into one binder per field, at these absolute depths. -/
   | split (plan : InstPlan) (depths : List Nat)
   /-- A nullary instance of this module: its fields are the declarations
@@ -849,7 +982,7 @@ def varAtDepth {Sg : Sig} (Γ : Ctx) (d : Nat) : Except String (SomeTerm Sg Γ) 
     erased value, all of which `Ty` sees as one opaque runtime value — the term is
     wrapped in `JsOp.cast`, which prints as the term itself.  Nothing is inserted into
     the output either way; what changes is only which `Ty` the backend ascribes. -/
-def coerce {Sg : Sig} (σ : Ty) {Γ : Ctx} (t : SomeTerm Sg Γ) : Term Sg Γ σ :=
+def coerceCast {Sg : Sig} (σ : Ty) {Γ : Ctx} (t : SomeTerm Sg Γ) : Term Sg Γ σ :=
   match σ, t with
   -- LCNF spells a character by its code point, and the backend spells it by the
   -- one-character string it is at run time: `'x'` is `"x"`, not `120`
@@ -858,6 +991,28 @@ def coerce {Sg : Sig} (σ : Ty) {Γ : Ctx} (t : SomeTerm Sg Γ) : Term Sg Γ σ 
     match Term.coerce? σ t.2 with
     | some t' => t'
     | none => .jsOp (.cast t.1 σ) (.cons t.2 .nil)
+
+/-- `coerceCast`, and in addition the one adjustment that is **not** a cast: a delayed
+    value where an immediate one is wanted is run (`e()`), and an immediate one where a
+    delayed one is wanted is delayed (`() => e`).  The two shapes differ in the output,
+    so ascribing one the other's type would be wrong; they arise because a declaration
+    whose only parameter was a unit-like one is a function of no arguments, while the
+    same value read at its Lean type is a `Ty.lazy`. -/
+def coerce {Sg : Sig} (σ : Ty) {Γ : Ctx} (t : SomeTerm Sg Γ) : Term Sg Γ σ :=
+  match σ, t with
+  | .lazy a, ⟨.lazy _, _⟩ => coerceCast (.lazy a) t
+  | .lazy σ', t => .lazyMk (coerceCast σ' t)
+  | σ, ⟨.lazy ρ, e⟩ => coerceCast σ ⟨ρ, .lazyForce e⟩
+  | σ, t => coerceCast σ t
+
+/-- The value of a **unit-like** type, where it is not erased.  A unit-like value is
+    dropped wherever the code that reads it knows it is one — a parameter of type `Unit`,
+    a field of that type — but a parameter whose type is a *type variable* was compiled
+    once, for every type, so it does take an argument even when the argument happens to
+    carry nothing.  What is handed over there is this: the opaque constant `0`, at
+    `Ty.typeParam`, which nothing can look inside. -/
+def unitValue {Sg : Sig} {Γ : Ctx} : SomeTerm Sg Γ :=
+  ⟨Ty.typeParam, coerce Ty.typeParam ⟨Ty.nat, .lit (.nat 0)⟩⟩
 
 /-- A natural number literal, read at the type the LCNF `let` gives it.  LCNF holds the
     constants of every integral type as a natural number, so this is where a `UInt8`
@@ -1061,6 +1216,7 @@ def bodyToTerm? {Sg : Sig} {Γ : Ctx} {σs : List Ty} {τ : Ty} :
     match bodyToTerm? t, bodyToTerm? e with
     | some a, some b => some (.ite c a b)
     | _, _ => none
+  | .joinPointB body rest => (bodyToTerm? rest).map (Term.joinPoint body)
 
 /-- The words a JavaScript module may not bind to a declaration: the keywords, the two
     identifiers a module — which is always strict — may not bind (`eval`, `arguments`),
@@ -1099,7 +1255,10 @@ def boxInst {Sg : Sig} {Γ : Ctx} (fields : List (SomeTerm Sg Γ)) :
     Except String (SomeTerm Sg Γ) :=
   match fields with
   | [v] => .ok v
-  | fs => ctorAt (.record (fs.map (·.1))) 0 fs
+  | fs =>
+    match LeanRecordSchema.ofList? (fs.map (·.1)) with
+    | some r => ctorAt (.record r) 0 fs
+    | none => .error "an instance with no runtime fields has nothing to pack"
 
 /-- Read field `i` out of an instance that was packed by `boxInst`. -/
 def unboxInstField {Sg : Sig} {Γ : Ctx} (plan : InstPlan) (t : SomeTerm Sg Γ)
@@ -1121,6 +1280,20 @@ def isErasedArg (vm : VarMap) : Arg → Bool
   | .erased => true
   | .fvar f => match vm[f]? with | some .erased => true | _ => false
 
+/-- Is this argument the one value of a unit-like type, kept as a value rather than
+    erased?  Where the callee is known to have dropped the parameter it goes to — a
+    constructor field of a unit-like type, say — it is dropped here too. -/
+def isUnitArg (vm : VarMap) : Arg → Bool
+  | .fvar f => match vm[f]? with | some .unitValue => true | _ => false
+  | _ => false
+
+/-- Drop the entries at the positions the callee dropped.  `flags` has one entry per
+    parameter of the callee, `true` where the parameter was dropped as unit-like; a
+    position past the end of `flags` is kept.  The same filter runs over the arguments
+    and over the per-parameter instance plans, so that the two stay parallel. -/
+def keptAt {α : Type} (flags : List Bool) (xs : List α) : List α :=
+  xs.zipIdx.filterMap fun (x, i) => if flags[i]?.getD false then none else some x
+
 /-! ## The translation itself -/
 
 mutual
@@ -1135,6 +1308,7 @@ partial def transArg {Sg : Sig} (Γ : Ctx) (vm : VarMap) (a : Arg) : Res Sg Γ :
   | .fvar f =>
     match vm[f]? with
     | some .erased => .error "an erased binder has no value to translate"
+    | some .unitValue => .ok unitValue
     | some (.one d) => varAtDepth Γ d
     | some (.split _ ds) => do
         let fields ← ds.mapM fun d => varAtDepth (Sg := Sg) Γ d
@@ -1154,6 +1328,7 @@ partial def transArgSplit {Sg : Sig} (Γ : Ctx) (vm : VarMap) (plan : InstPlan) 
   | .fvar f =>
     match vm[f]? with
     | some .erased => .error "an instance parameter is given an erased binder"
+    | some .unitValue => .error "an instance parameter is given a unit-like value"
     | some (.split _ ds) => ds.mapM fun d => varAtDepth (Sg := Sg) Γ d
     | some (.instGlobal base p) => instGlobalFields (Sg := Sg) (Γ := Γ) base p
     | some (.one d) => do
@@ -1246,15 +1421,33 @@ partial def transLetValue {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (ty : T
   | .fvar f args => do
       let fn ← transArg Γ vm (.fvar f)
       let ts ← transArgs Γ vm args.toList
-      let sp := spineOfTerms ts
-      let fn' : Term Sg Γ (.fn sp.1 ty) := coerce (.fn sp.1 ty) fn
-      return ⟨ty, .apN fn' sp.2⟩
+      if ts.isEmpty then
+        match args.isEmpty, fn.1 with
+        | true, _ =>
+          -- not a call at all: the value itself
+          return ⟨ty, coerce ty fn⟩
+        | false, .lazy _ =>
+          -- every argument carried nothing, so the call is `f()`: running a delayed value
+          return ⟨ty, .lazyForce (coerce (.lazy ty) fn)⟩
+        | false, _ =>
+          -- the arguments were types and proofs, and the value is not a delayed one:
+          -- the call takes no argument at all, so it *is* the value
+          return ⟨ty, coerce ty fn⟩
+      else
+        let sp := spineOfTerms ts
+        let fn' : Term Sg Γ (.fn sp.1 ty) := coerce (.fn sp.1 ty) fn
+        return ⟨ty, .apN fn' sp.2⟩
   | .const n _ args => transConst c Γ vm ty n args.toList
 
 /-- A call of a named declaration: a primitive, an extern, a constructor, the projection
     of an unboxed instance, or a call of a declaration of the signature. -/
 partial def transConst {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (ty : Ty)
     (n : Name) (args : List Arg) : Res Sg Γ := do
+  -- a call drops exactly the arguments the callee dropped, which is a property of the
+  -- *callee*: a unit-like value handed to a parameter whose type is a type variable is
+  -- passed like any other value, since that function was compiled once, for every type
+  let unitFlags := c.unitParams[n]?.getD []
+  let args := keptAt unitFlags args
   let runtimeArgs := args.filter (!isErasedArg vm ·)
   let tyArgs : List Ty := args.filterMap fun a => match a with
     | .type e => (toTy c.env e).toOption
@@ -1276,7 +1469,7 @@ partial def transConst {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (ty : Ty)
   -- the emitted function has one JavaScript parameter for each of those, and none for
   -- the types and proofs, which are dropped on both sides
   let named : List Arg → Res Sg Γ := fun given => do
-    let plans := c.paramPlan[n]?.getD []
+    let plans := keptAt unitFlags (c.paramPlan[n]?.getD [])
     -- the arguments, at whatever context they are read in: the eta-expansion below reads
     -- them again under the parameters it adds, which is sound because a variable is
     -- named by its *depth*, and a depth does not move when the context grows on top
@@ -1351,7 +1544,9 @@ partial def transConst {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (ty : Ty)
       else
         -- the fields are what follows the type parameters; a field that carries nothing
         -- at run time is dropped, here and in the layout alike
-        let tsAll ← transArgs Γ vm (args.drop ci.numParams)
+        -- a field of a unit-like type is dropped from the layout, so its argument goes
+        -- too: the layout is built at the type parameters this call gives
+        let tsAll ← transArgs Γ vm ((args.drop ci.numParams).filter (!isUnitArg vm ·))
         -- a newtype has no wrapper: building one is its field
         match tsAll with
         | [v] =>
@@ -1367,8 +1562,15 @@ partial def transConst {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (ty : Ty)
 partial def transNamed {Sg : Sig} (c : Ctx') (Γ : Ctx) (ty : Ty)
     (n : Name) (ts : List (SomeTerm Sg Γ)) : Res Sg Γ := do
   if ts.isEmpty then
-    let t ← globalTerm (Sg := Sg) (Γ := Γ) (c.js n) ty
-    return ⟨ty, t⟩
+    match GlobalRef.findAny? Sg (c.js n) with
+    | some ⟨.lazy σ, r⟩ =>
+        -- the declaration is a function of no arguments: naming it is the value, and a
+        -- call of it — which is what a call with nothing but erased arguments is — runs it
+        if Ty.beq ty (.lazy σ) then return ⟨.lazy σ, .global r⟩
+        else return ⟨σ, .lazyForce (.global r)⟩
+    | _ =>
+      let t ← globalTerm (Sg := Sg) (Γ := Γ) (c.js n) ty
+      return ⟨ty, t⟩
   else
     let sp := spineOfTerms ts
     let f ← globalTerm (Sg := Sg) (Γ := Γ) (c.js n) (.fn sp.1 ty)
@@ -1412,18 +1614,31 @@ partial def projectionOfUnboxed? {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) 
 /-- A local function: a `Term.lamN` whose body is a block that cannot continue a loop. -/
 partial def transFun {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap)
     (d : FunDecl) : Res Sg Γ := do
-  -- a parameter that carries nothing at run time is dropped, here and at every call
+  -- a type or a proof is dropped, here and at every call.  A parameter of a unit-like
+  -- type is *kept*: a local function is called only from the block it is bound in, and
+  -- keeping it there costs one argument, where dropping it would mean carrying a second
+  -- kind of arity around.  It has no type of its own, so it is read at `Ty.typeParam`.
   let ps := d.params.toList.filter (!isErasedParam ·)
-  let dropped := d.params.toList.filter isErasedParam
-  let ptys ← ps.mapM fun p => toTy c.env p.type
+  let dropped := d.params.toList.filter (isErasedParam ·)
+  let ptys ← ps.mapM fun p =>
+    if isUnitLikeTy c.env p.type then pure Ty.typeParam else toTy c.env p.type
   let ret ← toTy c.env d.type
   let base := Γ.length
   let vm0 := dropped.foldl (init := vm) fun m p => m.insert p.fvarId .erased
   let vm' := ps.zipIdx.foldl (init := vm0) fun m (p, i) => m.insert p.fvarId (.one (base + i))
-  let body ← transBody { c with self := none, group := {} } (ptys.reverse ++ Γ) vm' jps [] ret d.value
-  match bodyToTerm? body with
-  | some t => return ⟨.fn ptys ret, .lamN t⟩
-  | none => .error "a local function cannot continue the loop of the declaration it is in"
+  match ptys with
+  | [] =>
+      let body ← transBody { c with self := none, group := {} } Γ vm' jps [] ret d.value
+      match bodyToTerm? body with
+      | some t => return ⟨ret, t⟩
+      | none =>
+          .error "a local function cannot continue the loop of the declaration it is in"
+  | ptys@(_ :: _) =>
+      let body ← transBody { c with self := none, group := {} } (ptys.reverse ++ Γ) vm' jps [] ret d.value
+      match bodyToTerm? body with
+      | some t => return ⟨.fn ptys ret, .lamN t⟩
+      | none =>
+          .error "a local function cannot continue the loop of the declaration it is in"
 
 /-- A block of LCNF code, as the body of the loop of the declaration being compiled.
     `σs` are the loop variables and `τ` the answer. -/
@@ -1472,16 +1687,18 @@ has no value to put there: every expression it emits is a pure value, so there i
           transLet c Γ vm jps σs τ d k
         else if c.self == some n then
           -- a tail call of a self-recursive declaration: go round its loop again
-          let plans := c.paramPlan[n]?.getD []
-          let ts ← if plans.isEmpty then transArgs Γ vm args.toList
-                   else transArgsPlanned Γ vm plans args.toList
+          let unitFlags := c.unitParams[n]?.getD []
+          let plans := keptAt unitFlags (c.paramPlan[n]?.getD [])
+          let given := keptAt unitFlags args.toList
+          let ts ← if plans.isEmpty then transArgs Γ vm given
+                   else transArgsPlanned Γ vm plans given
           return .cont (← mkSpine σs (ts.take σs.length))
         else
           match c.group[n]? with
           | some tag =>
             -- a tail call to a member of the merged group: go round the *shared* loop
             -- again, with that member's tag and its arguments in the argument slots
-            let ts ← transArgs Γ vm args.toList
+            let ts ← transArgs Γ vm (keptAt (c.unitParams[n]?.getD []) args.toList)
             let tagTerm : SomeTerm Sg Γ := ⟨Ty.nat, .lit (.nat tag)⟩
             -- a slot the member being entered has no argument for keeps the value it
             -- already holds: the member never reads it, and an assignment of a slot to
@@ -1525,6 +1742,11 @@ partial def transLetPlain {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : 
   -- so is every argument position that mentions it
   if isErasedLcnfTy d.type || d.value matches .erased then
     return ← transBody c Γ (vm.insert d.fvarId .erased) jps σs τ k
+  -- a `let` of a unit-like type binds no JavaScript variable either, but what it binds
+  -- is a *value*: where it is handed to a parameter that was compiled for every type,
+  -- `FromLcnf.unitValue` is passed instead
+  if isUnitLikeTy c.env d.type then
+    return ← transBody c Γ (vm.insert d.fvarId .unitValue) jps σs τ k
   let ty ← toTy c.env d.type
   let v ← transLetValue (Sg := Sg) c Γ vm ty d.value
   let rest ← transBody c (v.1 :: Γ) (vm.insert d.fvarId (.one Γ.length)) jps σs τ k
@@ -1538,8 +1760,10 @@ partial def transJmp {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : JpMap
   match ps, args with
   | [], _ => transBody c Γ vm jps σs τ body
   | p :: ps', a :: args' =>
-    if isErasedParam p || isErasedArg vm a then
-      transJmp c Γ (vm.insert p.fvarId .erased) jps σs τ ps' args' body
+    if isErasedParamIn c.env p || isErasedArg vm a then
+      let b : Binding :=
+        if isUnitLikeTy c.env p.type || isUnitArg vm a then .unitValue else .erased
+      transJmp c Γ (vm.insert p.fvarId b) jps σs τ ps' args' body
     else do
       let t ← transArg Γ vm a
       let rest ← transJmp c (t.1 :: Γ) (vm.insert p.fvarId (.one Γ.length)) jps σs τ ps' args' body
@@ -1633,7 +1857,7 @@ partial def transIntCases {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : 
   let branchOf (ctor : Name) (ps : List Param) (k : Code) :
       Except String (Body Sg Γ σs τ) := do
     let d ← transArg Γ vm (.fvar discr)
-    match ps.filter (!isErasedParam ·) with
+    match ps.filter (!isErasedParamIn c.env ·) with
     | [pv] =>
         let vm' := vm.insert pv.fvarId (.one Γ.length)
         return .letB (fieldOf ctor d) (← transBody c (Ty.nat :: Γ) vm' jps σs τ k)
@@ -1709,8 +1933,9 @@ partial def transAltBody {Sg : Sig} (c : Ctx') (Γ : Ctx) (vm : VarMap) (jps : J
   match ps with
   | [] => transBody c Γ vm jps σs τ k
   | p :: ps' =>
-      if isErasedParam p then
-        transAltBody c Γ (vm.insert p.fvarId .erased) jps σs τ discr ctor ps' i k
+      if isErasedParamIn c.env p then
+        let b : Binding := if isUnitLikeTy c.env p.type then .unitValue else .erased
+        transAltBody c Γ (vm.insert p.fvarId b) jps σs τ discr ctor ps' i k
       else
         let d ← transArg Γ vm (.fvar discr)
         let fld ← if isNewtypeCtor c.env ctor then pure d

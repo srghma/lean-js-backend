@@ -29,6 +29,8 @@ so what it prints is exactly what the parser reads.
 
 namespace LakeJs.Surface
 
+open NonEmpty.ListCorrectByConstruction (NonEmptyList)
+
 open LakeJs
 open LakeJs.Ty
 
@@ -61,6 +63,8 @@ inductive RawTy where
   | promise (t : RawTy)
   /-- `(thunk τ)`. -/
   | thunk (t : RawTy)
+  /-- `(lazy τ)`. -/
+  | lazy (t : RawTy)
   /-- `(enum n shift)`. -/
   | enum (n : Nat) (shift : Int)
   /-- `(record [τ, …])`. -/
@@ -99,6 +103,7 @@ def RawTy.print : RawTy → String
   | .task t => "(task " ++ RawTy.print t ++ ")"
   | .promise t => "(promise " ++ RawTy.print t ++ ")"
   | .thunk t => "(thunk " ++ RawTy.print t ++ ")"
+  | .lazy t => "(lazy " ++ RawTy.print t ++ ")"
   | .enum n s => "(enum " ++ toString n ++ " " ++ toString s ++ ")"
   | .record fs => "(record [" ++ RawTy.printList fs ++ "])"
   | .union cs => "(union [" ++ RawTy.printCtors cs ++ "])"
@@ -156,6 +161,25 @@ def primOfName? : String → Option LeanPrimTy
   | "shareCommonState" => some .shareCommonState
   | _ => none
 
+/-- Why a written `enum` may be refused. -/
+def enumCountError : String :=
+  "an `enum` has at least three constructors: a sum of two field-less constructors is \
+   `bool`, one of a single constructor is a unit type, and one of none has no values"
+
+/-- Why a written `record` may be refused. -/
+def recordFieldsError : String :=
+  "a `record` has at least two fields: a one-field declaration is a newtype, whose \
+   wrapper is erased into its field, and a field-less one is a unit type"
+
+/-- Why a written sum may be refused. -/
+def unionCtorsError : String :=
+  "a tagged union has at least two constructors, at least one of which carries a \
+   field: with no field anywhere it is an `enum` or a `bool`"
+
+/-- Why a written `family` may be refused. -/
+def familyError : String :=
+  "a `family` has at least two members, and the member it selects has to be one of them"
+
 mutual
 
 /-- A written type, read as a closed type.  `self` is refused here: it is only
@@ -180,15 +204,32 @@ def RawTy.toTy : RawTy → Except String Ty
   | .task t => do .ok (.task (← RawTy.toTy t))
   | .promise t => do .ok (.promise (← RawTy.toTy t))
   | .thunk t => do .ok (.thunk (← RawTy.toTy t))
+  | .lazy t => do .ok (.lazy (← RawTy.toTy t))
   | .enum n s =>
-      if h : 0 < n then .ok (.enum n h s)
-      else .error "an `enum` has at least one constructor"
-  | .record fs => do .ok (.record (← RawTy.toTys fs))
-  | .union cs => do .ok (.taggedUnion (← RawTy.toTyCtors cs))
-  | .recUnion cs => do .ok (.recTaggedUnion (← RawTy.toRTyCtors cs))
-  | .recObject fs => do .ok (.recObject (← RawTy.toRTys fs))
-  | .recAlias t => do .ok (.recAlias (← RawTy.toRTy t))
-  | .family ms i => do .ok (.mutualRecursiveFamily (← RawTy.toFams ms) i)
+      match LeanEnumSchema.ofCount? n s with
+      | some e => .ok (.enum e)
+      | none => .error enumCountError
+  | .record fs => do
+      match LeanRecordSchema.ofList? (← RawTy.toTys fs) with
+      | some r => .ok (.record r)
+      | none => .error recordFieldsError
+  | .union cs => do
+      match LeanTaggedUnionSchema.ofList? (← RawTy.toTyCtors cs) with
+      | some tu => .ok (.taggedUnion tu)
+      | none => .error unionCtorsError
+  | .recUnion cs => do
+      match LeanTaggedUnionSchema.ofList? (← RawTy.toRTyCtors cs) with
+      | some tu => .ok (.recTaggedUnion ⟨tu⟩)
+      | none => .error unionCtorsError
+  | .recObject fs => do
+      match LeanRecordSchema.ofList? (← RawTy.toRTys fs) with
+      | some r => .ok (.recObject ⟨r⟩)
+      | none => .error recordFieldsError
+  | .recAlias t => do .ok (.recAlias ⟨← RawTy.toRTy t⟩)
+  | .family ms i => do
+      match LeanMutualRecFamily.ofMembers? (← RawTy.toFams ms) i with
+      | some f => .ok (.mutualRecursiveFamily f)
+      | none => .error familyError
   | .famCtors _ => .error "`famCtors` is only a member of a `family`"
   | .famAlias _ => .error "`famAlias` is only a member of a `family`"
 
@@ -223,15 +264,32 @@ def RawTy.toRTy : RawTy → Except String RTy
   | .task t => do .ok (.task (← RawTy.toRTy t))
   | .promise t => do .ok (.promise (← RawTy.toRTy t))
   | .thunk t => do .ok (.thunk (← RawTy.toRTy t))
+  | .lazy t => do .ok (.lazy (← RawTy.toRTy t))
   | .enum n s =>
-      if h : 0 < n then .ok (.enum n h s)
-      else .error "an `enum` has at least one constructor"
-  | .record fs => do .ok (.record (← RawTy.toRTys fs))
-  | .union cs => do .ok (.taggedUnion (← RawTy.toRTyCtors cs))
-  | .recUnion cs => do .ok (.recTaggedUnion (← RawTy.toRTyCtors cs))
-  | .recObject fs => do .ok (.recObject (← RawTy.toRTys fs))
-  | .recAlias t => do .ok (.recAlias (← RawTy.toRTy t))
-  | .family ms i => do .ok (.mutualRecursiveFamily (← RawTy.toFams ms) i)
+      match LeanEnumSchema.ofCount? n s with
+      | some e => .ok (.enum e)
+      | none => .error enumCountError
+  | .record fs => do
+      match LeanRecordSchema.ofList? (← RawTy.toRTys fs) with
+      | some r => .ok (.record r)
+      | none => .error recordFieldsError
+  | .union cs => do
+      match LeanTaggedUnionSchema.ofList? (← RawTy.toRTyCtors cs) with
+      | some tu => .ok (.taggedUnion tu)
+      | none => .error unionCtorsError
+  | .recUnion cs => do
+      match LeanTaggedUnionSchema.ofList? (← RawTy.toRTyCtors cs) with
+      | some tu => .ok (.recTaggedUnion ⟨tu⟩)
+      | none => .error unionCtorsError
+  | .recObject fs => do
+      match LeanRecordSchema.ofList? (← RawTy.toRTys fs) with
+      | some r => .ok (.recObject ⟨r⟩)
+      | none => .error recordFieldsError
+  | .recAlias t => do .ok (.recAlias ⟨← RawTy.toRTy t⟩)
+  | .family ms i => do
+      match LeanMutualRecFamily.ofMembers? (← RawTy.toFams ms) i with
+      | some f => .ok (.mutualRecursiveFamily f)
+      | none => .error familyError
   | .famCtors _ => .error "`famCtors` is only a member of a `family`"
   | .famAlias _ => .error "`famAlias` is only a member of a `family`"
 
@@ -245,9 +303,21 @@ def RawTy.toRTyCtors : List (List RawTy) → Except String (List (List RTy))
   | [] => .ok []
   | c :: cs => do .ok ((← RawTy.toRTys c) :: (← RawTy.toRTyCtors cs))
 
-/-- A written member of a mutual family. -/
+/-- A written member of a mutual family.  A member written with a single constructor
+    carrying a single field is a newtype member, and one with a single constructor
+    carrying several is a record member. -/
 def RawTy.toFam : RawTy → Except String FamMember
-  | .famCtors cs => do .ok (.ctors (← RawTy.toRTyCtors cs))
+  | .famCtors cs => do
+      match ← RawTy.toRTyCtors cs with
+      | [[f]] => .ok (.alias f)
+      | [fs] =>
+          match LeanRecordSchema.ofList? fs with
+          | some r => .ok (.record r)
+          | none => .error recordFieldsError
+      | l =>
+          match LeanTaggedUnionSchema.ofList? l with
+          | some tu => .ok (.ctors tu)
+          | none => .error unionCtorsError
   | .famAlias t => do .ok (.alias (← RawTy.toRTy t))
   | _ => .error "a member of a `family` is a `famCtors` or a `famAlias`"
 
@@ -278,13 +348,14 @@ def ofTy : Ty → RawTy
   | .task t => .task (ofTy t)
   | .promise t => .promise (ofTy t)
   | .thunk t => .thunk (ofTy t)
-  | .enum n _ s => .enum n s
-  | .record fs => .record (ofTys fs)
-  | .taggedUnion cs => .union (ofTyCtors cs)
-  | .recTaggedUnion cs => .recUnion (ofRTyCtors cs)
-  | .recObject fs => .recObject (ofRTys fs)
-  | .recAlias t => .recAlias (ofRTy t)
-  | .mutualRecursiveFamily ms i => .family (ofFams ms) i
+  | .lazy t => .lazy (ofTy t)
+  | .enum e => .enum e.nOfConstructors e.shift
+  | .record fs => .record (ofTyA2 fs)
+  | .taggedUnion cs => .union (ofTyTU cs)
+  | .recTaggedUnion ⟨cs⟩ => .recUnion (ofRTyTU cs)
+  | .recObject ⟨fs⟩ => .recObject (ofRTyA2 fs)
+  | .recAlias ⟨t⟩ => .recAlias (ofRTy t)
+  | .mutualRecursiveFamily f => ofFamily f
 
 /-- `ofTy`, on a list. -/
 def ofTys : List Ty → List RawTy
@@ -295,6 +366,24 @@ def ofTys : List Ty → List RawTy
 def ofTyCtors : List (List Ty) → List (List RawTy)
   | [] => []
   | c :: cs => ofTys c :: ofTyCtors cs
+
+/-- `ofTy`, on the fields of a record. -/
+def ofTyA2 : LeanRecordSchema Ty → List RawTy
+  | ⟨a, b, rest⟩ => ofTy a :: ofTy b :: ofTys rest
+
+/-- `ofTy`, on the fields of a constructor that has at least one. -/
+def ofTyNE : NonEmptyList Ty → List RawTy
+  | ⟨a, as⟩ => ofTy a :: ofTys as
+
+/-- `ofTy`, on the constructors of a tagged union. -/
+def ofTyTU : LeanTaggedUnionSchema Ty → List (List RawTy)
+  | .payloadFirst f n r => ofTyNE f :: ofTys n :: ofTyCtors r
+  | .skip rest => [] :: ofTyCP rest
+
+/-- `ofTy`, on the constructors that follow a field-less one. -/
+def ofTyCP : CtorsWithPayload Ty → List (List RawTy)
+  | .here f r => ofTyNE f :: ofTyCtors r
+  | .skip rest => [] :: ofTyCP rest
 
 /-- A type inside a recursive declaration, as it is written. -/
 def ofRTy : RTy → RawTy
@@ -308,13 +397,14 @@ def ofRTy : RTy → RawTy
   | .task t => .task (ofRTy t)
   | .promise t => .promise (ofRTy t)
   | .thunk t => .thunk (ofRTy t)
-  | .enum n _ s => .enum n s
-  | .record fs => .record (ofRTys fs)
-  | .taggedUnion cs => .union (ofRTyCtors cs)
-  | .recTaggedUnion cs => .recUnion (ofRTyCtors cs)
-  | .recObject fs => .recObject (ofRTys fs)
-  | .recAlias t => .recAlias (ofRTy t)
-  | .mutualRecursiveFamily ms i => .family (ofFams ms) i
+  | .lazy t => .lazy (ofRTy t)
+  | .enum e => .enum e.nOfConstructors e.shift
+  | .record fs => .record (ofRTyA2 fs)
+  | .taggedUnion cs => .union (ofRTyTU cs)
+  | .recTaggedUnion ⟨cs⟩ => .recUnion (ofRTyTU cs)
+  | .recObject ⟨fs⟩ => .recObject (ofRTyA2 fs)
+  | .recAlias ⟨t⟩ => .recAlias (ofRTy t)
+  | .mutualRecursiveFamily f => ofFamily f
 
 /-- `ofRTy`, on a list. -/
 def ofRTys : List RTy → List RawTy
@@ -326,15 +416,46 @@ def ofRTyCtors : List (List RTy) → List (List RawTy)
   | [] => []
   | c :: cs => ofRTys c :: ofRTyCtors cs
 
-/-- A member of a mutual family, as it is written. -/
+/-- `ofRTy`, on the fields of a record. -/
+def ofRTyA2 : LeanRecordSchema RTy → List RawTy
+  | ⟨a, b, rest⟩ => ofRTy a :: ofRTy b :: ofRTys rest
+
+/-- `ofRTy`, on the fields of a constructor that has at least one. -/
+def ofRTyNE : NonEmptyList RTy → List RawTy
+  | ⟨a, as⟩ => ofRTy a :: ofRTys as
+
+/-- `ofRTy`, on the constructors of a tagged union. -/
+def ofRTyTU : LeanTaggedUnionSchema RTy → List (List RawTy)
+  | .payloadFirst f n r => ofRTyNE f :: ofRTys n :: ofRTyCtors r
+  | .skip rest => [] :: ofRTyCP rest
+
+/-- `ofRTy`, on the constructors that follow a field-less one. -/
+def ofRTyCP : CtorsWithPayload RTy → List (List RawTy)
+  | .here f r => ofRTyNE f :: ofRTyCtors r
+  | .skip rest => [] :: ofRTyCP rest
+
+/-- A member of a mutual family, as it is written: every member is written as its
+    constructors, so a record member is one constructor and a newtype member is one
+    constructor of one field. -/
 def ofFam : FamMember → RawTy
-  | .ctors cs => .famCtors (ofRTyCtors cs)
+  | .ctors cs => .famCtors (ofRTyTU cs)
+  | .record fs => .famCtors [ofRTyA2 fs]
   | .alias t => .famAlias (ofRTy t)
 
 /-- `ofFam`, on a list. -/
 def ofFams : List FamMember → List RawTy
   | [] => []
   | m :: ms => ofFam m :: ofFams ms
+
+/-- A mutual family, as it is written: its members and the number of the one this type
+    is. -/
+def ofFamily : LeanMutualRecFamily RTy → RawTy
+  | .selectedThenMore before current next after =>
+      .family (ofFams before ++ ofFam current :: ofFam next :: ofFams after)
+        (ofFams before).length
+  | .selectedLast first before current =>
+      .family (ofFam first :: (ofFams before ++ [ofFam current]))
+        ((ofFams before).length + 1)
 
 end
 
@@ -422,10 +543,18 @@ inductive STerm where
   | proj (i j : Nat) (e : STerm)
   /-- `(tagOf e)`. -/
   | tagOf (e : STerm)
+  /-- `(lazy e)`: a function of no arguments answering with `e`. -/
+  | lazyMk (e : STerm)
+  /-- `(force e)`: call one. -/
+  | lazyForce (e : STerm)
   /-- `(case scrut (tag n e) … (default e))`. -/
   | caseTag (scrut : STerm) (alts : SAlts)
   /-- `(loop [x : σ = e, …] body)`. -/
   | loop (slots : List SParam) (inits : SSpine) (body : SBody)
+  /-- `(join j [x : σ, …] : τ body rest)`. -/
+  | joinPoint (name : String) (params : List SParam) (ret : Ty) (body : STerm) (rest : STerm)
+  /-- `(jump j a …)`. -/
+  | jump (name : String) (args : SSpine)
 
 /-- A written list of terms. -/
 inductive SSpine where
@@ -443,6 +572,9 @@ inductive SBody where
   | cont (args : SSpine)
   | letB (name : String) (ty : Ty) (val : STerm) (body : SBody)
   | iteB (c : STerm) (t e : SBody)
+  /-- `(joinB j [x : σ, …] : τ body rest)`: a join point bound inside a loop block. -/
+  | joinPointB (name : String) (params : List SParam) (ret : Ty) (body : STerm)
+      (rest : SBody)
 
 end
 
@@ -576,12 +708,22 @@ def STerm.printLines (ind : Nat) : STerm → List String
         :: STerm.printLines (ind + 2) e ++ [pad ind ++ ")"]
   | .tagOf e =>
       (pad ind ++ "(tagOf") :: STerm.printLines (ind + 2) e ++ [pad ind ++ ")"]
+  | .lazyMk e =>
+      (pad ind ++ "(lazy") :: STerm.printLines (ind + 2) e ++ [pad ind ++ ")"]
+  | .lazyForce e =>
+      (pad ind ++ "(force") :: STerm.printLines (ind + 2) e ++ [pad ind ++ ")"]
   | .caseTag s alts =>
       (pad ind ++ "(case") :: STerm.printLines (ind + 2) s
         ++ SAlts.printLines (ind + 2) alts ++ [pad ind ++ ")"]
   | .loop slots inits body =>
       (pad ind ++ "(loop " ++ printParams slots) :: SSpine.printLines (ind + 2) inits
         ++ SBody.printLines (ind + 2) body ++ [pad ind ++ ")"]
+  | .joinPoint n ps ret body rest =>
+      (pad ind ++ "(join " ++ n ++ " " ++ printParams ps ++ " : " ++ tyText ret)
+        :: STerm.printLines (ind + 2) body ++ STerm.printLines (ind + 2) rest
+        ++ [pad ind ++ ")"]
+  | .jump n args =>
+      (pad ind ++ "(jump " ++ n) :: SSpine.printLines (ind + 2) args ++ [pad ind ++ ")"]
 
 /-- The terms of a written spine, one after another. -/
 def SSpine.printLines (ind : Nat) : SSpine → List String
@@ -608,6 +750,10 @@ def SBody.printLines (ind : Nat) : SBody → List String
   | .iteB c t e =>
       (pad ind ++ "(ifB") :: STerm.printLines (ind + 2) c
         ++ SBody.printLines (ind + 2) t ++ SBody.printLines (ind + 2) e
+        ++ [pad ind ++ ")"]
+  | .joinPointB n ps ret body rest =>
+      (pad ind ++ "(joinB " ++ n ++ " " ++ printParams ps ++ " : " ++ tyText ret)
+        :: STerm.printLines (ind + 2) body ++ SBody.printLines (ind + 2) rest
         ++ [pad ind ++ ")"]
 
 end

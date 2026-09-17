@@ -1,18 +1,22 @@
 module
 
 public import LakeJs.LeanPrimTy
+public import LakeJs.Schema
 
 @[expose] public section
+
+open NonEmpty.ListCorrectByConstruction (NonEmptyList)
 
 namespace LakeJs
 
 /-!
 # `Ty`: the types that can be compiled to JavaScript
 
-`Ty` is a **tree of types**.  There are no schemas, no names and no side tables: a type
-is built out of its own parts, and two types are equal when their trees are equal.
+`Ty` is a **tree of types**.  There are no schemas held on the side, no names and no
+side tables: a type is built out of its own parts, and two types are equal when their
+trees are equal.
 
-Five decisions are baked into it.
+Six decisions are baked into it.
 
 * **no names anywhere.**  A constructor is a *position* in the list of constructors and
   a field is a *position* in the list of fields, so a value of a user-defined type is
@@ -21,9 +25,23 @@ Five decisions are baked into it.
 * **ordinary equality.**  `Ty` is a first-order inductive with a `DecidableEq` instance
   (`Ty.beq` and the lemmas below), so two types are compared with `=` and `decide`.
 
-* **nothing erased.**  A value that carries no information at run time — a proof, a
-  type argument — has no `Ty` at all: it is dropped when LCNF is translated.  So there
-  is no `Ty.unit`, no `Ty.void`, no `Ty.erased`, and `bitvec n` needs `n ≥ 1`.
+* **no degenerate type is writable.**  The payload of each shape is one of the schemas
+  of `LakeJs.Schema`, and those carry their counting invariants in their *types*:
+
+  | shape             | payload                          | what cannot be written              |
+  | :---------------- | :------------------------------- | :---------------------------------- |
+  | `Ty.enum`         | `LeanEnumSchema`                 | fewer than three constructors       |
+  | `Ty.record`       | `LeanRecordSchema Ty`            | fewer than two fields               |
+  | `Ty.taggedUnion`  | `LeanTaggedUnionSchema Ty`       | fewer than two constructors, or none with a field |
+  | `Ty.recObject`    | `LeanRecordSchema RTy`        | fewer than two fields               |
+  | `Ty.recTaggedUnion` | `LeanTaggedUnionSchema RTy` | fewer than two constructors, or none with a field |
+  | `Ty.mutualRecursiveFamily` | `LeanMutualRecFamily RTy` | fewer than two members, or a member number out of range |
+
+  So an `Empty`-like type (no values) and a `Unit`-like type (one value, carrying no
+  information, erased before a type is built) have no `Ty`, and a `Bool`-like type — a
+  sum of exactly two field-less constructors — is not an enum with two constructors but
+  `Ty.bool`, so that it prints as `true`/`false`.  There is likewise no `Ty.void` and no
+  `Ty.erased`, and `bitvec n` needs `n ≥ 1` because `BitVec 0` is a unit type.
 
 * **no unmodelled type.**  There is no `dynamic`: every Lean type a compiled
   declaration mentions is either one of the shapes below or the declaration is refused.
@@ -39,6 +57,11 @@ Five decisions are baked into it.
   `bitvec n`, `string`, …) is a constructor of `LakeJs.LeanPrimTy`, and `Ty` embeds them
   with `Ty.prim`.  `Ty.nat`, `Ty.uint32`, … remain available as abbreviations.
 
+* **the shapes are language-independent.**  The schemas are parametrised by the type
+  language (`LeanRecordSchema α`), so the *same* schema describes a record of `Ty`s and
+  a record of `RTy`s — and will describe a record of the types of whatever further
+  language is added next.  Only their instantiation lives here.
+
 ## The shapes a user-defined type can have
 
 A Lean declaration is modelled by *which* of the following shapes it has, so a
@@ -46,14 +69,15 @@ traversal never has to ask a schema what kind of declaration it came from:
 
 | Lean                                              | `Ty`                                   |
 | :------------------------------------------------ | :------------------------------------- |
-| `inductive Dir \| north \| south`                  | `.enum 2 0`  (a proof of `2 > 0` is filled in) |
-| `structure Point where x y : Nat`                  | `.record [.nat, .nat]`                 |
+| `inductive Dir \| north \| south`                  | `.bool` — a two-constructor enum is a boolean |
+| `inductive Dir3 \| n \| s \| e`                    | `.enum ⟨0, 0⟩` (three constructors, from `0`) |
+| `structure Point where x y : Nat`                  | `.record ⟨.nat, .nat, []⟩`             |
 | `structure Wrap where v : Nat` (a newtype)         | `.nat` — the wrapper is erased         |
-| `Option Nat`                                       | `.taggedUnion [[], [.nat]]`            |
-| `inductive T \| leaf \| node : T → T → T`          | `.recTaggedUnion [[], [.self 0, .self 0]]` |
-| `structure Tree where n : Nat; kids : Array Tree`  | `.recObject [.nat, .array (.self 0)]`  |
+| `Option Nat`                                       | `.option .nat`                         |
+| `inductive T \| leaf \| node : T → T → T`          | `.recTaggedUnion (.skip (.here ⟨.self 0, [.self 0]⟩ []))` |
+| `structure Tree where n : Nat; kids : Array Tree`  | `.recObject ⟨.nat, .array (.self 0), []⟩` |
 | `structure Rose where kids : Array Rose`           | `.recAlias (.array (.self 0))`         |
-| a mutual block                                     | `.mutualRecursiveFamily members i`     |
+| a mutual block                                     | `.mutualRecursiveFamily f`             |
 
 ## `.self` is available in the recursive shapes and nowhere else
 
@@ -62,50 +86,28 @@ The recursive shapes — `recTaggedUnion`, `recObject`, `recAlias` and
 `RTy`s, the types *inside a recursive declaration*, and `RTy.self i` is an occurrence of
 member `i` of that declaration (`i = 0` unless the binder is a mutual family).  The
 other shapes carry ordinary `Ty`s, which have no `.self` constructor at all, so a type
-outside a recursive declaration cannot mention one: the old `Ty.selfRef`, which was
-representable at the top level and meaningless there, is gone.
+outside a recursive declaration cannot mention one.
 
 `RTy` mirrors `Ty`, so anything may appear inside a recursive declaration — a `Nat`, an
-`Option Tree` (`.taggedUnion [[], [.self 0]]`), an `Array Tree`.  Where an `RTy` is
-itself a *recursive* shape, it opens a new scope: the `.self` of its children is that
-inner declaration, exactly as a nested binder shadows an outer one.
+`Option Tree`, an `Array Tree`.  Where an `RTy` is itself a *recursive* shape, it opens
+a new scope: the `.self` of its children is that inner declaration, exactly as a nested
+binder shadows an outer one.
+
+That a recursive shape really does mention itself, and that the type it describes has
+any values at all (`inductive Bad | mk : Bad → Bad` has none), are conditions on a whole
+type rather than counting conditions on one payload, so they are not carried by the
+constructors: they are the decidable predicates of `LakeJs.TySchema` (`Ty.Wf`), and the
+subtype `WfTy` is the type of the types that satisfy them.
 
 ## The shared type formers
 
-`fn`, `fn_returnsProd`, `array`, `list`, `task`, `promise` and `thunk` say nothing about
-recursion, and each of them makes sense at every layer.  They are therefore *not*
-constructors of `Ty` and of `RTy` twice over: they are the constructors of one
-parameterised inductive, `Shape`, which both layers embed (`Ty.shape`, `RTy.shape`).
-`Ty.fn`, `Ty.array`, … remain available — and usable in patterns — as abbreviations for
-`Ty.shape (Shape.fn …)`, `Ty.shape (Shape.array …)`, and so on.
+`array`, `list`, `task`, `promise` and `thunk` are the constructors of
+`LeanPrimTyCovariant`, and `fn` and `fn_returnsProd` those of `TyFn`: neither group says
+anything about recursion, and each makes sense at every layer, so both are parametrised
+by the layer's own type and embedded by `Ty` and by `RTy` alike (`Ty.primCovariant`,
+`Ty.fnTy`).  `Ty.fn`, `Ty.array`, … remain available — and usable in patterns — as
+abbreviations.
 -/
-
-/-! ## The shared type formers -/
-
-namespace Ty
-
-/-- The type formers that carry types but say nothing about recursion, and so are
-    shared by every layer of the type language: `Ty` and `RTy` both embed them.
-
-    `α` is the layer's own type: `Shape Ty` for a closed type, `Shape RTy` for a type
-    inside a recursive declaration. -/
-inductive Shape (α : Type) where
-  /-- A JS function, taking 0 or more parameters and returning a value.  It compiles
-      to an **uncurried** JS function, so Lean's `def foo : Int → Int → Int` is
-      `.fn [.int] (.fn [.int] .int)`.  A function returning nothing is unrepresentable:
-      the only reason to have one is an effect, and the source language is pure. -/
-  | fn : List α → α → Shape α
-  /-- A JS function answering with **several** values at once: it compiles to an
-      uncurried function whose `return` is an array literal, so
-      `def foo : Int × Float → Int × Float → Int × Float` is
-      `.fn [.int, .float] (.fn_returnsProd [.int, .float] .int [.float])` and prints as
-      `(v0, v1) => (v2, v3) => { return [1, 1.0]; }`.
-
-      The list of results is non-empty by construction, spelled as a first result and
-      the rest. -/
-  | fn_returnsProd : (params : List α) → (ret1 : α) → (retRest : List α) → Shape α
-
-end Ty
 
 /-! ## `Ty`, `RTy` and the members of a mutual family -/
 
@@ -122,52 +124,44 @@ inductive Ty where
       it and return it, but never look inside it: no constructor, projection or
       dispatch of `Term` is available at this type (`Ty.ctorFields?_typeParam`).  It is
       parametricity, not an unmodelled type: there is nothing more to know about it. -/
-  | typeParam : Ty
-  /-- One of the shared type formers: a function, an array, a list, a task, a promise
-      or a thunk.  `Ty.fn`, `Ty.array`, … abbreviate the common cases. -/
-  | shape : Ty.Shape Ty → Ty
-  /-- A non-recursive sum whose constructors all have no fields: `n` of them, printed
-      as the plain numbers `shift`, `shift + 1`, …, `shift + n - 1`.
-
-      `shift` is what unites an ordinary enum with the ones whose numbering Lean fixes:
-      `inductive Dir | north | south` is `.enum 2 0` and prints as `0 | 1`, while
-      `Ordering` is `.enum 3 (-1)` and prints as `-1 | 0 | 1`, which is the numbering
-      the runtime comparison functions answer with.
-
-      `nOfConstructors` is **positive**: a type with no constructors at all has no
-      values, so it is not a type a compiled declaration can mention, and `Empty`-like
-      types are ruled out by construction.  The proof is an auto-param, so a literal
-      number needs no extra argument: `.enum 2 0` elaborates. -/
-  | enum : (nOfConstructors : Nat) → (h_nonEmpty : nOfConstructors > 0 := by decide) →
-      (shift : Int) → Ty
+  -- | typeParam : Ty -- TODO: CANNOT BE, ERASED ARE ERASED AND ARE UNREPRESENTABLE!!!
+  /-- A function type: an uncurried JS function, or one answering with several values
+      at once.  `Ty.fn` and `Ty.fn_returnsProd` abbreviate the two cases. -/
+  | fnTy : TyFn Ty → Ty
+  /-- A built-in type former that carries one type: an array, a list, a task, a promise
+      or a thunk.  `Ty.array`, `Ty.list`, … abbreviate the cases. -/
+  | primCovariant : LeanPrimTyCovariant Ty → Ty
+  /-- A non-recursive sum whose constructors all have no fields, printed as the plain
+      numbers `shift`, `shift + 1`, … — of which there are **at least three**, since the
+      smaller cases are not enums: see `LeanEnumSchema`. -/
+  | enum : LeanEnumSchema → Ty
   /-- A non-recursive single-constructor type with ≥ 2 fields, in declaration order.
       In JS: `{ tag: 0, _1: …, _2: … }`.  A *one*-field record is a newtype: it is
       erased, and its `Ty` is the field's own `Ty`. -/
-  | record : List Ty → Ty
+  | record : LeanRecordSchema Ty → Ty
   /-- A non-recursive sum type with fields (`Option`, `Except`, …): one entry per
       constructor, in declaration order, each holding the types of that constructor's
       fields.  In JS: `{ tag: 1, _1: … }`. -/
-  | taggedUnion : List (List Ty) → Ty
+  | taggedUnion : LeanTaggedUnionSchema Ty → Ty
   /-- A recursive sum type (`MyList`, a tree, …): one entry per constructor, each
       holding the types of its fields, in which `RTy.self 0` is an occurrence of the
       declaration itself.  In JS: `{ tag: …, … }`. -/
-  | recTaggedUnion : List (List Ty.RTy) → Ty
+  | recTaggedUnion : LeanTaggedUnionSchema Ty.RTy → Ty
   /-- A recursive single-constructor type with ≥ 2 fields
       (`structure Tree where n : Nat; kids : Array Tree`), in which `RTy.self 0` is an
       occurrence of the declaration itself.  In JS: `{ tag: 0, _1: …, _2: … }`. -/
-  | recObject : List Ty.RTy → Ty
+  | recObject : LeanRecordSchema Ty.RTy → Ty
   /-- A recursive **newtype**, with the wrapper erased
       (`structure Rose where kids : Array Rose`): the fixed point of the single field's
       type.  In JS a `Rose` is just `[…]`, an array of arrays of …, with no object
       wrapper — `[[], [[], []]]` is a `Rose`. -/
   | recAlias : Ty.RTy → Ty
   /-- One member of a genuinely mutual recursive family: the bodies of *all* of its
-      members, in declaration order, and which of them this type is.  Inside them,
-      `RTy.self i` is an occurrence of member `i`, so a type never points outside its
-      family.  A member that is a newtype is an *alias member* (`FamMember.alias`):
-      like `Ty.recAlias` it has no object of its own, and a value of it is a value of
-      its single field. -/
-  | mutualRecursiveFamily : (members : List Ty.FamMember) → (member : Nat) → Ty
+      members, in declaration order, and which of them this type is — held as a zipper,
+      so the member number is in range and the family has two members or more by
+      construction.  Inside the bodies, `RTy.self i` is an occurrence of member `i`, so
+      a type never points outside its family. -/
+  | mutualRecursiveFamily : LeanMutualRecFamily Ty.RTy → Ty
 
 /-- A type **inside a recursive declaration**: everything a `Ty` can be, and in
     addition an occurrence of the declaration being defined.  This is the one layer
@@ -179,48 +173,42 @@ inductive Ty.RTy where
   /-- A terminal type. -/
   | prim : LeanPrimTy → Ty.RTy
   /-- The type of a value of a type parameter; see `Ty.typeParam`. -/
-  | typeParam : Ty.RTy
-  /-- One of the shared type formers, over types that may mention `.self`. -/
-  | shape : Ty.Shape Ty.RTy → Ty.RTy
-  /-- A non-recursive enum; see `Ty.enum`.  As there, `nOfConstructors` is positive. -/
-  | enum : (nOfConstructors : Nat) → (h_nonEmpty : nOfConstructors > 0 := by decide) →
-      (shift : Int) → Ty.RTy
+  -- | typeParam : Ty.RTy -- TODO: CANNOT BE, ERASED ARE ERASED AND ARE UNREPRESENTABLE!!!
+  /-- A function type over types that may mention `.self`. -/
+  | fnTy : TyFn Ty.RTy → Ty.RTy
+  /-- An array, list, task, promise or thunk of a type that may mention `.self`. -/
+  | primCovariant : LeanPrimTyCovariant Ty.RTy → Ty.RTy
+  /-- A non-recursive enum; see `Ty.enum`. -/
+  | enum : LeanEnumSchema → Ty.RTy
   /-- A single-constructor record; see `Ty.record`.  Its fields may mention `.self`
       (`structure Pair where fst : Tree; snd : Tree` inside `Tree`). -/
-  | record : List Ty.RTy → Ty.RTy
-  /-- A sum type with fields; see `Ty.taggedUnion`.  `Option Tree` inside `Tree` is
-      `.taggedUnion [[], [.self 0]]`. -/
-  | taggedUnion : List (List Ty.RTy) → Ty.RTy
+  | record : LeanRecordSchema Ty.RTy → Ty.RTy
+  /-- A sum type with fields; see `Ty.taggedUnion`. -/
+  | taggedUnion : LeanTaggedUnionSchema Ty.RTy → Ty.RTy
   /-- A *nested* recursive sum type: it opens a new scope, so the `.self` of its own
       children is this inner declaration, not the enclosing one. -/
-  | recTaggedUnion : List (List Ty.RTy) → Ty.RTy
+  | recTaggedUnion : LeanTaggedUnionSchema Ty.RTy → Ty.RTy
   /-- A nested recursive record; it opens a new scope, as `recTaggedUnion` does. -/
-  | recObject : List Ty.RTy → Ty.RTy
+  | recObject : LeanRecordSchema Ty.RTy → Ty.RTy
   /-- A nested recursive newtype; it opens a new scope, as `recTaggedUnion` does. -/
   | recAlias : Ty.RTy → Ty.RTy
   /-- A nested mutual recursive family; it opens a new scope, as `recTaggedUnion`
       does. -/
-  | mutualRecursiveFamily : (members : List Ty.FamMember) → (member : Nat) → Ty.RTy
-
-/-- One member of a mutual recursive family, as the body it contributes. -/
-inductive Ty.FamMember where
-  /-- A member with constructors: one entry per constructor, each holding the types of
-      its fields.  A member with a single constructor and ≥ 2 fields is a record, and
-      one whose constructors all have no fields is an enum; both are this. -/
-  | ctors : List (List Ty.RTy) → Ty.FamMember
-  /-- A member that is a newtype: it has no object of its own, and a value of it is a
-      value of this, its single field. -/
-  | alias : Ty.RTy → Ty.FamMember
+  | mutualRecursiveFamily : LeanMutualRecFamily Ty.RTy → Ty.RTy
 
 end
+
+/-- One member of a mutual recursive family: a member with constructors, a
+    single-constructor member with fields, or a newtype member. -/
+abbrev Ty.FamMember := LeanFamMemberSchema Ty.RTy
 
 namespace Ty
 
 /-! ## Deciding equality
 
-`Ty` holds lists of lists of types, and `Shape`s of them, which no `deriving` handler
-covers, so the instance is written out: a structural `Ty.beq` over the whole mutual
-family, and the two lemmas that make it equality. -/
+`Ty` holds schemas of types, and schemas of schemas of types, which no `deriving`
+handler covers, so the instance is written out: a structural `Ty.beq` over the whole
+family of types and schemas, and the two lemmas that make it equality. -/
 
 mutual
 
@@ -228,27 +216,32 @@ mutual
 def beq : Ty → Ty → Bool
   | .prim p, .prim q => p == q
   | .typeParam, .typeParam => true
-  | .shape s, .shape t => Ty.beqShape s t
-  | .enum n _ s, .enum m _ t => n == m && s == t
-  | .record a, .record b => Ty.beqList a b
-  | .taggedUnion a, .taggedUnion b => Ty.beqCtors a b
-  | .recTaggedUnion a, .recTaggedUnion b => RTy.beqCtors a b
-  | .recObject a, .recObject b => RTy.beqList a b
-  | .recAlias a, .recAlias b => RTy.beq a b
-  | .mutualRecursiveFamily ms i, .mutualRecursiveFamily ns j =>
-      FamMember.beqList ms ns && i == j
+  | .fnTy s, .fnTy t => Ty.beqFn s t
+  | .primCovariant s, .primCovariant t => Ty.beqCov s t
+  | .enum a, .enum b => a == b
+  | .record a, .record b => Ty.beqA2 a b
+  | .taggedUnion a, .taggedUnion b => Ty.beqTU a b
+  | .recTaggedUnion a, .recTaggedUnion b => RTy.beqRecTU a b
+  | .recObject a, .recObject b => RTy.beqRecObj a b
+  | .recAlias a, .recAlias b => RTy.beqAlias a b
+  | .mutualRecursiveFamily a, .mutualRecursiveFamily b => RTy.beqFamily a b
   | _, _ => false
 
-/-- Structural equality of two shared type formers over closed types. -/
-def beqShape : Shape Ty → Shape Ty → Bool
+/-- Structural equality of two function types over closed types. -/
+def beqFn : TyFn Ty → TyFn Ty → Bool
   | .fn ps r, .fn qs s => Ty.beqList ps qs && Ty.beq r s
   | .fn_returnsProd ps r rs, .fn_returnsProd qs s ss =>
       Ty.beqList ps qs && Ty.beq r s && Ty.beqList rs ss
+  | _, _ => false
+
+/-- Structural equality of two invariant type formers over closed types. -/
+def beqCov : LeanPrimTyCovariant Ty → LeanPrimTyCovariant Ty → Bool
   | .array a, .array b => Ty.beq a b
   | .list a, .list b => Ty.beq a b
   | .task a, .task b => Ty.beq a b
   | .promise a, .promise b => Ty.beq a b
   | .thunk a, .thunk b => Ty.beq a b
+  | .lazy a, .lazy b => Ty.beq a b
   | _, _ => false
 
 /-- `Ty.beq`, on a list of closed types. -/
@@ -263,33 +256,58 @@ def beqCtors : List (List Ty) → List (List Ty) → Bool
   | a :: as, b :: bs => Ty.beqList a b && Ty.beqCtors as bs
   | _, _ => false
 
+/-- `Ty.beq`, on the fields of a record of closed types. -/
+def beqA2 : LeanRecordSchema Ty → LeanRecordSchema Ty → Bool
+  | ⟨a1, a2, as⟩, ⟨b1, b2, bs⟩ => Ty.beq a1 b1 && Ty.beq a2 b2 && Ty.beqList as bs
+
+/-- `Ty.beq`, on the fields of a constructor that has at least one. -/
+def beqNE : NonEmptyList Ty → NonEmptyList Ty → Bool
+  | ⟨a, as⟩, ⟨b, bs⟩ => Ty.beq a b && Ty.beqList as bs
+
+/-- `Ty.beq`, on the constructors of a tagged union of closed types. -/
+def beqTU : LeanTaggedUnionSchema Ty → LeanTaggedUnionSchema Ty → Bool
+  | .payloadFirst f n r, .payloadFirst g m s =>
+      Ty.beqNE f g && Ty.beqList n m && Ty.beqCtors r s
+  | .skip a, .skip b => Ty.beqCP a b
+  | _, _ => false
+
+/-- `Ty.beq`, on the constructors that follow a field-less one. -/
+def beqCP : CtorsWithPayload Ty → CtorsWithPayload Ty → Bool
+  | .here f r, .here g s => Ty.beqNE f g && Ty.beqCtors r s
+  | .skip a, .skip b => Ty.beqCP a b
+  | _, _ => false
+
 /-- Structural equality of two types inside a recursive declaration. -/
 def RTy.beq : RTy → RTy → Bool
   | .self i, .self j => i == j
   | .prim p, .prim q => p == q
   | .typeParam, .typeParam => true
-  | .shape s, .shape t => RTy.beqShape s t
-  | .enum n _ s, .enum m _ t => n == m && s == t
-  | .record a, .record b => RTy.beqList a b
-  | .taggedUnion a, .taggedUnion b => RTy.beqCtors a b
-  | .recTaggedUnion a, .recTaggedUnion b => RTy.beqCtors a b
-  | .recObject a, .recObject b => RTy.beqList a b
-  | .recAlias a, .recAlias b => RTy.beq a b
-  | .mutualRecursiveFamily ms i, .mutualRecursiveFamily ns j =>
-      FamMember.beqList ms ns && i == j
+  | .fnTy s, .fnTy t => RTy.beqFn s t
+  | .primCovariant s, .primCovariant t => RTy.beqCov s t
+  | .enum a, .enum b => a == b
+  | .record a, .record b => RTy.beqA2 a b
+  | .taggedUnion a, .taggedUnion b => RTy.beqTU a b
+  | .recTaggedUnion a, .recTaggedUnion b => RTy.beqRecTU a b
+  | .recObject a, .recObject b => RTy.beqRecObj a b
+  | .recAlias a, .recAlias b => RTy.beqAlias a b
+  | .mutualRecursiveFamily a, .mutualRecursiveFamily b => RTy.beqFamily a b
   | _, _ => false
 
-/-- Structural equality of two shared type formers over types that may mention
-    `.self`. -/
-def RTy.beqShape : Shape RTy → Shape RTy → Bool
+/-- `RTy.beq`, on a function type. -/
+def RTy.beqFn : TyFn RTy → TyFn RTy → Bool
   | .fn ps r, .fn qs s => RTy.beqList ps qs && RTy.beq r s
   | .fn_returnsProd ps r rs, .fn_returnsProd qs s ss =>
       RTy.beqList ps qs && RTy.beq r s && RTy.beqList rs ss
+  | _, _ => false
+
+/-- `RTy.beq`, on an invariant type former. -/
+def RTy.beqCov : LeanPrimTyCovariant RTy → LeanPrimTyCovariant RTy → Bool
   | .array a, .array b => RTy.beq a b
   | .list a, .list b => RTy.beq a b
   | .task a, .task b => RTy.beq a b
   | .promise a, .promise b => RTy.beq a b
   | .thunk a, .thunk b => RTy.beq a b
+  | .lazy a, .lazy b => RTy.beq a b
   | _, _ => false
 
 /-- `RTy.beq`, on a list of types. -/
@@ -304,45 +322,78 @@ def RTy.beqCtors : List (List RTy) → List (List RTy) → Bool
   | a :: as, b :: bs => RTy.beqList a b && RTy.beqCtors as bs
   | _, _ => false
 
+/-- `RTy.beq`, on the fields of a record. -/
+def RTy.beqA2 : LeanRecordSchema RTy → LeanRecordSchema RTy → Bool
+  | ⟨a1, a2, as⟩, ⟨b1, b2, bs⟩ => RTy.beq a1 b1 && RTy.beq a2 b2 && RTy.beqList as bs
+
+/-- `RTy.beq`, on the fields of a constructor that has at least one. -/
+def RTy.beqNE : NonEmptyList RTy → NonEmptyList RTy → Bool
+  | ⟨a, as⟩, ⟨b, bs⟩ => RTy.beq a b && RTy.beqList as bs
+
+/-- `RTy.beq`, on the constructors of a tagged union. -/
+def RTy.beqTU : LeanTaggedUnionSchema RTy → LeanTaggedUnionSchema RTy → Bool
+  | .payloadFirst f n r, .payloadFirst g m s =>
+      RTy.beqNE f g && RTy.beqList n m && RTy.beqCtors r s
+  | .skip a, .skip b => RTy.beqCP a b
+  | _, _ => false
+
+/-- `RTy.beq`, on the constructors that follow a field-less one. -/
+def RTy.beqCP : CtorsWithPayload RTy → CtorsWithPayload RTy → Bool
+  | .here f r, .here g s => RTy.beqNE f g && RTy.beqCtors r s
+  | .skip a, .skip b => RTy.beqCP a b
+  | _, _ => false
+
+
 /-- Structural equality of two members of a mutual family. -/
-def FamMember.beq : FamMember → FamMember → Bool
-  | .ctors a, .ctors b => RTy.beqCtors a b
+def RTy.beqFam : FamMember → FamMember → Bool
+  | .ctors a, .ctors b => RTy.beqTU a b
+  | .record a, .record b => RTy.beqA2 a b
   | .alias a, .alias b => RTy.beq a b
   | _, _ => false
 
-/-- `FamMember.beq`, on the members of a family. -/
-def FamMember.beqList : List FamMember → List FamMember → Bool
+/-- `RTy.beqFam`, on a list of members. -/
+def RTy.beqFamList : List FamMember → List FamMember → Bool
   | [], [] => true
-  | a :: as, b :: bs => FamMember.beq a b && FamMember.beqList as bs
+  | a :: as, b :: bs => RTy.beqFam a b && RTy.beqFamList as bs
+  | _, _ => false
+
+/-- Structural equality of two mutual families, the selected member included. -/
+def RTy.beqFamily : LeanMutualRecFamily RTy → LeanMutualRecFamily RTy → Bool
+  | .selectedThenMore b c n a, .selectedThenMore b' c' n' a' =>
+      RTy.beqFamList b b' && RTy.beqFam c c' && RTy.beqFam n n' && RTy.beqFamList a a'
+  | .selectedLast f b c, .selectedLast f' b' c' =>
+      RTy.beqFam f f' && RTy.beqFamList b b' && RTy.beqFam c c'
   | _, _ => false
 
 end
 
+set_option maxHeartbeats 2000000 in
 mutual
 
 /-- Closed types that compare equal are equal. -/
 theorem eq_of_beq : ∀ {a b : Ty}, Ty.beq a b = true → a = b := by
   intro a b h
   cases a <;> cases b <;> simp_all [Ty.beq]
-  · exact Ty.eq_of_beqShape h
-  · exact Ty.eq_of_beqList h
-  · exact Ty.eq_of_beqCtors h
-  · exact RTy.eq_of_beqCtors h
-  · exact RTy.eq_of_beqList h
-  · exact RTy.eq_of_beq h
-  · simp [FamMember.eq_of_beqList h.1]
+  case fnTy.fnTy => exact Ty.eq_of_beqFn h
+  case primCovariant.primCovariant => exact Ty.eq_of_beqCov h
+  case record.record => exact Ty.eq_of_beqA2 h
+  case taggedUnion.taggedUnion => exact Ty.eq_of_beqTU h
+  case recTaggedUnion.recTaggedUnion => exact RTy.eq_of_beqRecTU h
+  case recObject.recObject => exact RTy.eq_of_beqRecObj h
+  case recAlias.recAlias => exact RTy.eq_of_beqAlias h
+  case mutualRecursiveFamily.mutualRecursiveFamily => exact RTy.eq_of_beqFamily h
 
-/-- The same, for the shared type formers over closed types. -/
-theorem eq_of_beqShape : ∀ {a b : Shape Ty}, Ty.beqShape a b = true → a = b := by
+/-- The same, for a function type over closed types. -/
+theorem eq_of_beqFn : ∀ {a b : TyFn Ty}, Ty.beqFn a b = true → a = b := by
   intro a b h
-  cases a <;> cases b <;> simp_all [Ty.beqShape]
+  cases a <;> cases b <;> simp_all [Ty.beqFn]
   · exact ⟨Ty.eq_of_beqList h.1, Ty.eq_of_beq h.2⟩
   · exact ⟨Ty.eq_of_beqList h.1.1, Ty.eq_of_beq h.1.2, Ty.eq_of_beqList h.2⟩
-  · exact Ty.eq_of_beq h
-  · exact Ty.eq_of_beq h
-  · exact Ty.eq_of_beq h
-  · exact Ty.eq_of_beq h
-  · exact Ty.eq_of_beq h
+
+/-- The same, for an invariant type former over closed types. -/
+theorem eq_of_beqCov : ∀ {a b : LeanPrimTyCovariant Ty}, Ty.beqCov a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [Ty.beqCov] <;> exact Ty.eq_of_beq h
 
 /-- The same, for a list of closed types. -/
 theorem eq_of_beqList : ∀ {a b : List Ty}, Ty.beqList a b = true → a = b := by
@@ -356,29 +407,58 @@ theorem eq_of_beqCtors : ∀ {a b : List (List Ty)}, Ty.beqCtors a b = true → 
   cases a <;> cases b <;> simp_all [Ty.beqCtors]
   exact ⟨Ty.eq_of_beqList h.1, Ty.eq_of_beqCtors h.2⟩
 
+/-- The same, for the fields of a record of closed types. -/
+theorem eq_of_beqA2 : ∀ {a b : LeanRecordSchema Ty}, Ty.beqA2 a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [Ty.beqA2]
+  exact ⟨Ty.eq_of_beq h.1.1, Ty.eq_of_beq h.1.2, Ty.eq_of_beqList h.2⟩
+
+/-- The same, for the fields of a constructor that has at least one. -/
+theorem eq_of_beqNE : ∀ {a b : NonEmptyList Ty}, Ty.beqNE a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [Ty.beqNE]
+  exact ⟨Ty.eq_of_beq h.1, Ty.eq_of_beqList h.2⟩
+
+/-- The same, for the constructors of a tagged union of closed types. -/
+theorem eq_of_beqTU : ∀ {a b : LeanTaggedUnionSchema Ty}, Ty.beqTU a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [Ty.beqTU]
+  case payloadFirst.payloadFirst =>
+    exact ⟨Ty.eq_of_beqNE h.1.1, Ty.eq_of_beqList h.1.2, Ty.eq_of_beqCtors h.2⟩
+  case skip.skip => exact Ty.eq_of_beqCP h
+
+/-- The same, for the constructors that follow a field-less one. -/
+theorem eq_of_beqCP : ∀ {a b : CtorsWithPayload Ty}, Ty.beqCP a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [Ty.beqCP]
+  case here.here => exact ⟨Ty.eq_of_beqNE h.1, Ty.eq_of_beqCtors h.2⟩
+  case skip.skip => exact Ty.eq_of_beqCP h
+
 /-- Types inside a recursive declaration that compare equal are equal. -/
 theorem RTy.eq_of_beq : ∀ {a b : RTy}, RTy.beq a b = true → a = b := by
   intro a b h
   cases a <;> cases b <;> simp_all [RTy.beq]
-  · exact RTy.eq_of_beqShape h
-  · exact RTy.eq_of_beqList h
-  · exact RTy.eq_of_beqCtors h
-  · exact RTy.eq_of_beqCtors h
-  · exact RTy.eq_of_beqList h
-  · exact RTy.eq_of_beq h
-  · simp [FamMember.eq_of_beqList h.1]
+  case fnTy.fnTy => exact RTy.eq_of_beqFn h
+  case primCovariant.primCovariant => exact RTy.eq_of_beqCov h
+  case record.record => exact RTy.eq_of_beqA2 h
+  case taggedUnion.taggedUnion => exact RTy.eq_of_beqTU h
+  case recTaggedUnion.recTaggedUnion => exact RTy.eq_of_beqRecTU h
+  case recObject.recObject => exact RTy.eq_of_beqRecObj h
+  case recAlias.recAlias => exact RTy.eq_of_beqAlias h
+  case mutualRecursiveFamily.mutualRecursiveFamily => exact RTy.eq_of_beqFamily h
 
-/-- The same, for the shared type formers. -/
-theorem RTy.eq_of_beqShape : ∀ {a b : Shape RTy}, RTy.beqShape a b = true → a = b := by
+/-- The same, for a function type. -/
+theorem RTy.eq_of_beqFn : ∀ {a b : TyFn RTy}, RTy.beqFn a b = true → a = b := by
   intro a b h
-  cases a <;> cases b <;> simp_all [RTy.beqShape]
+  cases a <;> cases b <;> simp_all [RTy.beqFn]
   · exact ⟨RTy.eq_of_beqList h.1, RTy.eq_of_beq h.2⟩
   · exact ⟨RTy.eq_of_beqList h.1.1, RTy.eq_of_beq h.1.2, RTy.eq_of_beqList h.2⟩
-  · exact RTy.eq_of_beq h
-  · exact RTy.eq_of_beq h
-  · exact RTy.eq_of_beq h
-  · exact RTy.eq_of_beq h
-  · exact RTy.eq_of_beq h
+
+/-- The same, for an invariant type former. -/
+theorem RTy.eq_of_beqCov :
+    ∀ {a b : LeanPrimTyCovariant RTy}, RTy.beqCov a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [RTy.beqCov] <;> exact RTy.eq_of_beq h
 
 /-- The same, for a list of types. -/
 theorem RTy.eq_of_beqList : ∀ {a b : List RTy}, RTy.beqList a b = true → a = b := by
@@ -392,47 +472,92 @@ theorem RTy.eq_of_beqCtors : ∀ {a b : List (List RTy)}, RTy.beqCtors a b = tru
   cases a <;> cases b <;> simp_all [RTy.beqCtors]
   exact ⟨RTy.eq_of_beqList h.1, RTy.eq_of_beqCtors h.2⟩
 
-/-- The same, for one member of a mutual family. -/
-theorem FamMember.eq_of_beq : ∀ {a b : FamMember}, FamMember.beq a b = true → a = b := by
+/-- The same, for the fields of a record. -/
+theorem RTy.eq_of_beqA2 : ∀ {a b : LeanRecordSchema RTy}, RTy.beqA2 a b = true → a = b := by
   intro a b h
-  cases a <;> cases b <;> simp_all [FamMember.beq]
-  · exact RTy.eq_of_beqCtors h
+  cases a <;> cases b <;> simp_all [RTy.beqA2]
+  exact ⟨RTy.eq_of_beq h.1.1, RTy.eq_of_beq h.1.2, RTy.eq_of_beqList h.2⟩
+
+/-- The same, for the fields of a constructor that has at least one. -/
+theorem RTy.eq_of_beqNE : ∀ {a b : NonEmptyList RTy}, RTy.beqNE a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [RTy.beqNE]
+  exact ⟨RTy.eq_of_beq h.1, RTy.eq_of_beqList h.2⟩
+
+/-- The same, for the constructors of a tagged union. -/
+theorem RTy.eq_of_beqTU :
+    ∀ {a b : LeanTaggedUnionSchema RTy}, RTy.beqTU a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [RTy.beqTU]
+  case payloadFirst.payloadFirst =>
+    exact ⟨RTy.eq_of_beqNE h.1.1, RTy.eq_of_beqList h.1.2, RTy.eq_of_beqCtors h.2⟩
+  case skip.skip => exact RTy.eq_of_beqCP h
+
+/-- The same, for the constructors that follow a field-less one. -/
+theorem RTy.eq_of_beqCP : ∀ {a b : CtorsWithPayload RTy}, RTy.beqCP a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [RTy.beqCP]
+  case here.here => exact ⟨RTy.eq_of_beqNE h.1, RTy.eq_of_beqCtors h.2⟩
+  case skip.skip => exact RTy.eq_of_beqCP h
+
+
+/-- The same, for one member of a mutual family. -/
+theorem RTy.eq_of_beqFam : ∀ {a b : FamMember}, RTy.beqFam a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [RTy.beqFam]
+  · exact RTy.eq_of_beqTU h
+  · exact RTy.eq_of_beqA2 h
   · exact RTy.eq_of_beq h
 
-/-- The same, for the members of a family. -/
-theorem FamMember.eq_of_beqList :
-    ∀ {a b : List FamMember}, FamMember.beqList a b = true → a = b := by
+/-- The same, for a list of members. -/
+theorem RTy.eq_of_beqFamList :
+    ∀ {a b : List FamMember}, RTy.beqFamList a b = true → a = b := by
   intro a b h
-  cases a <;> cases b <;> simp_all [FamMember.beqList]
-  exact ⟨FamMember.eq_of_beq h.1, FamMember.eq_of_beqList h.2⟩
+  cases a <;> cases b <;> simp_all [RTy.beqFamList]
+  exact ⟨RTy.eq_of_beqFam h.1, RTy.eq_of_beqFamList h.2⟩
+
+/-- The same, for two mutual families. -/
+theorem RTy.eq_of_beqFamily :
+    ∀ {a b : LeanMutualRecFamily RTy}, RTy.beqFamily a b = true → a = b := by
+  intro a b h
+  cases a <;> cases b <;> simp_all [RTy.beqFamily]
+  · exact ⟨RTy.eq_of_beqFamList h.1.1.1, RTy.eq_of_beqFam h.1.1.2, RTy.eq_of_beqFam h.1.2,
+      RTy.eq_of_beqFamList h.2⟩
+  · exact ⟨RTy.eq_of_beqFam h.1.1, RTy.eq_of_beqFamList h.1.2, RTy.eq_of_beqFam h.2⟩
 
 end
 
+set_option maxHeartbeats 2000000 in
 mutual
 
 /-- Every closed type compares equal to itself. -/
 theorem beq_refl : ∀ (a : Ty), Ty.beq a a = true
   | .prim _ => by simp [Ty.beq]
   | .typeParam => by simp [Ty.beq]
-  | .shape s => by simp [Ty.beq, Ty.beqShape_refl s]
-  | .enum _ _ _ => by simp [Ty.beq]
-  | .record a => by simp [Ty.beq, Ty.beqList_refl a]
-  | .taggedUnion a => by simp [Ty.beq, Ty.beqCtors_refl a]
-  | .recTaggedUnion a => by simp [Ty.beq, RTy.beqCtors_refl a]
-  | .recObject a => by simp [Ty.beq, RTy.beqList_refl a]
-  | .recAlias a => by simp [Ty.beq, RTy.beq_refl a]
-  | .mutualRecursiveFamily ms _ => by simp [Ty.beq, FamMember.beqList_refl ms]
+  | .fnTy s => by simp [Ty.beq, Ty.beqFn_refl s]
+  | .primCovariant s => by simp [Ty.beq, Ty.beqCov_refl s]
+  | .enum _ => by simp [Ty.beq]
+  | .record a => by simp [Ty.beq, Ty.beqA2_refl a]
+  | .taggedUnion a => by simp [Ty.beq, Ty.beqTU_refl a]
+  | .recTaggedUnion a => by simp [Ty.beq, RTy.beqRecTU_refl a]
+  | .recObject a => by simp [Ty.beq, RTy.beqRecObj_refl a]
+  | .recAlias a => by simp [Ty.beq, RTy.beqAlias_refl a]
+  | .mutualRecursiveFamily a => by simp [Ty.beq, RTy.beqFamily_refl a]
 
-/-- The same, for the shared type formers over closed types. -/
-theorem beqShape_refl : ∀ (a : Shape Ty), Ty.beqShape a a = true
-  | .fn ps r => by simp [Ty.beqShape, Ty.beqList_refl ps, Ty.beq_refl r]
+/-- The same, for a function type over closed types. -/
+theorem beqFn_refl : ∀ (a : TyFn Ty), Ty.beqFn a a = true
+  | .fn ps r => by simp [Ty.beqFn, Ty.beqList_refl ps, Ty.beq_refl r]
   | .fn_returnsProd ps r rs => by
-      simp [Ty.beqShape, Ty.beqList_refl ps, Ty.beq_refl r, Ty.beqList_refl rs]
-  | .array a => by simp [Ty.beqShape, Ty.beq_refl a]
-  | .list a => by simp [Ty.beqShape, Ty.beq_refl a]
-  | .task a => by simp [Ty.beqShape, Ty.beq_refl a]
-  | .promise a => by simp [Ty.beqShape, Ty.beq_refl a]
-  | .thunk a => by simp [Ty.beqShape, Ty.beq_refl a]
+      simp [Ty.beqFn, Ty.beqList_refl ps, Ty.beq_refl r, Ty.beqList_refl rs]
+
+/-- The same, for an invariant type former over closed types. -/
+theorem beqCov_refl : ∀ (a : LeanPrimTyCovariant Ty), Ty.beqCov a a = true
+  | .array a => by simp [Ty.beqCov, Ty.beq_refl a]
+  | .list a => by simp [Ty.beqCov, Ty.beq_refl a]
+  | .task a => by simp [Ty.beqCov, Ty.beq_refl a]
+  | .promise a => by simp [Ty.beqCov, Ty.beq_refl a]
+  | .thunk a => by simp [Ty.beqCov, Ty.beq_refl a]
+  | .lazy a => by simp [Ty.beqCov, Ty.beq_refl a]
 
 /-- The same, for a list of closed types. -/
 theorem beqList_refl : ∀ (a : List Ty), Ty.beqList a a = true
@@ -444,30 +569,55 @@ theorem beqCtors_refl : ∀ (a : List (List Ty)), Ty.beqCtors a a = true
   | [] => by simp [Ty.beqCtors]
   | a :: as => by simp [Ty.beqCtors, Ty.beqList_refl a, Ty.beqCtors_refl as]
 
+/-- The same, for the fields of a record of closed types. -/
+theorem beqA2_refl : ∀ (a : LeanRecordSchema Ty), Ty.beqA2 a a = true
+  | ⟨a1, a2, as⟩ => by
+      simp [Ty.beqA2, Ty.beq_refl a1, Ty.beq_refl a2, Ty.beqList_refl as]
+
+/-- The same, for the fields of a constructor that has at least one. -/
+theorem beqNE_refl : ∀ (a : NonEmptyList Ty), Ty.beqNE a a = true
+  | ⟨f, fs⟩ => by simp [Ty.beqNE, Ty.beq_refl f, Ty.beqList_refl fs]
+
+/-- The same, for the constructors of a tagged union of closed types. -/
+theorem beqTU_refl : ∀ (a : LeanTaggedUnionSchema Ty), Ty.beqTU a a = true
+  | .payloadFirst f n r => by
+      simp [Ty.beqTU, Ty.beqNE_refl f, Ty.beqList_refl n, Ty.beqCtors_refl r]
+  | .skip a => by simp [Ty.beqTU, Ty.beqCP_refl a]
+
+/-- The same, for the constructors that follow a field-less one. -/
+theorem beqCP_refl : ∀ (a : CtorsWithPayload Ty), Ty.beqCP a a = true
+  | .here f r => by simp [Ty.beqCP, Ty.beqNE_refl f, Ty.beqCtors_refl r]
+  | .skip a => by simp [Ty.beqCP, Ty.beqCP_refl a]
+
 /-- Every type inside a recursive declaration compares equal to itself. -/
 theorem RTy.beq_refl : ∀ (a : RTy), RTy.beq a a = true
   | .self _ => by simp [RTy.beq]
   | .prim _ => by simp [RTy.beq]
   | .typeParam => by simp [RTy.beq]
-  | .shape s => by simp [RTy.beq, RTy.beqShape_refl s]
-  | .enum _ _ _ => by simp [RTy.beq]
-  | .record a => by simp [RTy.beq, RTy.beqList_refl a]
-  | .taggedUnion a => by simp [RTy.beq, RTy.beqCtors_refl a]
-  | .recTaggedUnion a => by simp [RTy.beq, RTy.beqCtors_refl a]
-  | .recObject a => by simp [RTy.beq, RTy.beqList_refl a]
-  | .recAlias a => by simp [RTy.beq, RTy.beq_refl a]
-  | .mutualRecursiveFamily ms _ => by simp [RTy.beq, FamMember.beqList_refl ms]
+  | .fnTy s => by simp [RTy.beq, RTy.beqFn_refl s]
+  | .primCovariant s => by simp [RTy.beq, RTy.beqCov_refl s]
+  | .enum _ => by simp [RTy.beq]
+  | .record a => by simp [RTy.beq, RTy.beqA2_refl a]
+  | .taggedUnion a => by simp [RTy.beq, RTy.beqTU_refl a]
+  | .recTaggedUnion a => by simp [RTy.beq, RTy.beqRecTU_refl a]
+  | .recObject a => by simp [RTy.beq, RTy.beqRecObj_refl a]
+  | .recAlias a => by simp [RTy.beq, RTy.beqAlias_refl a]
+  | .mutualRecursiveFamily a => by simp [RTy.beq, RTy.beqFamily_refl a]
 
-/-- The same, for the shared type formers. -/
-theorem RTy.beqShape_refl : ∀ (a : Shape RTy), RTy.beqShape a a = true
-  | .fn ps r => by simp [RTy.beqShape, RTy.beqList_refl ps, RTy.beq_refl r]
+/-- The same, for a function type. -/
+theorem RTy.beqFn_refl : ∀ (a : TyFn RTy), RTy.beqFn a a = true
+  | .fn ps r => by simp [RTy.beqFn, RTy.beqList_refl ps, RTy.beq_refl r]
   | .fn_returnsProd ps r rs => by
-      simp [RTy.beqShape, RTy.beqList_refl ps, RTy.beq_refl r, RTy.beqList_refl rs]
-  | .array a => by simp [RTy.beqShape, RTy.beq_refl a]
-  | .list a => by simp [RTy.beqShape, RTy.beq_refl a]
-  | .task a => by simp [RTy.beqShape, RTy.beq_refl a]
-  | .promise a => by simp [RTy.beqShape, RTy.beq_refl a]
-  | .thunk a => by simp [RTy.beqShape, RTy.beq_refl a]
+      simp [RTy.beqFn, RTy.beqList_refl ps, RTy.beq_refl r, RTy.beqList_refl rs]
+
+/-- The same, for an invariant type former. -/
+theorem RTy.beqCov_refl : ∀ (a : LeanPrimTyCovariant RTy), RTy.beqCov a a = true
+  | .array a => by simp [RTy.beqCov, RTy.beq_refl a]
+  | .list a => by simp [RTy.beqCov, RTy.beq_refl a]
+  | .task a => by simp [RTy.beqCov, RTy.beq_refl a]
+  | .promise a => by simp [RTy.beqCov, RTy.beq_refl a]
+  | .thunk a => by simp [RTy.beqCov, RTy.beq_refl a]
+  | .lazy a => by simp [RTy.beqCov, RTy.beq_refl a]
 
 /-- The same, for a list of types. -/
 theorem RTy.beqList_refl : ∀ (a : List RTy), RTy.beqList a a = true
@@ -479,15 +629,44 @@ theorem RTy.beqCtors_refl : ∀ (a : List (List RTy)), RTy.beqCtors a a = true
   | [] => by simp [RTy.beqCtors]
   | a :: as => by simp [RTy.beqCtors, RTy.beqList_refl a, RTy.beqCtors_refl as]
 
-/-- The same, for one member of a mutual family. -/
-theorem FamMember.beq_refl : ∀ (a : FamMember), FamMember.beq a a = true
-  | .ctors a => by simp [FamMember.beq, RTy.beqCtors_refl a]
-  | .alias a => by simp [FamMember.beq, RTy.beq_refl a]
+/-- The same, for the fields of a record. -/
+theorem RTy.beqA2_refl : ∀ (a : LeanRecordSchema RTy), RTy.beqA2 a a = true
+  | ⟨a1, a2, as⟩ => by
+      simp [RTy.beqA2, RTy.beq_refl a1, RTy.beq_refl a2, RTy.beqList_refl as]
 
-/-- The same, for the members of a family. -/
-theorem FamMember.beqList_refl : ∀ (a : List FamMember), FamMember.beqList a a = true
-  | [] => by simp [FamMember.beqList]
-  | a :: as => by simp [FamMember.beqList, FamMember.beq_refl a, FamMember.beqList_refl as]
+/-- The same, for the fields of a constructor that has at least one. -/
+theorem RTy.beqNE_refl : ∀ (a : NonEmptyList RTy), RTy.beqNE a a = true
+  | ⟨f, fs⟩ => by simp [RTy.beqNE, RTy.beq_refl f, RTy.beqList_refl fs]
+
+/-- The same, for the constructors of a tagged union. -/
+theorem RTy.beqTU_refl : ∀ (a : LeanTaggedUnionSchema RTy), RTy.beqTU a a = true
+  | .payloadFirst f n r => by
+      simp [RTy.beqTU, RTy.beqNE_refl f, RTy.beqList_refl n, RTy.beqCtors_refl r]
+  | .skip a => by simp [RTy.beqTU, RTy.beqCP_refl a]
+
+/-- The same, for the constructors that follow a field-less one. -/
+theorem RTy.beqCP_refl : ∀ (a : CtorsWithPayload RTy), RTy.beqCP a a = true
+  | .here f r => by simp [RTy.beqCP, RTy.beqNE_refl f, RTy.beqCtors_refl r]
+  | .skip a => by simp [RTy.beqCP, RTy.beqCP_refl a]
+
+/-- The same, for one member of a mutual family. -/
+theorem RTy.beqFam_refl : ∀ (a : FamMember), RTy.beqFam a a = true
+  | .ctors a => by simp [RTy.beqFam, RTy.beqTU_refl a]
+  | .record a => by simp [RTy.beqFam, RTy.beqA2_refl a]
+  | .alias a => by simp [RTy.beqFam, RTy.beq_refl a]
+
+/-- The same, for a list of members. -/
+theorem RTy.beqFamList_refl : ∀ (a : List FamMember), RTy.beqFamList a a = true
+  | [] => by simp [RTy.beqFamList]
+  | a :: as => by simp [RTy.beqFamList, RTy.beqFam_refl a, RTy.beqFamList_refl as]
+
+/-- The same, for a mutual family. -/
+theorem RTy.beqFamily_refl : ∀ (a : LeanMutualRecFamily RTy), RTy.beqFamily a a = true
+  | .selectedThenMore b c n a => by
+      simp [RTy.beqFamily, RTy.beqFamList_refl b, RTy.beqFam_refl c, RTy.beqFam_refl n,
+        RTy.beqFamList_refl a]
+  | .selectedLast f b c => by
+      simp [RTy.beqFamily, RTy.beqFam_refl f, RTy.beqFamList_refl b, RTy.beqFam_refl c]
 
 end
 
@@ -506,44 +685,51 @@ instance : Inhabited RTy := ⟨.typeParam⟩
 
 /-! ## The shared type formers, as abbreviations
 
-`Ty.shape` and `RTy.shape` are the only way to build a function, an array, a list, a
-task, a promise or a thunk, but writing `.shape (.array α)` everywhere is noise, so each
-former is also available directly under `Ty` and `RTy`.  They are `@[match_pattern]`, so
-`.array α` works in a pattern as well as in a term. -/
+`Ty.fnTy` and `Ty.primCovariant` are the only way to build a function, an array, a list,
+a task, a promise or a thunk, but writing `.primCovariant (.array α)` everywhere is
+noise, so each former is also available directly under `Ty` and `RTy`.  They are
+`@[match_pattern]`, so `.array α` works in a pattern as well as in a term. -/
 
 /-- An uncurried function type. -/
-@[match_pattern] abbrev fn (params : List Ty) (ret : Ty) : Ty := .shape (.fn params ret)
+@[match_pattern] abbrev fn (params : List Ty) (ret : Ty) : Ty := .fnTy (.fn params ret)
 /-- A function answering with several values at once. -/
 @[match_pattern] abbrev fn_returnsProd (params : List Ty) (ret1 : Ty) (retRest : List Ty) :
-    Ty := .shape (.fn_returnsProd params ret1 retRest)
+    Ty := .fnTy (.fn_returnsProd params ret1 retRest)
 /-- In JS: an array. -/
-@[match_pattern] abbrev array (α : Ty) : Ty := .shape (.array α)
+@[match_pattern] abbrev array (α : Ty) : Ty := .primCovariant (.array α)
 /-- A cons list. -/
-@[match_pattern] abbrev list (α : Ty) : Ty := .shape (.list α)
+@[match_pattern] abbrev list (α : Ty) : Ty := .primCovariant (.list α)
 /-- In JS: `Promise<α>`. -/
-@[match_pattern] abbrev task (α : Ty) : Ty := .shape (.task α)
+@[match_pattern] abbrev task (α : Ty) : Ty := .primCovariant (.task α)
 /-- In JS: `Promise<α>`. -/
-@[match_pattern] abbrev promise (α : Ty) : Ty := .shape (.promise α)
+@[match_pattern] abbrev promise (α : Ty) : Ty := .primCovariant (.promise α)
 /-- A thunk. -/
-@[match_pattern] abbrev thunk (α : Ty) : Ty := .shape (.thunk α)
+@[match_pattern] abbrev thunk (α : Ty) : Ty := .primCovariant (.thunk α)
+
+/-- A JS function of no arguments answering with an `α`: what a Lean `Unit → α` is once
+    its erased argument is dropped. -/
+@[match_pattern] abbrev lazy (α : Ty) : Ty := .primCovariant (.lazy α)
 
 namespace RTy
 
 /-- An uncurried function type, inside a recursive declaration. -/
-@[match_pattern] abbrev fn (params : List RTy) (ret : RTy) : RTy := .shape (.fn params ret)
+@[match_pattern] abbrev fn (params : List RTy) (ret : RTy) : RTy := .fnTy (.fn params ret)
 /-- A function answering with several values at once. -/
 @[match_pattern] abbrev fn_returnsProd (params : List RTy) (ret1 : RTy)
-    (retRest : List RTy) : RTy := .shape (.fn_returnsProd params ret1 retRest)
+    (retRest : List RTy) : RTy := .fnTy (.fn_returnsProd params ret1 retRest)
 /-- In JS: an array. -/
-@[match_pattern] abbrev array (α : RTy) : RTy := .shape (.array α)
+@[match_pattern] abbrev array (α : RTy) : RTy := .primCovariant (.array α)
 /-- A cons list. -/
-@[match_pattern] abbrev list (α : RTy) : RTy := .shape (.list α)
+@[match_pattern] abbrev list (α : RTy) : RTy := .primCovariant (.list α)
 /-- In JS: `Promise<α>`. -/
-@[match_pattern] abbrev task (α : RTy) : RTy := .shape (.task α)
+@[match_pattern] abbrev task (α : RTy) : RTy := .primCovariant (.task α)
 /-- In JS: `Promise<α>`. -/
-@[match_pattern] abbrev promise (α : RTy) : RTy := .shape (.promise α)
+@[match_pattern] abbrev promise (α : RTy) : RTy := .primCovariant (.promise α)
 /-- A thunk. -/
-@[match_pattern] abbrev thunk (α : RTy) : RTy := .shape (.thunk α)
+@[match_pattern] abbrev thunk (α : RTy) : RTy := .primCovariant (.thunk α)
+
+/-- A JS function of no arguments; see `Ty.lazy`. -/
+@[match_pattern] abbrev lazy (α : RTy) : RTy := .primCovariant (.lazy α)
 
 end RTy
 
@@ -554,7 +740,7 @@ so each `LeanPrimTy` is also available directly under the `Ty` namespace — whi
 makes `.nat`, `.uint32`, `.bitvec 32`, … keep working in a position expecting a
 `Ty`. -/
 
-/-- In JS: `boolean`. -/
+/-- In JS: `boolean`.  Every two-constructor field-less sum is modelled as this. -/
 abbrev bool : Ty := .prim .bool
 /-- In JS: `number` or `bigint`. -/
 abbrev nat : Ty := .prim .nat
@@ -606,13 +792,41 @@ abbrev floatArray : Ty := .prim .floatArray
     it prints as `-1 | 0 | 1` — the numbering the comparison functions of the runtime
     answer with.  It is not a terminal type of its own: `Ty.enum` with a shift is what
     a specially numbered enum is. -/
-abbrev ordering : Ty := .enum 3 (shift := -1)
+abbrev ordering : Ty := .enum ⟨0, -1⟩
 /-- In JS (node only): a `ChildProcess` handle. -/
 abbrev childProcess : Ty := .prim .childProcess
 /-- In JS: `object` / `any`. -/
 abbrev shareCommonObject : Ty := .prim .shareCommonObject
 /-- In JS: a `Map` / cache object. -/
 abbrev shareCommonState : Ty := .prim .shareCommonState
+
+/-- The enum with `n` constructors numbered from `shift` — `none` unless `n` is a number
+    of constructors an enum can have, which is three or more: with none the type has no
+    values, with one it is a unit type and is erased, and with two it is `Ty.bool`. -/
+def enumOfCount? (n : Nat) (shift : Int := 0) : Option Ty :=
+  (LeanEnumSchema.ofCount? n shift).map Ty.enum
+
+/-- The type of a field-less sum with `n` constructors: `Ty.bool` for two of them and an
+    enum for three or more.  `none` for the two degenerate cases, which have no type:
+    a sum with no constructors has no values, and one with a single constructor is a
+    unit type, which is erased. -/
+def enumOrBool? (n : Nat) (shift : Int := 0) : Option Ty :=
+  if n == 2 && shift == 0 then some Ty.bool else enumOfCount? n shift
+
+namespace RTy
+
+/-- The enum with `n` constructors numbered from `shift`, one layer down; `none` unless
+    `n` is a number of constructors an enum can have. -/
+def enumOfCount? (n : Nat) (shift : Int := 0) : Option RTy :=
+  (LeanEnumSchema.ofCount? n shift).map RTy.enum
+
+/-- The type of a field-less sum with `n` constructors, one layer down: `RTy.prim .bool`
+    for two of them and an enum for three or more, and `none` for the degenerate
+    cases. -/
+def enumOrBool? (n : Nat) (shift : Int := 0) : Option RTy :=
+  if n == 2 && shift == 0 then some (.prim .bool) else enumOfCount? n shift
+
+end RTy
 
 /-- A one-parameter function type: `a ⇒ b` is `Ty.fn [a] b`. -/
 abbrev arrow (a b : Ty) : Ty := Ty.fn [a] b
@@ -622,10 +836,10 @@ abbrev nullary (ret : Ty) : Ty := Ty.fn [] ret
 
 /-- `Option α`: a non-recursive sum whose constructor `0` (`none`) carries nothing and
     whose constructor `1` (`some`) carries the value. -/
-abbrev option (α : Ty) : Ty := .taggedUnion [[], [α]]
+abbrev option (α : Ty) : Ty := .taggedUnion (.skip (.here ⟨α, []⟩ []))
 
 /-- `α × β`: one constructor with two fields. -/
-abbrev prod (α β : Ty) : Ty := .record [α, β]
+abbrev prod (α β : Ty) : Ty := .record ⟨α, β, []⟩
 
 infixr:70 " ⇒ " => Ty.arrow
 

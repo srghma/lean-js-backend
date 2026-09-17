@@ -104,6 +104,8 @@ def mapTerm {Sg : Sig} {Δ : Ctx} (e : Env Sg Δ) :
       let args' ← mapSpine e args
       pure (.callProd f' args' i)
   | _, _, .jsOp op args => (mapSpine e args).map (.jsOp op)
+  | _, _, .lazyMk t => (mapTerm e t).map .lazyMk
+  | _, _, .lazyForce t => (mapTerm e t).map .lazyForce
   | _, _, .letE (σ := σ) v b => do
       let v' ← mapTerm e v
       let b' ← mapTerm (Env.liftList [σ] e) b
@@ -124,6 +126,18 @@ def mapTerm {Sg : Sig} {Δ : Ctx} (e : Env Sg Δ) :
       let init' ← mapSpine e init
       let body' ← mapBody (Env.liftList σs.reverse e) body
       pure (.loop init' body')
+  | _, _, .joinPoint (params := ps) (σ := σ) body rest => do
+      let body' ← mapTerm (Env.liftList ps.reverse e) body
+      let rest' ← mapTerm (Env.liftList [Ty.fn ps σ] e) rest
+      pure (.joinPoint body' rest')
+  | _, _, .jump (params := ps) (σ := σ) v args => do
+      let f ← (e v.index).bind fun t => Term.coerce? (Ty.fn ps σ) t.2
+      let args' ← mapSpine e args
+      -- the target stays a join point when it is still a variable, and becomes the call
+      -- a jump abbreviates when the environment replaced it by a term
+      pure <| match f with
+        | .var w => .jump w args'
+        | f => .apN f args'
 
 /-- `mapTerm`, on every term of a spine. -/
 def mapSpine {Sg : Sig} {Δ : Ctx} (e : Env Sg Δ) :
@@ -157,6 +171,10 @@ def mapBody {Sg : Sig} {Δ : Ctx} (e : Env Sg Δ) :
       let t' ← mapBody e t
       let u' ← mapBody e u
       pure (.iteB c' t' u')
+  | _, _, _, .joinPointB (params := ps) (σ := σ) body rest => do
+      let body' ← mapTerm (Env.liftList ps.reverse e) body
+      let rest' ← mapBody (Env.liftList [Ty.fn ps σ] e) rest
+      pure (.joinPointB body' rest')
 
 end
 
@@ -199,6 +217,7 @@ def usedWhole {Sg : Sig} (i : Nat) :
   | _, _, .lamProd (params := ps) rets => usedWholeSpine (i + ps.length) rets
   | _, _, .callProd f args _ => usedWhole i f || usedWholeSpine i args
   | _, _, .jsOp _ args => usedWholeSpine i args
+  | _, _, .lazyMk t | _, _, .lazyForce t => usedWhole i t
   | _, _, .letE v b => usedWhole i v || usedWhole (i + 1) b
   | _, _, .ite c t u => usedWhole i c || usedWhole i t || usedWhole i u
   | _, _, .ctor _ _ _ args => usedWholeSpine i args
@@ -206,6 +225,9 @@ def usedWhole {Sg : Sig} (i : Nat) :
   | _, _, .caseTag s alts _ => usedWhole i s || usedWholeAlts i alts
   | _, _, .loop (σs := σs) init body =>
       usedWholeSpine i init || usedWholeBody (i + σs.length) body
+  | _, _, .joinPoint (params := ps) body rest =>
+      usedWhole (i + ps.length) body || usedWhole (i + 1) rest
+  | _, _, .jump v args => v.index == i || usedWholeSpine i args
 
 /-- `usedWhole`, on every term of a spine. -/
 def usedWholeSpine {Sg : Sig} (i : Nat) :
@@ -227,6 +249,8 @@ def usedWholeBody {Sg : Sig} (i : Nat) :
   | _, _, _, .cont args => usedWholeSpine i args
   | _, _, _, .letB v b => usedWhole i v || usedWholeBody (i + 1) b
   | _, _, _, .iteB c t u => usedWhole i c || usedWholeBody i t || usedWholeBody i u
+  | _, _, _, .joinPointB (params := ps) body rest =>
+      usedWhole (i + ps.length) body || usedWholeBody (i + 1) rest
 
 /-- `usedWhole`, inside a loop body, counting the answers too. -/
 def usedWholeBodyAll {Sg : Sig} (i : Nat) :
@@ -236,6 +260,8 @@ def usedWholeBodyAll {Sg : Sig} (i : Nat) :
   | _, _, _, .letB v b => usedWhole i v || usedWholeBodyAll (i + 1) b
   | _, _, _, .iteB c t u =>
       usedWhole i c || usedWholeBodyAll i t || usedWholeBodyAll i u
+  | _, _, _, .joinPointB (params := ps) body rest =>
+      usedWhole (i + ps.length) body || usedWholeBodyAll (i + 1) rest
 
 /-- `usedWhole` in the places of a loop body that are *not* where the block ends: a
     whole use in an answer or in a jump happens once, at the end of the block, so a
@@ -247,6 +273,8 @@ def usedWholeOffTail {Sg : Sig} (i : Nat) :
   | _, _, _, .letB v b => usedWhole i v || usedWholeOffTail (i + 1) b
   | _, _, _, .iteB c t u =>
       usedWhole i c || usedWholeOffTail i t || usedWholeOffTail i u
+  | _, _, _, .joinPointB (params := ps) body rest =>
+      usedWhole (i + ps.length) body || usedWholeOffTail (i + 1) rest
 
 end
 
@@ -267,6 +295,9 @@ def occCount {Sg : Sig} (i : Nat) : {Γ : Ctx} → {τ : Ty} → Term Sg Γ τ �
   | _, _, .apN f args => occCount i f + occCountSpine i args
   | _, _, .callProd f args _ => occCount i f + occCountSpine i args
   | _, _, .jsOp _ args => occCountSpine i args
+  -- a delayed value may be run more than once, so a use inside one is not a single use
+  | _, _, .lazyMk t => if occCount i t == 0 then 0 else 2
+  | _, _, .lazyForce t => occCount i t
   | _, _, .letE v b => occCount i v + occCount (i + 1) b
   | _, _, .ite c t u => occCount i c + max (occCount i t) (occCount i u)
   | _, _, .ctor _ _ _ args => occCountSpine i args
@@ -276,6 +307,10 @@ def occCount {Sg : Sig} (i : Nat) : {Γ : Ctx} → {τ : Ty} → Term Sg Γ τ �
   | _, _, .caseTag s alts _ => occCount i s + occCountAlts i alts
   | _, _, .loop (σs := σs) init body =>
       occCountSpine i init + (if occCountBody (i + σs.length) body == 0 then 0 else 2)
+  -- the body of a join point runs once per jump, so a read in it counts as many
+  | _, _, .joinPoint (params := ps) body rest =>
+      (if occCount (i + ps.length) body == 0 then 0 else 2) + occCount (i + 1) rest
+  | _, _, .jump v args => (if v.index == i then 1 else 0) + occCountSpine i args
 
 /-- `occCount`, on every term of a spine. -/
 def occCountSpine {Sg : Sig} (i : Nat) :
@@ -297,6 +332,9 @@ def occCountBody {Sg : Sig} (i : Nat) :
   | _, _, _, .cont args => occCountSpine i args
   | _, _, _, .letB v b => occCount i v + occCountBody (i + 1) b
   | _, _, _, .iteB c t u => occCount i c + max (occCountBody i t) (occCountBody i u)
+  -- the body of a join point runs once per jump, so a read in it counts as many
+  | _, _, _, .joinPointB (params := ps) body rest =>
+      (if occCount (i + ps.length) body == 0 then 0 else 2) + occCountBody (i + 1) rest
 
 end
 
@@ -356,12 +394,16 @@ def inlineTerm {Sg : Sig} : {Γ : Ctx} → {τ : Ty} → Term Sg Γ τ → Term 
   | _, _, .lamProd rets => .lamProd (inlineSpine rets)
   | _, _, .callProd f args i => .callProd (inlineTerm f) (inlineSpine args) i
   | _, _, .jsOp op args => .jsOp op (inlineSpine args)
+  | _, _, .lazyMk t => .lazyMk (inlineTerm t)
+  | _, _, .lazyForce t => .lazyForce (inlineTerm t)
   | _, _, .ite c t u => .ite (inlineTerm c) (inlineTerm t) (inlineTerm u)
   | _, _, .ctor i fs h args => .ctor i fs h (inlineSpine args)
   | _, _, .proj v i j h => .proj (inlineTerm v) i j h
   | _, _, .tagOf v h => .tagOf (inlineTerm v) h
   | _, _, .caseTag s alts h => .caseTag (inlineTerm s) (inlineAlts alts) h
   | _, _, .loop init body => .loop (inlineSpine init) (inlineBody body)
+  | _, _, .joinPoint body rest => .joinPoint (inlineTerm body) (inlineTerm rest)
+  | _, _, .jump v args => .jump v (inlineSpine args)
   | _, _, t => t
 
 /-- `inlineTerm`, on every term of a spine. -/
@@ -382,6 +424,8 @@ def inlineBody {Sg : Sig} :
   | _, _, _, .cont args => .cont (inlineSpine args)
   | _, _, _, .letB v b => inlineLetB (inlineTerm v) (inlineBody b)
   | _, _, _, .iteB c t u => .iteB (inlineTerm c) (inlineBody t) (inlineBody u)
+  | _, _, _, .joinPointB body rest =>
+      .joinPointB (inlineTerm body) (inlineBody rest)
 
 end
 
@@ -397,6 +441,7 @@ def rebuildsSlot {Sg : Sig} (p : Nat) :
       | _ => false
   | _, _, _, .letB _ b => rebuildsSlot p b
   | _, _, _, .iteB _ t u => rebuildsSlot p t || rebuildsSlot p u
+  | _, _, _, .joinPointB _ rest => rebuildsSlot p rest
 
 /-- A jump inside the *whole* body reads the slot variable at an index that depends on
     how many binders it sits under, which `usedWholeBody` already tracks; this is the
@@ -427,6 +472,10 @@ def mapBodySplit {Sg : Sig} {Δ : Ctx} (e : Env Sg Δ) (p : Nat) (τp : Ty)
       let t' ← mapBodySplit e p τp fs σs' t
       let u' ← mapBodySplit e p τp fs σs' u
       pure (.iteB c' t' u')
+  | _, _, _, .joinPointB (params := ps) (σ := σ) body rest => do
+      let body' ← mapTerm (Env.liftList ps.reverse e) body
+      let rest' ← mapBodySplit (Env.liftList [Ty.fn ps σ] e) p τp fs σs' rest
+      pure (.joinPointB body' rest')
 
 end
 

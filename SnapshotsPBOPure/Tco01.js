@@ -4,8 +4,7 @@ export const test = (v0) => {
     if (v1 === 0) {
       return v1;
     } else {
-      const v2 = v1 - 1;
-      v1 = v2;
+      v1 = v1 - 1;
       continue;
     }
   }

@@ -184,6 +184,8 @@ def Term.inlineCalls {Sg : Sig} (tbl : Table Sg) :
   | _, _, .callProd f args i =>
       .callProd (Term.inlineCalls tbl f) (Spine.inlineCalls tbl args) i
   | _, _, .jsOp op args => .jsOp op (Spine.inlineCalls tbl args)
+  | _, _, .lazyMk e => .lazyMk (Term.inlineCalls tbl e)
+  | _, _, .lazyForce e => .lazyForce (Term.inlineCalls tbl e)
   | _, _, .letE e b => .letE (Term.inlineCalls tbl e) (Term.inlineCalls tbl b)
   | _, _, .ite c t u =>
       .ite (Term.inlineCalls tbl c) (Term.inlineCalls tbl t) (Term.inlineCalls tbl u)
@@ -193,6 +195,9 @@ def Term.inlineCalls {Sg : Sig} (tbl : Table Sg) :
   | _, _, .caseTag s alts h => .caseTag (Term.inlineCalls tbl s) (Alts.inlineCalls tbl alts) h
   | _, _, .loop init body =>
       .loop (Spine.inlineCalls tbl init) (Body.inlineCalls tbl body)
+  | _, _, .joinPoint body rest =>
+      .joinPoint (Term.inlineCalls tbl body) (Term.inlineCalls tbl rest)
+  | _, _, .jump v args => .jump v (Spine.inlineCalls tbl args)
 
 /-- `Term.inlineCalls`, on every term of a spine. -/
 def Spine.inlineCalls {Sg : Sig} (tbl : Table Sg) :
@@ -215,6 +220,8 @@ def Body.inlineCalls {Sg : Sig} (tbl : Table Sg) :
   | _, _, _, .letB e b => .letB (Term.inlineCalls tbl e) (Body.inlineCalls tbl b)
   | _, _, _, .iteB c t u =>
       .iteB (Term.inlineCalls tbl c) (Body.inlineCalls tbl t) (Body.inlineCalls tbl u)
+  | _, _, _, .joinPointB body rest =>
+      .joinPointB (Term.inlineCalls tbl body) (Body.inlineCalls tbl rest)
 
 end
 
@@ -237,6 +244,7 @@ def Term.nodeCount {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → Nat
   | _, _, .lamProd rets => Spine.nodeCount rets + 1
   | _, _, .callProd f args _ => Term.nodeCount f + Spine.nodeCount args + 1
   | _, _, .jsOp _ args => Spine.nodeCount args + 1
+  | _, _, .lazyMk e | _, _, .lazyForce e => Term.nodeCount e + 1
   | _, _, .letE e b => Term.nodeCount e + Term.nodeCount b + 1
   | _, _, .ite c t u => Term.nodeCount c + Term.nodeCount t + Term.nodeCount u + 1
   | _, _, .ctor _ _ _ args => Spine.nodeCount args + 1
@@ -244,6 +252,8 @@ def Term.nodeCount {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → Nat
   | _, _, .tagOf e _ => Term.nodeCount e + 1
   | _, _, .caseTag s alts _ => Term.nodeCount s + Alts.nodeCount alts + 1
   | _, _, .loop init body => Spine.nodeCount init + Body.nodeCount body + 1
+  | _, _, .joinPoint body rest => Term.nodeCount body + Term.nodeCount rest + 1
+  | _, _, .jump _ args => Spine.nodeCount args + 1
 
 /-- `Term.nodeCount`, summed over a spine. -/
 def Spine.nodeCount {Sg : Sig} : ∀ {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → Nat
@@ -262,6 +272,7 @@ def Body.nodeCount {Sg : Sig} : ∀ {Γ : Ctx} {σs : List Ty} {τ : Ty}, Body S
   | _, _, _, .cont args => Spine.nodeCount args + 1
   | _, _, _, .letB e b => Term.nodeCount e + Body.nodeCount b + 1
   | _, _, _, .iteB c t u => Term.nodeCount c + Body.nodeCount t + Body.nodeCount u + 1
+  | _, _, _, .joinPointB body rest => Term.nodeCount body + Body.nodeCount rest + 1
 
 end
 
@@ -279,6 +290,7 @@ def hasControlFlowTerm {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → 
   | _, _, .lamProd rets => hasControlFlowSpine rets
   | _, _, .callProd f args _ => hasControlFlowTerm f || hasControlFlowSpine args
   | _, _, .jsOp _ args => hasControlFlowSpine args
+  | _, _, .lazyMk e | _, _, .lazyForce e => hasControlFlowTerm e
   | _, _, .letE e b => hasControlFlowTerm e || hasControlFlowTerm b
   | _, _, .ite _ _ _ => true
   | _, _, .ctor _ _ _ args => hasControlFlowSpine args
@@ -286,6 +298,9 @@ def hasControlFlowTerm {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → 
   | _, _, .tagOf e _ => hasControlFlowTerm e
   | _, _, .caseTag _ _ _ => true
   | _, _, .loop _ _ => true
+  -- a join point is the shared tail of a branch, so a term that has one branches
+  | _, _, .joinPoint _ _ => true
+  | _, _, .jump _ _ => true
 
 /-- `hasControlFlowTerm`, over a spine. -/
 def hasControlFlowSpine {Sg : Sig} : ∀ {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → Bool

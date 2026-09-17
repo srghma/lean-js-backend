@@ -27,10 +27,13 @@ refers only to the declarations of the signature.
 
 `Term.usesHead` and `Term.noUnusedLet` are the extrinsic check that goes with the rule:
 the first says whether a body mentions the variable a binder just bound, and the second
-that no `let` of a term is dead.  `LakeJsTest` asserts the second over the whole
-generated corpus, which is the guarantee the emitted JavaScript needs — rather than
-indexing `Term` itself by a usage mask, which would make an ordinary declaration that
-ignores one of its parameters unrepresentable.
+that no `let` of a term is dead.  The stronger condition — that no binding the backend
+itself chose is there for nothing — is `LakeJs.Usage`, which `LakeJs.Compile` checks on
+every declaration it prints and refuses the module over; the two passes that establish
+it are `LakeJs.LinearLet` and `LakeJs.DeadSlot`.  All of it is a check on the term rather
+than an index of `Term`, because the parameters of a function are part of its type: a
+lambda handed to a higher-order function has the arity that function asks for, whether it
+reads every parameter or not.
 -/
 
 namespace LakeJs.Rename
@@ -137,6 +140,8 @@ def Term.rename? {Sg : Sig} {Γ Δ : Ctx} (r : Ren Sg Γ Δ) :
       let args' ← Spine.rename? r args
       pure (.callProd f' args' i)
   | _, .jsOp op args => (Spine.rename? r args).map (.jsOp op)
+  | _, .lazyMk e => (Term.rename? r e).map .lazyMk
+  | _, .lazyForce e => (Term.rename? r e).map .lazyForce
   | _, .letE e b => do
       let e' ← Term.rename? r e
       let b' ← Term.rename? (r.lift _) b
@@ -157,6 +162,19 @@ def Term.rename? {Sg : Sig} {Γ Δ : Ctx} (r : Ren Sg Γ Δ) :
       let init' ← Spine.rename? r init
       let body' ← Body.rename? (Ren.liftList σs.reverse r) body
       pure (.loop init' body')
+  | _, .joinPoint (params := ps) body rest => do
+      let body' ← Term.rename? (Ren.liftList ps.reverse r) body
+      let rest' ← Term.rename? (r.lift _) rest
+      pure (.joinPoint body' rest')
+  | _, .jump v args => do
+      let target ← r.map v
+      let args' ← Spine.rename? r args
+      -- A renaming that carries the target to another variable keeps the jump a jump;
+      -- one that replaces it by a term turns it into the call that a jump abbreviates.
+      pure <| match target with
+        | .var w => .jump w args'
+        | .closed t => .apN (t _) args'
+        | .castVar (σ := σ) w => .apN (.jsOp (.cast σ _) (.cons (.var w) .nil)) args'
 
 /-- `Term.rename?`, on every term of a spine. -/
 def Spine.rename? {Sg : Sig} {Γ Δ : Ctx} (r : Ren Sg Γ Δ) :
@@ -190,6 +208,10 @@ def Body.rename? {Sg : Sig} {Γ Δ : Ctx} (r : Ren Sg Γ Δ) :
       let t' ← Body.rename? r t
       let e' ← Body.rename? r e
       pure (.iteB c' t' e')
+  | _, _, .joinPointB (params := ps) body rest => do
+      let body' ← Term.rename? (Ren.liftList ps.reverse r) body
+      let rest' ← Body.rename? (r.lift _) rest
+      pure (.joinPointB body' rest')
 
 end
 
@@ -223,13 +245,14 @@ JavaScript needs, since such a `let` prints as a `const` nobody reads. -/
 mutual
 
 /-- Is every `let` of this term read? -/
-partial def Term.noUnusedLet {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → Bool
+def Term.noUnusedLet {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → Bool
   | _, _, .var _ | _, _, .lit _ | _, _, .global _ | _, _, .extern _ => true
   | _, _, .lamN b => Term.noUnusedLet b
   | _, _, .apN f args => Term.noUnusedLet f && Spine.noUnusedLet args
   | _, _, .lamProd rets => Spine.noUnusedLet rets
   | _, _, .callProd f args _ => Term.noUnusedLet f && Spine.noUnusedLet args
   | _, _, .jsOp _ args => Spine.noUnusedLet args
+  | _, _, .lazyMk e | _, _, .lazyForce e => Term.noUnusedLet e
   | _, _, .letE e b => Term.usesHead b && Term.noUnusedLet e && Term.noUnusedLet b
   | _, _, .ite c t e => Term.noUnusedLet c && Term.noUnusedLet t && Term.noUnusedLet e
   | _, _, .ctor _ _ _ args => Spine.noUnusedLet args
@@ -237,25 +260,28 @@ partial def Term.noUnusedLet {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ �
   | _, _, .tagOf e _ => Term.noUnusedLet e
   | _, _, .caseTag s alts _ => Term.noUnusedLet s && Alts.noUnusedLet alts
   | _, _, .loop init body => Spine.noUnusedLet init && Body.noUnusedLet body
+  | _, _, .joinPoint body rest => Term.noUnusedLet body && Term.noUnusedLet rest
+  | _, _, .jump _ args => Spine.noUnusedLet args
 
 /-- `Term.noUnusedLet`, on every term of a spine. -/
-partial def Spine.noUnusedLet {Sg : Sig} : ∀ {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → Bool
+def Spine.noUnusedLet {Sg : Sig} : ∀ {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → Bool
   | _, _, .nil => true
   | _, _, .cons t rest => Term.noUnusedLet t && Spine.noUnusedLet rest
 
 /-- `Term.noUnusedLet`, on every branch of a case. -/
-partial def Alts.noUnusedLet {Sg : Sig} :
+def Alts.noUnusedLet {Sg : Sig} :
     ∀ {Γ : Ctx} {τ : Ty} {tags : List Nat}, Alts Sg Γ τ tags → Bool
   | _, _, _, .deflt t => Term.noUnusedLet t
   | _, _, _, .cons _ t rest => Term.noUnusedLet t && Alts.noUnusedLet rest
 
 /-- `Term.noUnusedLet`, inside a loop body. -/
-partial def Body.noUnusedLet {Sg : Sig} :
+def Body.noUnusedLet {Sg : Sig} :
     ∀ {Γ : Ctx} {σs : List Ty} {τ : Ty}, Body Sg Γ σs τ → Bool
   | _, _, _, .ret t => Term.noUnusedLet t
   | _, _, _, .cont args => Spine.noUnusedLet args
   | _, _, _, .letB e b => Body.usesHead b && Term.noUnusedLet e && Body.noUnusedLet b
   | _, _, _, .iteB c t e => Term.noUnusedLet c && Body.noUnusedLet t && Body.noUnusedLet e
+  | _, _, _, .joinPointB body rest => Term.noUnusedLet body && Body.noUnusedLet rest
 
 end
 
@@ -271,48 +297,55 @@ mutual
 
 /-- Is de Bruijn index `i` of the term's context read anywhere in the term?  `depth` is
     how many binders deep the traversal currently is. -/
-partial def Term.readsIndexAt (i depth : Nat) :
-    ∀ {Sg : Sig} {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → Bool
-  | _, _, _, .var v => v.index == i + depth
-  | _, _, _, .lit _ | _, _, _, .global _ | _, _, _, .extern _ => false
-  | _, _, _, .lamN (params := ps) b => Term.readsIndexAt i (depth + ps.length) b
-  | _, _, _, .apN f args => Term.readsIndexAt i depth f || Spine.readsIndexAt i depth args
-  | _, _, _, .lamProd (params := ps) rets => Spine.readsIndexAt i (depth + ps.length) rets
-  | _, _, _, .callProd f args _ =>
+def Term.readsIndexAt {Sg : Sig} (i depth : Nat) :
+    ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → Bool
+  | _, _, .var v => v.index == i + depth
+  | _, _, .lit _ | _, _, .global _ | _, _, .extern _ => false
+  | _, _, .lamN (params := ps) b => Term.readsIndexAt i (depth + ps.length) b
+  | _, _, .apN f args => Term.readsIndexAt i depth f || Spine.readsIndexAt i depth args
+  | _, _, .lamProd (params := ps) rets => Spine.readsIndexAt i (depth + ps.length) rets
+  | _, _, .callProd f args _ =>
       Term.readsIndexAt i depth f || Spine.readsIndexAt i depth args
-  | _, _, _, .jsOp _ args => Spine.readsIndexAt i depth args
-  | _, _, _, .letE e b => Term.readsIndexAt i depth e || Term.readsIndexAt i (depth + 1) b
-  | _, _, _, .ite c t e =>
+  | _, _, .jsOp _ args => Spine.readsIndexAt i depth args
+  | _, _, .lazyMk e | _, _, .lazyForce e => Term.readsIndexAt i depth e
+  | _, _, .letE e b => Term.readsIndexAt i depth e || Term.readsIndexAt i (depth + 1) b
+  | _, _, .ite c t e =>
       Term.readsIndexAt i depth c || Term.readsIndexAt i depth t || Term.readsIndexAt i depth e
-  | _, _, _, .ctor _ _ _ args => Spine.readsIndexAt i depth args
-  | _, _, _, .proj e _ _ _ => Term.readsIndexAt i depth e
-  | _, _, _, .tagOf e _ => Term.readsIndexAt i depth e
-  | _, _, _, .caseTag s alts _ =>
+  | _, _, .ctor _ _ _ args => Spine.readsIndexAt i depth args
+  | _, _, .proj e _ _ _ => Term.readsIndexAt i depth e
+  | _, _, .tagOf e _ => Term.readsIndexAt i depth e
+  | _, _, .caseTag s alts _ =>
       Term.readsIndexAt i depth s || Alts.readsIndexAt i depth alts
-  | _, _, _, .loop (σs := σs) init body =>
+  | _, _, .loop (σs := σs) init body =>
       Spine.readsIndexAt i depth init || Body.readsIndexAt i (depth + σs.length) body
+  | _, _, .joinPoint (params := ps) body rest =>
+      Term.readsIndexAt i (depth + ps.length) body || Term.readsIndexAt i (depth + 1) rest
+  | _, _, .jump v args =>
+      v.index == i + depth || Spine.readsIndexAt i depth args
 
 /-- `Term.readsIndexAt`, on every term of a spine. -/
-partial def Spine.readsIndexAt (i depth : Nat) :
-    ∀ {Sg : Sig} {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → Bool
-  | _, _, _, .nil => false
-  | _, _, _, .cons t rest => Term.readsIndexAt i depth t || Spine.readsIndexAt i depth rest
+def Spine.readsIndexAt {Sg : Sig} (i depth : Nat) :
+    ∀ {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → Bool
+  | _, _, .nil => false
+  | _, _, .cons t rest => Term.readsIndexAt i depth t || Spine.readsIndexAt i depth rest
 
 /-- `Term.readsIndexAt`, on every branch of a case. -/
-partial def Alts.readsIndexAt (i depth : Nat) :
-    ∀ {Sg : Sig} {Γ : Ctx} {τ : Ty} {tags : List Nat}, Alts Sg Γ τ tags → Bool
-  | _, _, _, _, .deflt t => Term.readsIndexAt i depth t
-  | _, _, _, _, .cons _ t rest =>
+def Alts.readsIndexAt {Sg : Sig} (i depth : Nat) :
+    ∀ {Γ : Ctx} {τ : Ty} {tags : List Nat}, Alts Sg Γ τ tags → Bool
+  | _, _, _, .deflt t => Term.readsIndexAt i depth t
+  | _, _, _, .cons _ t rest =>
       Term.readsIndexAt i depth t || Alts.readsIndexAt i depth rest
 
 /-- `Term.readsIndexAt`, inside a loop body. -/
-partial def Body.readsIndexAt (i depth : Nat) :
-    ∀ {Sg : Sig} {Γ : Ctx} {σs : List Ty} {τ : Ty}, Body Sg Γ σs τ → Bool
-  | _, _, _, _, .ret t => Term.readsIndexAt i depth t
-  | _, _, _, _, .cont args => Spine.readsIndexAt i depth args
-  | _, _, _, _, .letB e b => Term.readsIndexAt i depth e || Body.readsIndexAt i (depth + 1) b
-  | _, _, _, _, .iteB c t e =>
+def Body.readsIndexAt {Sg : Sig} (i depth : Nat) :
+    ∀ {Γ : Ctx} {σs : List Ty} {τ : Ty}, Body Sg Γ σs τ → Bool
+  | _, _, _, .ret t => Term.readsIndexAt i depth t
+  | _, _, _, .cont args => Spine.readsIndexAt i depth args
+  | _, _, _, .letB e b => Term.readsIndexAt i depth e || Body.readsIndexAt i (depth + 1) b
+  | _, _, _, .iteB c t e =>
       Term.readsIndexAt i depth c || Body.readsIndexAt i depth t || Body.readsIndexAt i depth e
+  | _, _, _, .joinPointB (params := ps) body rest =>
+      Term.readsIndexAt i (depth + ps.length) body || Body.readsIndexAt i (depth + 1) rest
 
 end
 

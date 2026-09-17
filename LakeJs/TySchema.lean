@@ -8,165 +8,106 @@ public import LakeJs.Layout
 namespace LakeJs
 
 open LakeJs.Ty
+open NonEmpty.ListCorrectByConstruction (NonEmptyList)
 
 /-!
-# The seven shapes of a user-defined type, named — and what makes one well formed
+# The shapes of a user-defined type, named — and what makes one well formed
 
 `Ty` models a user-defined Lean declaration by one of seven shapes, and each of them
-carries exactly the data that shape needs.  This module gives those payloads a name,
-and says — as a decidable check — which payloads are the ones the backend can produce.
+carries exactly the data that shape needs.  This module names those payloads, reads one
+off a type, builds a type from one, and says — as a decidable check — which of them
+describe a type that **exists**.
 
 ## The names
 
-There is **no schema type parameter**: `Ty` is the type language, so the payload of
-`Ty.record` is a list of `Ty`s and the payload of `Ty.recAlias` is an `RTy`.  Each name
-below is therefore a plain alias for the payload of one constructor:
+The payloads are the schemas of `LakeJs.Schema`, instantiated at the two layers of the
+type language:
 
-| shape                        | payload                                       |
-| :--------------------------- | :-------------------------------------------- |
-| `Ty.enum`                    | `LeanEnumSchema` = `Nat × Int`                 |
-| `Ty.record`                  | `LeanRecordSchema` = `List Ty`                 |
-| `Ty.taggedUnion`             | `LeanTaggedUnionSchema` = `List (List Ty)`     |
-| `Ty.recTaggedUnion`          | `LeanRecTaggedUnionSchema` = `List (List RTy)` |
-| `Ty.recObject`               | `LeanRecObjectSchema` = `List RTy`             |
-| `Ty.recAlias`                | `LeanRecAliasSchema` = `RTy`                   |
-| `Ty.mutualRecursiveFamily`   | `LeanMutualRecFamily` = `List FamMember × Nat` |
+| shape                        | payload                                          |
+| :--------------------------- | :----------------------------------------------- |
+| `Ty.enum`                    | `LeanEnumSchema`                                  |
+| `Ty.record`                  | `LeanRecordSchema Ty`                             |
+| `Ty.taggedUnion`             | `LeanTaggedUnionSchema Ty`                        |
+| `Ty.recTaggedUnion`          | `LeanTaggedUnionSchema Ty.RTy`                 |
+| `Ty.recObject`               | `LeanRecordSchema Ty.RTy`                      |
+| `Ty.recAlias`                | `Ty.RTy`                       |
+| `Ty.mutualRecursiveFamily`   | `LeanMutualRecFamily Ty.RTy`                      |
 
-They are aliases, not wrappers: `Ty.record fs` takes a `LeanRecordSchema` and nothing
-has to be unwrapped.  What they add is a name to talk about — `Ty.recordSchema?` reads
-one off a `Ty`, `LeanRecordSchema.ok` says whether it is one the backend can produce,
-and `LakeJs.TyMeta` reads one off a real Lean declaration.
+## What is checked here, and what is not
 
-## Which payloads are well formed
+Every **counting** condition is carried by the payload's own type and needs no check:
+an enum has three constructors or more, a record two fields or more, a tagged union two
+constructors of which one has a field, a family two members and a member number in
+range.  A degenerate shape is therefore not a `Ty` that fails a test — it is not a `Ty`.
 
-Only one of the conditions below is carried by `Ty` itself: `Ty.enum` takes a proof that
-it has at least one constructor.  The rest are *shape* conditions the type does not
-state, so they are written here as decidable predicates, one per shape, in two tiers.
+What is left are the conditions that mention the *type language*, and so cannot be
+fields of a schema that is parametrised by it:
 
-`.ok` is the **structural** tier, which the translation in `LakeJs.FromLcnf` maintains
-for every type it produces:
+* a recursive shape **mentions itself**: `Ty.recAlias ⟨.array .typeParam⟩` is a wrapper
+  that does not, and a wrapper that does not is erased into its field;
+* every `.self` points at a member the declaration **has**;
+* the type **has values**: `inductive Bad | mk : Bad → Bad` is the equation `T = T`,
+  which no value satisfies, and neither does `structure Worse where w : Worse; n : Nat`;
+* a mutual family is **strongly connected**: two declarations that do not each reach
+  the other are two types that happen to share a `mutual` block, not one family.
 
-* a `record` has **at least two** fields — a one-field declaration is a newtype, whose
-  wrapper is erased, and a field-less one is `enum 1`;
-* a `taggedUnion` has **at least two** constructors, at least one of them with a field
-  — otherwise it is an `enum`;
-* a `recTaggedUnion` has at least two constructors and **mentions itself**
-  (`RTy.self 0`; an index other than `0` has no binder to refer to);
-* a `recObject` has at least two fields and mentions itself;
-* a `recAlias` mentions itself — a wrapper that does not is erased into its field, and
-  there is no `recAlias` for it;
-* a `mutualRecursiveFamily` has at least two members, points at one of them, mentions
-  only members it has, and each of its members is shaped like a member (a member with
-  one constructor carrying one field is an `alias` member).
-
-`.strict` adds the conditions that say the type has **values at all**:
-
-* a recursive declaration has a constructor that can be built without a value of its
-  own type — `recAlias (.self 0)` is the equation `T = T`, which no value satisfies,
-  while `recAlias (.array (.self 0))` is an array, which may be empty;
-* a family is **strongly connected**: two declarations that do not each reach the other
-  are two separate types that happen to share a `mutual` block, not one family.
-
-Those are true of every type a working program uses, but they are not maintained by the
-current translation — Lean accepts an empty `inductive`, and it accepts a `mutual` block
-whose members ignore each other — so they are a check to run, not a condition of being a
-`Ty`.
-
-`Ty.wf` and `Ty.wfStrict` are the two tiers at every node of a whole type, nested
-recursive shapes included.  Both are deliberately *checks*, not indices: see
-`TY_SCHEMA_ASSESSMENT.md` for what it would take to make each of these conditions a
-constructor argument of `Ty`, and which of them is worth it.
+`Ty.wf` runs all four at every node of a whole type, and `WfTy` is the subtype of the
+types that pass — the type of a type the backend can actually compile.  `Ty.not_wf_selfLoop`
+and `Ty.not_wf_recObject_selfField` below are the two degenerate recursive declarations,
+written out and refuted.
 -/
-
-/-! ## The seven payloads -/
-
-/-- The payload of `Ty.enum`: how many constructors the type has, and the number its
-    first constructor prints as (`Ordering` is `(3, -1)`, an ordinary enum `(n, 0)`). -/
-abbrev LeanEnumSchema := Nat × Int
-
-/-- The payload of `Ty.record`: the types of the fields, in declaration order. -/
-abbrev LeanRecordSchema := List Ty
-
-/-- The payload of `Ty.taggedUnion`: one entry per constructor, in declaration order,
-    each holding the types of that constructor's fields. -/
-abbrev LeanTaggedUnionSchema := List (List Ty)
-
-/-- The payload of `Ty.recTaggedUnion`: as `LeanTaggedUnionSchema`, but the field types
-    may mention the declaration itself as `RTy.self 0`. -/
-abbrev LeanRecTaggedUnionSchema := List (List Ty.RTy)
-
-/-- The payload of `Ty.recObject`: the types of the fields of the single constructor,
-    which may mention the declaration itself as `RTy.self 0`. -/
-abbrev LeanRecObjectSchema := List Ty.RTy
-
-/-- The payload of `Ty.recAlias`: the type the erased wrapper stands for, mentioning
-    the declaration itself as `RTy.self 0`. -/
-abbrev LeanRecAliasSchema := Ty.RTy
-
-/-- The payload of `Ty.mutualRecursiveFamily`: the bodies of all the members of the
-    block, in declaration order, and which of them the type is. -/
-abbrev LeanMutualRecFamily := List Ty.FamMember × Nat
 
 /-! ## Reading a payload off a type, and building a type from one -/
 
 /-- The `LeanEnumSchema` of a type that is an enum. -/
 def Ty.enumSchema? : Ty → Option LeanEnumSchema
-  | .enum n _ s => some (n, s)
+  | .enum s => some s
   | _ => none
 
 /-- The `LeanRecordSchema` of a type that is a record. -/
-def Ty.recordSchema? : Ty → Option LeanRecordSchema
+def Ty.recordSchema? : Ty → Option (LeanRecordSchema Ty)
   | .record fs => some fs
   | _ => none
 
 /-- The `LeanTaggedUnionSchema` of a type that is a non-recursive tagged union. -/
-def Ty.taggedUnionSchema? : Ty → Option LeanTaggedUnionSchema
+def Ty.taggedUnionSchema? : Ty → Option (LeanTaggedUnionSchema Ty)
   | .taggedUnion l => some l
   | _ => none
 
-/-- The `LeanRecTaggedUnionSchema` of a type that is a recursive tagged union. -/
-def Ty.recTaggedUnionSchema? : Ty → Option LeanRecTaggedUnionSchema
+/-- The `LeanTaggedUnionSchema` of a type that is a recursive tagged union. -/
+def Ty.recTaggedUnionSchema? : Ty → Option (LeanTaggedUnionSchema RTy)
   | .recTaggedUnion l => some l
   | _ => none
 
-/-- The `LeanRecObjectSchema` of a type that is a recursive record. -/
-def Ty.recObjectSchema? : Ty → Option LeanRecObjectSchema
+/-- The `LeanRecordSchema` of a type that is a recursive record. -/
+def Ty.recObjectSchema? : Ty → Option (LeanRecordSchema RTy)
   | .recObject fs => some fs
   | _ => none
 
-/-- The `LeanRecAliasSchema` of a type that is a recursive newtype. -/
-def Ty.recAliasSchema? : Ty → Option LeanRecAliasSchema
-  | .recAlias b => some b
-  | _ => none
-
 /-- The `LeanMutualRecFamily` of a type that is a member of a mutual family. -/
-def Ty.mutualRecFamily? : Ty → Option LeanMutualRecFamily
-  | .mutualRecursiveFamily ms i => some (ms, i)
+def Ty.mutualRecFamily? : Ty → Option (LeanMutualRecFamily RTy)
+  | .mutualRecursiveFamily f => some f
   | _ => none
 
-/-- The enum with this many constructors and this shift — `none` when it has none, as
-    a type with no values has no representation. -/
-def LeanEnumSchema.toTy? (s : LeanEnumSchema) : Option Ty :=
-  if h : 0 < s.1 then some (.enum s.1 h s.2) else none
+/-- The enum this payload describes. -/
+def LeanEnumSchema.toTy (s : LeanEnumSchema) : Ty := .enum s
 
 /-- The record with these fields. -/
-def LeanRecordSchema.toTy (fs : LeanRecordSchema) : Ty := .record fs
+def LeanRecordSchema.toTy (fs : LeanRecordSchema Ty) : Ty := .record fs
 
 /-- The tagged union with these constructors. -/
-def LeanTaggedUnionSchema.toTy (l : LeanTaggedUnionSchema) : Ty := .taggedUnion l
+def LeanTaggedUnionSchema.toTy (l : LeanTaggedUnionSchema Ty) : Ty := .taggedUnion l
 
 /-- The recursive tagged union with these constructors. -/
-def LeanRecTaggedUnionSchema.toTy (l : LeanRecTaggedUnionSchema) : Ty := .recTaggedUnion l
+def LeanTaggedUnionSchema.toTy (l : LeanTaggedUnionSchema RTy) : Ty :=
+  .recTaggedUnion l
 
 /-- The recursive record with these fields. -/
-def LeanRecObjectSchema.toTy (fs : LeanRecObjectSchema) : Ty := .recObject fs
-
-/-- The recursive newtype with this body. -/
-def LeanRecAliasSchema.toTy (b : LeanRecAliasSchema) : Ty := .recAlias b
+def LeanRecordSchema.toTy (fs : LeanRecordSchema RTy) : Ty := .recObject fs
 
 /-- The member of the family this payload describes. -/
-def LeanMutualRecFamily.toTy (f : LeanMutualRecFamily) : Ty :=
-  .mutualRecursiveFamily f.1 f.2
+def LeanMutualRecFamily.toTy (f : LeanMutualRecFamily RTy) : Ty :=
+  .mutualRecursiveFamily f
 
 /-! ## A closed type, read inside a recursive declaration
 
@@ -181,25 +122,30 @@ mutual
 def Ty.toRTy : Ty → RTy
   | .prim p => .prim p
   | .typeParam => .typeParam
-  | .shape s => .shape (Ty.toRTyShape s)
-  | .enum n h sh => .enum n h sh
-  | .record fs => .record (Ty.toRTyList fs)
-  | .taggedUnion l => .taggedUnion (Ty.toRTyCtors l)
+  | .fnTy s => .fnTy (Ty.toRTyFn s)
+  | .primCovariant s => .primCovariant (Ty.toRTyCov s)
+  | .enum s => .enum s
+  | .record fs => .record (Ty.toRTyA2 fs)
+  | .taggedUnion l => .taggedUnion (Ty.toRTyTU l)
   | .recTaggedUnion l => .recTaggedUnion l
   | .recObject fs => .recObject fs
   | .recAlias b => .recAlias b
-  | .mutualRecursiveFamily ms i => .mutualRecursiveFamily ms i
+  | .mutualRecursiveFamily f => .mutualRecursiveFamily f
 
-/-- `Ty.toRTy`, on one of the shared type formers. -/
-def Ty.toRTyShape : Shape Ty → Shape RTy
+/-- `Ty.toRTy`, on a function type. -/
+def Ty.toRTyFn : TyFn Ty → TyFn RTy
   | .fn ps r => .fn (Ty.toRTyList ps) (Ty.toRTy r)
   | .fn_returnsProd ps r rs =>
       .fn_returnsProd (Ty.toRTyList ps) (Ty.toRTy r) (Ty.toRTyList rs)
+
+/-- `Ty.toRTy`, on an invariant type former. -/
+def Ty.toRTyCov : LeanPrimTyCovariant Ty → LeanPrimTyCovariant RTy
   | .array a => .array (Ty.toRTy a)
   | .list a => .list (Ty.toRTy a)
   | .task a => .task (Ty.toRTy a)
   | .promise a => .promise (Ty.toRTy a)
   | .thunk a => .thunk (Ty.toRTy a)
+  | .lazy a => .lazy (Ty.toRTy a)
 
 /-- `Ty.toRTy`, on a list of types. -/
 def Ty.toRTyList : List Ty → List RTy
@@ -211,6 +157,24 @@ def Ty.toRTyCtors : List (List Ty) → List (List RTy)
   | [] => []
   | fs :: l => Ty.toRTyList fs :: Ty.toRTyCtors l
 
+/-- `Ty.toRTy`, on the fields of a record. -/
+def Ty.toRTyA2 : LeanRecordSchema Ty → LeanRecordSchema RTy
+  | ⟨a, b, rest⟩ => ⟨Ty.toRTy a, Ty.toRTy b, Ty.toRTyList rest⟩
+
+/-- `Ty.toRTy`, on the fields of a constructor that has at least one. -/
+def Ty.toRTyNE : NonEmptyList Ty → NonEmptyList RTy
+  | ⟨a, as⟩ => ⟨Ty.toRTy a, Ty.toRTyList as⟩
+
+/-- `Ty.toRTy`, on the constructors of a tagged union. -/
+def Ty.toRTyTU : LeanTaggedUnionSchema Ty → LeanTaggedUnionSchema RTy
+  | .payloadFirst f n r => .payloadFirst (Ty.toRTyNE f) (Ty.toRTyList n) (Ty.toRTyCtors r)
+  | .skip rest => .skip (Ty.toRTyCP rest)
+
+/-- `Ty.toRTy`, on the constructors that follow a field-less one. -/
+def Ty.toRTyCP : CtorsWithPayload Ty → CtorsWithPayload RTy
+  | .here f r => .here (Ty.toRTyNE f) (Ty.toRTyCtors r)
+  | .skip rest => .skip (Ty.toRTyCP rest)
+
 end
 
 mutual
@@ -221,32 +185,35 @@ theorem instRTy_toRTy (rep : Nat → Option Ty) :
     ∀ τ : Ty, LakeJs.Layout.instRTy rep (Ty.toRTy τ) = some τ
   | .prim _ => rfl
   | .typeParam => rfl
-  | .shape s => by
-      simp [Ty.toRTy, LakeJs.Layout.instRTy, instShape_toRTyShape rep s]
-  | .enum _ _ _ => rfl
-  | .record fs => by
-      simp [Ty.toRTy, LakeJs.Layout.instRTy, instList_toRTyList rep fs]
-  | .taggedUnion l => by
-      simp [Ty.toRTy, LakeJs.Layout.instRTy, instCtors_toRTyCtors rep l]
+  | .fnTy s => by simp [Ty.toRTy, LakeJs.Layout.instRTy, instFn_toRTyFn rep s]
+  | .primCovariant s => by simp [Ty.toRTy, LakeJs.Layout.instRTy, instCov_toRTyCov rep s]
+  | .enum _ => rfl
+  | .record fs => by simp [Ty.toRTy, LakeJs.Layout.instRTy, instA2_toRTyA2 rep fs]
+  | .taggedUnion l => by simp [Ty.toRTy, LakeJs.Layout.instRTy, instTU_toRTyTU rep l]
   | .recTaggedUnion _ => rfl
   | .recObject _ => rfl
   | .recAlias _ => rfl
-  | .mutualRecursiveFamily _ _ => rfl
+  | .mutualRecursiveFamily _ => rfl
 
-/-- The same, for one of the shared type formers. -/
-theorem instShape_toRTyShape (rep : Nat → Option Ty) :
-    ∀ s : Shape Ty, LakeJs.Layout.instShape rep (Ty.toRTyShape s) = some s
+/-- The same, for a function type. -/
+theorem instFn_toRTyFn (rep : Nat → Option Ty) :
+    ∀ s : TyFn Ty, LakeJs.Layout.instFn rep (Ty.toRTyFn s) = some s
   | .fn ps r => by
-      simp [Ty.toRTyShape, LakeJs.Layout.instShape, instList_toRTyList rep ps,
+      simp [Ty.toRTyFn, LakeJs.Layout.instFn, instList_toRTyList rep ps,
         instRTy_toRTy rep r]
   | .fn_returnsProd ps r rs => by
-      simp [Ty.toRTyShape, LakeJs.Layout.instShape, instList_toRTyList rep ps,
+      simp [Ty.toRTyFn, LakeJs.Layout.instFn, instList_toRTyList rep ps,
         instRTy_toRTy rep r, instList_toRTyList rep rs]
-  | .array a => by simp [Ty.toRTyShape, LakeJs.Layout.instShape, instRTy_toRTy rep a]
-  | .list a => by simp [Ty.toRTyShape, LakeJs.Layout.instShape, instRTy_toRTy rep a]
-  | .task a => by simp [Ty.toRTyShape, LakeJs.Layout.instShape, instRTy_toRTy rep a]
-  | .promise a => by simp [Ty.toRTyShape, LakeJs.Layout.instShape, instRTy_toRTy rep a]
-  | .thunk a => by simp [Ty.toRTyShape, LakeJs.Layout.instShape, instRTy_toRTy rep a]
+
+/-- The same, for an invariant type former. -/
+theorem instCov_toRTyCov (rep : Nat → Option Ty) :
+    ∀ s : LeanPrimTyCovariant Ty, LakeJs.Layout.instCov rep (Ty.toRTyCov s) = some s
+  | .array a => by simp [Ty.toRTyCov, LakeJs.Layout.instCov, instRTy_toRTy rep a]
+  | .list a => by simp [Ty.toRTyCov, LakeJs.Layout.instCov, instRTy_toRTy rep a]
+  | .task a => by simp [Ty.toRTyCov, LakeJs.Layout.instCov, instRTy_toRTy rep a]
+  | .promise a => by simp [Ty.toRTyCov, LakeJs.Layout.instCov, instRTy_toRTy rep a]
+  | .thunk a => by simp [Ty.toRTyCov, LakeJs.Layout.instCov, instRTy_toRTy rep a]
+  | .lazy a => by simp [Ty.toRTyCov, LakeJs.Layout.instCov, instRTy_toRTy rep a]
 
 /-- The same, for a list of types. -/
 theorem instList_toRTyList (rep : Nat → Option Ty) :
@@ -264,6 +231,36 @@ theorem instCtors_toRTyCtors (rep : Nat → Option Ty) :
       simp [Ty.toRTyCtors, LakeJs.Layout.instCtors, instList_toRTyList rep fs,
         instCtors_toRTyCtors rep l]
 
+/-- The same, for the fields of a record. -/
+theorem instA2_toRTyA2 (rep : Nat → Option Ty) :
+    ∀ fs : LeanRecordSchema Ty, LakeJs.Layout.instA2 rep (Ty.toRTyA2 fs) = some fs
+  | ⟨a, b, rest⟩ => by
+      simp [Ty.toRTyA2, LakeJs.Layout.instA2, instRTy_toRTy rep a, instRTy_toRTy rep b,
+        instList_toRTyList rep rest]
+
+/-- The same, for the fields of a constructor that has at least one. -/
+theorem instNE_toRTyNE (rep : Nat → Option Ty) :
+    ∀ f : NonEmptyList Ty, LakeJs.Layout.instNE rep (Ty.toRTyNE f) = some f
+  | ⟨a, as⟩ => by
+      simp [Ty.toRTyNE, LakeJs.Layout.instNE, instRTy_toRTy rep a,
+        instList_toRTyList rep as]
+
+/-- The same, for the constructors of a tagged union. -/
+theorem instTU_toRTyTU (rep : Nat → Option Ty) :
+    ∀ l : LeanTaggedUnionSchema Ty, LakeJs.Layout.instTU rep (Ty.toRTyTU l) = some l
+  | .payloadFirst f n r => by
+      simp [Ty.toRTyTU, LakeJs.Layout.instTU, instNE_toRTyNE rep f,
+        instList_toRTyList rep n, instCtors_toRTyCtors rep r]
+  | .skip rest => by simp [Ty.toRTyTU, LakeJs.Layout.instTU, instCP_toRTyCP rep rest]
+
+/-- The same, for the constructors that follow a field-less one. -/
+theorem instCP_toRTyCP (rep : Nat → Option Ty) :
+    ∀ c : CtorsWithPayload Ty, LakeJs.Layout.instCP rep (Ty.toRTyCP c) = some c
+  | .here f r => by
+      simp [Ty.toRTyCP, LakeJs.Layout.instCP, instNE_toRTyNE rep f,
+        instCtors_toRTyCtors rep r]
+  | .skip rest => by simp [Ty.toRTyCP, LakeJs.Layout.instCP, instCP_toRTyCP rep rest]
+
 end
 
 /-! ## Which members of a recursive declaration it mentions -/
@@ -274,17 +271,21 @@ mutual
     *nested* recursive shape is not looked into: its `.self`s are its own. -/
 def Ty.RTy.selfIdxs : RTy → List Nat
   | .self i => [i]
-  | .shape s => RTy.selfIdxsShape s
-  | .record fs => RTy.selfIdxsList fs
-  | .taggedUnion l => RTy.selfIdxsCtors l
+  | .fnTy s => RTy.selfIdxsFn s
+  | .primCovariant s => RTy.selfIdxsCov s
+  | .record fs => RTy.selfIdxsA2 fs
+  | .taggedUnion l => RTy.selfIdxsTU l
   | _ => []
 
-/-- `RTy.selfIdxs`, on one of the shared type formers. -/
-def Ty.RTy.selfIdxsShape : Shape RTy → List Nat
+/-- `RTy.selfIdxs`, on a function type. -/
+def Ty.RTy.selfIdxsFn : TyFn RTy → List Nat
   | .fn ps r => RTy.selfIdxsList ps ++ RTy.selfIdxs r
   | .fn_returnsProd ps r rs =>
       RTy.selfIdxsList ps ++ RTy.selfIdxs r ++ RTy.selfIdxsList rs
-  | .array a | .list a | .task a | .promise a | .thunk a => RTy.selfIdxs a
+
+/-- `RTy.selfIdxs`, on an invariant type former. -/
+def Ty.RTy.selfIdxsCov : LeanPrimTyCovariant RTy → List Nat
+  | .array a | .list a | .task a | .promise a | .thunk a | .lazy a => RTy.selfIdxs a
 
 /-- `RTy.selfIdxs`, on a list of types. -/
 def Ty.RTy.selfIdxsList : List RTy → List Nat
@@ -296,12 +297,37 @@ def Ty.RTy.selfIdxsCtors : List (List RTy) → List Nat
   | [] => []
   | fs :: l => RTy.selfIdxsList fs ++ RTy.selfIdxsCtors l
 
+/-- `RTy.selfIdxs`, on the fields of a record. -/
+def Ty.RTy.selfIdxsA2 : LeanRecordSchema RTy → List Nat
+  | ⟨a, b, rest⟩ => RTy.selfIdxs a ++ RTy.selfIdxs b ++ RTy.selfIdxsList rest
+
+/-- `RTy.selfIdxs`, on the fields of a constructor that has at least one. -/
+def Ty.RTy.selfIdxsNE : NonEmptyList RTy → List Nat
+  | ⟨a, as⟩ => RTy.selfIdxs a ++ RTy.selfIdxsList as
+
+/-- `RTy.selfIdxs`, on the constructors of a tagged union. -/
+def Ty.RTy.selfIdxsTU : LeanTaggedUnionSchema RTy → List Nat
+  | .payloadFirst f n r => RTy.selfIdxsNE f ++ RTy.selfIdxsList n ++ RTy.selfIdxsCtors r
+  | .skip rest => RTy.selfIdxsCP rest
+
+/-- `RTy.selfIdxs`, on the constructors that follow a field-less one. -/
+def Ty.RTy.selfIdxsCP : CtorsWithPayload RTy → List Nat
+  | .here f r => RTy.selfIdxsNE f ++ RTy.selfIdxsCtors r
+  | .skip rest => RTy.selfIdxsCP rest
+
 end
 
 /-- The members of its family that one member mentions. -/
 def Ty.FamMember.selfIdxs : FamMember → List Nat
-  | .ctors l => RTy.selfIdxsCtors l
+  | .ctors l => RTy.selfIdxsTU l
+  | .record fs => RTy.selfIdxsA2 fs
   | .alias b => RTy.selfIdxs b
+
+/-- Does this member mention the declaration it belongs to at all? -/
+def Ty.FamMember.hasSelf : FamMember → Bool
+  | .ctors l => RTy.hasSelfTU l
+  | .record fs => RTy.hasSelfA2 fs
+  | .alias b => RTy.hasSelf b
 
 /-- Does every `.self` here point at a member the declaration has? -/
 def selfIdxsOk (numMembers : Nat) (idxs : List Nat) : Bool := idxs.all (· < numMembers)
@@ -322,25 +348,29 @@ def Ty.RTy.inhabWith (avail : List Bool) : RTy → Bool
   | .self i => (avail[i]?).getD false
   | .prim _ => true
   | .typeParam => true
-  | .shape s => RTy.inhabWithShape avail s
-  | .enum _ _ _ => true
-  | .record fs => RTy.inhabWithAll avail fs
-  | .taggedUnion l => RTy.inhabWithSome avail l
+  | .fnTy s => RTy.inhabWithFn avail s
+  | .primCovariant s => RTy.inhabWithCov avail s
+  | .enum _ => true
+  | .record fs => RTy.inhabWithA2 avail fs
+  | .taggedUnion l => RTy.inhabWithTU avail l
   -- a nested recursive shape opens a scope of its own, so it mentions no member of
   -- ours; whether *it* has values is checked where it is
   | .recTaggedUnion _ => true
   | .recObject _ => true
   | .recAlias _ => true
-  | .mutualRecursiveFamily _ _ => true
+  | .mutualRecursiveFamily _ => true
 
-/-- `RTy.inhabWith`, on one of the shared type formers. -/
-def Ty.RTy.inhabWithShape (avail : List Bool) : Shape RTy → Bool
+/-- `RTy.inhabWith`, on a function type. -/
+def Ty.RTy.inhabWithFn (avail : List Bool) : TyFn RTy → Bool
   -- a function needs no argument to exist, only a result
   | .fn _ r => RTy.inhabWith avail r
   | .fn_returnsProd _ r rs => RTy.inhabWith avail r && RTy.inhabWithAll avail rs
+
+/-- `RTy.inhabWith`, on an invariant type former. -/
+def Ty.RTy.inhabWithCov (avail : List Bool) : LeanPrimTyCovariant RTy → Bool
   -- the empty array and the empty list hold nothing
   | .array _ | .list _ => true
-  | .task a | .promise a | .thunk a => RTy.inhabWith avail a
+  | .task a | .promise a | .thunk a | .lazy a => RTy.inhabWith avail a
 
 /-- `RTy.inhabWith`, on the fields of one constructor: it needs all of them. -/
 def Ty.RTy.inhabWithAll (avail : List Bool) : List RTy → Bool
@@ -352,11 +382,28 @@ def Ty.RTy.inhabWithSome (avail : List Bool) : List (List RTy) → Bool
   | [] => false
   | fs :: l => RTy.inhabWithAll avail fs || RTy.inhabWithSome avail l
 
+/-- `RTy.inhabWith`, on the fields of a record: it needs all of them. -/
+def Ty.RTy.inhabWithA2 (avail : List Bool) : LeanRecordSchema RTy → Bool
+  | ⟨a, b, rest⟩ =>
+      RTy.inhabWith avail a && RTy.inhabWith avail b && RTy.inhabWithAll avail rest
+
+/-- `RTy.inhabWith`, on the fields of a constructor that has at least one. -/
+def Ty.RTy.inhabWithNE (avail : List Bool) : NonEmptyList RTy → Bool
+  | ⟨a, as⟩ => RTy.inhabWith avail a && RTy.inhabWithAll avail as
+
+/-- `RTy.inhabWith`, on the constructors of a tagged union: it needs one of them. -/
+def Ty.RTy.inhabWithTU (avail : List Bool) : LeanTaggedUnionSchema RTy → Bool
+  | .payloadFirst f n r =>
+      RTy.inhabWithNE avail f || RTy.inhabWithAll avail n || RTy.inhabWithSome avail r
+  -- the first constructor has no fields at all, so it can always be built
+  | .skip _ => true
+
 end
 
 /-- `RTy.inhabWith`, on one member of a family. -/
 def Ty.FamMember.inhabWith (avail : List Bool) : FamMember → Bool
-  | .ctors l => RTy.inhabWithSome avail l
+  | .ctors l => RTy.inhabWithTU avail l
+  | .record fs => RTy.inhabWithA2 avail fs
   | .alias b => RTy.inhabWith avail b
 
 /-- One step of the fixed point: which members are buildable, given which were. -/
@@ -407,214 +454,220 @@ def famStronglyConnected (ms : List Ty.FamMember) : Bool :=
     let r := famReach ms i
     (List.range ms.length).all fun j => r.contains j
 
-/-! ## Is a payload one the backend can produce?
+/-! ## Is a payload one that describes a type?
 
-Two tiers, because they are not the same question.
+The counting conditions are in the payloads' types, so what is left to check of one
+payload is that it *is* recursive, that its recursive occurrences point at members it
+has, and that the type it describes has values. -/
 
-* `.ok` — the **structural** conditions, the ones the translation in
-  `LakeJs.FromLcnf` maintains for every type it produces: how many constructors and
-  fields a shape has, whether it mentions the declaration it belongs to, and whether
-  every `.self` points at a member that exists.  A payload that fails one of these is
-  one no declaration is read as, and the elaborators of `LakeJs.TyMeta` refuse it.
-* `.strict` — those, **and** the conditions that say the type has values at all:
-  every member of a recursive declaration is buildable, and a family is strongly
-  connected (a block whose members do not each reach the other is two declarations, not
-  one family).  These are true of the types a program actually uses, but the current
-  translation does not maintain them — `mutual inductive A | mk : B → A; inductive B |
-  mk : A → B end` declares two types with no values, and Lean accepts it — so they are
-  offered as a check to run, not as a condition of being a `Ty`.  See
-  `TY_SCHEMA_ASSESSMENT.md`.
--/
-
-/-- An enum has at least one constructor — a type with none has no values.  (One is
-    allowed: `Unit` is `enum 1 0`, the type whose single value is `{ tag: 0 }`.)  The
-    condition is already carried by `Ty.enum`, so this only ever fails for a pair
-    written by hand. -/
-def LeanEnumSchema.ok (s : LeanEnumSchema) : Bool := 0 < s.1
-
-/-- An enum always has values, so there is nothing to add. -/
-def LeanEnumSchema.strict (s : LeanEnumSchema) : Bool := LeanEnumSchema.ok s
-
-/-- A record has at least two fields: a one-field declaration is a newtype, which is
-    erased into its field, and a field-less one is `enum 1`. -/
-def LeanRecordSchema.ok (fs : LeanRecordSchema) : Bool := 2 ≤ fs.length
-
-/-- A tagged union has at least two constructors, at least one of which has a field:
-    with no field anywhere it is an enum, and with one constructor it is a record, a
-    newtype or `enum 1`. -/
-def LeanTaggedUnionSchema.ok (l : LeanTaggedUnionSchema) : Bool :=
-  2 ≤ l.length && l.any (fun fs => !fs.isEmpty)
-
-/-- A recursive tagged union has at least two constructors, at least one with a field,
-    mentions itself — and only itself, since it has one member. -/
-def LeanRecTaggedUnionSchema.ok (l : LeanRecTaggedUnionSchema) : Bool :=
-  2 ≤ l.length && l.any (fun fs => !fs.isEmpty) && Ty.RTy.hasSelfCtors l
-    && selfIdxsOk 1 (Ty.RTy.selfIdxsCtors l)
-
-/-- As `ok`, and it has a constructor that can be built without a value of its own type, so
+/-- A recursive tagged union mentions itself — and only itself, since it has one
+    member — and has a constructor that can be built without a value of its own type, so
     that it has values at all: `inductive Bad | l : Bad → Bad | r : Bad → Bad` has
     none. -/
-def LeanRecTaggedUnionSchema.strict (l : LeanRecTaggedUnionSchema) : Bool :=
-  LeanRecTaggedUnionSchema.ok l && famAllInhabited [.ctors l]
+def LeanTaggedUnionSchema.wf (l : LeanTaggedUnionSchema RTy) : Bool :=
+  RTy.hasSelfTU l.ctors && selfIdxsOk 1 (RTy.selfIdxsTU l.ctors)
+    && famAllInhabited [.ctors l.ctors]
 
-/-- A recursive record has at least two fields — a one-field one is a newtype, i.e. a
-    `recAlias` — and mentions itself. -/
-def LeanRecObjectSchema.ok (fs : LeanRecObjectSchema) : Bool :=
-  2 ≤ fs.length && Ty.RTy.hasSelfList fs && selfIdxsOk 1 (Ty.RTy.selfIdxsList fs)
-
-/-- As `ok`, and every self occurrence in it is guarded, so that it has values:
+/-- A recursive record mentions itself, points only at itself, and has values:
     `structure S where s : S; n : Nat` has none. -/
-def LeanRecObjectSchema.strict (fs : LeanRecObjectSchema) : Bool :=
-  LeanRecObjectSchema.ok fs && famAllInhabited [.ctors [fs]]
+def LeanRecordSchema.wf (fs : LeanRecordSchema RTy) : Bool :=
+  RTy.hasSelfA2 fs.fields && selfIdxsOk 1 (RTy.selfIdxsA2 fs.fields)
+    && famAllInhabited [.record fs.fields]
 
-/-- A recursive newtype mentions itself — otherwise the wrapper is erased into its
-    field and there is no `recAlias` at all. -/
-def LeanRecAliasSchema.ok (b : LeanRecAliasSchema) : Bool :=
-  Ty.RTy.hasSelf b && selfIdxsOk 1 (Ty.RTy.selfIdxs b)
+/-- A recursive newtype mentions itself — otherwise the wrapper is erased into its field
+    and there is no `recAlias` at all — and does so guardedly, so that the equation it
+    stands for has a solution: `recAlias ⟨.self 0⟩` is `T = T`, which no value
+    satisfies, while `recAlias ⟨.array (.self 0)⟩` is the empty array and more. -/
+def RTy.wf (b : RTy RTy) : Bool :=
+  RTy.hasSelf b.body && selfIdxsOk 1 (RTy.selfIdxs b.body)
+    && famAllInhabited [.alias b.body]
 
-/-- As `ok`, and it does so guardedly, so that the equation it stands for has a solution:
-    `recAlias (.self 0)` is `T = T`, which no value satisfies, while
-    `recAlias (.array (.self 0))` is the empty array and more. -/
-def LeanRecAliasSchema.strict (b : LeanRecAliasSchema) : Bool :=
-  LeanRecAliasSchema.ok b && famAllInhabited [.alias b]
-
-/-- Is this member of a family shaped like one?  A member with constructors has at
-    least one; a member with exactly one constructor carrying exactly one field is a
-    newtype, and a newtype member is an `alias` member, not a `ctors` one. -/
-def Ty.FamMember.shapeOk : FamMember → Bool
-  | .ctors [] => false
-  | .ctors [[_]] => false
-  | .ctors _ => true
-  | .alias _ => true
-
-/-- A family has at least two members, points at one of them, mentions only members it
-    has, and each of its members is shaped like a member. -/
-def LeanMutualRecFamily.ok (f : LeanMutualRecFamily) : Bool :=
-  2 ≤ f.1.length && f.2 < f.1.length
-    && f.1.all (fun m => selfIdxsOk f.1.length (Ty.FamMember.selfIdxs m)
-        && Ty.FamMember.shapeOk m)
-
-/-- As `ok`, and it is a family rather than a `mutual` block of unrelated declarations — each
-    member reaches every member — and every member of it has values. -/
-def LeanMutualRecFamily.strict (f : LeanMutualRecFamily) : Bool :=
-  LeanMutualRecFamily.ok f && famStronglyConnected f.1 && famAllInhabited f.1
+/-- A family mentions only members it has, is a family rather than a `mutual` block of
+    unrelated declarations — each member reaches every member — and every member of it
+    has values. -/
+def LeanMutualRecFamily.wf (f : LeanMutualRecFamily RTy) : Bool :=
+  f.members.all (fun m => selfIdxsOk f.members.length (Ty.FamMember.selfIdxs m))
+    && famStronglyConnected f.members && famAllInhabited f.members
 
 /-! ## Well-formedness of a whole type
 
-Each shape of a type is checked by the predicate of its payload, and so is each shape
-nested in it.  The traversal takes the tier as an argument: `Ty.wf` is the structural
-one, `Ty.wfStrict` also asks that every recursive declaration in the type has values
-and that every family in it is one. -/
+Each recursive shape of a type is checked by the predicate of its payload, and so is
+each shape nested in it. -/
 
 mutual
 
-/-- Is every shape in this closed type one the backend can produce?  With
-    `strict := true`, is every recursive declaration in it one that has values? -/
-def Ty.wfWith (strict : Bool) : Ty → Bool
+/-- Does every recursive shape in this closed type describe a type that exists? -/
+def Ty.wf : Ty → Bool
   | .prim _ => true
   | .typeParam => true
-  | .shape s => Ty.wfShapeWith strict s
-  | .enum n _ _ => LeanEnumSchema.ok (n, 0)
-  | .record fs => LeanRecordSchema.ok fs && Ty.wfListWith strict fs
-  | .taggedUnion l => LeanTaggedUnionSchema.ok l && Ty.wfCtorsWith strict l
-  | .recTaggedUnion l =>
-      (if strict then LeanRecTaggedUnionSchema.strict l else LeanRecTaggedUnionSchema.ok l)
-        && Ty.RTy.wfCtorsWith strict l
-  | .recObject fs =>
-      (if strict then LeanRecObjectSchema.strict fs else LeanRecObjectSchema.ok fs)
-        && Ty.RTy.wfListWith strict fs
-  | .recAlias b =>
-      (if strict then LeanRecAliasSchema.strict b else LeanRecAliasSchema.ok b)
-        && Ty.RTy.wfWith strict b
-  | .mutualRecursiveFamily ms i =>
-      (if strict then LeanMutualRecFamily.strict (ms, i)
-       else LeanMutualRecFamily.ok (ms, i))
-        && Ty.FamMember.wfListWith strict ms
+  | .fnTy s => Ty.wfFn s
+  | .primCovariant s => Ty.wfCov s
+  | .enum _ => true
+  | .record fs => Ty.wfA2 fs
+  | .taggedUnion l => Ty.wfTU l
+  | .recTaggedUnion ⟨l⟩ => LeanTaggedUnionSchema.wf ⟨l⟩ && RTy.wfTU l
+  | .recObject ⟨fs⟩ => LeanRecordSchema.wf ⟨fs⟩ && RTy.wfA2 fs
+  | .recAlias ⟨b⟩ => RTy.wf ⟨b⟩ && RTy.wf b
+  | .mutualRecursiveFamily f => LeanMutualRecFamily.wf f && Ty.FamMember.wfFamily f
 
-/-- `Ty.wfWith`, on one of the shared type formers. -/
-def Ty.wfShapeWith (strict : Bool) : Shape Ty → Bool
-  | .fn ps r => Ty.wfListWith strict ps && Ty.wfWith strict r
-  | .fn_returnsProd ps r rs =>
-      Ty.wfListWith strict ps && Ty.wfWith strict r && Ty.wfListWith strict rs
-  | .array a | .list a | .task a | .promise a | .thunk a => Ty.wfWith strict a
+/-- `Ty.wf`, on a function type. -/
+def Ty.wfFn : TyFn Ty → Bool
+  | .fn ps r => Ty.wfList ps && Ty.wf r
+  | .fn_returnsProd ps r rs => Ty.wfList ps && Ty.wf r && Ty.wfList rs
 
-/-- `Ty.wfWith`, on a list of closed types. -/
-def Ty.wfListWith (strict : Bool) : List Ty → Bool
+/-- `Ty.wf`, on an invariant type former. -/
+def Ty.wfCov : LeanPrimTyCovariant Ty → Bool
+  | .array a | .list a | .task a | .promise a | .thunk a | .lazy a => Ty.wf a
+
+/-- `Ty.wf`, on a list of closed types. -/
+def Ty.wfList : List Ty → Bool
   | [] => true
-  | t :: ts => Ty.wfWith strict t && Ty.wfListWith strict ts
+  | t :: ts => Ty.wf t && Ty.wfList ts
 
-/-- `Ty.wfWith`, on the constructors of a closed layout. -/
-def Ty.wfCtorsWith (strict : Bool) : List (List Ty) → Bool
+/-- `Ty.wf`, on the constructors of a closed layout. -/
+def Ty.wfCtors : List (List Ty) → Bool
   | [] => true
-  | fs :: l => Ty.wfListWith strict fs && Ty.wfCtorsWith strict l
+  | fs :: l => Ty.wfList fs && Ty.wfCtors l
 
-/-- `Ty.wfWith`, one layer down: this type may mention the declaration it sits in. -/
-def Ty.RTy.wfWith (strict : Bool) : RTy → Bool
+/-- `Ty.wf`, on the fields of a record. -/
+def Ty.wfA2 : LeanRecordSchema Ty → Bool
+  | ⟨a, b, rest⟩ => Ty.wf a && Ty.wf b && Ty.wfList rest
+
+/-- `Ty.wf`, on the fields of a constructor that has at least one. -/
+def Ty.wfNE : NonEmptyList Ty → Bool
+  | ⟨a, as⟩ => Ty.wf a && Ty.wfList as
+
+/-- `Ty.wf`, on the constructors of a tagged union. -/
+def Ty.wfTU : LeanTaggedUnionSchema Ty → Bool
+  | .payloadFirst f n r => Ty.wfNE f && Ty.wfList n && Ty.wfCtors r
+  | .skip rest => Ty.wfCP rest
+
+/-- `Ty.wf`, on the constructors that follow a field-less one. -/
+def Ty.wfCP : CtorsWithPayload Ty → Bool
+  | .here f r => Ty.wfNE f && Ty.wfCtors r
+  | .skip rest => Ty.wfCP rest
+
+/-- `Ty.wf`, one layer down: this type may mention the declaration it sits in. -/
+def Ty.RTy.wf : RTy → Bool
   | .self _ => true
   | .prim _ => true
   | .typeParam => true
-  | .shape s => RTy.wfShapeWith strict s
-  | .enum n _ _ => LeanEnumSchema.ok (n, 0)
-  -- the same conditions as `LeanRecordSchema.ok` and `LeanTaggedUnionSchema.ok`, one
-  -- layer down: these fields may mention the declaration they sit in
-  | .record fs => 2 ≤ fs.length && RTy.wfListWith strict fs
-  | .taggedUnion l =>
-      2 ≤ l.length && l.any (fun fs => !fs.isEmpty) && RTy.wfCtorsWith strict l
-  | .recTaggedUnion l =>
-      (if strict then LeanRecTaggedUnionSchema.strict l else LeanRecTaggedUnionSchema.ok l)
-        && RTy.wfCtorsWith strict l
-  | .recObject fs =>
-      (if strict then LeanRecObjectSchema.strict fs else LeanRecObjectSchema.ok fs)
-        && RTy.wfListWith strict fs
-  | .recAlias b =>
-      (if strict then LeanRecAliasSchema.strict b else LeanRecAliasSchema.ok b)
-        && RTy.wfWith strict b
-  | .mutualRecursiveFamily ms i =>
-      (if strict then LeanMutualRecFamily.strict (ms, i)
-       else LeanMutualRecFamily.ok (ms, i))
-        && Ty.FamMember.wfListWith strict ms
+  | .fnTy s => RTy.wfFn s
+  | .primCovariant s => RTy.wfCov s
+  | .enum _ => true
+  | .record fs => RTy.wfA2 fs
+  | .taggedUnion l => RTy.wfTU l
+  | .recTaggedUnion ⟨l⟩ => LeanTaggedUnionSchema.wf ⟨l⟩ && RTy.wfTU l
+  | .recObject ⟨fs⟩ => LeanRecordSchema.wf ⟨fs⟩ && RTy.wfA2 fs
+  | .recAlias ⟨b⟩ => RTy.wf ⟨b⟩ && RTy.wf b
+  | .mutualRecursiveFamily f => LeanMutualRecFamily.wf f && Ty.FamMember.wfFamily f
 
-/-- `RTy.wfWith`, on one of the shared type formers. -/
-def Ty.RTy.wfShapeWith (strict : Bool) : Shape RTy → Bool
-  | .fn ps r => RTy.wfListWith strict ps && RTy.wfWith strict r
-  | .fn_returnsProd ps r rs =>
-      RTy.wfListWith strict ps && RTy.wfWith strict r && RTy.wfListWith strict rs
-  | .array a | .list a | .task a | .promise a | .thunk a => RTy.wfWith strict a
+/-- `RTy.wf`, on a function type. -/
+def Ty.RTy.wfFn : TyFn RTy → Bool
+  | .fn ps r => RTy.wfList ps && RTy.wf r
+  | .fn_returnsProd ps r rs => RTy.wfList ps && RTy.wf r && RTy.wfList rs
 
-/-- `RTy.wfWith`, on a list of types. -/
-def Ty.RTy.wfListWith (strict : Bool) : List RTy → Bool
+/-- `RTy.wf`, on an invariant type former. -/
+def Ty.RTy.wfCov : LeanPrimTyCovariant RTy → Bool
+  | .array a | .list a | .task a | .promise a | .thunk a | .lazy a => RTy.wf a
+
+/-- `RTy.wf`, on a list of types. -/
+def Ty.RTy.wfList : List RTy → Bool
   | [] => true
-  | t :: ts => RTy.wfWith strict t && RTy.wfListWith strict ts
+  | t :: ts => RTy.wf t && RTy.wfList ts
 
-/-- `RTy.wfWith`, on the constructors of a layout. -/
-def Ty.RTy.wfCtorsWith (strict : Bool) : List (List RTy) → Bool
+/-- `RTy.wf`, on the constructors of a layout. -/
+def Ty.RTy.wfCtors : List (List RTy) → Bool
   | [] => true
-  | fs :: l => RTy.wfListWith strict fs && RTy.wfCtorsWith strict l
+  | fs :: l => RTy.wfList fs && RTy.wfCtors l
 
-/-- `RTy.wfWith`, on one member of a family. -/
-def Ty.FamMember.wfWith (strict : Bool) : FamMember → Bool
-  | .ctors l => Ty.RTy.wfCtorsWith strict l
-  | .alias b => Ty.RTy.wfWith strict b
+/-- `RTy.wf`, on the fields of a record. -/
+def Ty.RTy.wfA2 : LeanRecordSchema RTy → Bool
+  | ⟨a, b, rest⟩ => RTy.wf a && RTy.wf b && RTy.wfList rest
 
-/-- `RTy.wfWith`, on the members of a family. -/
-def Ty.FamMember.wfListWith (strict : Bool) : List FamMember → Bool
+/-- `RTy.wf`, on the fields of a constructor that has at least one. -/
+def Ty.RTy.wfNE : NonEmptyList RTy → Bool
+  | ⟨a, as⟩ => RTy.wf a && RTy.wfList as
+
+/-- `RTy.wf`, on the constructors of a tagged union. -/
+def Ty.RTy.wfTU : LeanTaggedUnionSchema RTy → Bool
+  | .payloadFirst f n r => RTy.wfNE f && RTy.wfList n && RTy.wfCtors r
+  | .skip rest => RTy.wfCP rest
+
+/-- `RTy.wf`, on the constructors that follow a field-less one. -/
+def Ty.RTy.wfCP : CtorsWithPayload RTy → Bool
+  | .here f r => RTy.wfNE f && RTy.wfCtors r
+  | .skip rest => RTy.wfCP rest
+
+/-- `RTy.wf`, on one member of a family. -/
+def Ty.FamMember.wf : FamMember → Bool
+  | .ctors l => Ty.RTy.wfTU l
+  | .record fs => Ty.RTy.wfA2 fs
+  | .alias b => Ty.RTy.wf b
+
+/-- `RTy.wf`, on the members of a family. -/
+def Ty.FamMember.wfList : List FamMember → Bool
   | [] => true
-  | m :: ms => Ty.FamMember.wfWith strict m && Ty.FamMember.wfListWith strict ms
+  | m :: ms => Ty.FamMember.wf m && Ty.FamMember.wfList ms
+
+/-- `RTy.wf`, on every member of a family. -/
+def Ty.FamMember.wfFamily : LeanMutualRecFamily RTy → Bool
+  | .selectedThenMore before current next after =>
+      Ty.FamMember.wfList before && Ty.FamMember.wf current && Ty.FamMember.wf next
+        && Ty.FamMember.wfList after
+  | .selectedLast first before current =>
+      Ty.FamMember.wf first && Ty.FamMember.wfList before && Ty.FamMember.wf current
 
 end
 
-/-- Is every shape in this type one the backend can produce? -/
-def Ty.wf (t : Ty) : Bool := Ty.wfWith false t
+/-- A **well-formed type**: a `Ty` every recursive shape of which describes a type that
+    exists.  The counting conditions are already true of every `Ty`, so this is the
+    whole of what the backend asks of a type it is handed. -/
+structure WfTy where
+  /-- The type. -/
+  ty : Ty
+  /-- Its recursive shapes mention themselves, point only at members they have, and
+      describe types that have values. -/
+  wf : Ty.wf ty = true := by decide
 
-/-- `Ty.wf`, and in addition: every recursive declaration in the type has values, and
-    every mutual family in it really is one. -/
-def Ty.wfStrict (t : Ty) : Bool := Ty.wfWith true t
+namespace WfTy
 
-/-- `Ty.wf`, one layer down. -/
-def Ty.RTy.wf (t : RTy) : Bool := Ty.RTy.wfWith false t
+/-- Two well-formed types are equal when their types are. -/
+theorem ext : ∀ {a b : WfTy}, a.ty = b.ty → a = b
+  | ⟨_, _⟩, ⟨_, _⟩, rfl => rfl
 
-/-- `Ty.wfStrict`, one layer down. -/
-def Ty.RTy.wfStrict (t : RTy) : Bool := Ty.RTy.wfWith true t
+instance : DecidableEq WfTy := fun a b =>
+  decidable_of_iff (a.ty = b.ty) ⟨WfTy.ext, fun h => h ▸ rfl⟩
+
+end WfTy
+
+/-! ## The degenerate recursive declarations, refuted
+
+These are the two declarations Lean accepts and no compiled program can hold a value
+of.  They are `Ty`s — nothing about their *shape* is wrong — and `Ty.wf` refuses
+them. -/
+
+/-- `inductive Bad | mk : Bad → Bad` is read as the recursive newtype whose body is the
+    declaration itself, i.e. as the equation `T = T`.  No value satisfies it, so it is
+    not well formed, and there is no `WfTy` for it. -/
+theorem Ty.not_wf_selfLoop : Ty.wf (.recAlias ⟨.self 0⟩) = false := by decide
+
+/-- `structure Worse where w : Worse; n : Nat` is the same mistake one shape along: a
+    record needs *all* of its fields, and one of them is the record itself. -/
+theorem Ty.not_wf_recObject_selfField :
+    Ty.wf (.recObject ⟨⟨.self 0, .prim .nat, []⟩⟩) = false := by decide
+
+/-- A recursive newtype that does *not* mention itself is not one either: its wrapper is
+    erased into its field, and the type it describes is just that field. -/
+theorem Ty.not_wf_recAlias_noSelf : Ty.wf (.recAlias ⟨.prim .nat⟩) = false := by decide
+
+/-- A guarded recursive newtype — `structure Rose where kids : Array Rose` — *is* well
+    formed: the empty array holds no `Rose`, so a `Rose` can be built. -/
+theorem Ty.wf_recAlias_array : Ty.wf (.recAlias ⟨.array (.self 0)⟩) = true := by decide
+
+/-- And so is a recursive sum with a base case: `inductive T | leaf | node : T → T → T`. -/
+theorem Ty.wf_recTaggedUnion_tree :
+    Ty.wf (.recTaggedUnion ⟨.skip (.here ⟨.self 0, [.self 0]⟩ [])⟩) = true := by decide
 
 end LakeJs
 

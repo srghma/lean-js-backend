@@ -495,17 +495,23 @@ partial def exprOf (cfg : JsConfig) (depth : Nat) : ∀ {Sg : Sig} {Γ : Ctx} {�
   | _, _, _, .global r => var r.name
   | _, _, _, .extern e => externValue cfg depth e
   | _, _, _, .jsOp op args => jsOpExpr cfg depth op args
+  | _, _, _, .lazyMk e => .arrow [] (arrowBody cfg depth e)
+  | _, _, _, .lazyForce e => .call (exprOf cfg depth e) []
   -- a constructor of an enum carries nothing, so the value *is* its number, shifted:
   -- `.enum 3 (-1)` (an `Ordering`) prints as `-1`, `0`, `1`
-  | _, _, .enum _ _ sh, .ctor i _ _ _ => intLit (Int.ofNat i + sh)
+  | _, _, .enum es, .ctor i _ _ _ => intLit (Int.ofNat i + es.shift)
   | _, _, _, .ctor i _ _ args => ctorExpr i (spineOf cfg depth args)
   | _, _, _, .proj e _ j _ => .dot (exprOf cfg depth e) (ident (fieldName j))
   -- and its tag is the value itself, shifted back
-  | _, _, _, .tagOf (σ := .enum _ _ sh) e _ => unshift sh (exprOf cfg depth e)
+  | _, _, _, .tagOf (σ := .enum es) e _ => unshift es.shift (exprOf cfg depth e)
   | _, _, _, .tagOf e _ => .dot (exprOf cfg depth e) (ident "tag")
   | _, _, _, t@(.letE ..) => iife (stmtsOf cfg depth t)
   | _, _, _, t@(.caseTag ..) => iife (stmtsOf cfg depth t)
   | _, _, _, t@(.loop ..) => iife (stmtsOf cfg depth t)
+  | _, _, _, t@(.joinPoint ..) => iife (stmtsOf cfg depth t)
+  -- a join point is a local function that never escapes, so a jump is an ordinary call
+  | _, _, _, .jump v args =>
+      .call (var (depthName (depth - 1 - varIndex v))) (spineOf cfg depth args)
   | _, _, _, .ite c t e => .ternary (exprOf cfg depth c) (exprOf cfg depth t) (exprOf cfg depth e)
 
 /-- A call whose head is an extern, printed as the JavaScript operator of that extern
@@ -596,6 +602,16 @@ partial def stmtsOf (cfg : JsConfig) (depth : Nat) :
         | d :: ds => .decl .let_ ⟨d, ds⟩
       [ declStmt
       , .while_ .true_ (.block (bodyStmts cfg (depth + n) depth n body)) ]
+  -- `const j = (v₀, …) => { … };` in front of the block the join point is in scope in:
+  -- the parameters shadow the name inside the arrow, which is harmless, since a join
+  -- point is never in scope in its own body
+  | _, _, _, .joinPoint (params := ps) body rest =>
+      let n := ps.length
+      let names := (List.range n).map
+        (fun i => MiniParam.plain (.ident (ident (depthName (depth + i)))))
+      .decl .const ⟨⟨.ident (ident (depthName depth)),
+          some (.arrow names (arrowBody cfg (depth + n) body))⟩, []⟩ ::
+        stmtsOf cfg (depth + 1) rest
   | _, _, _, t => [.return_ (some (exprOf cfg depth t))]
 
 /-- The branches of a case, as a chain of `if`s on the tag. -/
@@ -640,6 +656,15 @@ partial def bodyStmts (cfg : JsConfig) (depth : Nat) (base : Nat) (n : Nat) :
       [ .if_ (exprOf cfg depth c)
           (.block (bodyStmts cfg depth base n t))
           (some (.block (bodyStmts cfg depth base n e))) ]
+  -- a join point of a loop block prints exactly as one of a term does: a local arrow
+  -- that is only ever called, in front of the rest of the block
+  | _, _, _, _, .joinPointB (params := ps) body rest =>
+      let k := ps.length
+      let names := (List.range k).map
+        (fun i => MiniParam.plain (.ident (ident (depthName (depth + i)))))
+      .decl .const ⟨⟨.ident (ident (depthName depth)),
+          some (.arrow names (arrowBody cfg (depth + k) body))⟩, []⟩ ::
+        bodyStmts cfg (depth + 1) base n rest
 
 /-- How many values a spine holds. -/
 partial def spineLen : ∀ {Sg : Sig} {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → Nat
@@ -680,6 +705,7 @@ partial def externsOfTerm (cfg : JsConfig) : ∀ {Sg : Sig} {Γ : Ctx} {τ : Ty}
   | _, _, _, .lamProd rets => externsOfSpine cfg rets
   | _, _, _, .callProd f args _ => externsOfTerm cfg f ++ externsOfSpine cfg args
   | _, _, _, .jsOp _ args => externsOfSpine cfg args
+  | _, _, _, .lazyMk e | _, _, _, .lazyForce e => externsOfTerm cfg e
   | _, _, _, .letE e b => externsOfTerm cfg e ++ externsOfTerm cfg b
   | _, _, _, .ite c t e => externsOfTerm cfg c ++ externsOfTerm cfg t ++ externsOfTerm cfg e
   | _, _, _, .ctor _ _ _ args => externsOfSpine cfg args
@@ -687,6 +713,8 @@ partial def externsOfTerm (cfg : JsConfig) : ∀ {Sg : Sig} {Γ : Ctx} {τ : Ty}
   | _, _, _, .tagOf e _ => externsOfTerm cfg e
   | _, _, _, .caseTag s alts _ => externsOfTerm cfg s ++ externsOfAlts cfg alts
   | _, _, _, .loop init body => externsOfSpine cfg init ++ externsOfBody cfg body
+  | _, _, _, .joinPoint body rest => externsOfTerm cfg body ++ externsOfTerm cfg rest
+  | _, _, _, .jump _ args => externsOfSpine cfg args
 
 /-- The runtime names a spine calls. -/
 partial def externsOfSpine (cfg : JsConfig) : ∀ {Sg : Sig} {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → List String
@@ -706,6 +734,7 @@ partial def externsOfBody (cfg : JsConfig) :
   | _, _, _, _, .cont args => externsOfSpine cfg args
   | _, _, _, _, .letB e b => externsOfTerm cfg e ++ externsOfBody cfg b
   | _, _, _, _, .iteB c t e => externsOfTerm cfg c ++ externsOfBody cfg t ++ externsOfBody cfg e
+  | _, _, _, _, .joinPointB body rest => externsOfTerm cfg body ++ externsOfBody cfg rest
 
 end
 
@@ -724,6 +753,7 @@ partial def globalsOfTerm : ∀ {Sg : Sig} {Γ : Ctx} {τ : Ty}, Term Sg Γ τ �
   | _, _, _, .lamProd rets => globalsOfSpine rets
   | _, _, _, .callProd f args _ => globalsOfTerm f ++ globalsOfSpine args
   | _, _, _, .jsOp _ args => globalsOfSpine args
+  | _, _, _, .lazyMk e | _, _, _, .lazyForce e => globalsOfTerm e
   | _, _, _, .letE e b => globalsOfTerm e ++ globalsOfTerm b
   | _, _, _, .ite c t e => globalsOfTerm c ++ globalsOfTerm t ++ globalsOfTerm e
   | _, _, _, .ctor _ _ _ args => globalsOfSpine args
@@ -731,6 +761,8 @@ partial def globalsOfTerm : ∀ {Sg : Sig} {Γ : Ctx} {τ : Ty}, Term Sg Γ τ �
   | _, _, _, .tagOf e _ => globalsOfTerm e
   | _, _, _, .caseTag s alts _ => globalsOfTerm s ++ globalsOfAlts alts
   | _, _, _, .loop init body => globalsOfSpine init ++ globalsOfBody body
+  | _, _, _, .joinPoint body rest => globalsOfTerm body ++ globalsOfTerm rest
+  | _, _, _, .jump _ args => globalsOfSpine args
 
 /-- The globals a spine mentions. -/
 partial def globalsOfSpine : ∀ {Sg : Sig} {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → List String
@@ -750,6 +782,7 @@ partial def globalsOfBody :
   | _, _, _, _, .cont args => globalsOfSpine args
   | _, _, _, _, .letB e b => globalsOfTerm e ++ globalsOfBody b
   | _, _, _, _, .iteB c t e => globalsOfTerm c ++ globalsOfBody t ++ globalsOfBody e
+  | _, _, _, _, .joinPointB body rest => globalsOfTerm body ++ globalsOfBody rest
 
 end
 

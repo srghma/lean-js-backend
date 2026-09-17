@@ -105,6 +105,8 @@ def termOf {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → STerm
   | Γ, _, .lamProd (params := ps) rets => .lamProd (paramNames Γ.length ps) (spineOf rets)
   | _, _, .callProd f args i => .callProd i.val (termOf f) (spineOf args)
   | _, _, .jsOp op args => .op (opOf op) (spineOf args)
+  | _, _, .lazyMk e => .lazyMk (termOf e)
+  | _, _, .lazyForce e => .lazyForce (termOf e)
   | Γ, _, .letE (σ := σ) e b => .letE ("v" ++ toString Γ.length) σ (termOf e) (termOf b)
   | _, _, .ite c t e => .ite (termOf c) (termOf t) (termOf e)
   | _, τ, .ctor i _ _ args => .ctor i τ (spineOf args)
@@ -113,6 +115,10 @@ def termOf {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → STerm
   | _, _, .caseTag s alts _ => .caseTag (termOf s) (altsOf alts)
   | Γ, _, .loop (σs := σs) init body =>
       .loop (paramNames Γ.length σs) (spineOf init) (bodyOf body)
+  | Γ, _, .joinPoint (params := ps) (σ := σ) body rest =>
+      .joinPoint ("v" ++ toString Γ.length) (paramNames Γ.length ps) σ
+        (termOf body) (termOf rest)
+  | Γ, _, .jump v args => .jump (nameAt Γ.length v.index) (spineOf args)
 
 /-- A spine, as it is written. -/
 def spineOf {Sg : Sig} : ∀ {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → SSpine
@@ -133,6 +139,9 @@ def bodyOf {Sg : Sig} :
   | Γ, _, _, .letB (σ := σ) e b =>
       .letB ("v" ++ toString Γ.length) σ (termOf e) (bodyOf b)
   | _, _, _, .iteB c t e => .iteB (termOf c) (bodyOf t) (bodyOf e)
+  | Γ, _, _, .joinPointB (params := ps) (σ := σ) body rest =>
+      .joinPointB ("v" ++ toString Γ.length) (paramNames Γ.length ps) σ
+        (termOf body) (bodyOf rest)
 
 end
 

@@ -261,3 +261,41 @@ harmless and is what you actually want, but it is far cheaper obtained by deleti
 `let` in `Simp` and checking the result, than by indexing four mutually recursive families
 with a mask whose algebra holds only up to propositional equality and which makes
 use-deleting optimisations untypable.
+
+---
+
+## 10. What was built in the end
+
+`LakeJs/Usage.lean` is the extrinsic version recommended in §9, extended to cover the
+`let` rule as well as the parameter rule, and to cover the join points that `Term` has
+since gained:
+
+* `Term.occ i t` counts the occurrences of de Bruijn index `i` in `t`, counting the
+  target of a `Term.jump` as an occurrence.
+* `Term.usesOk m t` is the check.  A variable a function binds — a `Term.lamN`, a
+  `Term.lamProd`, a `Term.loop`, the body of a `Term.joinPoint` — must occur at least
+  once; a variable a `Term.letE` or a `Body.letB` binds must occur at least **twice**,
+  since one occurrence means the value belongs where it is read rather than in a `let`;
+  a join point must be jumped to at least once and must never be named as a value.  The
+  mask `m` is what says which variables of the context are join points.
+* `WfTerm Sg Γ τ` is the subtype of terms that pass.
+
+The refusals are stated and proved rather than only computed:
+`Term.not_usesOk_lamN_of_unusedParam`, `Term.not_usesOk_letE_of_readOnce`,
+`Term.not_usesOk_joinPoint_of_noJump`, `Term.not_usesOk_var_of_join` and
+`Term.not_usesOk_jump_of_notJoin`.
+
+The §9 objection stands and is the reason this is a predicate rather than an index:
+`def f (_ : String) : String := "a"` is still a `Term`, and still compiles.  What is new
+is that the backend can *say* whether a term it built or received observes the discipline,
+and `WfTerm` is the type to ask for where it must.
+
+---
+
+## Update: what was built instead
+
+The conclusion of this file — check the condition on the term rather than index `Term` by
+a usage mask — is what the backend does, but the check is no longer only about dead
+`let`s.  `LakeJs/Usage.lean` states the whole discipline, `LakeJs/LinearLet.lean` and
+`LakeJs/DeadSlot.lean` establish it, and `LakeJs.Compile` refuses a module that breaks
+it.  See `USAGE_ENFORCEMENT.md`.

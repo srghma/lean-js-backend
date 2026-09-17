@@ -265,3 +265,15 @@ terminate (`LakeJs/ReduceCycle.lean`).
 `simp_not_idempotent` and `step_not_wellFounded` were re-checked here with
 `#print axioms`; each depends only on `propext`, `Classical.choice` and `Quot.sound`, so
 they are genuine proofs rather than assumptions.
+
+---
+
+## Update: items 2 and 4 have moved on
+
+Join points are a construct of `Term` (`Term.joinPoint`, `Term.jump`), and the usage
+discipline of `LakeJs.Usage` is now *enforced*: two passes establish it
+(`LakeJs.LinearLet`, `LakeJs.DeadSlot`), `LakeJs.Compile` refuses a module whose printed
+declarations break it, and `lake test` re-checks it over the corpus.  The unused loop
+slots and the singly-read `let`s this file counted are gone from the generated
+JavaScript; what is still only *reported* is an unread **function parameter**, which is
+part of the function's type.  See `USAGE_ENFORCEMENT.md`.

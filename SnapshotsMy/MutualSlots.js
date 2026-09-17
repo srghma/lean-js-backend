@@ -1,35 +1,24 @@
 const _spec$walkNat = (v0, v1, v2) => {
-  let v3 = v0, v4 = v1, v5 = v2;
+  let v3 = v0, v4 = v1;
   while (true) {
     if (v3 === 0) {
       return v4;
     } else {
-      const v6 = v3 - 1;
-      const v7 = v4 === 0;
-      if (v7) {
-        if (v6 === 0) {
-          const v8 = "".length;
-          return v8;
+      const v5 = v3 - 1;
+      if (v4 === 0) {
+        if (v5 === 0) {
+          return "".length;
         } else {
-          const v8 = v6 - 1;
-          const v9 = "".length;
-          const v10 = v9 + 1;
-          v3 = v8;
-          v4 = v10;
-          v5 = "";
+          v3 = v5 - 1;
+          v4 = "".length + 1;
           continue;
         }
       } else {
-        if (v6 === 0) {
-          const v8 = "xy".length;
-          return v8;
+        if (v5 === 0) {
+          return "xy".length;
         } else {
-          const v8 = v6 - 1;
-          const v9 = "xy".length;
-          const v10 = v9 + 1;
-          v3 = v8;
-          v4 = v10;
-          v5 = "xy";
+          v3 = v5 - 1;
+          v4 = "xy".length + 1;
           continue;
         }
       }
@@ -41,9 +30,6 @@ export const walkStr = (v0, v1) => {
   if (v0 === 0) {
     return v1.length;
   } else {
-    const v2 = v0 - 1;
-    const v3 = v1.length;
-    const v4 = v3 + 1;
-    return _spec$walkNat(v2, v4, v1);
+    return _spec$walkNat(v0 - 1, v1.length + 1, v1);
   }
 };

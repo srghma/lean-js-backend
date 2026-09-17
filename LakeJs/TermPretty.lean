@@ -113,12 +113,22 @@ def Term.ppLines {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Nat → Term Sg Γ τ �
         :: Term.ppLines (i + 2) e ++ [pad i ++ ")"]
   | _, _, i, .tagOf e _ =>
       (pad i ++ "(tagOf") :: Term.ppLines (i + 2) e ++ [pad i ++ ")"]
+  | _, _, i, .lazyMk e =>
+      (pad i ++ "(lazy") :: Term.ppLines (i + 2) e ++ [pad i ++ ")"]
+  | _, _, i, .lazyForce e =>
+      (pad i ++ "(force") :: Term.ppLines (i + 2) e ++ [pad i ++ ")"]
   | _, _, i, .caseTag s alts _ =>
       (pad i ++ "(caseTag") :: Term.ppLines (i + 2) s ++ Alts.ppLines (i + 2) alts
         ++ [pad i ++ ")"]
   | _, _, i, .loop (σs := σs) init body =>
       (pad i ++ "(loop " ++ tyList σs) :: Spine.ppLines (i + 2) init
         ++ Body.ppLines (i + 2) body ++ [pad i ++ ")"]
+  | _, _, i, .joinPoint (params := ps) body rest =>
+      (pad i ++ "(joinPoint " ++ tyList ps) :: Term.ppLines (i + 2) body
+        ++ Term.ppLines (i + 2) rest ++ [pad i ++ ")"]
+  | _, _, i, .jump v args =>
+      (pad i ++ "(jump " ++ toString v.index) :: Spine.ppLines (i + 2) args
+        ++ [pad i ++ ")"]
 
 /-- `Term.ppLines`, on every term of a spine. -/
 def Spine.ppLines {Sg : Sig} :
@@ -146,6 +156,9 @@ def Body.ppLines {Sg : Sig} :
   | _, _, _, i, .iteB c t u =>
       (pad i ++ "(iteB") :: Term.ppLines (i + 2) c ++ Body.ppLines (i + 2) t
         ++ Body.ppLines (i + 2) u ++ [pad i ++ ")"]
+  | _, _, _, i, .joinPointB (params := ps) body rest =>
+      (pad i ++ "(joinPointB " ++ tyList ps) :: Term.ppLines (i + 2) body
+        ++ Body.ppLines (i + 2) rest ++ [pad i ++ ")"]
 
 end
 

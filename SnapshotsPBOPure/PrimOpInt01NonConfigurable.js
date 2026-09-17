@@ -45,8 +45,7 @@ import {
 export const TestUInt8_sub = (v0, v1) => $lean_uint8_sub(v0, v1);
 export const TestUInt8_neg = (v0) => $lean_uint8_neg(v0);
 export const TestUInt8_ne = (v0, v1) => {
-  const v2 = instDecidableEqUInt8(v0, v1);
-  if (v2) {
+  if (instDecidableEqUInt8(v0, v1)) {
     return false;
   } else {
     return true;
@@ -63,8 +62,7 @@ export const TestUInt8_add = (v0, v1) => $lean_uint8_add(v0, v1);
 export const TestUInt32_sub = (v0, v1) => $lean_uint32_sub(v0, v1);
 export const TestUInt32_neg = (v0) => $lean_uint32_neg(v0);
 export const TestUInt32_ne = (v0, v1) => {
-  const v2 = instDecidableEqUInt32(v0, v1);
-  if (v2) {
+  if (instDecidableEqUInt32(v0, v1)) {
     return false;
   } else {
     return true;
@@ -81,8 +79,7 @@ export const TestUInt32_add = (v0, v1) => $lean_uint32_add(v0, v1);
 export const TestUInt16_sub = (v0, v1) => $lean_uint16_sub(v0, v1);
 export const TestUInt16_neg = (v0) => $lean_uint16_neg(v0);
 export const TestUInt16_ne = (v0, v1) => {
-  const v2 = instDecidableEqUInt16(v0, v1);
-  if (v2) {
+  if (instDecidableEqUInt16(v0, v1)) {
     return false;
   } else {
     return true;
@@ -99,8 +96,7 @@ export const TestUInt16_add = (v0, v1) => $lean_uint16_add(v0, v1);
 export const TestInt8_sub = (v0, v1) => $lean_int8_sub(v0, v1);
 export const TestInt8_neg = (v0) => $lean_int8_neg(v0);
 export const TestInt8_ne = (v0, v1) => {
-  const v2 = instDecidableEqInt8(v0, v1);
-  if (v2) {
+  if (instDecidableEqInt8(v0, v1)) {
     return false;
   } else {
     return true;
@@ -117,8 +113,7 @@ export const TestInt8_add = (v0, v1) => $lean_int8_add(v0, v1);
 export const TestInt32_sub = (v0, v1) => $lean_int32_sub(v0, v1);
 export const TestInt32_neg = (v0) => $lean_int32_neg(v0);
 export const TestInt32_ne = (v0, v1) => {
-  const v2 = instDecidableEqInt32(v0, v1);
-  if (v2) {
+  if (instDecidableEqInt32(v0, v1)) {
     return false;
   } else {
     return true;
@@ -135,8 +130,7 @@ export const TestInt32_add = (v0, v1) => $lean_int32_add(v0, v1);
 export const TestInt16_sub = (v0, v1) => $lean_int16_sub(v0, v1);
 export const TestInt16_neg = (v0) => $lean_int16_neg(v0);
 export const TestInt16_ne = (v0, v1) => {
-  const v2 = instDecidableEqInt16(v0, v1);
-  if (v2) {
+  if (instDecidableEqInt16(v0, v1)) {
     return false;
   } else {
     return true;

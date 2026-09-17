@@ -1,5 +1,6 @@
 import LakeJs.TermElab
 import LakeJs.TermDeelab
+import LakeJs.Usage
 
 /-!
 # The surface syntax, checked against the terms it stands for
@@ -69,7 +70,7 @@ sig nat
 /-! ## A constructor, a projection and a tag -/
 
 /-- `{ tag: 0, _1: 7, _2: true }`. -/
-def pair : Term Sg1 [] (.record [.nat, .bool]) :=
+def pair : Term Sg1 [] ((.prod .nat .bool)) :=
   .ctor 0 _ rfl (.cons (.lit (.nat 7)) (.cons (.lit (.bool true)) .nil))
 
 example : pair = [LEAN|
@@ -86,7 +87,7 @@ sig (record [nat, bool])
 #guard pair.roundTrips
 
 /-- `let x = p._1; x`, the second read being a `cast` that costs nothing. -/
-def firstField : Term Sg1 [.record [.nat, .bool]] .nat :=
+def firstField : Term Sg1 [(.prod .nat .bool)] .nat :=
   .letE (σ := .nat) (.proj (.var .head) 0 0 rfl)
     (.jsOp (.cast .nat .nat) (.cons (.var .head) .nil))
 
@@ -108,7 +109,7 @@ sig nat
 #guard firstField.roundTrips
 
 /-- The runtime tag of an `Option Nat`. -/
-def optionTag : Term Sg1 [.taggedUnion [[], [.nat]]] .nat :=
+def optionTag : Term Sg1 [(.option .nat)] .nat :=
   .tagOf (.var .head) rfl
 
 example : optionTag = [LEAN|
@@ -126,7 +127,7 @@ sig nat
 /-! ## A dispatch on the tag -/
 
 /-- `match o with | none => 0 | some n => n`. -/
-def optionOrZero : Term [⟨"g", .nat⟩] [.taggedUnion [[], [.nat]]] .nat :=
+def optionOrZero : Term [⟨"g", .nat⟩] [(.option .nat)] .nat :=
   .caseTag (.var .head)
     (.cons 0 (.lit (.nat 0)) (.deflt (.proj (.var .head) 1 0 rfl)))
     rfl
@@ -312,7 +313,7 @@ sig float
 
 /-- One constant of each of the shapes whose text is not just a number. -/
 def constants : Term [] []
-    (.record [.char, .string, .name, .substring, .byteArray, .bitvec 8]) :=
+    (.record ⟨.char, .string, [.name, .substring, .byteArray, .bitvec 8]⟩) :=
   [LEAN|
 sig (record [char, string, name, substring, byteArray, (bitvec 8)])
 |glob
@@ -380,5 +381,74 @@ example : addOne = [LEAN|
   )
 )
 ] := rfl
+
+
+/-! ## Join points: the term's own, and a loop block's
+
+`(join j […] : τ body rest)` binds a name the rest may only *jump* to, and
+`(joinB j […] : τ body rest)` is the same inside a loop block (`Body.joinPointB`). -/
+
+/-- The join point of `LakeJs.Usage.joinExample`, written in the surface syntax: one
+    parameter, jumped to from both arms of a conditional. -/
+example : LakeJs.Usage.joinExample = [LEAN|
+sig nat
+|glob
+|vars
+|
+(join v0 [v0 : nat] : nat
+  (app
+    (extern lean_nat_add)
+    v0
+    v0
+  )
+  (if
+    (lit bool true)
+    (jump v0 (lit nat 1))
+    (jump v0 (lit nat 2))
+  )
+)
+] := rfl
+
+#guard LakeJs.Usage.joinExample.roundTrips
+
+/-- A join point **of a loop block**: the block binds it, both arms of its conditional
+    jump to it, and the jump is what the block answers with. -/
+def loopJoin : Term [] [] Ty.nat :=
+  [LEAN|
+sig nat
+|glob
+|vars
+|
+(loop [v0 : nat]
+  (lit nat 3)
+  (joinB v1 [v1 : nat] : nat
+    (app
+      (extern lean_nat_add)
+      v1
+      v0
+    )
+    (ifB
+      (lit bool true)
+      (ret (jump v1 (lit nat 1)))
+      (ret (jump v1 (lit nat 2)))
+    )
+  )
+)
+]
+
+example : loopJoin =
+    .loop (σs := [Ty.nat]) (.cons (.lit (.nat 3)) .nil)
+      (.joinPointB (params := [Ty.nat]) (σ := Ty.nat)
+        (.apN (.extern .lean_nat_add)
+          (.cons (.var .head) (.cons (.var (.tail .head)) .nil)))
+        (.iteB (.lit (.bool true))
+          (.ret (.jump .head (.cons (.lit (.nat 1)) .nil)))
+          (.ret (.jump .head (.cons (.lit (.nat 2)) .nil))))) := rfl
+
+#guard loopJoin.roundTrips
+
+/-- And it keeps to the usage discipline: the join point is jumped to, its parameter is
+    read, and its name is never used as a value. -/
+example : LakeJs.Usage.Term.usesOk [] loopJoin = true := by decide +kernel
 
 end LakeJs.TermSyntaxSpec

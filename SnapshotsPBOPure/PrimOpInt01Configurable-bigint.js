@@ -48,8 +48,7 @@ import {
 export const TestUSize_sub = (v0, v1) => $lean_usize_sub(v0, v1);
 export const TestUSize_neg = (v0) => $lean_usize_neg(v0);
 export const TestUSize_ne = (v0, v1) => {
-  const v2 = instDecidableEqUSize(v0, v1);
-  if (v2) {
+  if (instDecidableEqUSize(v0, v1)) {
     return false;
   } else {
     return true;
@@ -66,8 +65,7 @@ export const TestUSize_add = (v0, v1) => $lean_usize_add(v0, v1);
 export const TestUInt64_sub = (v0, v1) => $lean_uint64_sub(v0, v1);
 export const TestUInt64_neg = (v0) => $lean_uint64_neg(v0);
 export const TestUInt64_ne = (v0, v1) => {
-  const v2 = instDecidableEqUInt64(v0, v1);
-  if (v2) {
+  if (instDecidableEqUInt64(v0, v1)) {
     return false;
   } else {
     return true;
@@ -83,8 +81,7 @@ export const TestUInt64_div = (v0, v1) => $lean_uint64_div(v0, v1);
 export const TestUInt64_add = (v0, v1) => $lean_uint64_add(v0, v1);
 export const TestNat_sub = (v0, v1) => $lean_nat_sub(v0, v1);
 export const TestNat_ne = (v0, v1) => {
-  const v2 = v0 === v1;
-  if (v2) {
+  if (v0 === v1) {
     return false;
   } else {
     return true;
@@ -101,8 +98,7 @@ export const TestNat_add = (v0, v1) => v0 + v1;
 export const TestInt64_sub = (v0, v1) => $lean_int64_sub(v0, v1);
 export const TestInt64_neg = (v0) => $lean_int64_neg(v0);
 export const TestInt64_ne = (v0, v1) => {
-  const v2 = instDecidableEqInt64(v0, v1);
-  if (v2) {
+  if (instDecidableEqInt64(v0, v1)) {
     return false;
   } else {
     return true;
@@ -119,8 +115,7 @@ export const TestInt64_add = (v0, v1) => $lean_int64_add(v0, v1);
 export const TestInt_sub = (v0, v1) => v0 - v1;
 export const TestInt_neg = (v0) => $lean_int_neg(v0);
 export const TestInt_ne = (v0, v1) => {
-  const v2 = Int_instDecidableEq(v0, v1);
-  if (v2) {
+  if (Int_instDecidableEq(v0, v1)) {
     return false;
   } else {
     return true;
@@ -137,8 +132,7 @@ export const TestInt_add = (v0, v1) => v0 + v1;
 export const TestISize_sub = (v0, v1) => $lean_isize_sub(v0, v1);
 export const TestISize_neg = (v0) => $lean_isize_neg(v0);
 export const TestISize_ne = (v0, v1) => {
-  const v2 = instDecidableEqISize(v0, v1);
-  if (v2) {
+  if (instDecidableEqISize(v0, v1)) {
     return false;
   } else {
     return true;

@@ -50,6 +50,8 @@ open Lean Elab Command Term Meta Lean.Compiler.LCNF
 
 namespace LakeJs.TyDerive
 
+open NonEmpty.ListCorrectByConstruction (NonEmptyList)
+
 open LakeJs.Ty
 open LakeJs.TyMeta
 
@@ -98,42 +100,47 @@ partial def substTy (self : Name) (k : Nat) : Ty → Ty → MetaM Term
   | .prim p, .prim q =>
       if p == q then do `(Ty.prim $(← primSyn p))
       else mismatch self (Ty.pretty (.prim p)) (Ty.pretty (.prim q))
-  | .shape s, .shape t => substShape self k s t
-  | .enum n h sh, .enum m _ sh' =>
-      if n == m && sh == sh' then tySyn (.enum n h sh)
-      else mismatch self (Ty.pretty (.enum n h sh)) s!"(enum {m} {sh'})"
-  | .record a, .record b => do `(Ty.record $(← substList self k a b))
-  | .taggedUnion a, .taggedUnion b => do `(Ty.taggedUnion $(← substCtors self k a b))
-  | .recTaggedUnion a, .recTaggedUnion b => do
-      `(Ty.recTaggedUnion $(← substRCtors self k a b))
-  | .recObject a, .recObject b => do `(Ty.recObject $(← substRList self k a b))
-  | .recAlias a, .recAlias b => do `(Ty.recAlias $(← substRTy self k a b))
-  | .mutualRecursiveFamily ms i, .mutualRecursiveFamily ns j =>
-      if i == j then do
-        `(Ty.mutualRecursiveFamily $(← substMembers self k ms ns) $(quote i))
-      else mismatch self (Ty.pretty (.mutualRecursiveFamily ms i))
-        (Ty.pretty (.mutualRecursiveFamily ns j))
+  | .fnTy s, .fnTy t => substFn self k s t
+  | .primCovariant s, .primCovariant t => substInv self k s t
+  | .enum e, .enum e' =>
+      if e == e' then tySyn (.enum e)
+      else mismatch self (Ty.pretty (.enum e)) (Ty.pretty (.enum e'))
+  | .record a, .record b => do `(Ty.record $(← substA2 self k a b))
+  | .taggedUnion a, .taggedUnion b => do `(Ty.taggedUnion $(← substTU self k a b))
+  | .recTaggedUnion ⟨a⟩, .recTaggedUnion ⟨b⟩ => do
+      `(Ty.recTaggedUnion ⟨$(← substRTU self k a b)⟩)
+  | .recObject ⟨a⟩, .recObject ⟨b⟩ => do `(Ty.recObject ⟨$(← substRA2 self k a b)⟩)
+  | .recAlias ⟨a⟩, .recAlias ⟨b⟩ => do `(Ty.recAlias ⟨$(← substRTy self k a b)⟩)
+  | .mutualRecursiveFamily f, .mutualRecursiveFamily g => do
+      `(Ty.mutualRecursiveFamily $(← substFamily self k f g))
   | a, b => mismatch self (Ty.pretty a) (Ty.pretty b)
 
-/-- `substTy`, on one of the shared type formers. -/
-partial def substShape (self : Name) (k : Nat) : Shape Ty → Shape Ty → MetaM Term
+/-- `substTy`, on a function type. -/
+partial def substFn (self : Name) (k : Nat) : TyFn Ty → TyFn Ty → MetaM Term
   | .fn ps r, .fn qs s => do `(Ty.fn $(← substList self k ps qs) $(← substTy self k r s))
   | .fn_returnsProd ps r rs, .fn_returnsProd qs s ss => do
       `(Ty.fn_returnsProd $(← substList self k ps qs) $(← substTy self k r s)
           $(← substList self k rs ss))
+  | a, b => mismatch self (Ty.pretty (.fnTy a)) (Ty.pretty (.fnTy b))
+
+/-- `substTy`, on an invariant type former. -/
+partial def substInv (self : Name) (k : Nat) :
+    LeanPrimTyCovariant Ty → LeanPrimTyCovariant Ty → MetaM Term
   | .array a, .array b => do `(Ty.array $(← substTy self k a b))
   | .list a, .list b => do `(Ty.list $(← substTy self k a b))
   | .task a, .task b => do `(Ty.task $(← substTy self k a b))
   | .promise a, .promise b => do `(Ty.promise $(← substTy self k a b))
   | .thunk a, .thunk b => do `(Ty.thunk $(← substTy self k a b))
-  | a, b => mismatch self (Ty.pretty (.shape a)) (Ty.pretty (.shape b))
+  | .lazy a, .lazy b => do `(Ty.lazy $(← substTy self k a b))
+  | a, b =>
+      mismatch self (Ty.pretty (.primCovariant a)) (Ty.pretty (.primCovariant b))
 
 /-- `substTy`, on a list of types. -/
 partial def substList (self : Name) (k : Nat) :
     List Ty → List Ty → MetaM Term
   | as, bs =>
       if as.length != bs.length then
-        mismatch self (Ty.pretty (.record as)) (Ty.pretty (.record bs))
+        mismatch self s!"{as.length} types" s!"{bs.length} types"
       else do
         let ts ← (as.zip bs).toArray.mapM fun (a, b) => substTy self k a b
         `([$ts,*])
@@ -143,10 +150,43 @@ partial def substCtors (self : Name) (k : Nat) :
     List (List Ty) → List (List Ty) → MetaM Term
   | as, bs =>
       if as.length != bs.length then
-        mismatch self (Ty.pretty (.taggedUnion as)) (Ty.pretty (.taggedUnion bs))
+        mismatch self s!"{as.length} constructors" s!"{bs.length} constructors"
       else do
         let l ← (as.zip bs).toArray.mapM fun (a, b) => substList self k a b
         `([$l,*])
+
+/-- `substTy`, on the fields of a record. -/
+partial def substA2 (self : Name) (k : Nat) :
+    LeanRecordSchema Ty → LeanRecordSchema Ty → MetaM Term
+  | ⟨a1, a2, as⟩, ⟨b1, b2, bs⟩ => do
+      `(⟨$(← substTy self k a1 b1), $(← substTy self k a2 b2),
+         $(← substList self k as bs)⟩)
+
+/-- `substTy`, on the fields of a constructor that has at least one. -/
+partial def substNE (self : Name) (k : Nat) :
+    NonEmptyList Ty → NonEmptyList Ty → MetaM Term
+  | ⟨a, as⟩, ⟨b, bs⟩ => do
+      `(⟨$(← substTy self k a b), $(← substList self k as bs)⟩)
+
+/-- `substTy`, on the constructors of a tagged union. -/
+partial def substTU (self : Name) (k : Nat) :
+    LeanTaggedUnionSchema Ty → LeanTaggedUnionSchema Ty → MetaM Term
+  | .payloadFirst f n r, .payloadFirst g m s => do
+      `(LeanTaggedUnionSchema.payloadFirst $(← substNE self k f g)
+          $(← substList self k n m) $(← substCtors self k r s))
+  | .skip a, .skip b => do `(LeanTaggedUnionSchema.skip $(← substCP self k a b))
+  | a, b =>
+      mismatch self (Ty.pretty (.taggedUnion a)) (Ty.pretty (.taggedUnion b))
+
+/-- `substTy`, on the constructors that follow a field-less one. -/
+partial def substCP (self : Name) (k : Nat) :
+    CtorsWithPayload Ty → CtorsWithPayload Ty → MetaM Term
+  | .here f r, .here g s => do
+      `(CtorsWithPayload.here $(← substNE self k f g) $(← substCtors self k r s))
+  | .skip a, .skip b => do `(CtorsWithPayload.skip $(← substCP self k a b))
+  | _, _ =>
+      mismatch self "a sum whose first constructor carries fields"
+        "a sum whose first constructor carries none"
 
 /-- `substTy`, on a type inside a recursive declaration. -/
 partial def substRTy (self : Name) (k : Nat) : RTy → RTy → MetaM Term
@@ -164,43 +204,48 @@ partial def substRTy (self : Name) (k : Nat) : RTy → RTy → MetaM Term
   | .prim p, .prim q =>
       if p == q then do `(RTy.prim $(← primSyn p))
       else mismatch self (RTy.pretty (.prim p)) (RTy.pretty (.prim q))
-  | .shape s, .shape t => substRShape self k s t
-  | .enum n h sh, .enum m _ sh' =>
-      if n == m && sh == sh' then rtySyn (.enum n h sh)
-      else mismatch self (RTy.pretty (.enum n h sh)) s!"(enum {m} {sh'})"
-  | .record a, .record b => do `(RTy.record $(← substRList self k a b))
-  | .taggedUnion a, .taggedUnion b => do `(RTy.taggedUnion $(← substRCtors self k a b))
-  | .recTaggedUnion a, .recTaggedUnion b => do
-      `(RTy.recTaggedUnion $(← substRCtors self k a b))
-  | .recObject a, .recObject b => do `(RTy.recObject $(← substRList self k a b))
-  | .recAlias a, .recAlias b => do `(RTy.recAlias $(← substRTy self k a b))
-  | .mutualRecursiveFamily ms i, .mutualRecursiveFamily ns j =>
-      if i == j then do
-        `(RTy.mutualRecursiveFamily $(← substMembers self k ms ns) $(quote i))
-      else mismatch self (RTy.pretty (.mutualRecursiveFamily ms i))
-        (RTy.pretty (.mutualRecursiveFamily ns j))
+  | .fnTy s, .fnTy t => substRFn self k s t
+  | .primCovariant s, .primCovariant t => substRInv self k s t
+  | .enum e, .enum e' =>
+      if e == e' then rtySyn (.enum e)
+      else mismatch self (RTy.pretty (.enum e)) (RTy.pretty (.enum e'))
+  | .record a, .record b => do `(RTy.record $(← substRA2 self k a b))
+  | .taggedUnion a, .taggedUnion b => do `(RTy.taggedUnion $(← substRTU self k a b))
+  | .recTaggedUnion ⟨a⟩, .recTaggedUnion ⟨b⟩ => do
+      `(RTy.recTaggedUnion ⟨$(← substRTU self k a b)⟩)
+  | .recObject ⟨a⟩, .recObject ⟨b⟩ => do `(RTy.recObject ⟨$(← substRA2 self k a b)⟩)
+  | .recAlias ⟨a⟩, .recAlias ⟨b⟩ => do `(RTy.recAlias ⟨$(← substRTy self k a b)⟩)
+  | .mutualRecursiveFamily f, .mutualRecursiveFamily g => do
+      `(RTy.mutualRecursiveFamily $(← substFamily self k f g))
   | a, b => mismatch self (RTy.pretty a) (RTy.pretty b)
 
-/-- `substRTy`, on one of the shared type formers. -/
-partial def substRShape (self : Name) (k : Nat) : Shape RTy → Shape RTy → MetaM Term
+/-- `substRTy`, on a function type. -/
+partial def substRFn (self : Name) (k : Nat) : TyFn RTy → TyFn RTy → MetaM Term
   | .fn ps r, .fn qs s => do
       `(RTy.fn $(← substRList self k ps qs) $(← substRTy self k r s))
   | .fn_returnsProd ps r rs, .fn_returnsProd qs s ss => do
       `(RTy.fn_returnsProd $(← substRList self k ps qs) $(← substRTy self k r s)
           $(← substRList self k rs ss))
+  | a, b => mismatch self (RTy.pretty (.fnTy a)) (RTy.pretty (.fnTy b))
+
+/-- `substRTy`, on an invariant type former. -/
+partial def substRInv (self : Name) (k : Nat) :
+    LeanPrimTyCovariant RTy → LeanPrimTyCovariant RTy → MetaM Term
   | .array a, .array b => do `(RTy.array $(← substRTy self k a b))
   | .list a, .list b => do `(RTy.list $(← substRTy self k a b))
   | .task a, .task b => do `(RTy.task $(← substRTy self k a b))
   | .promise a, .promise b => do `(RTy.promise $(← substRTy self k a b))
   | .thunk a, .thunk b => do `(RTy.thunk $(← substRTy self k a b))
-  | a, b => mismatch self (RTy.pretty (.shape a)) (RTy.pretty (.shape b))
+  | .lazy a, .lazy b => do `(RTy.lazy $(← substRTy self k a b))
+  | a, b =>
+      mismatch self (RTy.pretty (.primCovariant a)) (RTy.pretty (.primCovariant b))
 
 /-- `substRTy`, on a list of types. -/
 partial def substRList (self : Name) (k : Nat) :
     List RTy → List RTy → MetaM Term
   | as, bs =>
       if as.length != bs.length then
-        mismatch self (RTy.pretty (.record as)) (RTy.pretty (.record bs))
+        mismatch self s!"{as.length} types" s!"{bs.length} types"
       else do
         let ts ← (as.zip bs).toArray.mapM fun (a, b) => substRTy self k a b
         `([$ts,*])
@@ -210,17 +255,51 @@ partial def substRCtors (self : Name) (k : Nat) :
     List (List RTy) → List (List RTy) → MetaM Term
   | as, bs =>
       if as.length != bs.length then
-        mismatch self (RTy.pretty (.taggedUnion as)) (RTy.pretty (.taggedUnion bs))
+        mismatch self s!"{as.length} constructors" s!"{bs.length} constructors"
       else do
         let l ← (as.zip bs).toArray.mapM fun (a, b) => substRList self k a b
         `([$l,*])
 
+/-- `substRTy`, on the fields of a record. -/
+partial def substRA2 (self : Name) (k : Nat) :
+    LeanRecordSchema RTy → LeanRecordSchema RTy → MetaM Term
+  | ⟨a1, a2, as⟩, ⟨b1, b2, bs⟩ => do
+      `(⟨$(← substRTy self k a1 b1), $(← substRTy self k a2 b2),
+         $(← substRList self k as bs)⟩)
+
+/-- `substRTy`, on the fields of a constructor that has at least one. -/
+partial def substRNE (self : Name) (k : Nat) :
+    NonEmptyList RTy → NonEmptyList RTy → MetaM Term
+  | ⟨a, as⟩, ⟨b, bs⟩ => do
+      `(⟨$(← substRTy self k a b), $(← substRList self k as bs)⟩)
+
+/-- `substRTy`, on the constructors of a tagged union. -/
+partial def substRTU (self : Name) (k : Nat) :
+    LeanTaggedUnionSchema RTy → LeanTaggedUnionSchema RTy → MetaM Term
+  | .payloadFirst f n r, .payloadFirst g m s => do
+      `(LeanTaggedUnionSchema.payloadFirst $(← substRNE self k f g)
+          $(← substRList self k n m) $(← substRCtors self k r s))
+  | .skip a, .skip b => do `(LeanTaggedUnionSchema.skip $(← substRCP self k a b))
+  | a, b =>
+      mismatch self (RTy.pretty (.taggedUnion a)) (RTy.pretty (.taggedUnion b))
+
+/-- `substRTy`, on the constructors that follow a field-less one. -/
+partial def substRCP (self : Name) (k : Nat) :
+    CtorsWithPayload RTy → CtorsWithPayload RTy → MetaM Term
+  | .here f r, .here g s => do
+      `(CtorsWithPayload.here $(← substRNE self k f g) $(← substRCtors self k r s))
+  | .skip a, .skip b => do `(CtorsWithPayload.skip $(← substRCP self k a b))
+  | _, _ =>
+      mismatch self "a sum whose first constructor carries fields"
+        "a sum whose first constructor carries none"
+
 /-- `substRTy`, on one member of a mutual family. -/
 partial def substMember (self : Name) (k : Nat) : FamMember → FamMember → MetaM Term
-  | .ctors a, .ctors b => do `(FamMember.ctors $(← substRCtors self k a b))
-  | .alias a, .alias b => do `(FamMember.alias $(← substRTy self k a b))
-  | .ctors a, .alias b => mismatch self (RTy.pretty (.recTaggedUnion a)) (RTy.pretty b)
-  | .alias a, .ctors b => mismatch self (RTy.pretty a) (RTy.pretty (.recTaggedUnion b))
+  | .ctors a, .ctors b => do `(LeanFamMemberSchema.ctors $(← substRTU self k a b))
+  | .record a, .record b => do `(LeanFamMemberSchema.record $(← substRA2 self k a b))
+  | .alias a, .alias b => do `(LeanFamMemberSchema.alias $(← substRTy self k a b))
+  | _, _ =>
+      mismatch self "a member of one shape" "a member of another"
 
 /-- `substRTy`, on the members of a mutual family. -/
 partial def substMembers (self : Name) (k : Nat) :
@@ -232,6 +311,19 @@ partial def substMembers (self : Name) (k : Nat) :
       else do
         let ms ← (as.zip bs).toArray.mapM fun (a, b) => substMember self k a b
         `([$ms,*])
+
+/-- `substRTy`, on a whole mutual family. -/
+partial def substFamily (self : Name) (k : Nat) :
+    LeanMutualRecFamily RTy → LeanMutualRecFamily RTy → MetaM Term
+  | .selectedThenMore b1 c1 n1 a1, .selectedThenMore b2 c2 n2 a2 => do
+      `(LeanMutualRecFamily.selectedThenMore $(← substMembers self k b1 b2)
+          $(← substMember self k c1 c2) $(← substMember self k n1 n2)
+          $(← substMembers self k a1 a2))
+  | .selectedLast f1 b1 c1, .selectedLast f2 b2 c2 => do
+      `(LeanMutualRecFamily.selectedLast $(← substMember self k f1 f2)
+          $(← substMembers self k b1 b2) $(← substMember self k c1 c2))
+  | _, _ =>
+      mismatch self "a family selecting one member" "a family selecting another"
 
 end
 

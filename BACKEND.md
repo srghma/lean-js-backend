@@ -30,21 +30,55 @@ lake env ./.lake/build/bin/lean-to-js-backend --config=faithful SnapshotsPBOPure
 
 `UInt8/16/32`, `Int8/16/32`, `Float`, `Char`, `String` and `Array` are not configurable,
 since a number holds each of them exactly; a module built only out of those has one
-output rather than two, which is what `PrimOpIntDivNonConfigurable.lean` is.
+output rather than two, which is what the `…NonConfigurable.lean` snapshots are.  A bit
+vector follows `bitvecRepr` from 32 bits up and is a number below that.
 
 The representation reaches the output in three places: the literals, the operator forms
 (`a + b` is not `UInt64.add` over numbers *or* over `BigInt`s, but `1n` is not `1`), and
-the runtime prelude the module imports — `runtime/lean_runtime.mjs` implements the
-externs over numbers and `runtime/lean_runtime_bigint.mjs` over `BigInt`s.  A
-configuration that mixes the two would need a prelude that is neither, so it is refused
-(`JsConfig.isUniform`), and the test run checks that it is.
+the runtime prelude the module imports.  The prelude is **one module per knob**, not one
+per configuration:
+
+* `runtime/lean_runtime_non_configurable.mjs` — every function whose answer is of a type
+  no knob decides (a `Bool`, a `String`, an array, a fixed-width type below 64 bits);
+* `runtime/lean_runtime_<knob>_num.mjs` and `runtime/lean_runtime_<knob>_bigint.mjs` for
+  each of `nat`, `int`, `usize`, `uint64`, `int64`, `isize`, `bitvec` — the functions
+  that answer with the type that knob decides.
+
+The split is not only a convention: the test run reads the files and checks that each
+module of the prelude exports exactly the names its group claims
+(`LakeJs.Config.RuntimeGroup.names`, `LakeJsTest.checkRuntimeSplit`), so a runtime
+function whose answer a knob decides cannot sit in the part no knob changes, and a name
+the group claims cannot be missing from the file it is imported from.  The `bitvec`
+group is the one that pays for itself: `BitVec.add` and its neighbours take the width as
+an argument and answer with a bit vector, so they follow `bitvecRepr`, while
+`BitVec.toNat` answers with a `Nat` and is with the `Nat` functions, and the decidable
+comparisons answer with a `Bool` and read either representation, so they are in the part
+no knob changes.
+
+A compiled module imports one of them per group of names it uses, so an output at
+`--config=pbo` mentions only `…_num.mjs` and one at `--config=faithful` only
+`…_bigint.mjs` (`LakeJs.Config.RuntimeGroup`, `runtimeGroupOf`, `preludeFileOf`).  A
+configuration that mixes the two representations is still refused
+(`JsConfig.isUniform`), since a value crossing from one knob's type to another's would
+need conversions the backend does not yet insert, and the test run checks that it is.
+
+A cast that *does* cross representations — a `Nat` held as a `BigInt` read as the
+`UInt8` it is, which is always a number — prints as the conversion it is
+(`EmitJs.castExpr`), and an integral constant is a literal *of* its own type
+(`FromLcnf.natLitAt`), so a module no knob can change prints the same text at either
+preset.
 
 A configured output names its configuration, and so does the header of its
-`-Expr.txt`.  `scripts/snapshot-files.txt` carries the preset beside the file:
+`-Expr.txt`.  `scripts/snapshot-files.txt` lists one generated file per line, and the
+*name* says which configuration generates it — `-num.js` is `--config=pbo`,
+`-bigint.js` is `--config=faithful`, and a plain `.js` is the default.  A module called
+`XxxNonConfigurable` is the exception the other way round: no knob changes it, so the
+backend writes `XxxNonConfigurable.js` whichever preset is asked for.
 
 ```
-SnapshotsPBOPure/PrimOpIntDivConfigurable-num.js pbo
-SnapshotsPBOPure/PrimOpIntDivConfigurable-bigint.js faithful
+SnapshotsPBOPure/PrimOpIntDivConfigurable-num.js
+SnapshotsPBOPure/PrimOpIntDivConfigurable-bigint.js
+SnapshotsPBOPure/PrimOpIntDivNonConfigurable.js
 ```
 
 The two outputs of `PrimOpIntDivConfigurable.lean` are checked by running them: every
@@ -52,12 +86,13 @@ declaration of that module is a `Bool` that says the division the optimiser fold
 agrees with the `@[noinline]` division and with the answer written in Lean, so the test
 suite beside each output asserts that every `…_shouldBeTrue` export is `true`.
 
-`PrimOpInt01/02/03Configurable` and `PrimOpIntBit01/02Configurable` — the arithmetic,
-the comparisons and the bitwise operations of the 64-bit types — are compiled both ways
+`PrimOpInt01/02/03Configurable`, `PrimOpIntBit01/02Configurable` and
+`PrimOpBitVec01/02Configurable` — the arithmetic, the comparisons and the bitwise
+operations of the 64-bit types and of `BitVec 32`/`BitVec 64` — are compiled both ways
 too, and their outputs are checked against what Lean answers for each export.  Those
 answers are Lean's own: `scripts/gen-primop-expectations.py` writes one Lean program per
 snapshot, `scripts/regen-primop-expectations.sh` runs them into
-`scripts/expectations/<Module>.json`, and `scripts/primop-check.mjs` is what the ten
+`scripts/expectations/<Module>.json`, and `scripts/primop-check.mjs` is what the nineteen
 `*.test.js` files run against it.  Under `faithful` every answer must be Lean's.  Under
 `pbo` a number holds an integer exactly only below `2^53`, and these snapshots exceed
 that on purpose (`-1 : UInt64` is `2^64 - 1`), so the suite asserts Lean's answer inside
@@ -68,6 +103,50 @@ which is asserted to disagree with Lean, so the list cannot go stale.
 `lake test` runs the backend over **every** snapshot of `SnapshotsPBOPure` — the
 directory is read as the test runs, so a snapshot added to it is tested without any list
 being edited — and over the pure modules of `SnapshotsMy`, and checks each verdict.
+
+## `[LEAN| … ]`: writing a `Term` in its own syntax
+
+A `LakeJs.Expr.Term` is intrinsically scoped, typed and linked, so writing one by hand
+means counting binders, counting signature entries and supplying three kinds of proof.
+`LakeJs/TermElab.lean` lets one write it the way it reads instead:
+
+```lean
+open LakeJs.Expr in
+def addOne : Term [] [] (.fn [.nat] .nat) :=
+  [LEAN|
+sig (fn [nat] nat)
+|glob
+|vars
+|
+(fn [v0 : nat]
+  (app
+    (extern lean_nat_add)
+    v0
+    (lit nat 1)))
+]
+```
+
+The header sections are the things a `Term` is written against: `sig` is the type `τ` of
+`Term Sg Γ τ`, `glob` is the signature `Sg` (the top-level declarations the code may
+name, in the order the signature declares them), `vars` is the context `Γ` (de Bruijn
+index 0 first, each slot named), and what follows the last `|` is the code.  A section
+may be left out and the sections may be written in any order; the delaborator prints
+the canonical order above.
+
+The fragment is read as *text* — the scan counts brackets and skips string and
+character literals — tokenised and parsed by `LakeJs/SurfaceParse.lean` into the
+surface AST of `LakeJs/Surface.lean`, then translated into ordinary Lean syntax: names
+are resolved (a name is a variable of the context where the context has it, and a
+declaration of the signature otherwise) and the evidence a `ctor`, a `proj`, a `tagOf`
+and a `case` carry — a decidable fact about the types that are written down — is
+recomputed with `rfl`.  Nothing is checked twice: an ill-typed fragment is an ordinary
+Lean type error.
+
+`LakeJs/TermDeelab.lean` is the other direction.  `Term.deelab` prints a term,
+`Term.deelabEmbed` prints the whole `[LEAN| … ]` fragment, and `Term.roundTrips` says
+that parsing that fragment and printing it again gives the same text.
+`LakeJs/TermSyntaxSpec.lean` exercises every constructor of `Term`: each example is
+checked with `rfl` against the term built by hand, and each round trips.
 
 ## The pipeline
 
@@ -234,9 +313,19 @@ const v5 = 1024 <= v1;
 if (v5) { return v4(1); } else { return v4(2); }
 ```
 
-Nothing was added to the term language for this: a local function is `Term.letE` of a
-`Term.lamN`, and a jump is `Term.apN` of the variable it bound, both of which were there
-already.
+Nothing was added to the term language for the *translation* of it: a local function is
+`Term.letE` of a `Term.lamN`, and a jump is `Term.apN` of the variable it bound, both of
+which were there already.  The term language does have a form that says such a name never
+escapes — `Term.joinPoint`/`Term.jump`, and `Body.joinPointB` for a local function bound
+inside a loop block — and `LakeJs/Contify.lean` is the pass that recognises one: a `let`
+of a lambda every use of which is a call, none of them under a binder, becomes a join
+point and its calls become jumps.  It is the last step of `LakeJs.Compile.optimise`, so
+the terms the backend prints from really do bind join points — 46 of them across the
+corpus (`lake env lean scripts/count-join-points.lean`), and `Result.joinPoints` reports
+them per module.  The emitted JavaScript is unchanged: a join point prints as the same
+local arrow, and a jump as the same call; what changes is that `LakeJs.Usage` can then
+hold the term to the discipline a join point has (jumped to at least once, never named
+as a value).
 
 Three conditions, all of them conservative, decide it (`LakeJs/FromLcnf.lean`,
 `transBody`):
@@ -674,6 +763,67 @@ names the types it binds, a variable prints as its de Bruijn index and its type,
 prints as the name the signature gives it and an extern as the runtime name it is called
 by.  `--no-expr` leaves the file alone.
 
+## The program of one declaration: `#lean_to_lean_term`
+
+A module is not always the unit that is wanted.  `deriving Repr` writes a `partial def`
+beside a type, and the totality gate refuses the whole module for it — even though the
+function one actually cares about never calls it.  `LakeJs/Program.lean` compiles the
+**closure of a single declaration** instead:
+
+* the root is that one declaration, and it is what the emitted module exports;
+* a declaration it reaches belongs to the program whenever the backend can read a body
+  for it, *whatever module that body came from* — so a helper in another module is
+  followed rather than left as an import;
+* a call the runtime implements (`Array.push`, `String.append`, … — the catalogue of
+  `LakeJs/Externs.lean`) stops the walk: the term calls it as `(extern lean_array_push)`;
+* nothing else of the root's module is looked at, so the `Repr` instance beside the type
+  does not refuse the function that does not call it.
+
+Both units are one function now: `LakeJs.Compile.compileSpec` takes a
+`LakeJs.Compile.ProgramSpec` — the roots, which reachable declarations belong to the
+program, and which modules the totality gate reads as being compiled —
+`LakeJs.Compile.moduleSpec` is the spec of a module and `LakeJs.Program.declSpec` the
+spec of a closure.
+
+The command prints the program in the editor:
+
+```lean
+import LakeJs.Program
+
+#lean_to_lean_term test                     -- the types and the terms
+#lean_to_lean_term (config := faithful) test -- the same, `Nat` as a `BigInt`
+#lean_to_lean_js test                        -- the JavaScript of the same closure
+```
+
+and what it prints is
+
+1. **the types** the program mentions, each as the Lean type it comes from and the `Ty`
+   the backend models it by — a recursive `inductive` is a `recTaggedUnion`, a
+   `structure` a `record`, `Array α` an `array`;
+2. **the declarations**, callees before callers, each as the name the emitted module
+   binds, the Lean declaration it came from, its type and its term, as the translation
+   produced it — before the optimiser ran.
+
+A declaration whose result is a class instance is unboxed here as everywhere else: the
+program holds one declaration per field, `inst$field`, not a record.  A root that the
+backend has no body for — a runtime primitive, an `opaque`, a type — is refused, and so
+is a root that really does call something `partial`.
+
+The same thing from the command line, which writes the two files
+`<Module>-<decl>.js` and `<Module>-<decl>-Program.txt`:
+
+```
+lake env ./.lake/build/bin/lean-to-js-backend --decl=test SnapshotsMy/Html.lean
+#   SnapshotsMy/Html.lean -> SnapshotsMy/Html-test.js, SnapshotsMy/Html-test-Program.txt
+```
+
+`SnapshotsMy/Html.lean` is the worked example: a tiny HTML builder whose `do` blocks are
+a `StateM` of an `Array Html`.  The module is in the `rejected` table of the test run —
+its `deriving Repr` is `partial` — while the program of its `test` compiles, is checked
+by `LakeJsTest`, and the JavaScript beside it is exercised by
+`SnapshotsMy/Html-test.test.js` under Node.  `scripts/snapshot-decls.txt` lists the
+declarations regenerated this way, as `<Module.lean> <declaration>`.
+
 ## Scalarising a loop accumulator
 
 A loop variable whose type is a record costs an allocation per iteration when the body
@@ -771,6 +921,18 @@ modules of `SnapshotsPBOPure` and the five pure ones of `SnapshotsMy`.
 * A handful of modules must also contain particular text: a `while` loop where the Lean
   recursion is a tail call, the merged `_mut$…` loop for a mutually tail-recursive
   group, the unboxed instance fields.
+* The **configuration** is checked by the convention the snapshot names follow, so that
+  no module is listed twice:
+  * `XxxConfigurable` is compiled at both presets.  The two outputs must *differ*; the
+    `--config=pbo` one must import only `…_num.mjs` preludes and mention no `BigInt`;
+    the `--config=faithful` one must import only `…_bigint.mjs` preludes; and each must
+    be exactly the file beside the source, `XxxConfigurable-num.js` and
+    `XxxConfigurable-bigint.js`.
+  * `XxxNonConfigurable` is compiled at both presets too, and there the two outputs must
+    be *identical*, must be exactly `XxxNonConfigurable.js`, must mention no `BigInt`,
+    and may import no prelude other than
+    `runtime/lean_runtime_non_configurable.mjs`.
+* A configuration that mixes the two representations is refused.
 
 And the modules that must be refused are refused, with a message that says why:
 `SnapshotsPBOPartial/RecursiveBindingGroup01` and `SnapshotsPBOPure/Html` for a

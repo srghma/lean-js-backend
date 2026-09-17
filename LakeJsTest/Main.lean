@@ -114,7 +114,9 @@ def accepted : List Expectation :=
   , { mod := `SnapshotsMy.MutualTail,
       contains := ["while", "_spec$test1", "_spec$test3",
                    "export const test1 = _spec$test1;",
-                   "return _spec$test1(v1);"],
+                   -- the argument of the entering call is the expression itself: the
+                   -- `let` that named it had a single reader
+                   "return _spec$test1(v0 - 1);"],
       absent := ["Math.max", "_mut$"] }
     -- a group whose members disagree on the type of a parameter gets a slot for each
     -- type rather than one slot widened to `Ty.typeParam`: `walkStr` holds its `String`
@@ -136,7 +138,9 @@ def accepted : List Expectation :=
     -- is the body of that declaration; `@[noinline]` is a prohibition the backend keeps,
     -- and a declaration every call site copied and nothing exports is not bound at all
   , { mod := `SnapshotsMy.InlineDemo,
-      contains := ["const bar = 3;", "const v1 = v0 * 2;", "triple(v0)"],
+      -- the inlined body of `scale` is read once, so it is the expression it is read
+      -- in rather than a `const` of its own
+      contains := ["const bar = 3;", "v0 * 2 + (v0 + 1) * 2", "triple(v0)"],
       absent := ["scale(", "const scale"] }
     -- a `Nat` division whose answer Lean itself computed: the name of the declaration
     -- says what the answer has to be, and it is bound whatever the configuration is
@@ -412,6 +416,12 @@ def checkModule (useNode : Bool) (e : Expectation) : IO (List String) := do
     -- check that it did.
     if !res.deadLets.isEmpty then
       bad := bad ++ [s!"these declarations still bind a value nothing reads: {res.deadLets}"]
+    -- and, more than that: every binder the backend itself chose — a `let`, a loop slot,
+    -- a join point — has to be read as often as `LakeJs.Usage` asks.  `compileSpec`
+    -- refuses a module that breaks it, so this is empty whenever the module compiled at
+    -- all; it is checked here so that a regression names the declaration and the rule.
+    for (nm, issues) in res.usageIssues do
+      bad := bad ++ [s!"`{nm}` breaks the usage discipline: {issues}"]
     bad := bad ++ LakeJsTest.JsShape.issues res.js
     -- a loop is left with a `return`, never with an exit flag and a result variable
     bad := bad ++ LakeJsTest.JsShape.flagLoopIssues res.js
@@ -427,6 +437,9 @@ def checkModule (useNode : Bool) (e : Expectation) : IO (List String) := do
       IO.println s!"note {e.mod}: {rec?} call themselves, the Lean recursion not being a tail call"
     -- an ignored *parameter* is reported rather than refused: it belongs to the type of
     -- the function, hence to its calling convention, so it cannot be dropped
+    for nm in res.erased do
+      IO.println s!"note {e.mod}: `{nm}` answers with a value that carries nothing at \
+        run time, so it is erased"
     for (nm, ps) in res.unusedParams do
       IO.println s!"note {e.mod}: `{nm}` never reads its parameter(s) {ps}"
     return bad

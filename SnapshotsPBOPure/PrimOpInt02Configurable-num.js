@@ -46,1314 +46,950 @@ import {
   $lean_isize_sub,
 } from "../runtime/lean_runtime_isize_num.mjs";
 export const TestUSize_test9 = (() => {
-  const v0 = $lean_usize_mul(1, 1);
-  const v1 = $lean_usize_mul(1, 2);
-  const v2 = $lean_usize_mul(2, 1);
-  const v3 = $lean_usize_neg(2);
-  const v4 = $lean_usize_mul(1, v3);
-  const v5 = $lean_usize_neg(1);
-  const v6 = $lean_usize_mul(v5, 2);
-  const v7 = $lean_usize_mul(v5, v5);
-  const v8 = [];
-  const v9 = [...v8, v0];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v4];
-  const v13 = [...v12, v6];
-  return [...v13, v7];
+  const v0 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_usize_mul(1, 1)], $lean_usize_mul(1, 2)],
+          $lean_usize_mul(2, 1),
+        ],
+        $lean_usize_mul(1, $lean_usize_neg(2)),
+      ],
+      $lean_usize_mul(v0, 2),
+    ],
+    $lean_usize_mul(v0, v0),
+  ];
 })();
 export const TestUSize_test8 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v1 <= v0;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_usize_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_usize_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v1 <= v0;
+  const v1 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_usize_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUSize_test7 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v0 <= v1;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_usize_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_usize_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v0 <= v1;
+  const v1 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_usize_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUSize_test6 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v1 < v0;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_usize_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_usize_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v1 < v0;
+  const v1 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_usize_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUSize_test5 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v0 < v1;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_usize_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_usize_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v0 < v1;
+  const v1 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_usize_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUSize_test4 = (() => {
   const v0 = (v0, v1) => {
-    const v2 = instDecidableEqUSize(v0, v1);
-    if (v2) {
+    if (instDecidableEqUSize(v0, v1)) {
       return false;
     } else {
       return true;
     }
   };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_usize_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_usize_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v1 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_usize_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUSize_test3 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = instDecidableEqUSize(v0, v1);
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_usize_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_usize_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => instDecidableEqUSize(v0, v1);
+  const v1 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_usize_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUSize_test2 = (() => {
-  const v0 = $lean_usize_sub(1, 1);
-  const v1 = $lean_usize_sub(1, 2);
-  const v2 = $lean_usize_sub(2, 1);
-  const v3 = $lean_usize_neg(2);
-  const v4 = $lean_usize_sub(1, v3);
-  const v5 = $lean_usize_neg(1);
-  const v6 = $lean_usize_sub(v5, 2);
-  const v7 = $lean_usize_sub(v5, v5);
-  const v8 = [];
-  const v9 = [...v8, v0];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v4];
-  const v13 = [...v12, v6];
-  return [...v13, v7];
+  const v0 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_usize_sub(1, 1)], $lean_usize_sub(1, 2)],
+          $lean_usize_sub(2, 1),
+        ],
+        $lean_usize_sub(1, $lean_usize_neg(2)),
+      ],
+      $lean_usize_sub(v0, 2),
+    ],
+    $lean_usize_sub(v0, v0),
+  ];
 })();
 export const TestUSize_test11 = (() => {
   const v0 = $lean_usize_neg(1);
-  const v1 = $lean_usize_neg(v0);
-  const v2 = [];
-  const v3 = [...v2, v0];
-  return [...v3, v1];
+  return [...[...[], v0], $lean_usize_neg(v0)];
 })();
 export const TestUSize_test10 = (() => {
-  const v0 = $lean_usize_div(1, 1);
-  const v1 = $lean_usize_div(1, 2);
-  const v2 = $lean_usize_div(2, 1);
-  const v3 = $lean_usize_neg(2);
-  const v4 = $lean_usize_div(1, v3);
-  const v5 = $lean_usize_neg(1);
-  const v6 = $lean_usize_div(v5, 2);
-  const v7 = $lean_usize_div(v5, v5);
-  const v8 = [];
-  const v9 = [...v8, v0];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v4];
-  const v13 = [...v12, v6];
-  return [...v13, v7];
+  const v0 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_usize_div(1, 1)], $lean_usize_div(1, 2)],
+          $lean_usize_div(2, 1),
+        ],
+        $lean_usize_div(1, $lean_usize_neg(2)),
+      ],
+      $lean_usize_div(v0, 2),
+    ],
+    $lean_usize_div(v0, v0),
+  ];
 })();
 export const TestUSize_test1 = (() => {
-  const v0 = $lean_usize_add(1, 1);
-  const v1 = $lean_usize_add(1, 2);
-  const v2 = $lean_usize_add(2, 1);
-  const v3 = $lean_usize_neg(2);
-  const v4 = $lean_usize_add(1, v3);
-  const v5 = $lean_usize_neg(1);
-  const v6 = $lean_usize_add(v5, 2);
-  const v7 = $lean_usize_add(v5, v5);
-  const v8 = [];
-  const v9 = [...v8, v0];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v4];
-  const v13 = [...v12, v6];
-  return [...v13, v7];
+  const v0 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_usize_add(1, 1)], $lean_usize_add(1, 2)],
+          $lean_usize_add(2, 1),
+        ],
+        $lean_usize_add(1, $lean_usize_neg(2)),
+      ],
+      $lean_usize_add(v0, 2),
+    ],
+    $lean_usize_add(v0, v0),
+  ];
 })();
 export const TestUSize_intValues = (v0) => {
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_usize_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_usize_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v1 = $lean_usize_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_usize_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 };
 export const TestUInt64_test9 = (() => {
-  const v0 = $lean_uint64_neg(2);
-  const v1 = $lean_uint64_neg(1);
-  const v2 = $lean_uint64_shift_left(v1, 1);
-  const v3 = $lean_uint64_mul(v1, v1);
-  const v4 = [];
-  const v5 = [...v4, 1];
-  const v6 = [...v5, 2];
-  const v7 = [...v6, 2];
-  const v8 = [...v7, v0];
-  const v9 = [...v8, v2];
-  return [...v9, v3];
+  const v0 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[...[...[...[...[], 1], 2], 2], $lean_uint64_neg(2)],
+      $lean_uint64_shift_left(v0, 1),
+    ],
+    $lean_uint64_mul(v0, v0),
+  ];
 })();
 export const TestUInt64_test8 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v1 <= v0;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_uint64_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_uint64_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v1 <= v0;
+  const v1 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_uint64_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUInt64_test7 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v0 <= v1;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_uint64_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_uint64_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v0 <= v1;
+  const v1 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_uint64_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUInt64_test6 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v1 < v0;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_uint64_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_uint64_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v1 < v0;
+  const v1 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_uint64_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUInt64_test5 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v0 < v1;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_uint64_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_uint64_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v0 < v1;
+  const v1 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_uint64_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUInt64_test4 = (() => {
   const v0 = (v0, v1) => {
-    const v2 = instDecidableEqUInt64(v0, v1);
-    if (v2) {
+    if (instDecidableEqUInt64(v0, v1)) {
       return false;
     } else {
       return true;
     }
   };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_uint64_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_uint64_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v1 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_uint64_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUInt64_test3 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = instDecidableEqUInt64(v0, v1);
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_uint64_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_uint64_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => instDecidableEqUInt64(v0, v1);
+  const v1 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_uint64_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestUInt64_test2 = (() => {
-  const v0 = $lean_uint64_neg(2);
-  const v1 = $lean_uint64_sub(1, v0);
-  const v2 = $lean_uint64_neg(1);
-  const v3 = $lean_uint64_sub(v2, 2);
-  const v4 = $lean_uint64_sub(v2, v2);
-  const v5 = [];
-  const v6 = [...v5, 0];
-  const v7 = [...v6, 18446744073709551615];
-  const v8 = [...v7, 1];
-  const v9 = [...v8, v1];
-  const v10 = [...v9, v3];
-  return [...v10, v4];
+  const v0 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], 0], 18446744073709551615], 1],
+        $lean_uint64_sub(1, $lean_uint64_neg(2)),
+      ],
+      $lean_uint64_sub(v0, 2),
+    ],
+    $lean_uint64_sub(v0, v0),
+  ];
 })();
 export const TestUInt64_test11 = (() => {
   const v0 = $lean_uint64_neg(1);
-  const v1 = $lean_uint64_neg(v0);
-  const v2 = [];
-  const v3 = [...v2, v0];
-  return [...v3, v1];
+  return [...[...[], v0], $lean_uint64_neg(v0)];
 })();
 export const TestUInt64_test10 = (() => {
-  const v0 = $lean_uint64_neg(2);
-  const v1 = $lean_uint64_div(1, v0);
-  const v2 = $lean_uint64_neg(1);
-  const v3 = $lean_uint64_shift_right(v2, 1);
-  const v4 = $lean_uint64_div(v2, v2);
-  const v5 = [];
-  const v6 = [...v5, 1];
-  const v7 = [...v6, 0];
-  const v8 = [...v7, 2];
-  const v9 = [...v8, v1];
-  const v10 = [...v9, v3];
-  return [...v10, v4];
+  const v0 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], 1], 0], 2],
+        $lean_uint64_div(1, $lean_uint64_neg(2)),
+      ],
+      $lean_uint64_shift_right(v0, 1),
+    ],
+    $lean_uint64_div(v0, v0),
+  ];
 })();
 export const TestUInt64_test1 = (() => {
-  const v0 = $lean_uint64_neg(2);
-  const v1 = $lean_uint64_add(1, v0);
-  const v2 = $lean_uint64_neg(1);
-  const v3 = $lean_uint64_add(v2, 2);
-  const v4 = $lean_uint64_add(v2, v2);
-  const v5 = [];
-  const v6 = [...v5, 2];
-  const v7 = [...v6, 3];
-  const v8 = [...v7, 3];
-  const v9 = [...v8, v1];
-  const v10 = [...v9, v3];
-  return [...v10, v4];
+  const v0 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], 2], 3], 3],
+        $lean_uint64_add(1, $lean_uint64_neg(2)),
+      ],
+      $lean_uint64_add(v0, 2),
+    ],
+    $lean_uint64_add(v0, v0),
+  ];
 })();
 export const TestUInt64_intValues = (v0) => {
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_uint64_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_uint64_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v1 = $lean_uint64_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_uint64_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 };
-export const TestNat_test9 = (() => {
-  const v0 = [];
-  const v1 = [...v0, 1];
-  const v2 = [...v1, 2];
-  const v3 = [...v2, 2];
-  const v4 = [...v3, 0];
-  const v5 = [...v4, 0];
-  return [...v5, 0];
-})();
+export const TestNat_test9 = [...[...[...[...[...[...[], 1], 2], 2], 0], 0], 0];
 export const TestNat_test8 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v1 <= v0;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = v0(1, 0);
-  const v5 = v0(0, 2);
-  const v6 = v0(0, 0);
-  const v7 = [];
-  const v8 = [...v7, v1];
-  const v9 = [...v8, v2];
-  const v10 = [...v9, v3];
-  const v11 = [...v10, v4];
-  const v12 = [...v11, v5];
-  return [...v12, v6];
+  const v0 = (v0, v1) => v1 <= v0;
+  return [
+    ...[
+      ...[...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)], v0(1, 0)],
+      v0(0, 2),
+    ],
+    v0(0, 0),
+  ];
 })();
 export const TestNat_test7 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v0 <= v1;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = v0(1, 0);
-  const v5 = v0(0, 2);
-  const v6 = v0(0, 0);
-  const v7 = [];
-  const v8 = [...v7, v1];
-  const v9 = [...v8, v2];
-  const v10 = [...v9, v3];
-  const v11 = [...v10, v4];
-  const v12 = [...v11, v5];
-  return [...v12, v6];
+  const v0 = (v0, v1) => v0 <= v1;
+  return [
+    ...[
+      ...[...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)], v0(1, 0)],
+      v0(0, 2),
+    ],
+    v0(0, 0),
+  ];
 })();
 export const TestNat_test6 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v1 < v0;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = v0(1, 0);
-  const v5 = v0(0, 2);
-  const v6 = v0(0, 0);
-  const v7 = [];
-  const v8 = [...v7, v1];
-  const v9 = [...v8, v2];
-  const v10 = [...v9, v3];
-  const v11 = [...v10, v4];
-  const v12 = [...v11, v5];
-  return [...v12, v6];
+  const v0 = (v0, v1) => v1 < v0;
+  return [
+    ...[
+      ...[...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)], v0(1, 0)],
+      v0(0, 2),
+    ],
+    v0(0, 0),
+  ];
 })();
 export const TestNat_test5 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v0 < v1;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = v0(1, 0);
-  const v5 = v0(0, 2);
-  const v6 = v0(0, 0);
-  const v7 = [];
-  const v8 = [...v7, v1];
-  const v9 = [...v8, v2];
-  const v10 = [...v9, v3];
-  const v11 = [...v10, v4];
-  const v12 = [...v11, v5];
-  return [...v12, v6];
+  const v0 = (v0, v1) => v0 < v1;
+  return [
+    ...[
+      ...[...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)], v0(1, 0)],
+      v0(0, 2),
+    ],
+    v0(0, 0),
+  ];
 })();
 export const TestNat_test4 = (() => {
   const v0 = (v0, v1) => {
-    const v2 = v0 === v1;
-    if (v2) {
+    if (v0 === v1) {
       return false;
     } else {
       return true;
     }
   };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = v0(1, 0);
-  const v5 = v0(0, 2);
-  const v6 = v0(0, 0);
-  const v7 = [];
-  const v8 = [...v7, v1];
-  const v9 = [...v8, v2];
-  const v10 = [...v9, v3];
-  const v11 = [...v10, v4];
-  const v12 = [...v11, v5];
-  return [...v12, v6];
+  return [
+    ...[
+      ...[...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)], v0(1, 0)],
+      v0(0, 2),
+    ],
+    v0(0, 0),
+  ];
 })();
 export const TestNat_test3 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v0 === v1;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = v0(1, 0);
-  const v5 = v0(0, 2);
-  const v6 = v0(0, 0);
-  const v7 = [];
-  const v8 = [...v7, v1];
-  const v9 = [...v8, v2];
-  const v10 = [...v9, v3];
-  const v11 = [...v10, v4];
-  const v12 = [...v11, v5];
-  return [...v12, v6];
+  const v0 = (v0, v1) => v0 === v1;
+  return [
+    ...[
+      ...[...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)], v0(1, 0)],
+      v0(0, 2),
+    ],
+    v0(0, 0),
+  ];
 })();
-export const TestNat_test2 = (() => {
-  const v0 = [];
-  const v1 = [...v0, 0];
-  const v2 = [...v1, 0];
-  const v3 = [...v2, 1];
-  const v4 = [...v3, 1];
-  const v5 = [...v4, 0];
-  return [...v5, 0];
-})();
-export const TestNat_test10 = (() => {
-  const v0 = [];
-  const v1 = [...v0, 1];
-  const v2 = [...v1, 0];
-  const v3 = [...v2, 2];
-  const v4 = [...v3, 0];
-  const v5 = [...v4, 0];
-  return [...v5, 0];
-})();
-export const TestNat_test1 = (() => {
-  const v0 = [];
-  const v1 = [...v0, 2];
-  const v2 = [...v1, 3];
-  const v3 = [...v2, 3];
-  const v4 = [...v3, 1];
-  const v5 = [...v4, 2];
-  return [...v5, 0];
-})();
-export const TestNat_intValues = (v0) => {
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = v0(1, 0);
-  const v5 = v0(0, 2);
-  const v6 = v0(0, 0);
-  const v7 = [];
-  const v8 = [...v7, v1];
-  const v9 = [...v8, v2];
-  const v10 = [...v9, v3];
-  const v11 = [...v10, v4];
-  const v12 = [...v11, v5];
-  return [...v12, v6];
-};
+export const TestNat_test2 = [...[...[...[...[...[...[], 0], 0], 1], 1], 0], 0];
+export const TestNat_test10 = [
+  ...[...[...[...[...[...[], 1], 0], 2], 0], 0],
+  0,
+];
+export const TestNat_test1 = [...[...[...[...[...[...[], 2], 3], 3], 1], 2], 0];
+export const TestNat_intValues = (
+  v0,
+) => [
+  ...[
+    ...[...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)], v0(1, 0)],
+    v0(0, 2),
+  ],
+  v0(0, 0),
+];
 export const TestInt64_test9 = (() => {
   const v0 = $lean_int64_of_nat(1);
-  const v1 = $lean_int64_mul(v0, v0);
-  const v2 = $lean_int64_of_nat(2);
-  const v3 = $lean_int64_mul(v0, v2);
-  const v4 = $lean_int64_mul(v2, v0);
-  const v5 = $lean_int64_neg(v2);
-  const v6 = $lean_int64_mul(v0, v5);
-  const v7 = $lean_int64_neg(v0);
-  const v8 = $lean_int64_mul(v7, v2);
-  const v9 = $lean_int64_mul(v7, v7);
-  const v10 = [];
-  const v11 = [...v10, v1];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v6];
-  const v15 = [...v14, v8];
-  return [...v15, v9];
+  const v1 = $lean_int64_of_nat(2);
+  const v2 = $lean_int64_neg(v0);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_int64_mul(v0, v0)], $lean_int64_mul(v0, v1)],
+          $lean_int64_mul(v1, v0),
+        ],
+        $lean_int64_mul(v0, $lean_int64_neg(v1)),
+      ],
+      $lean_int64_mul(v2, v1),
+    ],
+    $lean_int64_mul(v2, v2),
+  ];
 })();
 export const TestInt64_test8 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = $lean_int64_dec_le(v1, v0);
-    return v2;
-  };
+  const v0 = (v0, v1) => $lean_int64_dec_le(v1, v0);
   const v1 = $lean_int64_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_int64_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_int64_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_int64_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_int64_of_nat(2);
+  const v3 = $lean_int64_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_int64_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestInt64_test7 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = $lean_int64_dec_le(v0, v1);
-    return v2;
-  };
+  const v0 = (v0, v1) => $lean_int64_dec_le(v0, v1);
   const v1 = $lean_int64_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_int64_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_int64_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_int64_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_int64_of_nat(2);
+  const v3 = $lean_int64_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_int64_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestInt64_test6 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = $lean_int64_dec_lt(v1, v0);
-    return v2;
-  };
+  const v0 = (v0, v1) => $lean_int64_dec_lt(v1, v0);
   const v1 = $lean_int64_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_int64_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_int64_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_int64_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_int64_of_nat(2);
+  const v3 = $lean_int64_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_int64_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestInt64_test5 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = $lean_int64_dec_lt(v0, v1);
-    return v2;
-  };
+  const v0 = (v0, v1) => $lean_int64_dec_lt(v0, v1);
   const v1 = $lean_int64_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_int64_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_int64_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_int64_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_int64_of_nat(2);
+  const v3 = $lean_int64_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_int64_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestInt64_test4 = (() => {
   const v0 = (v0, v1) => {
-    const v2 = instDecidableEqInt64(v0, v1);
-    if (v2) {
+    if (instDecidableEqInt64(v0, v1)) {
       return false;
     } else {
       return true;
     }
   };
   const v1 = $lean_int64_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_int64_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_int64_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_int64_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_int64_of_nat(2);
+  const v3 = $lean_int64_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_int64_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestInt64_test3 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = instDecidableEqInt64(v0, v1);
-    return v2;
-  };
+  const v0 = (v0, v1) => instDecidableEqInt64(v0, v1);
   const v1 = $lean_int64_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_int64_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_int64_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_int64_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_int64_of_nat(2);
+  const v3 = $lean_int64_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_int64_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestInt64_test2 = (() => {
   const v0 = $lean_int64_of_nat(1);
-  const v1 = $lean_int64_sub(v0, v0);
-  const v2 = $lean_int64_of_nat(2);
-  const v3 = $lean_int64_sub(v0, v2);
-  const v4 = $lean_int64_sub(v2, v0);
-  const v5 = $lean_int64_neg(v2);
-  const v6 = $lean_int64_sub(v0, v5);
-  const v7 = $lean_int64_neg(v0);
-  const v8 = $lean_int64_sub(v7, v2);
-  const v9 = $lean_int64_sub(v7, v7);
-  const v10 = [];
-  const v11 = [...v10, v1];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v6];
-  const v15 = [...v14, v8];
-  return [...v15, v9];
+  const v1 = $lean_int64_of_nat(2);
+  const v2 = $lean_int64_neg(v0);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_int64_sub(v0, v0)], $lean_int64_sub(v0, v1)],
+          $lean_int64_sub(v1, v0),
+        ],
+        $lean_int64_sub(v0, $lean_int64_neg(v1)),
+      ],
+      $lean_int64_sub(v2, v1),
+    ],
+    $lean_int64_sub(v2, v2),
+  ];
 })();
 export const TestInt64_test11 = (() => {
-  const v0 = $lean_int64_of_nat(1);
-  const v1 = $lean_int64_neg(v0);
-  const v2 = $lean_int64_neg(v1);
-  const v3 = [];
-  const v4 = [...v3, v1];
-  return [...v4, v2];
+  const v0 = $lean_int64_neg($lean_int64_of_nat(1));
+  return [...[...[], v0], $lean_int64_neg(v0)];
 })();
 export const TestInt64_test10 = (() => {
   const v0 = $lean_int64_of_nat(1);
-  const v1 = $lean_int64_div(v0, v0);
-  const v2 = $lean_int64_of_nat(2);
-  const v3 = $lean_int64_div(v0, v2);
-  const v4 = $lean_int64_div(v2, v0);
-  const v5 = $lean_int64_neg(v2);
-  const v6 = $lean_int64_div(v0, v5);
-  const v7 = $lean_int64_neg(v0);
-  const v8 = $lean_int64_div(v7, v2);
-  const v9 = $lean_int64_div(v7, v7);
-  const v10 = [];
-  const v11 = [...v10, v1];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v6];
-  const v15 = [...v14, v8];
-  return [...v15, v9];
+  const v1 = $lean_int64_of_nat(2);
+  const v2 = $lean_int64_neg(v0);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_int64_div(v0, v0)], $lean_int64_div(v0, v1)],
+          $lean_int64_div(v1, v0),
+        ],
+        $lean_int64_div(v0, $lean_int64_neg(v1)),
+      ],
+      $lean_int64_div(v2, v1),
+    ],
+    $lean_int64_div(v2, v2),
+  ];
 })();
 export const TestInt64_test1 = (() => {
   const v0 = $lean_int64_of_nat(1);
-  const v1 = $lean_int64_add(v0, v0);
-  const v2 = $lean_int64_of_nat(2);
-  const v3 = $lean_int64_add(v0, v2);
-  const v4 = $lean_int64_add(v2, v0);
-  const v5 = $lean_int64_neg(v2);
-  const v6 = $lean_int64_add(v0, v5);
-  const v7 = $lean_int64_neg(v0);
-  const v8 = $lean_int64_add(v7, v2);
-  const v9 = $lean_int64_add(v7, v7);
-  const v10 = [];
-  const v11 = [...v10, v1];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v6];
-  const v15 = [...v14, v8];
-  return [...v15, v9];
+  const v1 = $lean_int64_of_nat(2);
+  const v2 = $lean_int64_neg(v0);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_int64_add(v0, v0)], $lean_int64_add(v0, v1)],
+          $lean_int64_add(v1, v0),
+        ],
+        $lean_int64_add(v0, $lean_int64_neg(v1)),
+      ],
+      $lean_int64_add(v2, v1),
+    ],
+    $lean_int64_add(v2, v2),
+  ];
 })();
 export const TestInt64_intValues = (v0) => {
   const v1 = $lean_int64_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_int64_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_int64_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_int64_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_int64_of_nat(2);
+  const v3 = $lean_int64_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_int64_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 };
 export const TestInt_test9 = (() => {
-  const v0 = 1 * 1;
-  const v1 = 1 * 2;
-  const v2 = 2 * 1;
-  const v3 = $lean_int_neg(2);
-  const v4 = 1 * v3;
-  const v5 = $lean_int_neg(1);
-  const v6 = v5 * 2;
-  const v7 = v5 * v5;
-  const v8 = [];
-  const v9 = [...v8, v0];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v4];
-  const v13 = [...v12, v6];
-  return [...v13, v7];
+  const v0 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[...[...[...[...[], 1 * 1], 1 * 2], 2 * 1], 1 * $lean_int_neg(2)],
+      v0 * 2,
+    ],
+    v0 * v0,
+  ];
 })();
 export const TestInt_test8 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v1 <= v0;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_int_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_int_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v1 <= v0;
+  const v1 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_int_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestInt_test7 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v0 <= v1;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_int_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_int_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v0 <= v1;
+  const v1 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_int_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestInt_test6 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v1 < v0;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_int_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_int_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v1 < v0;
+  const v1 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_int_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestInt_test5 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = v0 < v1;
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_int_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_int_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => v0 < v1;
+  const v1 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_int_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestInt_test4 = (() => {
   const v0 = (v0, v1) => {
-    const v2 = Int_instDecidableEq(v0, v1);
-    if (v2) {
+    if (Int_instDecidableEq(v0, v1)) {
       return false;
     } else {
       return true;
     }
   };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_int_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_int_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v1 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_int_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestInt_test3 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = Int_instDecidableEq(v0, v1);
-    return v2;
-  };
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_int_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_int_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v0 = (v0, v1) => Int_instDecidableEq(v0, v1);
+  const v1 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_int_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 })();
 export const TestInt_test2 = (() => {
-  const v0 = 1 - 1;
-  const v1 = 1 - 2;
-  const v2 = 2 - 1;
-  const v3 = $lean_int_neg(2);
-  const v4 = 1 - v3;
-  const v5 = $lean_int_neg(1);
-  const v6 = v5 - 2;
-  const v7 = v5 - v5;
-  const v8 = [];
-  const v9 = [...v8, v0];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v4];
-  const v13 = [...v12, v6];
-  return [...v13, v7];
+  const v0 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[...[...[...[...[], 1 - 1], 1 - 2], 2 - 1], 1 - $lean_int_neg(2)],
+      v0 - 2,
+    ],
+    v0 - v0,
+  ];
 })();
 export const TestInt_test11 = (() => {
   const v0 = $lean_int_neg(1);
-  const v1 = $lean_int_neg(v0);
-  const v2 = [];
-  const v3 = [...v2, v0];
-  return [...v3, v1];
+  return [...[...[], v0], $lean_int_neg(v0)];
 })();
 export const TestInt_test10 = (() => {
-  const v0 = $lean_int_ediv(1, 1);
-  const v1 = $lean_int_ediv(1, 2);
-  const v2 = $lean_int_ediv(2, 1);
-  const v3 = $lean_int_neg(2);
-  const v4 = $lean_int_ediv(1, v3);
-  const v5 = $lean_int_neg(1);
-  const v6 = $lean_int_ediv(v5, 2);
-  const v7 = $lean_int_ediv(v5, v5);
-  const v8 = [];
-  const v9 = [...v8, v0];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v4];
-  const v13 = [...v12, v6];
-  return [...v13, v7];
+  const v0 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_int_ediv(1, 1)], $lean_int_ediv(1, 2)],
+          $lean_int_ediv(2, 1),
+        ],
+        $lean_int_ediv(1, $lean_int_neg(2)),
+      ],
+      $lean_int_ediv(v0, 2),
+    ],
+    $lean_int_ediv(v0, v0),
+  ];
 })();
 export const TestInt_test1 = (() => {
-  const v0 = 1 + 1;
-  const v1 = 1 + 2;
-  const v2 = 2 + 1;
-  const v3 = $lean_int_neg(2);
-  const v4 = 1 + v3;
-  const v5 = $lean_int_neg(1);
-  const v6 = v5 + 2;
-  const v7 = v5 + v5;
-  const v8 = [];
-  const v9 = [...v8, v0];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v4];
-  const v13 = [...v12, v6];
-  return [...v13, v7];
+  const v0 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[...[...[...[...[], 1 + 1], 1 + 2], 2 + 1], 1 + $lean_int_neg(2)],
+      v0 + 2,
+    ],
+    v0 + v0,
+  ];
 })();
 export const TestInt_intValues = (v0) => {
-  const v1 = v0(1, 1);
-  const v2 = v0(1, 2);
-  const v3 = v0(2, 1);
-  const v4 = $lean_int_neg(2);
-  const v5 = v0(1, v4);
-  const v6 = $lean_int_neg(1);
-  const v7 = v0(v6, 2);
-  const v8 = v0(v6, v6);
-  const v9 = [];
-  const v10 = [...v9, v1];
-  const v11 = [...v10, v2];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v5];
-  const v14 = [...v13, v7];
-  return [...v14, v8];
+  const v1 = $lean_int_neg(1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(1, 1)], v0(1, 2)], v0(2, 1)],
+        v0(1, $lean_int_neg(2)),
+      ],
+      v0(v1, 2),
+    ],
+    v0(v1, v1),
+  ];
 };
 export const TestISize_test9 = (() => {
   const v0 = $lean_isize_of_nat(1);
-  const v1 = $lean_isize_mul(v0, v0);
-  const v2 = $lean_isize_of_nat(2);
-  const v3 = $lean_isize_mul(v0, v2);
-  const v4 = $lean_isize_mul(v2, v0);
-  const v5 = $lean_isize_neg(v2);
-  const v6 = $lean_isize_mul(v0, v5);
-  const v7 = $lean_isize_neg(v0);
-  const v8 = $lean_isize_mul(v7, v2);
-  const v9 = $lean_isize_mul(v7, v7);
-  const v10 = [];
-  const v11 = [...v10, v1];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v6];
-  const v15 = [...v14, v8];
-  return [...v15, v9];
+  const v1 = $lean_isize_of_nat(2);
+  const v2 = $lean_isize_neg(v0);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_isize_mul(v0, v0)], $lean_isize_mul(v0, v1)],
+          $lean_isize_mul(v1, v0),
+        ],
+        $lean_isize_mul(v0, $lean_isize_neg(v1)),
+      ],
+      $lean_isize_mul(v2, v1),
+    ],
+    $lean_isize_mul(v2, v2),
+  ];
 })();
 export const TestISize_test8 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = $lean_isize_dec_le(v1, v0);
-    return v2;
-  };
+  const v0 = (v0, v1) => $lean_isize_dec_le(v1, v0);
   const v1 = $lean_isize_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_isize_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_isize_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_isize_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_isize_of_nat(2);
+  const v3 = $lean_isize_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_isize_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestISize_test7 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = $lean_isize_dec_le(v0, v1);
-    return v2;
-  };
+  const v0 = (v0, v1) => $lean_isize_dec_le(v0, v1);
   const v1 = $lean_isize_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_isize_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_isize_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_isize_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_isize_of_nat(2);
+  const v3 = $lean_isize_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_isize_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestISize_test6 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = $lean_isize_dec_lt(v1, v0);
-    return v2;
-  };
+  const v0 = (v0, v1) => $lean_isize_dec_lt(v1, v0);
   const v1 = $lean_isize_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_isize_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_isize_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_isize_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_isize_of_nat(2);
+  const v3 = $lean_isize_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_isize_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestISize_test5 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = $lean_isize_dec_lt(v0, v1);
-    return v2;
-  };
+  const v0 = (v0, v1) => $lean_isize_dec_lt(v0, v1);
   const v1 = $lean_isize_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_isize_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_isize_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_isize_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_isize_of_nat(2);
+  const v3 = $lean_isize_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_isize_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestISize_test4 = (() => {
   const v0 = (v0, v1) => {
-    const v2 = instDecidableEqISize(v0, v1);
-    if (v2) {
+    if (instDecidableEqISize(v0, v1)) {
       return false;
     } else {
       return true;
     }
   };
   const v1 = $lean_isize_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_isize_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_isize_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_isize_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_isize_of_nat(2);
+  const v3 = $lean_isize_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_isize_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestISize_test3 = (() => {
-  const v0 = (v0, v1) => {
-    const v2 = instDecidableEqISize(v0, v1);
-    return v2;
-  };
+  const v0 = (v0, v1) => instDecidableEqISize(v0, v1);
   const v1 = $lean_isize_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_isize_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_isize_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_isize_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_isize_of_nat(2);
+  const v3 = $lean_isize_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_isize_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 })();
 export const TestISize_test2 = (() => {
   const v0 = $lean_isize_of_nat(1);
-  const v1 = $lean_isize_sub(v0, v0);
-  const v2 = $lean_isize_of_nat(2);
-  const v3 = $lean_isize_sub(v0, v2);
-  const v4 = $lean_isize_sub(v2, v0);
-  const v5 = $lean_isize_neg(v2);
-  const v6 = $lean_isize_sub(v0, v5);
-  const v7 = $lean_isize_neg(v0);
-  const v8 = $lean_isize_sub(v7, v2);
-  const v9 = $lean_isize_sub(v7, v7);
-  const v10 = [];
-  const v11 = [...v10, v1];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v6];
-  const v15 = [...v14, v8];
-  return [...v15, v9];
+  const v1 = $lean_isize_of_nat(2);
+  const v2 = $lean_isize_neg(v0);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_isize_sub(v0, v0)], $lean_isize_sub(v0, v1)],
+          $lean_isize_sub(v1, v0),
+        ],
+        $lean_isize_sub(v0, $lean_isize_neg(v1)),
+      ],
+      $lean_isize_sub(v2, v1),
+    ],
+    $lean_isize_sub(v2, v2),
+  ];
 })();
 export const TestISize_test11 = (() => {
-  const v0 = $lean_isize_of_nat(1);
-  const v1 = $lean_isize_neg(v0);
-  const v2 = $lean_isize_neg(v1);
-  const v3 = [];
-  const v4 = [...v3, v1];
-  return [...v4, v2];
+  const v0 = $lean_isize_neg($lean_isize_of_nat(1));
+  return [...[...[], v0], $lean_isize_neg(v0)];
 })();
 export const TestISize_test10 = (() => {
   const v0 = $lean_isize_of_nat(1);
-  const v1 = $lean_isize_div(v0, v0);
-  const v2 = $lean_isize_of_nat(2);
-  const v3 = $lean_isize_div(v0, v2);
-  const v4 = $lean_isize_div(v2, v0);
-  const v5 = $lean_isize_neg(v2);
-  const v6 = $lean_isize_div(v0, v5);
-  const v7 = $lean_isize_neg(v0);
-  const v8 = $lean_isize_div(v7, v2);
-  const v9 = $lean_isize_div(v7, v7);
-  const v10 = [];
-  const v11 = [...v10, v1];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v6];
-  const v15 = [...v14, v8];
-  return [...v15, v9];
+  const v1 = $lean_isize_of_nat(2);
+  const v2 = $lean_isize_neg(v0);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_isize_div(v0, v0)], $lean_isize_div(v0, v1)],
+          $lean_isize_div(v1, v0),
+        ],
+        $lean_isize_div(v0, $lean_isize_neg(v1)),
+      ],
+      $lean_isize_div(v2, v1),
+    ],
+    $lean_isize_div(v2, v2),
+  ];
 })();
 export const TestISize_test1 = (() => {
   const v0 = $lean_isize_of_nat(1);
-  const v1 = $lean_isize_add(v0, v0);
-  const v2 = $lean_isize_of_nat(2);
-  const v3 = $lean_isize_add(v0, v2);
-  const v4 = $lean_isize_add(v2, v0);
-  const v5 = $lean_isize_neg(v2);
-  const v6 = $lean_isize_add(v0, v5);
-  const v7 = $lean_isize_neg(v0);
-  const v8 = $lean_isize_add(v7, v2);
-  const v9 = $lean_isize_add(v7, v7);
-  const v10 = [];
-  const v11 = [...v10, v1];
-  const v12 = [...v11, v3];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v6];
-  const v15 = [...v14, v8];
-  return [...v15, v9];
+  const v1 = $lean_isize_of_nat(2);
+  const v2 = $lean_isize_neg(v0);
+  return [
+    ...[
+      ...[
+        ...[
+          ...[...[...[], $lean_isize_add(v0, v0)], $lean_isize_add(v0, v1)],
+          $lean_isize_add(v1, v0),
+        ],
+        $lean_isize_add(v0, $lean_isize_neg(v1)),
+      ],
+      $lean_isize_add(v2, v1),
+    ],
+    $lean_isize_add(v2, v2),
+  ];
 })();
 export const TestISize_intValues = (v0) => {
   const v1 = $lean_isize_of_nat(1);
-  const v2 = v0(v1, v1);
-  const v3 = $lean_isize_of_nat(2);
-  const v4 = v0(v1, v3);
-  const v5 = v0(v3, v1);
-  const v6 = $lean_isize_neg(v3);
-  const v7 = v0(v1, v6);
-  const v8 = $lean_isize_neg(v1);
-  const v9 = v0(v8, v3);
-  const v10 = v0(v8, v8);
-  const v11 = [];
-  const v12 = [...v11, v2];
-  const v13 = [...v12, v4];
-  const v14 = [...v13, v5];
-  const v15 = [...v14, v7];
-  const v16 = [...v15, v9];
-  return [...v16, v10];
+  const v2 = $lean_isize_of_nat(2);
+  const v3 = $lean_isize_neg(v1);
+  return [
+    ...[
+      ...[
+        ...[...[...[...[], v0(v1, v1)], v0(v1, v2)], v0(v2, v1)],
+        v0(v1, $lean_isize_neg(v2)),
+      ],
+      v0(v3, v2),
+    ],
+    v0(v3, v3),
+  ];
 };

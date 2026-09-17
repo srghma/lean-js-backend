@@ -38,6 +38,8 @@ theorem prod_eq_prodOfDecl : Ty.prod = prodOfDecl := rfl
     carries an `ε` and whose `ok` carries an `α`. -/
 derive_ty Except as exceptOfDecl
 
-example : exceptOfDecl .nat .string = Ty.taggedUnion [[.nat], [.string]] := rfl
+example :
+    exceptOfDecl .nat .string
+      = Ty.taggedUnion (.payloadFirst ⟨.nat, []⟩ [.string] []) := rfl
 
 end LakeJs.TyDerived

@@ -1,6 +1,8 @@
 import LakeJs.Simp
 import LakeJs.Inline
 import LakeJs.Scalarise
+import LakeJs.DeadSlot
+import LakeJs.Contify
 
 /-!
 # The optimiser as a relation
@@ -158,12 +160,33 @@ inductive Step {Sg : Sig} (tbl : Inline.Table Sg) :
   | scalariseSlot {Γ : Ctx} {σs : List Ty} {τ : Ty} {init : Spine Sg Γ σs}
       {body : Body Sg (σs.reverse ++ Γ) σs τ} {p : Nat} {t : Term Sg Γ τ} :
       Scalarise.scalariseSlot? init body p = some t → Step tbl (.loop init body) t
+  /-- A loop slot no iteration reads is dropped (`LakeJs.DeadSlot.dropSlot?`): the loop
+      starts with one value fewer and hands one value fewer round, and — as with
+      `scalariseSlot` — the slots of a loop are not part of the type of the term the loop
+      is, so the smaller loop is a term of the same type. -/
+  | dropDeadSlot {Γ : Ctx} {σs : List Ty} {τ : Ty} {init : Spine Sg Γ σs}
+      {body : Body Sg (σs.reverse ++ Γ) σs τ} {p : Nat} {t : Term Sg Γ τ} :
+      DeadSlot.dropSlot? init body p = some t → Step tbl (.loop init body) t
+  /-- A `let` of a lambda that is only ever *called* — never used as a value, never
+      called from under a binder — is a join point (`LakeJs.Contify.contifiable`): the
+      same body, bound by `Term.joinPoint`, and every call of it in the rest turned into
+      a `Term.jump`.  Both sides bind the same body and run it on the same arguments at
+      the same places; what changes is that the term now *says* the name never escapes,
+      which is what `LakeJs.Usage` asks of a join point. -/
+  | contify {Γ : Ctx} {ps : List Ty} {ret τ : Ty} {body : Term Sg (ps.reverse ++ Γ) ret}
+      {b : Term Sg (.fn ps ret :: Γ) τ} :
+      Contify.contifiable body b = true →
+        Step tbl (.letE (.lamN body) b) (.joinPoint body (Contify.toJumps 0 b))
   -- the positions: a rewrite inside a subterm is a rewrite of the term
   | projArg {Γ : Ctx} {σ τ : Ty} {e e' : Term Sg Γ σ} {i j : Nat}
       {h : σ.fieldTy? i j = some τ} :
       Step tbl e e' → Step tbl (.proj e i j h) (.proj e' i j h)
   | tagOfArg {Γ : Ctx} {σ : Ty} {e e' : Term Sg Γ σ} {h : σ.isTagged = true} :
       Step tbl e e' → Step tbl (.tagOf e h) (.tagOf e' h)
+  | lazyMkBody {Γ : Ctx} {τ : Ty} {e e' : Term Sg Γ τ} :
+      Step tbl e e' → Step tbl (.lazyMk e) (.lazyMk e')
+  | lazyForceArg {Γ : Ctx} {τ : Ty} {e e' : Term Sg Γ (.lazy τ)} :
+      Step tbl e e' → Step tbl (.lazyForce e) (.lazyForce e')
   | iteCond {Γ : Ctx} {τ : Ty} {c c' : Term Sg Γ (.prim .bool)} {t u : Term Sg Γ τ} :
       Step tbl c c' → Step tbl (.ite c t u) (.ite c' t u)
   | iteThen {Γ : Ctx} {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t t' u : Term Sg Γ τ} :
@@ -212,6 +235,15 @@ inductive Step {Sg : Sig} (tbl : Inline.Table Sg) :
   | loopBody {Γ : Ctx} {σs : List Ty} {τ : Ty} {init : Spine Sg Γ σs}
       {body body' : Body Sg (σs.reverse ++ Γ) σs τ} :
       BodyStep tbl body body' → Step tbl (.loop init body) (.loop init body')
+  | joinBody {Γ : Ctx} {ps : List Ty} {σ τ : Ty}
+      {body body' : Term Sg (ps.reverse ++ Γ) σ} {rest : Term Sg (.fn ps σ :: Γ) τ} :
+      Step tbl body body' → Step tbl (.joinPoint body rest) (.joinPoint body' rest)
+  | joinRest {Γ : Ctx} {ps : List Ty} {σ τ : Ty}
+      {body : Term Sg (ps.reverse ++ Γ) σ} {rest rest' : Term Sg (.fn ps σ :: Γ) τ} :
+      Step tbl rest rest' → Step tbl (.joinPoint body rest) (.joinPoint body rest')
+  | jumpArgs {Γ : Ctx} {ps : List Ty} {σ : Ty} {v : Γ ∋ (.fn ps σ)}
+      {args args' : Spine Sg Γ ps} :
+      SpineStep tbl args args' → Step tbl (.jump v args) (.jump v args')
 
 /-- A rewrite inside one argument of a spine. -/
 inductive SpineStep {Sg : Sig} (tbl : Inline.Table Sg) : {Γ : Ctx} → {σs : List Ty} →
@@ -282,6 +314,20 @@ inductive BodyStep {Sg : Sig} (tbl : Inline.Table Sg) :
   | iteBElse {Γ : Ctx} {σs : List Ty} {τ : Ty} {c : Term Sg Γ (.prim .bool)}
       {t u u' : Body Sg Γ σs τ} :
       BodyStep tbl u u' → BodyStep tbl (.iteB c t u) (.iteB c t u')
+  /-- The block's `let` of a lambda that is only ever called is a join point of the
+      block (`LakeJs.Contify.contifiableB`): `Step.contify`, one layer in. -/
+  | contifyB {Γ : Ctx} {ps : List Ty} {ret : Ty} {σs : List Ty} {τ : Ty}
+      {body : Term Sg (ps.reverse ++ Γ) ret} {b : Body Sg (.fn ps ret :: Γ) σs τ} :
+      Contify.contifiableB body b = true →
+        BodyStep tbl (.letB (.lamN body) b) (.joinPointB body (Contify.toJumpsBody 0 b))
+  | joinBBody {Γ : Ctx} {ps : List Ty} {σ : Ty} {σs : List Ty} {τ : Ty}
+      {body body' : Term Sg (ps.reverse ++ Γ) σ} {rest : Body Sg (.fn ps σ :: Γ) σs τ} :
+      Step tbl body body' →
+        BodyStep tbl (.joinPointB body rest) (.joinPointB body' rest)
+  | joinBRest {Γ : Ctx} {ps : List Ty} {σ : Ty} {σs : List Ty} {τ : Ty}
+      {body : Term Sg (ps.reverse ++ Γ) σ} {rest rest' : Body Sg (.fn ps σ :: Γ) σs τ} :
+      BodyStep tbl rest rest' →
+        BodyStep tbl (.joinPointB body rest) (.joinPointB body rest')
 
 end
 
@@ -347,6 +393,14 @@ theorem projArg {Γ : Ctx} {σ τ : Ty} {e e' : Term Sg Γ σ} {i j : Nat}
 theorem tagOfArg {Γ : Ctx} {σ : Ty} {e e' : Term Sg Γ σ} {h : σ.isTagged = true}
     (hc : e —↠[tbl] e') : (Term.tagOf e h) —↠[tbl] (Term.tagOf e' h) :=
   Chain.congr (fun x => Term.tagOf x h) (fun hs => .tagOfArg hs) hc
+
+theorem lazyMkBody {Γ : Ctx} {τ : Ty} {e e' : Term Sg Γ τ}
+    (hc : e —↠[tbl] e') : (Term.lazyMk e) —↠[tbl] (Term.lazyMk e') :=
+  Chain.congr (fun x => Term.lazyMk x) (fun hs => .lazyMkBody hs) hc
+
+theorem lazyForceArg {Γ : Ctx} {τ : Ty} {e e' : Term Sg Γ (.lazy τ)}
+    (hc : e —↠[tbl] e') : (Term.lazyForce e) —↠[tbl] (Term.lazyForce e') :=
+  Chain.congr (fun x => Term.lazyForce x) (fun hs => .lazyForceArg hs) hc
 
 theorem iteCond {Γ : Ctx} {τ : Ty} {c c' : Term Sg Γ (.prim .bool)} {t u : Term Sg Γ τ}
     (hc : c —↠[tbl] c') : (Term.ite c t u) —↠[tbl] (Term.ite c' t u) :=
@@ -432,6 +486,21 @@ theorem loopBody {Γ : Ctx} {σs : List Ty} {τ : Ty} {init : Spine Sg Γ σs}
     (Term.loop init body) —↠[tbl] (Term.loop init body') :=
   Chain.congr (fun x => Term.loop init x) (fun hs => .loopBody hs) hc
 
+theorem joinBody {Γ : Ctx} {ps : List Ty} {σ τ : Ty} {body body' : Term Sg (ps.reverse ++ Γ) σ}
+    {rest : Term Sg (.fn ps σ :: Γ) τ} (hc : body —↠[tbl] body') :
+    (Term.joinPoint body rest) —↠[tbl] (Term.joinPoint body' rest) :=
+  Chain.congr (fun x => Term.joinPoint x rest) (fun hs => .joinBody hs) hc
+
+theorem joinRest {Γ : Ctx} {ps : List Ty} {σ τ : Ty} {body : Term Sg (ps.reverse ++ Γ) σ}
+    {rest rest' : Term Sg (.fn ps σ :: Γ) τ} (hc : rest —↠[tbl] rest') :
+    (Term.joinPoint body rest) —↠[tbl] (Term.joinPoint body rest') :=
+  Chain.congr (fun x => Term.joinPoint body x) (fun hs => .joinRest hs) hc
+
+theorem jumpArgs {Γ : Ctx} {ps : List Ty} {σ : Ty} {v : Γ ∋ (.fn ps σ)}
+    {args args' : Spine Sg Γ ps} (hc : Chain (SpineStep tbl) args args') :
+    (Term.jump v args) —↠[tbl] (Term.jump v args') :=
+  Chain.congr (fun x => Term.jump v x) (fun hs => .jumpArgs hs) hc
+
 theorem spineHead {Γ : Ctx} {σ : Ty} {σs : List Ty} {t t' : Term Sg Γ σ}
     {rest : Spine Sg Γ σs} (hc : t —↠[tbl] t') :
     Chain (SpineStep tbl) (Spine.cons t rest) (Spine.cons t' rest) :=
@@ -474,6 +543,18 @@ theorem letBBody {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty} {e : Term Sg Γ 
     {b b' : Body Sg (σ :: Γ) σs τ} (hc : Chain (BodyStep tbl) b b') :
     Chain (BodyStep tbl) (Body.letB e b) (Body.letB e b') :=
   Chain.congr (fun x => Body.letB e x) (fun hs => .letBBody hs) hc
+
+theorem joinBBody {Γ : Ctx} {ps : List Ty} {σ : Ty} {σs : List Ty} {τ : Ty}
+    {body body' : Term Sg (ps.reverse ++ Γ) σ} {rest : Body Sg (.fn ps σ :: Γ) σs τ}
+    (hc : body —↠[tbl] body') :
+    Chain (BodyStep tbl) (Body.joinPointB body rest) (Body.joinPointB body' rest) :=
+  Chain.congr (fun x => Body.joinPointB x rest) (fun hs => .joinBBody hs) hc
+
+theorem joinBRest {Γ : Ctx} {ps : List Ty} {σ : Ty} {σs : List Ty} {τ : Ty}
+    {body : Term Sg (ps.reverse ++ Γ) σ} {rest rest' : Body Sg (.fn ps σ :: Γ) σs τ}
+    (hc : Chain (BodyStep tbl) rest rest') :
+    Chain (BodyStep tbl) (Body.joinPointB body rest) (Body.joinPointB body rest') :=
+  Chain.congr (fun x => Body.joinPointB body x) (fun hs => .joinBRest hs) hc
 
 theorem iteBCond {Γ : Ctx} {σs : List Ty} {τ : Ty} {c c' : Term Sg Γ (.prim .bool)}
     {t u : Body Sg Γ σs τ} (hc : c —↠[tbl] c') :
@@ -621,6 +702,8 @@ theorem Term.simp_chain {Sg : Sig} {tbl : Inline.Table Sg} : ∀ {Γ : Ctx} {τ 
   | _, _, .extern _ => .refl
   | _, _, .proj e _ _ _ => simpProj_chain (Chain.projArg (Term.simp_chain e))
   | _, _, .tagOf e _ => Chain.tagOfArg (Term.simp_chain e)
+  | _, _, .lazyMk e => Chain.lazyMkBody (Term.simp_chain e)
+  | _, _, .lazyForce e => Chain.lazyForceArg (Term.simp_chain e)
   | _, _, .ite c t u =>
       simpIte_chain
         (((Chain.iteCond (Term.simp_chain c)).trans
@@ -641,6 +724,9 @@ theorem Term.simp_chain {Sg : Sig} {tbl : Inline.Table Sg} : ∀ {Γ : Ctx} {τ 
       (Chain.caseScrut (Term.simp_chain s)).trans (Chain.caseAlts (Alts.simp_chain alts))
   | _, _, .loop init body =>
       (Chain.loopInit (Spine.simp_chain init)).trans (Chain.loopBody (Body.simp_chain body))
+  | _, _, .joinPoint body rest =>
+      (Chain.joinBody (Term.simp_chain body)).trans (Chain.joinRest (Term.simp_chain rest))
+  | _, _, .jump _ args => Chain.jumpArgs (Spine.simp_chain args)
 
 /-- `Term.simp_chain`, for the arguments of a spine. -/
 theorem Spine.simp_chain {Sg : Sig} {tbl : Inline.Table Sg}
@@ -671,6 +757,9 @@ theorem Body.simp_chain {Sg : Sig} {tbl : Inline.Table Sg} :
       simpIteB_chain
         (((Chain.iteBCond (Term.simp_chain c)).trans
           (Chain.iteBThen (Body.simp_chain t))).trans (Chain.iteBElse (Body.simp_chain u)))
+  | _, _, _, .joinPointB body rest =>
+      (Chain.joinBBody (Term.simp_chain body)).trans
+        (Chain.joinBRest (Body.simp_chain rest))
 
 end
 
@@ -719,6 +808,8 @@ theorem Term.inlineCalls_chain {Sg : Sig} {tbl : Inline.Table Sg} :
   | _, _, .extern _ => .refl
   | _, _, .proj e _ _ _ => Chain.projArg (Term.inlineCalls_chain e)
   | _, _, .tagOf e _ => Chain.tagOfArg (Term.inlineCalls_chain e)
+  | _, _, .lazyMk e => Chain.lazyMkBody (Term.inlineCalls_chain e)
+  | _, _, .lazyForce e => Chain.lazyForceArg (Term.inlineCalls_chain e)
   | _, _, .ite c t u =>
       ((Chain.iteCond (Term.inlineCalls_chain c)).trans
         (Chain.iteThen (Term.inlineCalls_chain t))).trans
@@ -743,6 +834,10 @@ theorem Term.inlineCalls_chain {Sg : Sig} {tbl : Inline.Table Sg} :
   | _, _, .loop init body =>
       (Chain.loopInit (Spine.inlineCalls_chain init)).trans
         (Chain.loopBody (Body.inlineCalls_chain body))
+  | _, _, .joinPoint body rest =>
+      (Chain.joinBody (Term.inlineCalls_chain body)).trans
+        (Chain.joinRest (Term.inlineCalls_chain rest))
+  | _, _, .jump _ args => Chain.jumpArgs (Spine.inlineCalls_chain args)
 
 /-- `Term.inlineCalls_chain`, for the arguments of a spine. -/
 theorem Spine.inlineCalls_chain {Sg : Sig} {tbl : Inline.Table Sg} :
@@ -775,6 +870,9 @@ theorem Body.inlineCalls_chain {Sg : Sig} {tbl : Inline.Table Sg} :
       ((Chain.iteBCond (Term.inlineCalls_chain c)).trans
         (Chain.iteBThen (Body.inlineCalls_chain t))).trans
           (Chain.iteBElse (Body.inlineCalls_chain u))
+  | _, _, _, .joinPointB body rest =>
+      (Chain.joinBBody (Term.inlineCalls_chain body)).trans
+        (Chain.joinBRest (Body.inlineCalls_chain rest))
 
 end
 
@@ -825,6 +923,8 @@ theorem Term.inlineCtors_chain {Sg : Sig} {tbl : Inline.Table Sg} :
   | _, _, .extern _ => .refl
   | _, _, .proj e _ _ _ => Chain.projArg (Term.inlineCtors_chain e)
   | _, _, .tagOf e _ => Chain.tagOfArg (Term.inlineCtors_chain e)
+  | _, _, .lazyMk e => Chain.lazyMkBody (Term.inlineCtors_chain e)
+  | _, _, .lazyForce e => Chain.lazyForceArg (Term.inlineCtors_chain e)
   | _, _, .ite c t u =>
       ((Chain.iteCond (Term.inlineCtors_chain c)).trans
         (Chain.iteThen (Term.inlineCtors_chain t))).trans
@@ -849,6 +949,10 @@ theorem Term.inlineCtors_chain {Sg : Sig} {tbl : Inline.Table Sg} :
   | _, _, .loop init body =>
       (Chain.loopInit (Spine.inlineCtors_chain init)).trans
         (Chain.loopBody (Body.inlineCtors_chain body))
+  | _, _, .joinPoint body rest =>
+      (Chain.joinBody (Term.inlineCtors_chain body)).trans
+        (Chain.joinRest (Term.inlineCtors_chain rest))
+  | _, _, .jump _ args => Chain.jumpArgs (Spine.inlineCtors_chain args)
 
 /-- `Term.inlineCtors_chain`, for the arguments of a spine. -/
 theorem Spine.inlineCtors_chain {Sg : Sig} {tbl : Inline.Table Sg} :
@@ -882,6 +986,9 @@ theorem Body.inlineCtors_chain {Sg : Sig} {tbl : Inline.Table Sg} :
       ((Chain.iteBCond (Term.inlineCtors_chain c)).trans
         (Chain.iteBThen (Body.inlineCtors_chain t))).trans
           (Chain.iteBElse (Body.inlineCtors_chain u))
+  | _, _, _, .joinPointB body rest =>
+      (Chain.joinBBody (Term.inlineCtors_chain body)).trans
+        (Chain.joinBRest (Body.inlineCtors_chain rest))
 
 end
 
@@ -934,6 +1041,8 @@ theorem scalariseLoops_chain {Sg : Sig} {tbl : Inline.Table Sg} :
   | _, _, .extern _ => .refl
   | _, _, .proj .. => .refl
   | _, _, .tagOf .. => .refl
+  | _, _, .lazyMk .. => .refl
+  | _, _, .lazyForce .. => .refl
   | _, _, .ite .. => .refl
   | _, _, .letE .. => .refl
   | _, _, .apN .. => .refl
@@ -942,6 +1051,8 @@ theorem scalariseLoops_chain {Sg : Sig} {tbl : Inline.Table Sg} :
   | _, _, .jsOp .. => .refl
   | _, _, .ctor .. => .refl
   | _, _, .caseTag .. => .refl
+  | _, _, .joinPoint .. => .refl
+  | _, _, .jump .. => .refl
 
 /-- The whole scalarising pass is a reduction of the rules. -/
 theorem Term.scalarise_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {τ : Ty}

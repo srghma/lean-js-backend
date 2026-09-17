@@ -100,10 +100,13 @@ theorem Term.no_proj_of_function {Sg : Sig} {Γ : Ctx} {params : List Ty} {ret �
   cases h
 
 /-- **No scalar is a record either.**  A `Nat` has no constructor to build and no field
-    to read: only a type carrying a schema does. -/
+    to read: only a type carrying a schema does.  A `Bool` is the exception, and it is
+    not really one: a boolean *is* the two-constructor field-less sum — that is how the
+    type language models one — so it has the layout `[[], []]`, and `false` and `true`
+    are its constructors. -/
 theorem Term.no_ctor_at_scalar {p : LeanPrimTy} {fields : FieldLayout} (i : Nat)
-    (h : (Ty.prim p).ctorFields? i = some fields) : False := by
-  rw [Ty.ctorFields?_prim] at h
+    (hp : p ≠ .bool) (h : (Ty.prim p).ctorFields? i = some fields) : False := by
+  rw [Ty.ctorFields?_prim p i hp] at h
   cases h
 
 /-- **A value of a type parameter cannot be taken apart.**  `Ty.typeParam` is the type
@@ -121,7 +124,7 @@ theorem Term.no_ctor_at_typeParam {fields : FieldLayout} (i : Nat)
     value of `Ty.recAlias b` is a value of what `b` unfolds to: there is nothing to
     build and nothing to read. -/
 theorem Term.no_ctor_at_alias {b : RTy} {fields : FieldLayout} (i : Nat)
-    (h : (Ty.recAlias b).ctorFields? i = some fields) : False := by
+    (h : (Ty.recAlias ⟨b⟩).ctorFields? i = some fields) : False := by
   rw [Ty.ctorFields?_recAlias] at h
   cases h
 
@@ -140,6 +143,7 @@ def Term.loopCount {Sg : Sig} : ∀ {Γ τ}, Term Sg Γ τ → Nat
   | _, _, .ite c t e => Term.loopCount c + Term.loopCount t + Term.loopCount e
   | _, _, .letE e b => Term.loopCount e + Term.loopCount b
   | _, _, .jsOp _ args => Spine.loopCount args
+  | _, _, .lazyMk e | _, _, .lazyForce e => Term.loopCount e
   | _, _, .lamProd rets => Spine.loopCount rets
   | _, _, .callProd f args _ => Term.loopCount f + Spine.loopCount args
   | _, _, .lamN b => Term.loopCount b
@@ -147,6 +151,8 @@ def Term.loopCount {Sg : Sig} : ∀ {Γ τ}, Term Sg Γ τ → Nat
   | _, _, .ctor _ _ _ args => Spine.loopCount args
   | _, _, .caseTag s alts _ => Term.loopCount s + Alts.loopCount alts
   | _, _, .loop init body => 1 + Spine.loopCount init + Body.loopCount body
+  | _, _, .joinPoint body rest => Term.loopCount body + Term.loopCount rest
+  | _, _, .jump _ args => Spine.loopCount args
 
 /-- `Term.loopCount`, summed over a spine. -/
 def Spine.loopCount {Sg : Sig} : ∀ {Γ σs}, Spine Sg Γ σs → Nat
@@ -164,6 +170,7 @@ def Body.loopCount {Sg : Sig} : ∀ {Γ σs τ}, Body Sg Γ σs τ → Nat
   | _, _, _, .cont args => Spine.loopCount args
   | _, _, _, .letB e b => Term.loopCount e + Body.loopCount b
   | _, _, _, .iteB c t e => Term.loopCount c + Body.loopCount t + Body.loopCount e
+  | _, _, _, .joinPointB body rest => Term.loopCount body + Body.loopCount rest
 
 end
 

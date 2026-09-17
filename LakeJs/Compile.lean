@@ -1,4 +1,8 @@
 import LakeJs.FromLcnf
+import LakeJs.Usage
+import LakeJs.LinearLet
+import LakeJs.Contify
+import LakeJs.DeadSlot
 import LakeJs.Scalarise
 import LakeJs.Specialise
 import LakeJs.Inline
@@ -42,17 +46,26 @@ open LakeJs.TermPretty
 
 /-- Everything the backend does to a translated declaration before it is printed:
     simplify, inline the calls of the declarations of `tbl` (`LakeJs.Inline`), simplify
-    what inlining exposed, scalarise the accumulators of its loops, and simplify again —
-    the last pass is what collapses the projections scalarising leaves behind.  Every
-    one of them is a function `Term Sg Γ τ → Term Sg Γ τ`, so none of it can produce a
-    program that is not well-typed. -/
+    what inlining exposed, scalarise the accumulators of its loops, simplify again — that
+    pass is what collapses the projections scalarising leaves behind — drop the loop
+    slots no iteration reads (`LakeJs.DeadSlot`), simplify once more, since a dropped slot
+    can leave the value it was handed behind as a dead `let`, and finally move the value
+    of every `let` with a single reader to that reader (`LakeJs.LinearLet`), so that no
+    binding the module prints is one that shares nothing, and read every local function
+    that is only ever called as the join point it is (`LakeJs.Contify`), so that a
+    binding the emitted module never lets escape is one the term itself marks as such.  Every one of them is a function
+    `Term Sg Γ τ → Term Sg Γ τ`, so none of it can produce a program that is not
+    well-typed. -/
 def optimise {Sg : Sig} {τ : Ty} (tbl : LakeJs.Inline.Table Sg) (t : Term Sg [] τ) :
     Term Sg [] τ :=
   let t1 := LakeJs.Simp.Term.simpAll t
   let t2 :=
     if tbl.isEmpty then t1
     else LakeJs.Simp.Term.simpAll (LakeJs.Inline.Term.inlineCalls tbl t1)
-  LakeJs.Simp.Term.simpAll (LakeJs.Scalarise.scalarise t2)
+  LakeJs.Contify.Term.contify
+    (LakeJs.LinearLet.Term.lineariseLets
+      (LakeJs.Simp.Term.simpAll (LakeJs.DeadSlot.Term.dropDead
+        (LakeJs.Simp.Term.simpAll (LakeJs.Scalarise.scalarise t2)))))
 
 /-- What a translated declaration is put through before it is printed.  The driver runs
     the translation twice: once with `optimised`, whose result is the emitted JavaScript,
@@ -232,38 +245,55 @@ Lean declaration has. -/
 
 /-- The parameters the emitted function takes, and where each Lean parameter went.
     `base` is the depth the first parameter sits at. -/
-def expandParams (base : Nat) :
+def expandParams (env : Environment) (base : Nat) :
     List (Option InstPlan) → List Param → List (Option Ty) →
       List Ty × List (FVarId × Binding)
   | _, [], _ => ([], [])
   | plans, p :: ps, ptys =>
     -- a dropped parameter has no type, and no JavaScript parameter either
-    let pty := (ptys.headD none).getD (.enum 1 (shift := 0))
+    -- a dropped parameter has no type of its own: what is passed is a value the
+    -- compiled code can only hand on, which is what `Ty.typeParam` is
+    let pty := (ptys.headD none).getD .typeParam
     let rest := ptys.tail
     let plan := plans.headD none
     let plans' := plans.tail
-    if isErasedParam p then
-      -- a type or a proof: no JavaScript parameter at all
-      let (tys, bs) := expandParams base plans' ps rest
-      (tys, (p.fvarId, .erased) :: bs)
+    if isErasedParamIn env p then
+      -- a type, a proof or a unit-like value: no JavaScript parameter at all.  A
+      -- unit-like value is still a value, so it is bound as one: see `Binding.unitValue`
+      let (tys, bs) := expandParams env base plans' ps rest
+      let b : Binding := if isUnitLikeTy env p.type then .unitValue else .erased
+      (tys, (p.fvarId, b) :: bs)
     else
     match plan with
     | none =>
-      let (tys, bs) := expandParams (base + 1) plans' ps rest
+      let (tys, bs) := expandParams env (base + 1) plans' ps rest
       (pty :: tys, (p.fvarId, .one base) :: bs)
     | some ip =>
       let k := ip.size
-      let (tys, bs) := expandParams (base + k) plans' ps rest
+      let (tys, bs) := expandParams env (base + k) plans' ps rest
       (ip.tys ++ tys, (p.fvarId, .split ip ((List.range k).map (base + ·))) :: bs)
 
 /-- The `Ty` of each parameter, in order, with `none` for a parameter that is dropped —
     a type or a proof — so that the list stays parallel to the LCNF parameters. -/
 def paramTys (env : Environment) (ps : List Param) : Except String (List (Option Ty)) :=
-  ps.mapM fun p => if isErasedParam p then pure none else do return some (← toTy env p.type)
+  ps.mapM fun p => if isErasedParamIn env p then pure none else do return some (← toTy env p.type)
 
 /-- How many parameters of a declaration survive to run time: the arrows its `Ty`
     has. -/
-def runtimeParamCount (ps : List Param) : Nat := (ps.filter (!isErasedParam ·)).length
+def runtimeParamCount (env : Environment) (ps : List Param) : Nat :=
+  (ps.filter (!isErasedParamIn env ·)).length
+
+/-- Did this declaration drop a parameter of a **unit-like** type?  If it did, and no
+    run-time parameter is left, what the declaration compiles to is a JavaScript function
+    of no arguments — a `Ty.lazy` — rather than a plain value. -/
+def dropsUnitParam (env : Environment) (ps : List Param) : Bool :=
+  ps.any fun p => isUnitLikeTy env p.type
+
+/-- The type of a declaration with these run-time parameter types and this result: a
+    function of them, a delayed value where they are all gone but a unit-like one was
+    dropped, and the result itself otherwise. -/
+def declTyOf (etys : List Ty) (ret : Ty) (lazy : Bool) : Ty :=
+  if etys.isEmpty then (if lazy then .lazy ret else ret) else .fn etys ret
 
 /-! ## Mutually recursive groups
 
@@ -291,8 +321,9 @@ structure Member where
   /-- Its LCNF parameters that survive to run time, needed to map them onto the loop's
       argument slots. -/
   params : List Param
-  /-- The parameters that were dropped: types and proofs, which are no argument. -/
-  erasedParams : List FVarId
+  /-- The parameters that were dropped — types, proofs and unit-like values, which are
+      no argument — with the binding each of them gets. -/
+  erasedParams : List (FVarId × Binding)
   /-- The type of each surviving parameter. -/
   ptys : List Ty
   /-- What it answers with. -/
@@ -335,13 +366,15 @@ def toMember (env : Environment) (d : Decl) : Except String Member := do
     | .code c => pure c
     | .extern _ => throw s!"`{d.name}` is implemented by `@[extern]`, so there is nothing to compile"
   let allPs := d.params.toList
-  let ps := allPs.filter (!isErasedParam ·)
+  let ps := allPs.filter (!isErasedParamIn env ·)
   if ps.isEmpty then
     throw s!"`{d.name}` has no parameters, so it cannot be a member of a dispatch loop"
   let ptys ← ps.mapM fun p => toTy env p.type
   let declTy ← toTy env d.type
   return { name := d.name, params := ps,
-           erasedParams := (allPs.filter isErasedParam).map (·.fvarId), ptys := ptys,
+           erasedParams := (allPs.filter (isErasedParamIn env ·)).map fun p =>
+             (p.fvarId, if isUnitLikeTy env p.type then Binding.unitValue else .erased),
+           ptys := ptys,
            ret := stripArrows ps.length declTy, code := code }
 
 /-- The first slot of type `t` that this member is not already using, if there is one. -/
@@ -420,7 +453,7 @@ def transGroup {Sg : Sig} (post : Post Sg) (c : Ctx') (ds : List Decl) :
     -- each parameter of the member is the slot `groupSlotAlloc` gave it
     let vm : VarMap := mem.params.zipIdx.foldl (init := {}) fun m (p, i) =>
       m.insert p.fvarId (.one (slots + 2 + (idxs[i]?.getD i)))
-    let vm : VarMap := mem.erasedParams.foldl (init := vm) fun m f => m.insert f .erased
+    let vm : VarMap := mem.erasedParams.foldl (init := vm) fun m (f, b) => m.insert f b
     transBody gc Γbody vm {} σs ret mem.code
   -- Is the tag a compile-time value?  Then the dispatch is waste: the cycle is unrolled
   -- and the loop belongs to one member, which the others enter (`LakeJs.Specialise`).
@@ -497,12 +530,19 @@ def transBodyOf {Sg : Sig} (c : Ctx') (d : Decl) (code : Code) (ret : Ty) :
   let ps := d.params.toList
   let ptys ← paramTys c.env ps
   let plans := c.paramPlan[d.name]?.getD []
-  let (etys, binds) := expandParams 0 plans ps ptys
+  let (etys, binds) := expandParams c.env 0 plans ps ptys
   let n := etys.length
   if n == 0 then
-    let body ← transBody { c with self := none } [] {} {} [] ret code
+    let vm : VarMap := binds.foldl (init := {}) fun m (f, b) => m.insert f b
+    let body ← transBody { c with self := none } [] vm {} [] ret code
     match bodyToTerm? body with
-    | some t => return ⟨ret, t⟩
+    | some t =>
+        -- a declaration whose parameters were all dropped is a plain value, unless one
+        -- of them was a unit-like value: `def f (_ : Unit) : Int` is `() => …`
+        if dropsUnitParam c.env ps then
+          return ⟨.lazy ret, .lazyMk t⟩
+        else
+          return ⟨ret, t⟩
     | none => throw s!"`{d.name}` has no parameters, so it cannot be a loop"
   else if hasTailSelfCall d.name code then
     -- the parameters of the lambda, then a mutable copy of each as a loop variable
@@ -526,6 +566,7 @@ where
   /-- Inside the loop, the loop variables sit `n` binders above the parameters. -/
   shiftBinding (n : Nat) : Binding → Binding
     | .erased => .erased
+    | .unitValue => .unitValue
     | .one d => .one (d + n)
     | .split p ds => .split p (ds.map (· + n))
     | .instGlobal b p => .instGlobal b p
@@ -539,7 +580,7 @@ def declCode (d : Decl) : Except String Code :=
 /-- The result type of a declaration, after its parameters. -/
 def declRet (env : Environment) (d : Decl) : Except String Ty := do
   let declTy ← toTy env d.type
-  return stripArrows (runtimeParamCount d.params.toList) declTy
+  return stripArrows (runtimeParamCount env d.params.toList) declTy
 
 /-- Translate one ordinary declaration. -/
 def transDecl {Sg : Sig} (post : Post Sg) (c : Ctx') (d : Decl) :
@@ -570,7 +611,7 @@ def transInstDecl {Sg : Sig} (post : Post Sg) (c : Ctx') (d : Decl) (plan : Inst
         let ps := d.params.toList
         let ptys ← paramTys c.env ps
         let plans := c.paramPlan[d.name]?.getD []
-        let (etys, _) := expandParams 0 plans ps ptys
+        let (etys, _) := expandParams c.env 0 plans ps ptys
         let Γlam : Ctx := etys.reverse ++ []
         let instTy : Ty := plan.boxedTy
         let boxTy : Ty := if etys.isEmpty then instTy else .fn etys instTy
@@ -660,6 +701,23 @@ structure Result where
       convention, so it cannot be dropped the way a dead `let` can: this is reported,
       not refused. -/
   unusedParams : Array (String × List Nat) := #[]
+  /-- The declarations whose term breaks the usage discipline of `LakeJs.Usage`, and why:
+      a binder inside the declaration that nothing reads, a `let` that shares its value
+      with fewer than two readers, or a join point used as anything but a jump target.
+      The parameters of the declaration *itself* are exempt — they are its calling
+      convention — and are reported by `unusedParams` instead. -/
+  usageIssues : Array (String × List String) := #[]
+  /-- The declarations of the emitted module that hold a **join point** — a local
+      function the term itself says never escapes, because every use of it is a jump —
+      and how many each holds.  `LakeJs.Contify` is the pass that reads one off a `let`
+      of a lambda, inside a loop block (`Body.joinPointB`) as well as outside it. -/
+  joinPoints : Array (String × Nat) := #[]
+  /-- The declarations that were **erased**: the ones whose result is a value of a
+      unit-like type, which carries nothing at run time.  There is no such value in the
+      type language, and a call of such a declaration is erased where the call is made,
+      so the declaration itself is not emitted — this is the list of the ones that were
+      left out, reported rather than silently dropped. -/
+  erased : Array Name := #[]
   /-- The terms of the module as the translation produced them, before the optimiser
       ran, rendered by `LakeJs.TermPretty`: what `<Module>-Expr.txt` holds. -/
   exprs : String := ""
@@ -683,6 +741,18 @@ def ofExcept' {α : Type} : Except String α → CoreM α
   | .ok a => pure a
   | .error e => throwError e
 
+/-- Does this declaration answer with a value that carries nothing at run time — a
+    value of a unit-like type?  There is no such value in the type language, and none is
+    needed: a call of such a declaration is erased where the call is made, since the
+    `let` that would bind its result binds nothing.  So the declaration itself is not
+    emitted either. -/
+def answersWithNothing (env : Environment) (d : Decl) : Bool :=
+  isUnitLikeTy env (resultOfForalls d.type)
+
+/-- Run an action, naming the declaration in any message it fails with. -/
+def withDeclContext {α : Type} (n : String) (act : CoreM α) : CoreM α :=
+  try act catch e => throwError s!"reading `{n}`: {← e.toMessageData.toString}"
+
 /-- The type of an imported declaration, as the signature records it. -/
 def importedTy (env : Environment) (n : Name) : CoreM Ty := do
   match ← getBaseDecl? n with
@@ -690,9 +760,9 @@ def importedTy (env : Environment) (n : Name) : CoreM Ty := do
       let ps := d.params.toList
       let ptys ← ofExcept' (paramTys env ps)
       let declTy ← ofExcept' (toTy env d.type)
-      let ret := stripArrows (runtimeParamCount ps) declTy
-      let etys := (ps.zip ptys).filterMap fun (p, t) => if isErasedParam p then none else t
-      return if etys.isEmpty then ret else .fn etys ret
+      let ret := stripArrows (runtimeParamCount env ps) declTy
+      let etys := (ps.zip ptys).filterMap fun (p, t) => if isErasedParamIn env p then none else t
+      return declTyOf etys ret (dropsUnitParam env ps)
   | none =>
     match env.find? n with
     | some ci => return (toTy env ci.type).toOption.getD Ty.typeParam
@@ -899,6 +969,22 @@ def compileSpec (spec : ProgramSpec) (preludeDepth : Nat := 1)
     let plans ← Meta.MetaM.run' (paramPlanOfDecl d)
     if plans.any (·.isSome) then
       paramPlan := paramPlan.insert n plans
+  -- 4a. which parameters of each declaration are dropped as unit-like.  A call has to
+  -- drop exactly the arguments the callee dropped, and that is a property of the
+  -- *callee*, so it is collected here, for the declarations of this module and for the
+  -- imported ones alike.
+  let unitFlagsOf (d : Decl) : List Bool :=
+    d.params.toList.map fun p => isUnitLikeTy env p.type
+  let mut unitParams : Std.HashMap Name (List Bool) := {}
+  for n in order do
+    let some d := declOf[n]? | continue
+    let fs := unitFlagsOf d
+    if fs.any id then unitParams := unitParams.insert n fs
+  for n in mentioned do
+    if inModule.contains n then continue
+    if let some d ← getBaseDecl? n then
+      let fs := unitFlagsOf d
+      if fs.any id then unitParams := unitParams.insert n fs
   -- 4b. one JavaScript name per declaration.  `jsName` is only a *base*: two Lean names
   -- can spell alike once the characters JavaScript does not allow are replaced, and the
   -- constants an instance is unboxed into (`inst_field`) can spell like a declaration of
@@ -930,13 +1016,15 @@ def compileSpec (spec : ProgramSpec) (preludeDepth : Nat := 1)
   let mut sig : Sig := []
   for n in order do
     let some d := declOf[n]? | continue
+    -- a declaration that answers with nothing is not part of the module
+    if answersWithNothing env d then continue
     let ps := d.params.toList
-    let ptys ← ofExcept' (paramTys env ps)
-    let declTy ← ofExcept' (toTy env d.type)
-    let ret := stripArrows (runtimeParamCount ps) declTy
+    let ptys ← withDeclContext s!"{n} : {d.type}" (ofExcept' (paramTys env ps))
+    let declTy ← withDeclContext s!"{n} : {d.type}" (ofExcept' (toTy env d.type))
+    let ret := stripArrows (runtimeParamCount env ps) declTy
     let plans := paramPlan[n]?.getD []
-    let (etys, _) := expandParams 0 plans ps ptys
-    let fnTy (r : Ty) : Ty := if etys.isEmpty then r else .fn etys r
+    let (etys, _) := expandParams env 0 plans ps ptys
+    let fnTy (r : Ty) : Ty := declTyOf etys r (dropsUnitParam env ps)
     match instOf[n]? with
     | some plan =>
         sig := sig ++ [{ name := nm n ++ "$box", ty := fnTy plan.boxedTy }]
@@ -976,12 +1064,14 @@ def compileSpec (spec : ProgramSpec) (preludeDepth : Nat := 1)
   -- other members of its group, which share one loop.
   let Sg : Sig := sig
   let c : Ctx' := { env := env, self := none, compiled := seen,
-                    instOf := instOf, paramPlan := paramPlan, jsNames := nameOf }
+                    instOf := instOf, paramPlan := paramPlan, unitParams := unitParams,
+                    jsNames := nameOf }
   let mut units : Array (List Name × List (JsDecl Sg)) := #[]
   -- the same units, translated again without the optimiser: what `<Module>-Expr.txt`
   -- holds, keyed by the same member list so that a unit dropped below is dropped here
   let mut rawUnits : Array (List Name × List (JsDecl Sg)) := #[]
   let mut failures : Array (Name × String) := #[]
+  let mut erasedDecls : Array Name := #[]
   let mut failed : NameSet := {}
   let mut emitted : NameSet := {}
   -- the declarations a call of which is inlined, filled in as they are translated: the
@@ -991,6 +1081,10 @@ def compileSpec (spec : ProgramSpec) (preludeDepth : Nat := 1)
   for n in topoOrder edges order.toList do
     if emitted.contains n then continue
     let some d := declOf[n]? | continue
+    if answersWithNothing env d then
+      emitted := emitted.insert n
+      erasedDecls := erasedDecls.push n
+      continue
     let grp := groupOf n
     let post : Post Sg := optimised inlineTable
     let merged? : Option (JsDecl Sg × List (Name × JsDecl Sg)) :=
@@ -1080,8 +1174,27 @@ def compileSpec (spec : ProgramSpec) (preludeDepth : Nat := 1)
     (decls.filterMap fun d =>
       let ps := Term.unusedParams d.value.2
       if ps.isEmpty then none else some (d.name, ps)).toArray
+  -- the usage discipline of `LakeJs.Usage`, over the term of every declaration that is
+  -- about to be printed: a binding the backend itself chose and nothing reads is a
+  -- `const` or a loop slot the module would declare for nothing, so a module that still
+  -- holds one is refused rather than emitted
+  let usageIssues : Array (String × List String) :=
+    (decls.filterMap fun d =>
+      let is := LakeJs.Usage.Term.declIssues d.value.2
+      if is.isEmpty then none else some (d.name, is.eraseDups)).toArray
+  unless usageIssues.isEmpty do
+    throwError ("the optimiser left a binding that nothing reads, which the usage \
+      discipline of `LakeJs.Usage` refuses:" ++
+      String.join (usageIssues.toList.map fun (nm, is) =>
+        "\n  `" ++ nm ++ "`: " ++ String.intercalate "; " is))
+  let joinPoints : Array (String × Nat) :=
+    (decls.filterMap fun d =>
+      let n := LakeJs.Contify.Term.joinCount d.value.2
+      if n == 0 then none else some (d.name, n)).toArray
   return { js := render cfg decls preludeDepth, failures := failures, compiled := compiled,
-           deadLets := deadLets, unusedParams := unusedParams,
+           deadLets := deadLets, unusedParams := unusedParams, usageIssues := usageIssues,
+           joinPoints := joinPoints,
+           erased := erasedDecls,
            exprs := renderExprs cfg mod rawDecls,
            exprDecls := (rawUnits.filter fun u => liveKeys.contains u.1).flatMap fun u =>
              u.2.toArray.map fun d =>

@@ -195,6 +195,8 @@ def Term.assumeNonZero {Sg : Sig} (i : Nat) :
   | _, _, .global r => .global r
   | _, _, .extern e => .extern e
   | _, _, .jsOp op args => .jsOp op (Spine.assumeNonZero i args)
+  | _, _, .lazyMk e => .lazyMk (Term.assumeNonZero i e)
+  | _, _, .lazyForce e => .lazyForce (Term.assumeNonZero i e)
   | _, _, .proj e j k h => .proj (Term.assumeNonZero i e) j k h
   | _, _, .tagOf e h => .tagOf (Term.assumeNonZero i e) h
   | _, _, .ite c t e =>
@@ -209,6 +211,9 @@ def Term.assumeNonZero {Sg : Sig} (i : Nat) :
   | _, _, .caseTag s alts h => .caseTag (Term.assumeNonZero i s) (Alts.assumeNonZero i alts) h
   | _, _, .loop (σs := σs) init body =>
       .loop (Spine.assumeNonZero i init) (Body.assumeNonZero (i + σs.length) body)
+  | _, _, .joinPoint (params := ps) body rest =>
+      .joinPoint (Term.assumeNonZero (i + ps.length) body) (Term.assumeNonZero (i + 1) rest)
+  | _, _, .jump v args => .jump v (Spine.assumeNonZero i args)
 
 /-- `Term.assumeNonZero`, on every term of a spine. -/
 def Spine.assumeNonZero {Sg : Sig} (i : Nat) :
@@ -230,6 +235,9 @@ def Body.assumeNonZero {Sg : Sig} (i : Nat) :
   | _, _, _, .letB e b => .letB (Term.assumeNonZero i e) (Body.assumeNonZero (i + 1) b)
   | _, _, _, .iteB c t e =>
       .iteB (Term.assumeNonZero i c) (Body.assumeNonZero i t) (Body.assumeNonZero i e)
+  | _, _, _, .joinPointB (params := ps) body rest =>
+      .joinPointB (Term.assumeNonZero (i + ps.length) body)
+        (Body.assumeNonZero (i + 1) rest)
 
 end
 
@@ -367,6 +375,8 @@ def Term.simp {Sg : Sig} : ∀ {Γ τ}, Term Sg Γ τ → Term Sg Γ τ
   | _, _, .ite c t e => simpIte (Term.simp c) (Term.simp t) (Term.simp e)
   | _, _, .letE e b => simpLetE (Term.simp e) (Term.simp b)
   | _, _, .jsOp op args => .jsOp op (Spine.simp args)
+  | _, _, .lazyMk e => .lazyMk (Term.simp e)
+  | _, _, .lazyForce e => .lazyForce (Term.simp e)
   | _, _, .lamProd rets => .lamProd (Spine.simp rets)
   | _, _, .callProd f args i => .callProd (Term.simp f) (Spine.simp args) i
   | _, _, .lamN (params := ps) b => simpLamN (ps := ps) (Term.simp b)
@@ -374,6 +384,8 @@ def Term.simp {Sg : Sig} : ∀ {Γ τ}, Term Sg Γ τ → Term Sg Γ τ
   | _, _, .ctor i fs h args => .ctor i fs h (Spine.simp args)
   | _, _, .caseTag s alts h => .caseTag (Term.simp s) (Alts.simp alts) h
   | _, _, .loop init body => .loop (Spine.simp init) (Body.simp body)
+  | _, _, .joinPoint body rest => .joinPoint (Term.simp body) (Term.simp rest)
+  | _, _, .jump v args => .jump v (Spine.simp args)
 
 /-- `Term.simp`, on every term of a spine. -/
 def Spine.simp {Sg : Sig} : ∀ {Γ σs}, Spine Sg Γ σs → Spine Sg Γ σs
@@ -391,6 +403,7 @@ def Body.simp {Sg : Sig} : ∀ {Γ σs τ}, Body Sg Γ σs τ → Body Sg Γ σs
   | _, _, _, .cont args => .cont (Spine.simp args)
   | _, _, _, .letB e b => simpLetB (Term.simp e) (Body.simp b)
   | _, _, _, .iteB c t e => simpIteB (Term.simp c) (Body.simp t) (Body.simp e)
+  | _, _, _, .joinPointB body rest => .joinPointB (Term.simp body) (Body.simp rest)
 
 end
 

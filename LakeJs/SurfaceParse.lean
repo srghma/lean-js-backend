@@ -231,6 +231,9 @@ def parseRawTy : Nat → List Tok → Except String (RawTy × List Tok)
       | "thunk" => do
           let (t, ts) ← parseRawTy fuel rest
           .ok (.thunk t, ← expectPunct ")" ts)
+      | "lazy" => do
+          let (t, ts) ← parseRawTy fuel rest
+          .ok (.lazy t, ← expectPunct ")" ts)
       | "enum" => do
           let (n, ts) ← expectNat rest
           let (s, ts) ← expectInt ts
@@ -455,6 +458,12 @@ def parseTerm : Nat → List Tok → Except String (STerm × List Tok)
       | "tagOf" => do
           let (e, ts) ← parseTerm fuel rest
           .ok (.tagOf e, ← expectPunct ")" ts)
+      | "lazy" => do
+          let (e, ts) ← parseTerm fuel rest
+          .ok (.lazyMk e, ← expectPunct ")" ts)
+      | "force" => do
+          let (e, ts) ← parseTerm fuel rest
+          .ok (.lazyForce e, ← expectPunct ")" ts)
       | "case" => do
           let (s, ts) ← parseTerm fuel rest
           let (alts, ts) ← parseAlts fuel ts
@@ -465,6 +474,19 @@ def parseTerm : Nat → List Tok → Except String (STerm × List Tok)
           let (inits, ts) ← parseTermsN fuel slots.length ts []
           let (b, ts) ← parseBody fuel ts
           .ok (.loop slots (spineOfList inits) b, ← expectPunct ")" ts)
+      | "join" => do
+          let (n, ts) ← expectId rest
+          let ts ← expectPunct "[" ts
+          let (ps, ts) ← parseParams fuel ts []
+          let ts ← expectPunct ":" ts
+          let (ret, ts) ← parseTy fuel ts
+          let (body, ts) ← parseTerm fuel ts
+          let (r, ts) ← parseTerm fuel ts
+          .ok (.joinPoint n ps ret body r, ← expectPunct ")" ts)
+      | "jump" => do
+          let (n, ts) ← expectId rest
+          let (args, ts) ← parseTermsUntilClose fuel ts []
+          .ok (.jump n (spineOfList args), ts)
       | h => .error s!"unknown term former `{h}`"
     | _ => .error (unexpected "a term" ts)
 
@@ -550,7 +572,17 @@ def parseBody : Nat → List Tok → Except String (SBody × List Tok)
           let (t, ts) ← parseBody fuel ts
           let (e, ts) ← parseBody fuel ts
           .ok (.iteB c t e, ← expectPunct ")" ts)
-      | _ => .error (unexpected "a `(ret …)`, `(cont …)`, `(letB …)` or `(ifB …)`" ts)
+      | .punct "(" :: .id "joinB" :: rest => do
+          let (n, ts) ← expectId rest
+          let ts ← expectPunct "[" ts
+          let (ps, ts) ← parseParams fuel ts []
+          let ts ← expectPunct ":" ts
+          let (ret, ts) ← parseTy fuel ts
+          let (body, ts) ← parseTerm fuel ts
+          let (r, ts) ← parseBody fuel ts
+          .ok (.joinPointB n ps ret body r, ← expectPunct ")" ts)
+      | _ => .error (unexpected "a `(ret …)`, `(cont …)`, `(letB …)`, `(ifB …)` or \
+`(joinB …)`" ts)
 
 end
 

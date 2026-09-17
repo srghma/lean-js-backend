@@ -75,6 +75,8 @@ def tagsOfBody {Sg : Sig} {Γ : Ctx} {slotTys : List Ty} {τ : Ty} :
       let a ← tagsOfBody t
       let b ← tagsOfBody u
       pure (a ++ b)
+  -- the body of a join point is a term, so it holds no jump round the loop
+  | .joinPointB _ rest => tagsOfBody rest
 
 /-- The one member a member jumps to, if all its jumps agree and it has at least one.
     A member that never jumps is no part of a cycle. -/
@@ -156,6 +158,11 @@ partial def specBody {Sg : Sig} {Γb : Ctx} {slotTys : List Ty} {τ : Ty}
       let t' ← specBody bodies owner onOwner fuel e t
       let u' ← specBody bodies owner onOwner fuel e u
       pure (.iteB c' t' u')
+  | _, _, e, .joinPointB (params := ps) (σ := σ) body rest => do
+      let body' ← LakeJs.Scalarise.mapTerm (LakeJs.Scalarise.Env.liftList ps.reverse e) body
+      let rest' ← specBody bodies owner onOwner fuel
+        (LakeJs.Scalarise.Env.liftList [Ty.fn ps σ] e) rest
+      pure (.joinPointB body' rest')
   | _, _, e, .cont (.cons tagT rest) => do
       let j ← LakeJs.Simp.natLit? tagT
       let rest' ← LakeJs.Scalarise.mapSpine e rest
@@ -210,6 +217,7 @@ def termSize {Sg : Sig} : {Γ : Ctx} → {τ : Ty} → Term Sg Γ τ → Nat
   | _, _, .lamProd rets => spineSize rets + 1
   | _, _, .callProd f args _ => termSize f + spineSize args + 1
   | _, _, .jsOp _ args => spineSize args + 1
+  | _, _, .lazyMk e | _, _, .lazyForce e => termSize e + 1
   | _, _, .letE v b => termSize v + termSize b + 1
   | _, _, .ite c t u => termSize c + termSize t + termSize u + 1
   | _, _, .ctor _ _ _ args => spineSize args + 1
@@ -217,6 +225,8 @@ def termSize {Sg : Sig} : {Γ : Ctx} → {τ : Ty} → Term Sg Γ τ → Nat
   | _, _, .tagOf v _ => termSize v + 1
   | _, _, .caseTag s alts _ => termSize s + altsSize alts + 1
   | _, _, .loop init body => spineSize init + bodySize body + 1
+  | _, _, .joinPoint body rest => termSize body + termSize rest + 1
+  | _, _, .jump _ args => spineSize args + 1
 
 /-- `termSize`, summed over a spine. -/
 def spineSize {Sg : Sig} : {Γ : Ctx} → {σs : List Ty} → Spine Sg Γ σs → Nat
@@ -235,6 +245,7 @@ def bodySize {Sg : Sig} : {Γ : Ctx} → {σs : List Ty} → {τ : Ty} → Body 
   | _, _, _, .cont args => spineSize args + 1
   | _, _, _, .letB v b => termSize v + bodySize b + 1
   | _, _, _, .iteB c t u => termSize c + bodySize t + bodySize u + 1
+  | _, _, _, .joinPointB body rest => termSize body + bodySize rest + 1
 
 end
 

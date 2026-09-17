@@ -86,30 +86,13 @@ structure GlobalDecl where
   name : String
   /-- Its type. -/
   ty : Ty
+  isInlined : Bool
 
 /-- The signature of the module being emitted: every top-level name a `Term` of it may
     mention. -/
-abbrev Sig := List GlobalDecl
-
-namespace Sig
-
-/-- The JavaScript names a signature declares, in order. -/
-def names (Sg : Sig) : List String := Sg.map (·.name)
-
-/-- Does the signature declare every name at most once?  A signature is a list, so
-    nothing in its *type* stops two entries from sharing a name; this is the side
-    condition that says they do not, and `LakeJs.Compile` checks it of the signature it
-    builds before any declaration is translated, so a module is never emitted against a
-    signature that names one JavaScript binding twice.
-
-    What it buys is `GlobalRef.ty_unique_of_namesUnique` below: under it, the name of a
-    reference determines the type the reference has, so reading a name out of the
-    signature cannot silently pick a different declaration's type. -/
-def namesUnique : Sig → Bool
-  | [] => true
-  | g :: rest => !(rest.any (·.name == g.name)) && namesUnique rest
-
-end Sig
+structure Sig where
+  decls : List GlobalDecl
+  h_names_unique : List.dedup (map name decls) -- TODO: how to correctly?
 
 /-- A reference to a declaration of the signature — a de Bruijn index into `Sg`, whose
     type is the one the signature gives it.  There is no other way to name a global, so
@@ -168,104 +151,6 @@ def GlobalRef.findAny? : (Sg : Sig) → (name : String) → Option (Σ τ : Ty, 
   | g :: Sg, nm =>
     if g.name == nm then some ⟨g.ty, GlobalRef.here⟩
     else (GlobalRef.findAny? Sg nm).map fun r => ⟨r.1, .there r.2⟩
-
-/-! ## Literals -/
-
-/-- A constant of a terminal type: one constructor per constructor of `LeanPrimTy`,
-    holding the Lean value itself rather than a rendering of it, and indexed by the
-    terminal type it is a constant *of*.  So a literal is a constant of the Lean type
-    model, and turning it into JavaScript source is the printer's business alone
-    (`LakeJs.EmitJs.litExpr`).
-
-    Three constructors of `LeanPrimTy` are missing here, on purpose: `.childProcess`,
-    `.shareCommonObject` and `.shareCommonState` are run-time handles, and a handle has
-    no constant — `Lit .childProcess` is an empty type, which is the right statement.
-
-    `Float` and `Float32` are held as the Lean floats they are.  That is why
-    `LakeJs.FloatDecide` exists: a fact about them is settled by `float_decide`, a
-    `native_decide` that first checks the goal really is about floating point. -/
-inductive Lit : LeanPrimTy → Type
-  | bool   : Bool → Lit .bool
-  | nat    : Nat → Lit .nat
-  | int    : Int → Lit .int
-  | bitvec : ∀ {n : Nat} {h : 0 < n}, BitVec n → Lit (.bitvec n h)
-  | uint8  : UInt8 → Lit .uint8
-  | uint16 : UInt16 → Lit .uint16
-  | uint32 : UInt32 → Lit .uint32
-  | uint64 : UInt64 → Lit .uint64
-  | usize  : USize → Lit .usize
-  | int8   : Int8 → Lit .int8
-  | int16  : Int16 → Lit .int16
-  | int32  : Int32 → Lit .int32
-  | int64  : Int64 → Lit .int64
-  | isize  : ISize → Lit .isize
-  | char   : Char → Lit .char
-  | string : String → Lit .string
-  | byteArray : Array UInt8 → Lit .byteArray
-  | name   : Lean.Name → Lit .name
-  /-- A byte position in a string. -/
-  | stringPos : Nat → Lit .stringPos
-  /-- A substring: the string, and the byte positions it starts and stops at. -/
-  | substring : (str : String) → (startPos stopPos : Nat) → Lit .substring
-  /-- A string slice, which carries the same three fields. -/
-  | stringSlice : (str : String) → (startPos stopPos : Nat) → Lit .stringSlice
-  | float  : Float → Lit .float
-  | float32 : Float32 → Lit .float32
-  | floatArray : Array Float → Lit .floatArray
-
-/-! ## The operations that are JavaScript's, not Lean's
-
-Every operation of the language that *is* a Lean function is a `Term.extern`: the
-catalogue `LakeJs.Externs` names the `@[extern]` function it is, and carries the types
-it takes and answers with, so `Nat.add` is `lean_nat_add` applied to two `Nat`s and
-nothing else.  `Term.extern` is the only way a `Term` mentions a Lean function that this
-module does not declare.
-
-What is left over is this handful of operations, which are *not* Lean functions and so
-have no entry in the catalogue:
-
-* reading a value at another type, which the translation records and the printer
-  forgets;
-* `Bool.and`, `Bool.or` and `Bool.not` — Lean functions, but not `@[extern]` ones, so no
-  runtime function implements them and the backend prints JavaScript's operators;
-* the *untruncated* subtraction of two `Nat`s, which no Lean function denotes: Lean's
-  `Nat.sub` truncates (`lean_nat_sub`), and this is what the optimiser puts in its
-  place where a guard has shown that the truncation cannot happen;
-* `String(a)`, which stands for a `ToString` instance the translation could not resolve
-  to a declaration.
-
-Like `Externs`, `JsOp` is *indexed* by the list of its argument types and by its result
-type, so applying one to the wrong number of arguments, or to arguments of the wrong
-types, is not a `Term`. -/
-
-inductive JsOp : List Ty → Ty → Type where
-  /-- The argument itself, read at another type: a coercion that costs nothing at run
-      time, such as the one between a `Decidable` and the boolean it decides, or the one
-      between a value of a type parameter (`Ty.typeParam`) and the type the context
-      knows it to have.  It prints as the argument, so the reinterpretation is visible
-      in the term and invisible in the output. -/
-  | cast (σ τ : Ty) : JsOp [σ] τ
-  /-- `a && b`: `Bool.and`, which Lean implements in Lean rather than with `@[extern]`. -/
-  | boolAnd : JsOp [.bool, .bool] .bool
-  /-- `a || b`: `Bool.or`. -/
-  | boolOr : JsOp [.bool, .bool] .bool
-  /-- `!a`: `Bool.not`. -/
-  | boolNot : JsOp [.bool] .bool
-  /-- `a === b` on two `Bool`s: Lean decides `Bool` equality with a match on the two
-      constructors rather than with a runtime function, and the match is `===` on the
-      JavaScript booleans the backend represents them with. -/
-  | boolBEq : JsOp [.bool, .bool] .bool
-  /-- `a === b` on two `Char`s, which the backend represents as one-character strings. -/
-  | charBEq : JsOp [.char, .char] .bool
-  /-- `a - b` on two `Nat`s *without* the truncation to zero that `Nat.sub`
-      (`lean_nat_sub`, which prints as `Math.max(0, a - b)`) has.  No Lean function
-      denotes it: it is what `LakeJs.Simp` puts where the enclosing test has shown that
-      the subtraction cannot go below zero. -/
-  | natSubExact : JsOp [.nat, .nat] .nat
-  /-- `String(a)`: the rendering of a value whose `ToString` instance the translation
-      did not resolve to a declaration. -/
-  | toStr (τ : Ty) : JsOp [τ] .string
-
 /-! ## Terms -/
 
 mutual
@@ -303,6 +188,15 @@ inductive Term (Sg : Sig) : Ctx → Ty → Type
   /-- One of the operations that are JavaScript's rather than Lean's (`JsOp`), applied
       to exactly the arguments its type asks for. -/
   | jsOp : ∀ {Γ σs τ}, JsOp σs τ → Spine Sg Γ σs → Term Sg Γ τ
+  /-- Delay a value: `() => { return e; }`.  This is what a Lean `fun (_ : Unit) => e`
+      becomes — the parameter is the one value of a unit type, which carries nothing at
+      run time and is erased, so what is left is a function of no arguments.  The type
+      language has no function type with an empty parameter list, and `Ty.lazy` is
+      exactly this one. -/
+  | lazyMk : ∀ {Γ τ}, Term Sg Γ τ → Term Sg Γ (.lazy τ)
+  /-- Run a delayed value: `e()`.  This is what an application `f ()` becomes once the
+      unit argument is erased. -/
+  | lazyForce : ∀ {Γ τ}, Term Sg Γ (.lazy τ) → Term Sg Γ τ
   /-- `let x = e; body` — `x` is de Bruijn index 0 of `body`. -/
   | letE : ∀ {Γ σ τ}, Term Sg Γ σ → Term Sg (σ :: Γ) τ → Term Sg Γ τ
   /-- `c ? t : e`. -/
@@ -336,6 +230,30 @@ inductive Term (Sg : Sig) : Ctx → Ty → Type
       loop variable, i.e. the context is `σs.reverse ++ Γ`. -/
   | loop : ∀ {Γ σs τ},
       (init : Spine Sg Γ σs) → (body : Body Sg (σs.reverse ++ Γ) σs τ) → Term Sg Γ τ
+  /-- A **join point**: bind a block to a name that the rest of the term may *jump* to,
+      and may do nothing else with.
+
+      `body` is the block.  It binds `params` the way a lambda does, so inside it de
+      Bruijn index `i` counts from the *last* parameter.  `rest` is the term the join
+      point is in scope in: there, de Bruijn index 0 is the join point itself, at type
+      `.fn params σ`.
+
+      What makes it a join point rather than a `let` of a lambda is the discipline in
+      `LakeJs.Usage`: the bound name may appear only as the target of a `Term.jump`,
+      never as a value, and it must be jumped to at least once.  A join point therefore
+      never escapes, so `LakeJs.EmitJs` prints it as a local function that is only ever
+      called — no closure is allocated for it, and every branch that shares a tail can
+      be compiled to a jump into the one copy of that tail instead of duplicating it. -/
+  | joinPoint : ∀ {Γ params σ τ},
+      (body : Term Sg (params.reverse ++ Γ) σ) →
+      (rest : Term Sg (.fn params σ :: Γ) τ) → Term Sg Γ τ
+  /-- Jump to a join point that is in scope, with one argument per parameter.  The
+      variable is an ordinary de Bruijn index — it is `LakeJs.Usage` that says it has to
+      be one a `Term.joinPoint` bound — and the spine is typed by the join point's
+      parameters, so a jump can neither be given the wrong number of arguments nor
+      arguments of the wrong types. -/
+  | jump : ∀ {Γ params σ},
+      (target : Γ ∋ (.fn params σ)) → (args : Spine Sg Γ params) → Term Sg Γ σ
 
 /-- A list of terms, typed by the list of their types: the arguments of a call, the
     results of a `Term.lamProd`, the initial values of a loop. -/
@@ -365,6 +283,23 @@ inductive Body (Sg : Sig) : Ctx → List Ty → Ty → Type
   /-- `if (c) { … } else { … }`, both arms being blocks. -/
   | iteB : ∀ {Γ σs τ},
       Term Sg Γ (.prim .bool) → Body Sg Γ σs τ → Body Sg Γ σs τ → Body Sg Γ σs τ
+  /-- A **join point** bound inside a loop block: the counterpart of `Term.joinPoint`
+      for a `Body`.
+
+      `body` is the block the join point is, a `Term` — so a jump to it cannot continue
+      the enclosing loop, exactly as a call of a local function cannot.  `rest` is the
+      rest of the block, in which de Bruijn index 0 is the join point itself, at type
+      `.fn params σ`; a jump to it is `Term.jump`, so in tail position of the block it
+      is `Body.ret (.jump …)`.
+
+      The discipline is the one `LakeJs.Usage` states of `Term.joinPoint`: the name may
+      appear only as the target of a jump, and it must be jumped to at least once.
+      Without this constructor a local function bound by `Body.letB` inside a loop could
+      never be read as the join point it is, which is why `LakeJs.Contify` fires here
+      too. -/
+  | joinPointB : ∀ {Γ params σ σs τ},
+      (body : Term Sg (params.reverse ++ Γ) σ) →
+      (rest : Body Sg (.fn params σ :: Γ) σs τ) → Body Sg Γ σs τ
 
 end
 

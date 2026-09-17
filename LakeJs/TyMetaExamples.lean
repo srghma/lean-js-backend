@@ -8,13 +8,21 @@ Each declaration below is a real Lean type, and the `Ty` next to it is read off 
 environment while this file is elaborated — by the same translation the backend uses to
 compile code — so this file is also the test suite of `LakeJs.TyMeta` and
 `LakeJs.TyDerive`.  Every `example` is closed by `rfl` or `decide`.
+
+Three declarations that *used* to have a `Ty` no longer have one, because the type
+language no longer has the degenerate shapes: a type with a single value (`Unit`), a
+type with none (`Empty`), and a sum of two field-less constructors, which is now
+modelled as `Ty.bool`.  They are shown, refused, in the last section.
 -/
 
 open LakeJs LakeJs.Ty
 
 namespace LakeJs.TyMetaExamples
 
-/-! ## Enum -/
+/-! ## Enum
+
+An enum has three constructors or more; `LeanEnumSchema` holds the number *beyond* those
+three. -/
 
 inductive Direction where
   | north | south | east | west
@@ -26,11 +34,16 @@ def directionSchema : LeanEnumSchema := lean_enum_schema% Direction
 /-- The same type, as the `Ty` it is. -/
 def directionTy : Ty := lean_ty% Direction
 
-example : directionSchema = (4, 0) := rfl
-example : directionTy = .enum 4 (shift := 0) := rfl
+example : directionSchema = ⟨1, 0⟩ := rfl
+example : directionSchema.nOfConstructors = 4 := rfl
+example : directionTy = .enum ⟨1, 0⟩ := rfl
 
-/-- `Unit` is the one-constructor enum: one value, `{ tag: 0 }`. -/
-example : (lean_ty% Unit) = .enum 1 (shift := 0) := rfl
+/-- A sum of exactly two field-less constructors is a **boolean**: that is how the
+    backend models it, so it prints as `true`/`false` rather than as `0`/`1`. -/
+inductive Side where
+  | left | right
+
+example : (lean_ty% Side) = Ty.bool := rfl
 
 /-- `Ordering` is the enum the runtime comparisons answer with, numbered from `-1`. -/
 example : (lean_ty% Ordering) = Ty.ordering := rfl
@@ -41,11 +54,11 @@ structure Point where
   x : Float
   y : Float
 
-def pointSchema : LeanRecordSchema := lean_record_schema% Point
+def pointSchema : LeanRecordSchema Ty := lean_record_schema% Point
 def pointTy : Ty := lean_ty% Point
 
-example : pointSchema = [.float, .float] := rfl
-example : pointTy = .record [.float, .float] := rfl
+example : pointSchema = ⟨.float, .float, []⟩ := rfl
+example : pointTy = .record ⟨.float, .float, []⟩ := rfl
 example : pointTy.pretty = "(record float float)" := by decide
 
 /-- A record whose field is another user-defined type: that type's own `Ty` is expanded
@@ -55,7 +68,7 @@ structure Segment where
   to_ : Point
   label : String
 
-example : (lean_ty% Segment) = .record [pointTy, pointTy, .string] := rfl
+example : (lean_ty% Segment) = .record ⟨pointTy, pointTy, [.string]⟩ := rfl
 
 /-! ## Tagged union -/
 
@@ -63,14 +76,17 @@ inductive Shape where
   | circle (r : Float)
   | rect (w : Float) (h : Float)
 
-def shapeSchema : LeanTaggedUnionSchema := lean_tagged_union_schema% Shape
+def shapeSchema : LeanTaggedUnionSchema Ty := lean_tagged_union_schema% Shape
 
-example : shapeSchema = [[.float], [.float, .float]] := rfl
-example : (lean_ty% Shape) = .taggedUnion [[.float], [.float, .float]] := rfl
+example : shapeSchema = .payloadFirst ⟨.float, []⟩ [.float, .float] [] := rfl
+example : shapeSchema.toList = [[.float], [.float, .float]] := rfl
+example : (lean_ty% Shape) = .taggedUnion shapeSchema := rfl
 
 /-- A parameterised declaration is read **at its instantiation**, so the elaborator
     takes a type, not only a name. -/
-example : (lean_ty% (Except Nat String)) = .taggedUnion [[.nat], [.string]] := rfl
+example :
+    (lean_ty% (Except Nat String)) = .taggedUnion (.payloadFirst ⟨.nat, []⟩ [.string] []) :=
+  rfl
 example : (lean_ty% (Option Nat)) = Ty.option .nat := rfl
 example : (lean_ty% (Array (Option Nat))) = .array (Ty.option .nat) := rfl
 example : (lean_ty% (Nat → Nat)) = .fn [.nat] .nat := rfl
@@ -81,11 +97,12 @@ inductive MyList where
   | nil
   | cons (hd : Int) (tl : MyList)
 
-def myListSchema : LeanRecTaggedUnionSchema := lean_rec_tagged_union_schema% MyList
+def myListSchema : LeanTaggedUnionSchema Ty.RTy := lean_rec_tagged_union_schema% MyList
 def myListTy : Ty := lean_ty% MyList
 
-example : myListSchema = [[], [.prim .int, .self 0]] := rfl
-example : myListTy = .recTaggedUnion [[], [.prim .int, .self 0]] := rfl
+example : myListSchema = ⟨.skip (.here ⟨.prim .int, [.self 0]⟩ [])⟩ := rfl
+example : myListSchema.ctors.toList = [[], [.prim .int, .self 0]] := rfl
+example : myListTy = .recTaggedUnion myListSchema := rfl
 example : myListTy.pretty = "(recTaggedUnion ()|(int self#0))" := by decide
 
 /-- An `Option` guards a self occurrence, so `link` is a base constructor — and it is
@@ -94,7 +111,10 @@ inductive Chain where
   | stop
   | link (next : Option Chain)
 
-example : (lean_ty% Chain) = .recTaggedUnion [[], [.taggedUnion [[], [.self 0]]]] := rfl
+example :
+    (lean_ty% Chain)
+      = .recTaggedUnion
+          ⟨.skip (.here ⟨.taggedUnion (.skip (.here ⟨.self 0, []⟩ [])), []⟩ [])⟩ := rfl
 
 /-! ## Recursive record -/
 
@@ -102,9 +122,9 @@ structure Rose where
   v : Int
   kids : Array Rose
 
-def roseSchema : LeanRecObjectSchema := lean_rec_object_schema% Rose
+def roseSchema : LeanRecordSchema Ty.RTy := lean_rec_object_schema% Rose
 
-example : roseSchema = [.prim .int, .array (.self 0)] := rfl
+example : roseSchema = ⟨⟨.prim .int, .array (.self 0), []⟩⟩ := rfl
 example : (lean_ty% Rose).pretty = "(recObject int (array self#0))" := by decide
 
 /-- A self occurrence may sit inside a pair, as long as it is guarded: an
@@ -114,7 +134,8 @@ structure Forest where
   kids : Array (Int × Forest)
 
 example :
-    (lean_ty% Forest) = .recObject [.prim .string, .array (.record [.prim .int, .self 0])] :=
+    (lean_ty% Forest)
+      = .recObject ⟨⟨.prim .string, .array (.record ⟨.prim .int, .self 0, []⟩), []⟩⟩ :=
   rfl
 
 /-! ## Newtypes are erased
@@ -128,10 +149,10 @@ own. -/
 structure Rose2 where
   kids : Array Rose2
 
-def rose2Schema : LeanRecAliasSchema := lean_rec_alias_schema% Rose2
+def rose2Schema : Ty.RTy := lean_rec_alias_schema% Rose2
 
-example : rose2Schema = .array (.self 0) := rfl
-example : (lean_ty% Rose2) = .recAlias (.array (.self 0)) := rfl
+example : rose2Schema = ⟨.array (.self 0)⟩ := rfl
+example : (lean_ty% Rose2) = .recAlias ⟨.array (.self 0)⟩ := rfl
 
 /-- A **non-recursive** newtype disappears completely: a `Wrapper` *is* a `Nat`. -/
 structure Wrapper where
@@ -149,14 +170,6 @@ structure Positive where
 
 example : (lean_ty% Positive) = Ty.nat := rfl
 
-/-- A `Unit` field is the one-value enum, and is kept as such: it is *fields that carry
-    nothing at all* — proofs and types — that go. -/
-structure WithUnit where
-  a : Nat
-  u : Unit
-
-example : (lean_ty% WithUnit) = .record [.nat, .enum 1 (shift := 0)] := rfl
-
 /-- A type field is dropped, and the value field whose type it is becomes a
     `Ty.typeParam`: the caller chooses the type, so the compiled code can only pass the
     value on. -/
@@ -165,7 +178,7 @@ structure Unfold where
   seed : State
   step : Nat
 
-example : (lean_ty% Unfold) = .record [.typeParam, .nat] := rfl
+example : (lean_ty% Unfold) = .record ⟨.typeParam, .nat, []⟩ := rfl
 
 /-! ## Genuinely mutual family -/
 
@@ -178,41 +191,23 @@ mutual
     | seq (ss : List Stm) (tail : Exp)
 end
 
-def expFamily : LeanMutualRecFamily := lean_mutual_rec_family% Exp
-def stmFamily : LeanMutualRecFamily := lean_mutual_rec_family% Stm
+def expFamily : LeanMutualRecFamily Ty.RTy := lean_mutual_rec_family% Exp
+def stmFamily : LeanMutualRecFamily Ty.RTy := lean_mutual_rec_family% Stm
 
 /-- Both members are types of the *same* block, differing only in which member they
     are. -/
-example : expFamily.1 = stmFamily.1 := rfl
-example : expFamily.2 = 0 := rfl
-example : stmFamily.2 = 1 := rfl
+example : expFamily.members = stmFamily.members := rfl
+example : expFamily.memberIdx = 0 := rfl
+example : stmFamily.memberIdx = 1 := rfl
 
 example :
-    expFamily.1
-      = [ .ctors [[.prim .int], [.self 1]]
-        , .ctors [[.self 0], [.list (.self 1), .self 0]] ] := rfl
+    expFamily.members
+      = [ .ctors (.payloadFirst ⟨.prim .int, []⟩ [.self 1] [])
+        , .ctors (.payloadFirst ⟨.self 0, []⟩ [.list (.self 1), .self 0] []) ] := rfl
 
 /-- What the elaborators check is exactly what `LakeJs.TySchema` says a family has to
     be: two members that reach each other, and values for both. -/
-example : LeanMutualRecFamily.ok expFamily = true := by decide
-
-/-! A `mutual` block whose members do not mention each other is two independent
-declarations — `Color` below is an enum and so is `Sha` — but the current translation
-reads every `mutual` block as a family, so what it answers with is a family whose
-members ignore each other.  `LeanMutualRecFamily.ok` accepts that (it is what the
-backend produces); `LeanMutualRecFamily.strict`, which asks for a family that really is
-one, does not. -/
-
-mutual
-  inductive Color where | red | blue
-  inductive Sha where | circle | box
-end
-
-def colorFamily : LeanMutualRecFamily := lean_mutual_rec_family% Color
-
-example : colorFamily = ([.ctors [[], []], .ctors [[], []]], 0) := rfl
-example : LeanMutualRecFamily.ok colorFamily = true := by decide
-example : LeanMutualRecFamily.strict colorFamily = false := by decide
+example : LeanMutualRecFamily.wf expFamily = true := by decide
 
 /-! ## A mutual block with an **alias member**
 
@@ -227,12 +222,14 @@ mutual
     | mk (lines : Array Line)
 end
 
-def lineFamily : LeanMutualRecFamily := lean_mutual_rec_family% Line
+def lineFamily : LeanMutualRecFamily Ty.RTy := lean_mutual_rec_family% Line
 
-example : lineFamily.1 = [.ctors [[.prim .string], [.self 1]], .alias (.array (.self 0))] :=
-  rfl
-example : LeanMutualRecFamily.ok lineFamily = true := by decide
-example : (lean_mutual_rec_family% Block).2 = 1 := rfl
+example :
+    lineFamily.members
+      = [.ctors (.payloadFirst ⟨.prim .string, []⟩ [.self 1] []),
+         .alias (.array (.self 0))] := rfl
+example : LeanMutualRecFamily.wf lineFamily = true := by decide
+example : (lean_mutual_rec_family% Block).memberIdx = 1 := rfl
 
 /-! ## `derive_ty`: parameterised declarations
 
@@ -241,8 +238,8 @@ what it has is a function from `Ty` to `Ty`, generated by `derive_ty`; that is h
 `LakeJs.TyDerived` checks `Ty.option` and `Ty.prod` against Lean's own `Option` and
 `Prod`. -/
 
-example : Ty.option .char = .taggedUnion [[], [.char]] := rfl
-example : Ty.prod .float .int64 = .record [.float, .int64] := rfl
+example : Ty.option .char = .taggedUnion (.skip (.here ⟨.char, []⟩ [])) := rfl
+example : Ty.prod .float .int64 = .record ⟨.float, .int64, []⟩ := rfl
 
 /-- A parameterised record. -/
 structure Boxed (α : Type) where
@@ -251,7 +248,7 @@ structure Boxed (α : Type) where
 
 derive_ty Boxed as boxedTy
 
-example : boxedTy .int = .record [.int, .string] := rfl
+example : boxedTy .int = .record ⟨.int, .string, []⟩ := rfl
 
 /-- A parameterised recursive declaration: the occurrence of `MyListG α` inside
     itself is `RTy.self 0`, and the parameter is the generated function's argument, read
@@ -262,7 +259,9 @@ inductive MyListG (α : Type) where
 
 derive_ty MyListG as myListGTy
 
-example : myListGTy .string = .recTaggedUnion [[], [.prim .string, .self 0]] := rfl
+example :
+    myListGTy .string = .recTaggedUnion ⟨.skip (.here ⟨.prim .string, [.self 0]⟩ [])⟩ :=
+  rfl
 
 /-- The derived function agrees with the declaration read at an instantiation. -/
 example : myListGTy .int = lean_ty% (MyListG Int) := rfl
@@ -275,7 +274,9 @@ inductive Choice (α β : Type) where
 
 derive_ty Choice as choiceTy
 
-example : choiceTy .int .bool = .taggedUnion [[.int], [.bool], [.int, .bool]] := rfl
+example :
+    choiceTy .int .bool
+      = .taggedUnion (.payloadFirst ⟨.int, []⟩ [.bool] [[.int, .bool]]) := rfl
 
 /-- A parameter is told apart from a scalar the declaration mentions itself: `b` below
     is a `Float32` whatever the parameter is, and the generated function says so. -/
@@ -286,8 +287,8 @@ structure Mixed (α : Type) where
 
 derive_ty Mixed as mixedTy
 
-example : mixedTy .int = .record [.int, .float32, .nat] := rfl
-example : mixedTy .float32 = .record [.float32, .float32, .nat] := rfl
+example : mixedTy .int = .record ⟨.int, .float32, [.nat]⟩ := rfl
+example : mixedTy .float32 = .record ⟨.float32, .float32, [.nat]⟩ := rfl
 
 /-- A parameterised **newtype**: the wrapper is erased, so the generated function is the
     identity on `Ty`. -/
@@ -301,16 +302,27 @@ example : identTy (Ty.array .string) = .array .string := rfl
 
 /-! ## What is refused
 
-Each of these is an elaboration error, so it is shown commented out:
+Each of these is an elaboration error, so it is shown commented out.  The first three
+are the degenerate types the language no longer has: a declaration whose `Ty` would be
+one of them is refused where it is read, rather than modelled by something it is not.
 
 ```lean
-def bad1 : LeanEnumSchema := lean_enum_schema% Point          -- `Point` is a record
-def bad2 : LeanRecordSchema := lean_record_schema% Rose       -- `Rose` is recursive
-def bad3 : LeanRecObjectSchema := lean_rec_object_schema% Rose2  -- `Rose2` is a newtype
-def bad4 : LeanRecordSchema := lean_record_schema% Wrapper    -- a newtype: it is a Nat
-def bad5 : Ty := lean_ty% Empty                               -- no values
-def bad6 : Ty := lean_ty% Option                              -- a family, not a type
-def bad7 : LeanMutualRecFamily := lean_mutual_rec_family% Color  -- not mutual
+def bad0 : Ty := lean_ty% Unit                                -- a single value
+def bad1 : Ty := lean_ty% Empty                               -- no values
+structure WithUnit where a : Nat; u : Unit
+def bad2 : Ty := lean_ty% WithUnit                            -- a field of unit type
+
+mutual
+  inductive Color where | red | blue
+  inductive Sha where | circle | box
+end
+def bad3 : Ty := lean_ty% Color    -- two field-less members: two booleans, not a family
+
+def bad4 : LeanEnumSchema := lean_enum_schema% Point          -- `Point` is a record
+def bad5 : LeanRecordSchema Ty := lean_record_schema% Rose    -- `Rose` is recursive
+def bad6 : LeanRecordSchema Ty.RTy := lean_rec_object_schema% Rose2 -- a newtype
+def bad7 : LeanRecordSchema Ty := lean_record_schema% Wrapper -- a newtype: it is a Nat
+def bad8 : Ty := lean_ty% Option                              -- a family, not a type
 derive_ty Vector as vectorTy   -- `n : Nat` is a value parameter, i.e. an index
 ```
 -/
