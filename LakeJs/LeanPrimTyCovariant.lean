@@ -1,7 +1,9 @@
 module
 
+prelude
 public import Init.Prelude
 public import Init.Data.Format.Basic
+public import Init.Data.Format.Instances
 public import Init.Data.ToString.Basic
 
 @[expose] public section
