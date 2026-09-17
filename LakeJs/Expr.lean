@@ -86,7 +86,6 @@ structure GlobalDecl where
   name : String
   /-- Its type. -/
   ty : Ty
-  isInlined : Bool
 
 /-- The signature of the module being emitted: every top-level name a `Term` of it may
     mention. -/
