@@ -1,101 +1,140 @@
-// UInt64, USize, Nat, Int64, ISize, Int in this file are configured with
-// `*Repr = "num"` (natRepr/intRepr/usizeRepr/uint64Repr/int64Repr = "num").
-// All values are represented as plain JS Numbers (IEEE-754 double-precision floats,
-// safe up to Number.MAX_SAFE_INTEGER = 2^53 - 1).
-//
-// Rules under `num` mode:
-// - Comparisons (==, !=, <, >, <=, >=) operate directly on JS Numbers.
-// - Basic arithmetic (+, -, *) operates natively via `+`, `-`, `*`.
-// - For unsigned types (UInt64, USize, Nat), division truncates toward zero / floor:
-//   `b !== 0 ? Math.floor(a / b) : 0`.
-// - For signed types (Int64, ISize, Int), division follows Euclidean division:
-//   `b > 0 ? Math.floor(a / b) : b < 0 ? -Math.floor(a / -b) : 0`.
-// - Nat subtraction is saturating: `Math.max(0, a - b)`.
-// - Nat does not support negation.
-
-// ---------------- TestUInt64 ----------------
-
-export const TestUInt64$add = (a) => (b) => a + b;
-export const TestUInt64$sub = (a) => (b) => a - b;
-export const TestUInt64$eq = (a) => (b) => a === b;
-export const TestUInt64$ne = (a) => (b) => a !== b;
-export const TestUInt64$lt = (a) => (b) => a < b;
-export const TestUInt64$gt = (a) => (b) => a > b;
-export const TestUInt64$le = (a) => (b) => a <= b;
-export const TestUInt64$ge = (a) => (b) => a >= b;
-export const TestUInt64$mul = (a) => (b) => a * b;
-export const TestUInt64$div = (a) => (b) => (b !== 0 ? Math.floor(a / b) : 0);
-export const TestUInt64$neg = (a) => -a;
-
-// ---------------- TestUSize ----------------
-
-export const TestUSize$add = (a) => (b) => a + b;
-export const TestUSize$sub = (a) => (b) => a - b;
-export const TestUSize$eq = (a) => (b) => a === b;
-export const TestUSize$ne = (a) => (b) => a !== b;
-export const TestUSize$lt = (a) => (b) => a < b;
-export const TestUSize$gt = (a) => (b) => a > b;
-export const TestUSize$le = (a) => (b) => a <= b;
-export const TestUSize$ge = (a) => (b) => a >= b;
-export const TestUSize$mul = (a) => (b) => a * b;
-export const TestUSize$div = (a) => (b) => (b !== 0 ? Math.floor(a / b) : 0);
-export const TestUSize$neg = (a) => -a;
-
-// ---------------- TestNat ----------------
-
-export const TestNat$add = (a) => (b) => a + b;
-export const TestNat$sub = (a) => (b) => Math.max(0, a - b);
-export const TestNat$eq = (a) => (b) => a === b;
-export const TestNat$ne = (a) => (b) => a !== b;
-export const TestNat$lt = (a) => (b) => a < b;
-export const TestNat$gt = (a) => (b) => a > b;
-export const TestNat$le = (a) => (b) => a <= b;
-export const TestNat$ge = (a) => (b) => a >= b;
-export const TestNat$mul = (a) => (b) => a * b;
-export const TestNat$div = (a) => (b) => (b !== 0 ? Math.floor(a / b) : 0);
-// Nat does not support negation
-
-// ---------------- TestInt64 ----------------
-
-export const TestInt64$add = (a) => (b) => a + b;
-export const TestInt64$sub = (a) => (b) => a - b;
-export const TestInt64$eq = (a) => (b) => a === b;
-export const TestInt64$ne = (a) => (b) => a !== b;
-export const TestInt64$lt = (a) => (b) => a < b;
-export const TestInt64$gt = (a) => (b) => a > b;
-export const TestInt64$le = (a) => (b) => a <= b;
-export const TestInt64$ge = (a) => (b) => a >= b;
-export const TestInt64$mul = (a) => (b) => a * b;
-export const TestInt64$div = (a) => (b) =>
-  b > 0 ? Math.floor(a / b) : b < 0 ? -Math.floor(a / -b) : 0;
-export const TestInt64$neg = (a) => -a;
-
-// ---------------- TestISize ----------------
-
-export const TestISize$add = (a) => (b) => a + b;
-export const TestISize$sub = (a) => (b) => a - b;
-export const TestISize$eq = (a) => (b) => a === b;
-export const TestISize$ne = (a) => (b) => a !== b;
-export const TestISize$lt = (a) => (b) => a < b;
-export const TestISize$gt = (a) => (b) => a > b;
-export const TestISize$le = (a) => (b) => a <= b;
-export const TestISize$ge = (a) => (b) => a >= b;
-export const TestISize$mul = (a) => (b) => a * b;
-export const TestISize$div = (a) => (b) =>
-  b > 0 ? Math.floor(a / b) : b < 0 ? -Math.floor(a / -b) : 0;
-export const TestISize$neg = (a) => -a;
-
-// ---------------- TestInt ----------------
-
-export const TestInt$add = (a) => (b) => a + b;
-export const TestInt$sub = (a) => (b) => a - b;
-export const TestInt$eq = (a) => (b) => a === b;
-export const TestInt$ne = (a) => (b) => a !== b;
-export const TestInt$lt = (a) => (b) => a < b;
-export const TestInt$gt = (a) => (b) => a > b;
-export const TestInt$le = (a) => (b) => a <= b;
-export const TestInt$ge = (a) => (b) => a >= b;
-export const TestInt$mul = (a) => (b) => a * b;
-export const TestInt$div = (a) => (b) =>
-  b > 0 ? Math.floor(a / b) : b < 0 ? -Math.floor(a / -b) : 0;
-export const TestInt$neg = (a) => -a;
+import {
+  $lean_int64_add,
+  $lean_int64_dec_le,
+  $lean_int64_dec_lt,
+  $lean_int64_div,
+  $lean_int64_mul,
+  $lean_int64_neg,
+  $lean_int64_sub,
+  $lean_int_ediv,
+  $lean_int_neg,
+  $lean_isize_add,
+  $lean_isize_dec_le,
+  $lean_isize_dec_lt,
+  $lean_isize_div,
+  $lean_isize_mul,
+  $lean_isize_neg,
+  $lean_isize_sub,
+  $lean_uint64_add,
+  $lean_uint64_div,
+  $lean_uint64_mul,
+  $lean_uint64_neg,
+  $lean_uint64_sub,
+  $lean_usize_add,
+  $lean_usize_div,
+  $lean_usize_mul,
+  $lean_usize_neg,
+  $lean_usize_sub,
+  Int_instDecidableEq,
+  instDecidableEqISize,
+  instDecidableEqInt64,
+  instDecidableEqUInt64,
+  instDecidableEqUSize,
+} from "../runtime/lean_runtime.mjs";
+export const TestUSize_sub = (v0, v1) => $lean_usize_sub(v0, v1);
+export const TestUSize_neg = (v0) => $lean_usize_neg(v0);
+export const TestUSize_ne = (v0, v1) => {
+  const v2 = instDecidableEqUSize(v0, v1);
+  if (v2) {
+    return false;
+  } else {
+    return true;
+  }
+};
+export const TestUSize_mul = (v0, v1) => $lean_usize_mul(v0, v1);
+export const TestUSize_lt = (v0, v1) => v0 < v1;
+export const TestUSize_le = (v0, v1) => v0 <= v1;
+export const TestUSize_gt = (v0, v1) => v1 < v0;
+export const TestUSize_ge = (v0, v1) => v1 <= v0;
+export const TestUSize_eq = instDecidableEqUSize;
+export const TestUSize_div = (v0, v1) => $lean_usize_div(v0, v1);
+export const TestUSize_add = (v0, v1) => $lean_usize_add(v0, v1);
+export const TestUInt64_sub = (v0, v1) => $lean_uint64_sub(v0, v1);
+export const TestUInt64_neg = (v0) => $lean_uint64_neg(v0);
+export const TestUInt64_ne = (v0, v1) => {
+  const v2 = instDecidableEqUInt64(v0, v1);
+  if (v2) {
+    return false;
+  } else {
+    return true;
+  }
+};
+export const TestUInt64_mul = (v0, v1) => $lean_uint64_mul(v0, v1);
+export const TestUInt64_lt = (v0, v1) => v0 < v1;
+export const TestUInt64_le = (v0, v1) => v0 <= v1;
+export const TestUInt64_gt = (v0, v1) => v1 < v0;
+export const TestUInt64_ge = (v0, v1) => v1 <= v0;
+export const TestUInt64_eq = instDecidableEqUInt64;
+export const TestUInt64_div = (v0, v1) => $lean_uint64_div(v0, v1);
+export const TestUInt64_add = (v0, v1) => $lean_uint64_add(v0, v1);
+export const TestNat_sub = (v0, v1) => Math.max(0, v0 - v1);
+export const TestNat_ne = (v0, v1) => {
+  const v2 = v0 === v1;
+  if (v2) {
+    return false;
+  } else {
+    return true;
+  }
+};
+export const TestNat_mul = (v0, v1) => v0 * v1;
+export const TestNat_lt = (v0, v1) => v0 < v1;
+export const TestNat_le = (v0, v1) => v0 <= v1;
+export const TestNat_gt = (v0, v1) => v1 < v0;
+export const TestNat_ge = (v0, v1) => v1 <= v0;
+export const TestNat_eq = (v0, v1) => v0 === v1;
+export const TestNat_div = (v0, v1) => v1 !== 0 ? Math.trunc(v0 / v1) : 0;
+export const TestNat_add = (v0, v1) => v0 + v1;
+export const TestInt64_sub = (v0, v1) => $lean_int64_sub(v0, v1);
+export const TestInt64_neg = (v0) => $lean_int64_neg(v0);
+export const TestInt64_ne = (v0, v1) => {
+  const v2 = instDecidableEqInt64(v0, v1);
+  if (v2) {
+    return false;
+  } else {
+    return true;
+  }
+};
+export const TestInt64_mul = (v0, v1) => $lean_int64_mul(v0, v1);
+export const TestInt64_lt = (v0, v1) => $lean_int64_dec_lt(v0, v1);
+export const TestInt64_le = (v0, v1) => $lean_int64_dec_le(v0, v1);
+export const TestInt64_gt = (v0, v1) => $lean_int64_dec_lt(v1, v0);
+export const TestInt64_ge = (v0, v1) => $lean_int64_dec_le(v1, v0);
+export const TestInt64_eq = instDecidableEqInt64;
+export const TestInt64_div = (v0, v1) => $lean_int64_div(v0, v1);
+export const TestInt64_add = (v0, v1) => $lean_int64_add(v0, v1);
+export const TestInt_sub = (v0, v1) => v0 - v1;
+export const TestInt_neg = (v0) => $lean_int_neg(v0);
+export const TestInt_ne = (v0, v1) => {
+  const v2 = Int_instDecidableEq(v0, v1);
+  if (v2) {
+    return false;
+  } else {
+    return true;
+  }
+};
+export const TestInt_mul = (v0, v1) => v0 * v1;
+export const TestInt_lt = (v0, v1) => v0 < v1;
+export const TestInt_le = (v0, v1) => v0 <= v1;
+export const TestInt_gt = (v0, v1) => v1 < v0;
+export const TestInt_ge = (v0, v1) => v1 <= v0;
+export const TestInt_eq = Int_instDecidableEq;
+export const TestInt_div = (v0, v1) => $lean_int_ediv(v0, v1);
+export const TestInt_add = (v0, v1) => v0 + v1;
+export const TestISize_sub = (v0, v1) => $lean_isize_sub(v0, v1);
+export const TestISize_neg = (v0) => $lean_isize_neg(v0);
+export const TestISize_ne = (v0, v1) => {
+  const v2 = instDecidableEqISize(v0, v1);
+  if (v2) {
+    return false;
+  } else {
+    return true;
+  }
+};
+export const TestISize_mul = (v0, v1) => $lean_isize_mul(v0, v1);
+export const TestISize_lt = (v0, v1) => $lean_isize_dec_lt(v0, v1);
+export const TestISize_le = (v0, v1) => $lean_isize_dec_le(v0, v1);
+export const TestISize_gt = (v0, v1) => $lean_isize_dec_lt(v1, v0);
+export const TestISize_ge = (v0, v1) => $lean_isize_dec_le(v1, v0);
+export const TestISize_eq = instDecidableEqISize;
+export const TestISize_div = (v0, v1) => $lean_isize_div(v0, v1);
+export const TestISize_add = (v0, v1) => $lean_isize_add(v0, v1);

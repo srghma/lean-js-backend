@@ -1,0 +1,129 @@
+-- SnapshotsMy.InlineDemo  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+bar : nat
+(letE : nat
+  (lit 3)
+  (var 0 : nat)
+)
+
+foo : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (apN
+      (extern lean_nat_mul)
+      (var 1 : nat)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (apN
+        (extern lean_nat_add)
+        (var 0 : nat)
+        (var 2 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+triple : (fn [nat] nat)
+(lamN [nat]
+  (letE : nat
+    (lit 3)
+    (letE : nat
+      (apN
+        (extern lean_nat_mul)
+        (var 1 : nat)
+        (var 0 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+_private_SnapshotsMy_InlineDemo_0_scale : (fn [nat] nat)
+(lamN [nat]
+  (letE : nat
+    (lit 2)
+    (letE : nat
+      (apN
+        (extern lean_nat_mul)
+        (var 1 : nat)
+        (var 0 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+useScale : (fn [nat] nat)
+(lamN [nat]
+  (letE : nat
+    (apN
+      (global _private_SnapshotsMy_InlineDemo_0_scale)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 1)
+      (letE : nat
+        (apN
+          (extern lean_nat_add)
+          (var 2 : nat)
+          (var 0 : nat)
+        )
+        (letE : nat
+          (apN
+            (global _private_SnapshotsMy_InlineDemo_0_scale)
+            (var 0 : nat)
+          )
+          (letE : nat
+            (apN
+              (extern lean_nat_add)
+              (var 3 : nat)
+              (var 0 : nat)
+            )
+            (var 0 : nat)
+          )
+        )
+      )
+    )
+  )
+)
+
+useTriple : (fn [nat] nat)
+(lamN [nat]
+  (letE : nat
+    (apN
+      (global triple)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 1)
+      (letE : nat
+        (apN
+          (extern lean_nat_add)
+          (var 2 : nat)
+          (var 0 : nat)
+        )
+        (letE : nat
+          (apN
+            (global triple)
+            (var 0 : nat)
+          )
+          (letE : nat
+            (apN
+              (extern lean_nat_add)
+              (var 3 : nat)
+              (var 0 : nat)
+            )
+            (var 0 : nat)
+          )
+        )
+      )
+    )
+  )
+)
+

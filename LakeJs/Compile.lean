@@ -1,10 +1,8 @@
-module
-
-public import LakeJs.FromLcnf
-
-@[expose] public section
-
-namespace LakeJs.Compile
+import LakeJs.FromLcnf
+import LakeJs.Scalarise
+import LakeJs.Specialise
+import LakeJs.Inline
+import LakeJs.TermPretty
 
 /-!
 # The driver: an `.olean` in, a `.js` file out
@@ -26,6 +24,52 @@ namespace LakeJs.Compile
 6. print it with `MiniAST` (`LakeJs.EmitJs`).
 -/
 
+namespace LakeJs.Compile
+
+open LakeJs
+open LakeJs.Ty
+open LakeJs.Layout (FieldLayout ObjLayout)
+open LakeJs.Expr
+open LakeJs.Lookup
+open LakeJs.Rename
+open LakeJs.Simp
+open LakeJs.Inline
+open LakeJs.Scalarise
+open LakeJs.Specialise
+open LakeJs.EmitJs
+open LakeJs.FromLcnf
+open LakeJs.TermPretty
+
+/-- Everything the backend does to a translated declaration before it is printed:
+    simplify, inline the calls of the declarations of `tbl` (`LakeJs.Inline`), simplify
+    what inlining exposed, scalarise the accumulators of its loops, and simplify again —
+    the last pass is what collapses the projections scalarising leaves behind.  Every
+    one of them is a function `Term Sg Γ τ → Term Sg Γ τ`, so none of it can produce a
+    program that is not well-typed. -/
+def optimise {Sg : Sig} {τ : Ty} (tbl : LakeJs.Inline.Table Sg) (t : Term Sg [] τ) :
+    Term Sg [] τ :=
+  let t1 := LakeJs.Simp.Term.simpAll t
+  let t2 :=
+    if tbl.isEmpty then t1
+    else LakeJs.Simp.Term.simpAll (LakeJs.Inline.Term.inlineCalls tbl t1)
+  LakeJs.Simp.Term.simpAll (LakeJs.Scalarise.scalarise t2)
+
+/-- What a translated declaration is put through before it is printed.  The driver runs
+    the translation twice: once with `optimised`, whose result is the emitted JavaScript,
+    and once with `unoptimised`, whose result is the term `<Module>-Expr.txt` holds. -/
+abbrev Post (Sg : Sig) := (τ : Ty) → Term Sg [] τ → Term Sg [] τ
+
+/-- The term as the translation produced it. -/
+def unoptimised {Sg : Sig} : Post Sg := fun _ t => t
+
+/-- The term the optimiser produces, with `tbl` the declarations a call of which may be
+    inlined. -/
+def optimised {Sg : Sig} (tbl : LakeJs.Inline.Table Sg) : Post Sg := fun _ t => optimise tbl t
+
+/-- How big a declaration's body may be for the backend to inline a call of it where
+    Lean itself said nothing about the declaration.  A declaration Lean marked
+    `@[inline]` is inlined whatever its size. -/
+def inlineSizeLimit : Nat := 24
 
 open Lean Lean.Compiler.LCNF
 open LakeJs.FromLcnf
@@ -194,7 +238,7 @@ def expandParams (base : Nat) :
   | _, [], _ => ([], [])
   | plans, p :: ps, ptys =>
     -- a dropped parameter has no type, and no JavaScript parameter either
-    let pty := (ptys.headD none).getD (.enum 1)
+    let pty := (ptys.headD none).getD (.enum 1 (shift := 0))
     let rest := ptys.tail
     let plan := plans.headD none
     let plans' := plans.tail
@@ -256,16 +300,24 @@ structure Member where
   /-- Its body. -/
   code : Code
 
-/-- The type two members give the same argument slot.  Where they agree it is that
-    type; where they do not, the slot holds values of both, and each member reads it at
-    its own type — the slot is typed as a value the loop only passes on, which is what
-    `Ty.typeParam` is. -/
+/-- The type two members give the same *result*.  Where they agree it is that type;
+    where they do not, the merged loop answers with a value it only passes on, which is
+    what `Ty.typeParam` is, and each member’s wrapper reads the answer at its own type.
+    The argument slots are no longer unified like this: `groupSlotAlloc` gives a
+    parameter a slot of its own rather than widening one. -/
 def unifyTy (a b : Ty) : Ty :=
   if a = b then a else Ty.typeParam
 
 /-- The name of the merged function of a group, built from the name its first member
     was given. -/
 def mergedName (firstBase : String) : String := "_mut$" ++ firstBase
+
+/-- The name of the *specialised* function of a group whose tag is statically known
+    (`LakeJs.Specialise`): the loop of the member the group is named after, with the
+    other members unrolled into it.  It is a different name from `mergedName` because
+    it is a different function — it has no tag parameter — and a group gets one or the
+    other, never both. -/
+def specName (firstBase : String) : String := "_spec$" ++ firstBase
 
 /-- The dispatch of the merged loop: test the tag against each member in turn, the last
     member being the `else`. -/
@@ -274,7 +326,7 @@ def dispatch {Sg : Sig} {Γ : Ctx} {σs : List Ty} {τ : Ty} (tagTerm : Term Sg 
   | _, b, [] => b
   | i, b, b' :: rest =>
       let test : Term Sg Γ (.prim .bool) :=
-        .prim (.beq .nat) (.cons tagTerm (.cons (.lit (.nat i)) .nil))
+        .callExtern .lean_nat_dec_eq (.cons tagTerm (.cons (.lit (.nat i)) .nil))
       .iteB test b (dispatch tagTerm (i + 1) b' rest)
 
 /-- Read one member of a group off its LCNF declaration. -/
@@ -292,36 +344,115 @@ def toMember (env : Environment) (d : Decl) : Except String Member := do
            erasedParams := (allPs.filter isErasedParam).map (·.fvarId), ptys := ptys,
            ret := stripArrows ps.length declTy, code := code }
 
-/-- The type of the merged function of a group. -/
+/-- The first slot of type `t` that this member is not already using, if there is one. -/
+def freeSlot? (tys : List Ty) (used : List Nat) (t : Ty) : Option Nat :=
+  let rec go : Nat → List Ty → Option Nat
+    | _, [] => none
+    | k, u :: rest => if u == t && !used.contains k then some k else go (k + 1) rest
+  go 0 tys
+
+/-- Where each parameter of each member of a group is held in the merged loop: the types
+    of the argument slots, and, per member, the slot of each of its parameters.
+
+    A slot is shared by two members only where they *agree* on its type, so no slot is
+    ever widened to `Ty.typeParam` and every slot holds values of one type — which is
+    what lets a JavaScript engine keep the loop variable unboxed.  A parameter whose type
+    no free slot has gets a slot of its own.  Members that agree pointwise, which is the
+    ordinary case and every case in the corpus, therefore get exactly the layout they had
+    before: parameter `k` is slot `k`, and there are as many slots as the widest member
+    has parameters. -/
+def groupSlotAlloc (mems : List Member) : List Ty × List (List Nat) :=
+  let rec member : List Ty → List Nat → List Ty → List Ty × List Nat
+    | tys, used, [] => (tys, used)
+    | tys, used, t :: rest =>
+      match freeSlot? tys used t with
+      | some k => member tys (used ++ [k]) rest
+      | none => member (tys ++ [t]) (used ++ [tys.length]) rest
+  let rec go : List Ty → List Member → List Ty × List (List Nat)
+    | tys, [] => (tys, [])
+    | tys, m :: rest =>
+      let (tys, used) := member tys [] m.ptys
+      let (tys, outs) := go tys rest
+      (tys, used :: outs)
+  go [] mems
+
+/-- The argument slots of the merged function of a group, one type per slot. -/
+def groupSlotTys (mems : List Member) : List Ty := (groupSlotAlloc mems).1
+
+/-- What the merged function of a group answers with. -/
+def groupRet (mems : List Member) : Ty :=
+  match mems with
+  | [] => Ty.typeParam
+  | m :: rest => rest.foldl (fun t m' => unifyTy t m'.ret) m.ret
+
+/-- The type of the merged function of a group: the tag of the member that is running,
+    then the argument slots. -/
 def groupTypes (mems : List Member) : List Ty × Ty :=
-  let slots := mems.foldl (fun n m => max n m.ptys.length) 0
-  let slotTys : List Ty := (List.range slots).map fun i =>
-    match mems.filterMap (fun m => m.ptys[i]?) with
-    | [] => Ty.typeParam
-    | t :: rest => rest.foldl unifyTy t
-  let ret : Ty := match mems with
-    | [] => Ty.typeParam
-    | m :: rest => rest.foldl (fun t m' => unifyTy t m'.ret) m.ret
-  (Ty.nat :: slotTys, ret)
+  (Ty.nat :: groupSlotTys mems, groupRet mems)
+
+/-- The value of every argument slot of a merged loop, for a member that holds its `k`-th
+    parameter in slot `idxs[k]`: the slots the member has no parameter for get none. -/
+def slotValues {Sg : Sig} {Γ : Ctx} (idxs : List Nat) (args : List (SomeTerm Sg Γ))
+    (slots : Nat) : List (Option (SomeTerm Sg Γ)) :=
+  (List.range slots).map fun j =>
+    match idxs.idxOf? j with
+    | some k => args[k]?
+    | none => none
 
 /-- Translate a mutually recursive group into the merged function and the wrapper of
     each member.  A tail call inside the group becomes a `continue` of the one loop. -/
-def transGroup {Sg : Sig} (c : Ctx') (ds : List Decl) :
+def transGroup {Sg : Sig} (post : Post Sg) (c : Ctx') (ds : List Decl) :
     Except String (JsDecl Sg × List (Name × JsDecl Sg)) := do
   let mems ← ds.mapM (toMember c.env)
-  let slots := mems.foldl (fun n m => max n m.ptys.length) 0
-  let (σs, ret) := groupTypes mems
+  let (slotTys, argSlots) := groupSlotAlloc mems
+  let slots := slotTys.length
+  let ret : Ty := groupRet mems
+  let σs : List Ty := Ty.nat :: slotTys
   let Γlam : Ctx := σs.reverse ++ []
   let Γbody : Ctx := σs.reverse ++ Γlam
   let gmap : Std.HashMap Name Nat :=
     mems.zipIdx.foldl (init := {}) fun m (mem, i) => m.insert mem.name i
-  let gc : Ctx' := { c with self := none, group := gmap, groupSlots := slots }
-  let bodies : List (Body Sg Γbody σs ret) ← mems.mapM fun mem => do
-    -- the member's parameters are the argument slots of the loop
+  let slotsOf : Std.HashMap Name (List Nat) :=
+    (mems.zip argSlots).foldl (init := {}) fun m (mem, idxs) => m.insert mem.name idxs
+  let gc : Ctx' :=
+    { c with self := none, group := gmap, groupSlots := slots, groupArgSlots := slotsOf }
+  let bodies : List (Body Sg Γbody σs ret) ← (mems.zip argSlots).mapM fun (mem, idxs) => do
+    -- each parameter of the member is the slot `groupSlotAlloc` gave it
     let vm : VarMap := mem.params.zipIdx.foldl (init := {}) fun m (p, i) =>
-      m.insert p.fvarId (.one (slots + 2 + i))
+      m.insert p.fvarId (.one (slots + 2 + (idxs[i]?.getD i)))
     let vm : VarMap := mem.erasedParams.foldl (init := vm) fun m f => m.insert f .erased
     transBody gc Γbody vm {} σs ret mem.code
+  -- Is the tag a compile-time value?  Then the dispatch is waste: the cycle is unrolled
+  -- and the loop belongs to one member, which the others enter (`LakeJs.Specialise`).
+  let spec? : Option (JsDecl Sg × List (Name × JsDecl Sg)) := do
+    let succ ← LakeJs.Specialise.cycleOf? bodies
+    guard (succ.length ≤ LakeJs.Specialise.maxCycleLength)
+    let barr := bodies.toArray
+    let Γlam' : Ctx := slotTys.reverse ++ []
+    let Γbody' : Ctx := slotTys.reverse ++ Γlam'
+    let lbody ← LakeJs.Specialise.loopBody? Γbody' barr 0
+    let initTerms ← (List.range slotTys.length).mapM fun i =>
+      (varAtDepth (Sg := Sg) Γlam' i).toOption
+    let init ← mkSpine? (Γ := Γlam') slotTys initTerms
+    let sname := specName (c.js (mems.head?.map (·.name) |>.getD Name.anonymous))
+    let specTerm : Term Sg [] (.fn slotTys ret) :=
+      post _ (Term.lamN (Term.loop init lbody))
+    guard (LakeJs.Specialise.termSize specTerm ≤ LakeJs.Specialise.sizeBudget)
+    let ownerRef ← GlobalRef.find? Sg sname (.fn slotTys ret)
+    let wrappers ← (mems.zip argSlots).zipIdx.mapM fun ((mem, idxs), i) => do
+      let Γw : Ctx := mem.ptys.reverse ++ []
+      let argTerms ← (List.range mem.ptys.length).mapM fun j =>
+        (varAtDepth (Sg := Sg) Γw j).toOption
+      let args : Spine Sg Γw slotTys := mkSpineSomePad slotTys (slotValues idxs argTerms slots)
+      let t ← LakeJs.Specialise.enterTerm? barr 0 ownerRef i args
+      let bodyW : Term Sg Γw mem.ret := coerce mem.ret ⟨ret, t⟩
+      pure (mem.name,
+        ({ name := c.js mem.name,
+           value := ⟨_, post _
+             (Term.lamN bodyW : Term Sg [] (.fn mem.ptys mem.ret))⟩ } : JsDecl Sg))
+    pure (({ name := sname, exported := false, value := ⟨_, specTerm⟩ } : JsDecl Sg), wrappers)
+  if let some r := spec? then
+    return r
   let tagVar ← varAtDepth Γbody (slots + 1)
   let body ← match bodies with
     | [] => throw "a merged dispatch loop must have at least one member"
@@ -331,17 +462,18 @@ def transGroup {Sg : Sig} (c : Ctx') (ds : List Decl) :
   let mname := mergedName (c.js (mems.head?.map (·.name) |>.getD Name.anonymous))
   let merged : JsDecl Sg :=
     { name := mname, exported := false,
-      value := ⟨_, (Term.lamN (Term.loop init body) : Term Sg [] (.fn σs ret))⟩ }
-  let wrappers ← mems.zipIdx.mapM fun (mem, i) => do
+      value := ⟨_, post _ (Term.lamN (Term.loop init body) : Term Sg [] (.fn σs ret))⟩ }
+  let wrappers ← (mems.zip argSlots).zipIdx.mapM fun ((mem, idxs), i) => do
     let Γw : Ctx := mem.ptys.reverse ++ []
     let tagArg : SomeTerm Sg Γw := ⟨Ty.nat, .lit (.nat i)⟩
     let argTerms ← (List.range mem.ptys.length).mapM fun j => varAtDepth (Sg := Sg) Γw j
     let mergedRef ← globalTerm (Sg := Sg) (Γ := Γw) mname (.fn σs ret)
-    let call : Term Sg Γw ret := .apN mergedRef (mkSpinePad σs (tagArg :: argTerms))
+    let call : Term Sg Γw ret :=
+      .apN mergedRef (mkSpineSomePad σs (some tagArg :: slotValues idxs argTerms slots))
     let bodyW : Term Sg Γw mem.ret := coerce mem.ret ⟨ret, call⟩
     return (mem.name,
       ({ name := c.js mem.name,
-         value := ⟨_, (Term.lamN bodyW : Term Sg [] (.fn mem.ptys mem.ret))⟩ } : JsDecl Sg))
+         value := ⟨_, post _ (Term.lamN bodyW : Term Sg [] (.fn mem.ptys mem.ret))⟩ } : JsDecl Sg))
   return (merged, wrappers)
 
 /-- Everything reachable from the successors of `start` in the call graph. -/
@@ -410,17 +542,18 @@ def declRet (env : Environment) (d : Decl) : Except String Ty := do
   return stripArrows (runtimeParamCount d.params.toList) declTy
 
 /-- Translate one ordinary declaration. -/
-def transDecl {Sg : Sig} (c : Ctx') (d : Decl) : Except String (JsDecl Sg) := do
+def transDecl {Sg : Sig} (post : Post Sg) (c : Ctx') (d : Decl) :
+    Except String (JsDecl Sg) := do
   let code ← declCode d
   let ret ← declRet c.env d
   let v ← transBodyOf c d code ret
-  return { name := c.js d.name, value := ⟨v.1, LakeJs.Simp.Term.simp v.2⟩ }
+  return { name := c.js d.name, value := ⟨v.1, post v.1 v.2⟩ }
 
 /-- Translate a declaration whose result is a class instance: one declaration per field.
     Where the body ends in the constructor of the class, each field keeps only what it
     needs; where it does not, the instance is built once under a private name and the
     fields read it. -/
-def transInstDecl {Sg : Sig} (c : Ctx') (d : Decl) (plan : InstPlan) :
+def transInstDecl {Sg : Sig} (post : Post Sg) (c : Ctx') (d : Decl) (plan : InstPlan) :
     Except String (List (JsDecl Sg)) := do
   let code ← declCode d
   let boxName := c.js d.name ++ "$box"
@@ -431,7 +564,7 @@ def transInstDecl {Sg : Sig} (c : Ctx') (d : Decl) (plan : InstPlan) :
     | some fcode =>
         let v ← transBodyOf c d (dropDeadLets fcode) fty
         out := out ++ [{ name := instFieldName (c.js d.name) fname,
-                         value := ⟨v.1, LakeJs.Simp.Term.simp v.2⟩ }]
+                         value := ⟨v.1, post v.1 v.2⟩ }]
     | none =>
         needBox := true
         let ps := d.params.toList
@@ -458,7 +591,7 @@ def transInstDecl {Sg : Sig} (c : Ctx') (d : Decl) (plan : InstPlan) :
   if needBox then
     let ret ← declRet c.env d
     let v ← transBodyOf c d code ret
-    out := { name := boxName, exported := false, value := ⟨v.1, LakeJs.Simp.Term.simp v.2⟩ } :: out
+    out := { name := boxName, exported := false, value := ⟨v.1, post v.1 v.2⟩ } :: out
   return out
 
 /-- The declarations Lean derives for a type rather than the user writing them: the
@@ -502,6 +635,18 @@ structure Result where
   failures : Array (Name × String) := #[]
   /-- The declarations that were compiled. -/
   compiled : Array Name := #[]
+  /-- The declarations whose term still holds a `let` its body never reads.  The
+      dead-`let` rule of `LakeJs.Simp` removes those, so this is empty — the test run
+      asserts it, which is the extrinsic form of "no unused binding". -/
+  deadLets : Array String := #[]
+  /-- The declarations that ignore one of their parameters, and which parameters those
+      are.  A parameter belongs to the type of the function, hence to its calling
+      convention, so it cannot be dropped the way a dead `let` can: this is reported,
+      not refused. -/
+  unusedParams : Array (String × List Nat) := #[]
+  /-- The terms of the module as the translation produced them, before the optimiser
+      ran, rendered by `LakeJs.TermPretty`: what `<Module>-Expr.txt` holds. -/
+  exprs : String := ""
 
 /-- The first of `base`, `base$1`, `base$2`, … all of whose names (`binds`) are still
     free.  A declaration binds more than one name when it is an instance the backend
@@ -533,9 +678,106 @@ def importedTy (env : Environment) (n : Name) : CoreM Ty := do
     | some ci => return (toTy env ci.type).toOption.getD Ty.typeParam
     | none => return Ty.typeParam
 
+/-- The declarations of a module in an order that puts a callee before its caller: a
+    depth-first walk of the call graph, pushing a declaration once everything it calls has
+    been pushed.  A cycle is broken where it is found — the members of a mutually
+    recursive group are translated as one unit anyway.  This is the order the driver
+    *translates* in, so that the body a call site may inline is already translated and
+    already optimised; the order the declarations are *printed* in is unchanged. -/
+partial def topoVisit (edges : Std.HashMap Name (List Name)) (n : Name)
+    (st : NameSet × Array Name) : NameSet × Array Name :=
+  if st.1.contains n then st
+  else
+    let st := (edges[n]?.getD []).foldl (init := (st.1.insert n, st.2))
+      fun st m => topoVisit edges m st
+    (st.1, st.2.push n)
+
+/-- `topoVisit`, from every declaration of the module. -/
+def topoOrder (edges : Std.HashMap Name (List Name)) (ns : List Name) : Array Name :=
+  (ns.foldl (init := (({} : NameSet), (#[] : Array Name)))
+    fun st n => topoVisit edges n st).2
+
+/-- Is a call of this declaration inlined at its call sites?  Lean's own `@[inline]`
+    and `@[macro_inline]` say yes and `@[noinline]` says no; where Lean said nothing, a
+    body small enough to cost less copied than called is inlined too.  Only a declaration
+    whose body is a lambda over its parameters qualifies, since a saturated call is the
+    only call the pass rewrites, and one that mentions its own name never does: expanding
+    it would put the call back. -/
+def inlinableDecl {Sg : Sig} (env : Environment) (n : Name) (jd : JsDecl Sg) : Bool :=
+  !Lean.Compiler.hasNoInlineAttribute env n
+    && LakeJs.Inline.isLambda jd.value
+    && (Lean.Compiler.hasInlineAttribute env n
+        || Lean.Compiler.hasMacroInlineAttribute env n
+        || LakeJs.Inline.worthInlining inlineSizeLimit jd.value)
+    && !(LakeJs.EmitJs.globalsOfTerm jd.value.2).contains jd.name
+
+/-- The names an emitted module needs: the ones it exports, and — transitively — the
+    ones a needed declaration mentions. -/
+partial def reachableNames {Sg : Sig} (decls : List (JsDecl Sg)) (acc : List String) :
+    List String :=
+  let acc' := (acc ++ (decls.filter fun d => acc.contains d.name).flatMap
+    fun d => LakeJs.EmitJs.globalsOfTerm d.value.2).eraseDups
+  if acc'.length == acc.length then acc else reachableNames decls acc'
+
+/-- Drop the declarations the module neither exports nor uses.  Inlining a call is what
+    makes those appear: a private declaration whose every call site took a copy of its
+    body is a binding nothing reads any more, and the module is smaller without it. -/
+def dropUnusedDecls {Sg : Sig} (decls : List (JsDecl Sg)) : List (JsDecl Sg) :=
+  let exported := (decls.filter (·.exported)).map (·.name)
+  if exported.isEmpty then decls
+  else
+    let live := reachableNames decls exported
+    decls.filter fun d => live.contains d.name
+
+/-- The first declaration of `rest` all of whose dependencies are already out of `rest`,
+    i.e. the first one that can be emitted next without mentioning a name the module has
+    not bound yet.  A declaration may mention itself: that is a loop, not a dependency. -/
+def readyDecl? {Sg : Sig} (rest : List (JsDecl Sg)) : Option (JsDecl Sg) :=
+  rest.find? fun d =>
+    (LakeJs.EmitJs.globalsOfTerm d.value.2).all fun n =>
+      n == d.name || !(rest.any fun e => e.name == n)
+
+/-- `decls` in an order in which a declaration comes after the declarations it mentions,
+    keeping the order they were in wherever that is already so. -/
+def orderDeclsAux {Sg : Sig} : Nat → List (JsDecl Sg) → List (JsDecl Sg)
+  | _, [] => []
+  | 0, rest => rest
+  | fuel + 1, d0 :: ds =>
+      let d := (readyDecl? (d0 :: ds)).getD d0
+      d :: orderDeclsAux fuel ((d0 :: ds).filter fun e => e.name != d.name)
+
+/-- The declarations of a module in dependency order: a declaration is emitted after
+    every declaration it mentions.
+
+    `const` in JavaScript is not hoisted, so a declaration whose value is computed as the
+    module loads — a Lean constant rather than a function — throws if it runs before a
+    declaration it calls has been initialised.  Only a cycle cannot be ordered, and the
+    declarations of one keep the order they had: a cycle is made of functions, which are
+    only read when they are called, by which time the whole module has loaded. -/
+def orderDecls {Sg : Sig} (decls : List (JsDecl Sg)) : List (JsDecl Sg) :=
+  orderDeclsAux decls.length decls
+
+/-- The terms of a module as `<Module>-Expr.txt` holds them: one block per declaration,
+    with its JavaScript name, its type, and the term itself. -/
+def renderExprs (cfg : LakeJs.Config.JsConfig) {Sg : Sig} (mod : Name)
+    (decls : List (JsDecl Sg)) : String :=
+  let header :=
+    s!"-- {mod}  [{cfg.describe}]\n\
+       -- The terms of this module as the translation produced them, *before* the\n\
+       -- optimiser ran; the `.js` file beside this one holds what the optimiser made of\n\
+       -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index\n\
+       -- of the binder it belongs to, and every binding form names the types it binds.\n\n"
+  header ++ String.join (decls.map fun d =>
+    s!"{d.name} : {Ty.pretty d.value.1}\n" ++ LakeJs.TermPretty.Term.pretty d.value.2 ++ "\n\n")
+
 /-- Compile one module: the declarations it declares, and the declarations of the same
     module that they call. -/
-def compileModule (mod : Name) : CoreM Result := do
+def compileModule (mod : Name) (preludeDepth : Nat := 1)
+    (cfg : LakeJs.Config.JsConfig := .presetPBO) : CoreM Result := do
+  unless cfg.isUniform do
+    throwError "this configuration mixes JavaScript numbers and `BigInt`s, and there is \
+      no runtime prelude for it: every configurable type has to have the same \
+      representation"
   let env ← getEnv
   let some idx := env.getModuleIdx? mod
     | throwError s!"module `{mod}` was not imported"
@@ -621,7 +863,7 @@ def compileModule (mod : Name) : CoreM Result := do
       base :: (match instOf[n]? with
                | some plan => (base ++ "$box") :: plan.fields.map fun f => instFieldName base f.1
                | none => [])
-            ++ (if isHead then [mergedName base] else [])
+            ++ (if isHead then [mergedName base, specName base] else [])
     let base := freshName used binds (jsName n) 0
     for b in binds base do
       used := used.insert b
@@ -658,12 +900,26 @@ def compileModule (mod : Name) : CoreM Result := do
       match mems.mapM (toMember env) with
       | .ok ms =>
           let (σs, gret) := groupTypes ms
-          sig := sig ++ [{ name := mergedName (nm (ms.head?.map (·.name) |>.getD Name.anonymous)),
-                           ty := .fn σs gret }]
+          let rep := ms.head?.map (·.name) |>.getD Name.anonymous
+          -- the merged loop is *one* declaration for the whole group, so it is declared
+          -- once, when the member it is named after comes round — not once per member.
+          -- Both shapes it can take are declared, since which one the group gets is only
+          -- known once its members are translated; the one it does not get is a name the
+          -- emitted module never mentions, and an unmentioned name is not printed.
+          if rep == n then
+            sig := sig ++ [{ name := mergedName (nm rep), ty := .fn σs gret }]
+            sig := sig ++ [{ name := specName (nm rep), ty := .fn (groupSlotTys ms) gret }]
       | .error _ => pure ()
   for n in mentioned do
     if inModule.contains n then continue
     sig := sig ++ [{ name := nm n, ty := ← importedTy env n }]
+  -- the names a signature declares must be unique: two entries under one name would be
+  -- two JavaScript bindings of the same identifier, and reading the name back out of the
+  -- signature could pick either one's type.  Every name here comes from `freshName`, so
+  -- this holds; it is checked rather than assumed.
+  unless Sig.namesUnique sig do
+    throwError s!"the module signature declares a name twice: \
+{(Sig.names sig).filter fun s => (Sig.names sig).count s > 1}"
   -- 6. translate, in dependency order (callees first).  A declaration is translated as
   -- a *unit*: on its own, or — for a merged tail-recursive group — together with the
   -- other members of its group, which share one loop.
@@ -671,41 +927,68 @@ def compileModule (mod : Name) : CoreM Result := do
   let c : Ctx' := { env := env, self := none, compiled := seen,
                     instOf := instOf, paramPlan := paramPlan, jsNames := nameOf }
   let mut units : Array (List Name × List (JsDecl Sg)) := #[]
+  -- the same units, translated again without the optimiser: what `<Module>-Expr.txt`
+  -- holds, keyed by the same member list so that a unit dropped below is dropped here
+  let mut rawUnits : Array (List Name × List (JsDecl Sg)) := #[]
   let mut failures : Array (Name × String) := #[]
   let mut failed : NameSet := {}
   let mut emitted : NameSet := {}
-  for n in order.reverse do
+  -- the declarations a call of which is inlined, filled in as they are translated: the
+  -- order is callees first, so a call site always finds the callee's finished term
+  let mut inlineTable : LakeJs.Inline.Table Sg := []
+  -- callees first, so that the term a call site inlines is the callee's finished one
+  for n in topoOrder edges order.toList do
     if emitted.contains n then continue
     let some d := declOf[n]? | continue
     let grp := groupOf n
+    let post : Post Sg := optimised inlineTable
     let merged? : Option (JsDecl Sg × List (Name × JsDecl Sg)) :=
       if isMergedGroup grp then
-        match transGroup c (grp.filterMap fun m => declOf[m]?) with
+        match transGroup post c (grp.filterMap fun m => declOf[m]?) with
         | .ok r => some r
         | .error _ => none
       else
         none
+    let rawDecls : List (JsDecl Sg) :=
+      if isMergedGroup grp then
+        match transGroup unoptimised c (grp.filterMap fun m => declOf[m]?) with
+        | .ok (m, ws) => m :: ws.map (·.2)
+        | .error _ => []
+      else
+        match instOf[n]? with
+        | some plan => (transInstDecl unoptimised c d plan).toOption.getD []
+        | none =>
+          match transDecl unoptimised c d with
+          | .ok jd => [jd]
+          | .error _ => []
     match merged? with
     | some (mergedDecl, wrappers) =>
         let mems := wrappers.map (·.1)
         let jds := mergedDecl :: wrappers.map fun (m, jd) => { jd with exported := roots.contains m }
         units := units.push (mems, jds)
+        rawUnits := rawUnits.push (mems, rawDecls)
         for m in mems do
           emitted := emitted.insert m
     | none =>
       emitted := emitted.insert n
       match instOf[n]? with
       | some plan =>
-          match transInstDecl c d plan with
+          match transInstDecl post c d plan with
           | .ok jds =>
               units := units.push ([n],
                 jds.map fun jd => { jd with exported := jd.exported && roots.contains n })
+              rawUnits := rawUnits.push ([n], rawDecls)
           | .error e =>
               failures := failures.push (n, e)
               failed := failed.insert n
       | none =>
-        match transDecl c d with
-        | .ok jd => units := units.push ([n], [{ jd with exported := roots.contains n }])
+        match transDecl post c d with
+        | .ok jd =>
+            let jd : JsDecl Sg := { jd with exported := roots.contains n }
+            units := units.push ([n], [jd])
+            rawUnits := rawUnits.push ([n], rawDecls)
+            if inlinableDecl env n jd then
+              inlineTable := (jd.name, jd.value) :: inlineTable
         | .error e =>
             failures := failures.push (n, e)
             failed := failed.insert n
@@ -728,8 +1011,26 @@ def compileModule (mod : Name) : CoreM Result := do
             let names := String.intercalate ", " (bad.eraseDups.map (s!"`{·}`"))
             failures := failures.push (m, s!"it calls {names}, which could not be translated")
     live := keep
-  let decls : List (JsDecl Sg) := live.toList.flatMap (·.2)
-  let compiled : Array Name := live.flatMap fun u => u.1.toArray
-  return { js := render decls, failures := failures, compiled := compiled }
+  -- the declarations are printed in the order they always were — the caller before the
+  -- callee it was translated after
+  let emitIdx (ns : List Name) : Nat :=
+    (order.toList.reverse.findIdx? fun m => ns.contains m).getD 0
+  let ordered := live.qsort fun u v => emitIdx u.1 < emitIdx v.1
+  let liveKeys : List (List Name) := ordered.toList.map (·.1)
+  -- 8. a declaration nothing exports and nothing calls is not printed: inlining a call
+  -- is what leaves those behind.
+  let decls : List (JsDecl Sg) := orderDecls (dropUnusedDecls (ordered.toList.flatMap (·.2)))
+  let rawDecls : List (JsDecl Sg) :=
+    (rawUnits.toList.filter fun u => liveKeys.contains u.1).flatMap (·.2)
+  let compiled : Array Name := ordered.flatMap fun u => u.1.toArray
+  let deadLets : Array String :=
+    (decls.filter fun d => !Term.noUnusedLet d.value.2).toArray.map (·.name)
+  let unusedParams : Array (String × List Nat) :=
+    (decls.filterMap fun d =>
+      let ps := Term.unusedParams d.value.2
+      if ps.isEmpty then none else some (d.name, ps)).toArray
+  return { js := render cfg decls preludeDepth, failures := failures, compiled := compiled,
+           deadLets := deadLets, unusedParams := unusedParams,
+           exprs := renderExprs cfg mod rawDecls }
 
 end LakeJs.Compile

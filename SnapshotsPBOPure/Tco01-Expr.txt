@@ -1,0 +1,33 @@
+-- SnapshotsPBOPure.Tco01  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+test : (fn [nat] nat)
+(lamN [nat]
+  (loop [nat]
+    (var 0 : nat)
+    (iteB
+      (apN
+        (extern lean_nat_dec_eq)
+        (var 0 : nat)
+        (lit 0)
+      )
+      (ret
+        (var 0 : nat)
+      )
+      (letB : nat
+        (apN
+          (extern lean_nat_sub)
+          (var 0 : nat)
+          (lit 1)
+        )
+        (cont
+          (var 0 : nat)
+        )
+      )
+    )
+  )
+)
+

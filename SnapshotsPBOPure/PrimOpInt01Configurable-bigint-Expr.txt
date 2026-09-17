@@ -1,0 +1,1021 @@
+-- SnapshotsPBOPure.PrimOpInt01Configurable  [nat=bigint int=bigint usize=bigint uint64=bigint int64=bigint isize=bigint]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+TestISize_add : (fn [isize isize] isize)
+(lamN [isize isize]
+  (letE : isize
+    (apN
+      (extern lean_isize_add)
+      (var 1 : isize)
+      (var 0 : isize)
+    )
+    (var 0 : isize)
+  )
+)
+
+TestISize_div : (fn [isize isize] isize)
+(lamN [isize isize]
+  (letE : isize
+    (apN
+      (extern lean_isize_div)
+      (var 1 : isize)
+      (var 0 : isize)
+    )
+    (var 0 : isize)
+  )
+)
+
+TestISize_eq : (fn [isize isize] bool)
+(lamN [isize isize]
+  (letE : bool
+    (apN
+      (global instDecidableEqISize)
+      (var 1 : isize)
+      (var 0 : isize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestISize_ge : (fn [isize isize] bool)
+(lamN [isize isize]
+  (letE : bool
+    (apN
+      (extern lean_isize_dec_le)
+      (var 0 : isize)
+      (var 1 : isize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestISize_gt : (fn [isize isize] bool)
+(lamN [isize isize]
+  (letE : bool
+    (apN
+      (extern lean_isize_dec_lt)
+      (var 0 : isize)
+      (var 1 : isize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestISize_le : (fn [isize isize] bool)
+(lamN [isize isize]
+  (letE : bool
+    (apN
+      (extern lean_isize_dec_le)
+      (var 1 : isize)
+      (var 0 : isize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestISize_lt : (fn [isize isize] bool)
+(lamN [isize isize]
+  (letE : bool
+    (apN
+      (extern lean_isize_dec_lt)
+      (var 1 : isize)
+      (var 0 : isize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestISize_mul : (fn [isize isize] isize)
+(lamN [isize isize]
+  (letE : isize
+    (apN
+      (extern lean_isize_mul)
+      (var 1 : isize)
+      (var 0 : isize)
+    )
+    (var 0 : isize)
+  )
+)
+
+TestISize_ne : (fn [isize isize] bool)
+(lamN [isize isize]
+  (letE : bool
+    (apN
+      (global instDecidableEqISize)
+      (var 1 : isize)
+      (var 0 : isize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (ite
+        (var 0 : bool)
+        (letE : bool
+          (lit false)
+          (var 0 : bool)
+        )
+        (letE : bool
+          (lit true)
+          (var 0 : bool)
+        )
+      )
+    )
+  )
+)
+
+TestISize_neg : (fn [isize] isize)
+(lamN [isize]
+  (letE : isize
+    (apN
+      (extern lean_isize_neg)
+      (var 0 : isize)
+    )
+    (var 0 : isize)
+  )
+)
+
+TestISize_sub : (fn [isize isize] isize)
+(lamN [isize isize]
+  (letE : isize
+    (apN
+      (extern lean_isize_sub)
+      (var 1 : isize)
+      (var 0 : isize)
+    )
+    (var 0 : isize)
+  )
+)
+
+TestInt_add : (fn [int int] int)
+(lamN [int int]
+  (letE : int
+    (apN
+      (extern lean_int_add)
+      (var 1 : int)
+      (var 0 : int)
+    )
+    (var 0 : int)
+  )
+)
+
+TestInt_div : (fn [int int] int)
+(lamN [int int]
+  (letE : int
+    (apN
+      (extern lean_int_ediv)
+      (var 1 : int)
+      (var 0 : int)
+    )
+    (var 0 : int)
+  )
+)
+
+TestInt_eq : (fn [int int] bool)
+(lamN [int int]
+  (letE : bool
+    (apN
+      (global Int_instDecidableEq)
+      (var 1 : int)
+      (var 0 : int)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt_ge : (fn [int int] bool)
+(lamN [int int]
+  (letE : bool
+    (apN
+      (extern lean_int_dec_le)
+      (var 0 : int)
+      (var 1 : int)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt_gt : (fn [int int] bool)
+(lamN [int int]
+  (letE : bool
+    (apN
+      (extern lean_int_dec_lt)
+      (var 0 : int)
+      (var 1 : int)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt_le : (fn [int int] bool)
+(lamN [int int]
+  (letE : bool
+    (apN
+      (extern lean_int_dec_le)
+      (var 1 : int)
+      (var 0 : int)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt_lt : (fn [int int] bool)
+(lamN [int int]
+  (letE : bool
+    (apN
+      (extern lean_int_dec_lt)
+      (var 1 : int)
+      (var 0 : int)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt_mul : (fn [int int] int)
+(lamN [int int]
+  (letE : int
+    (apN
+      (extern lean_int_mul)
+      (var 1 : int)
+      (var 0 : int)
+    )
+    (var 0 : int)
+  )
+)
+
+TestInt_ne : (fn [int int] bool)
+(lamN [int int]
+  (letE : bool
+    (apN
+      (global Int_instDecidableEq)
+      (var 1 : int)
+      (var 0 : int)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (ite
+        (var 0 : bool)
+        (letE : bool
+          (lit false)
+          (var 0 : bool)
+        )
+        (letE : bool
+          (lit true)
+          (var 0 : bool)
+        )
+      )
+    )
+  )
+)
+
+TestInt_neg : (fn [int] int)
+(lamN [int]
+  (letE : int
+    (apN
+      (extern lean_int_neg)
+      (var 0 : int)
+    )
+    (var 0 : int)
+  )
+)
+
+TestInt_sub : (fn [int int] int)
+(lamN [int int]
+  (letE : int
+    (apN
+      (extern lean_int_sub)
+      (var 1 : int)
+      (var 0 : int)
+    )
+    (var 0 : int)
+  )
+)
+
+TestInt64_add : (fn [int64 int64] int64)
+(lamN [int64 int64]
+  (letE : int64
+    (apN
+      (extern lean_int64_add)
+      (var 1 : int64)
+      (var 0 : int64)
+    )
+    (var 0 : int64)
+  )
+)
+
+TestInt64_div : (fn [int64 int64] int64)
+(lamN [int64 int64]
+  (letE : int64
+    (apN
+      (extern lean_int64_div)
+      (var 1 : int64)
+      (var 0 : int64)
+    )
+    (var 0 : int64)
+  )
+)
+
+TestInt64_eq : (fn [int64 int64] bool)
+(lamN [int64 int64]
+  (letE : bool
+    (apN
+      (global instDecidableEqInt64)
+      (var 1 : int64)
+      (var 0 : int64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt64_ge : (fn [int64 int64] bool)
+(lamN [int64 int64]
+  (letE : bool
+    (apN
+      (extern lean_int64_dec_le)
+      (var 0 : int64)
+      (var 1 : int64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt64_gt : (fn [int64 int64] bool)
+(lamN [int64 int64]
+  (letE : bool
+    (apN
+      (extern lean_int64_dec_lt)
+      (var 0 : int64)
+      (var 1 : int64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt64_le : (fn [int64 int64] bool)
+(lamN [int64 int64]
+  (letE : bool
+    (apN
+      (extern lean_int64_dec_le)
+      (var 1 : int64)
+      (var 0 : int64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt64_lt : (fn [int64 int64] bool)
+(lamN [int64 int64]
+  (letE : bool
+    (apN
+      (extern lean_int64_dec_lt)
+      (var 1 : int64)
+      (var 0 : int64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestInt64_mul : (fn [int64 int64] int64)
+(lamN [int64 int64]
+  (letE : int64
+    (apN
+      (extern lean_int64_mul)
+      (var 1 : int64)
+      (var 0 : int64)
+    )
+    (var 0 : int64)
+  )
+)
+
+TestInt64_ne : (fn [int64 int64] bool)
+(lamN [int64 int64]
+  (letE : bool
+    (apN
+      (global instDecidableEqInt64)
+      (var 1 : int64)
+      (var 0 : int64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (ite
+        (var 0 : bool)
+        (letE : bool
+          (lit false)
+          (var 0 : bool)
+        )
+        (letE : bool
+          (lit true)
+          (var 0 : bool)
+        )
+      )
+    )
+  )
+)
+
+TestInt64_neg : (fn [int64] int64)
+(lamN [int64]
+  (letE : int64
+    (apN
+      (extern lean_int64_neg)
+      (var 0 : int64)
+    )
+    (var 0 : int64)
+  )
+)
+
+TestInt64_sub : (fn [int64 int64] int64)
+(lamN [int64 int64]
+  (letE : int64
+    (apN
+      (extern lean_int64_sub)
+      (var 1 : int64)
+      (var 0 : int64)
+    )
+    (var 0 : int64)
+  )
+)
+
+TestNat_add : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (apN
+      (extern lean_nat_add)
+      (var 1 : nat)
+      (var 0 : nat)
+    )
+    (var 0 : nat)
+  )
+)
+
+TestNat_div : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (apN
+      (extern lean_nat_div)
+      (var 1 : nat)
+      (var 0 : nat)
+    )
+    (var 0 : nat)
+  )
+)
+
+TestNat_eq : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : bool
+    (apN
+      (extern lean_nat_dec_eq)
+      (var 1 : nat)
+      (var 0 : nat)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestNat_ge : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : bool
+    (apN
+      (extern lean_nat_dec_le)
+      (var 0 : nat)
+      (var 1 : nat)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestNat_gt : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : bool
+    (apN
+      (extern lean_nat_dec_lt)
+      (var 0 : nat)
+      (var 1 : nat)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestNat_le : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : bool
+    (apN
+      (extern lean_nat_dec_le)
+      (var 1 : nat)
+      (var 0 : nat)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestNat_lt : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : bool
+    (apN
+      (extern lean_nat_dec_lt)
+      (var 1 : nat)
+      (var 0 : nat)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestNat_mul : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (apN
+      (extern lean_nat_mul)
+      (var 1 : nat)
+      (var 0 : nat)
+    )
+    (var 0 : nat)
+  )
+)
+
+TestNat_ne : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : bool
+    (apN
+      (extern lean_nat_dec_eq)
+      (var 1 : nat)
+      (var 0 : nat)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (ite
+        (var 0 : bool)
+        (letE : bool
+          (lit false)
+          (var 0 : bool)
+        )
+        (letE : bool
+          (lit true)
+          (var 0 : bool)
+        )
+      )
+    )
+  )
+)
+
+TestNat_sub : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (apN
+      (extern lean_nat_sub)
+      (var 1 : nat)
+      (var 0 : nat)
+    )
+    (var 0 : nat)
+  )
+)
+
+TestUInt64_add : (fn [uint64 uint64] uint64)
+(lamN [uint64 uint64]
+  (letE : uint64
+    (apN
+      (extern lean_uint64_add)
+      (var 1 : uint64)
+      (var 0 : uint64)
+    )
+    (var 0 : uint64)
+  )
+)
+
+TestUInt64_div : (fn [uint64 uint64] uint64)
+(lamN [uint64 uint64]
+  (letE : uint64
+    (apN
+      (extern lean_uint64_div)
+      (var 1 : uint64)
+      (var 0 : uint64)
+    )
+    (var 0 : uint64)
+  )
+)
+
+TestUInt64_eq : (fn [uint64 uint64] bool)
+(lamN [uint64 uint64]
+  (letE : bool
+    (apN
+      (global instDecidableEqUInt64)
+      (var 1 : uint64)
+      (var 0 : uint64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUInt64_ge : (fn [uint64 uint64] bool)
+(lamN [uint64 uint64]
+  (letE : bool
+    (apN
+      (extern lean_uint64_dec_le)
+      (var 0 : uint64)
+      (var 1 : uint64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUInt64_gt : (fn [uint64 uint64] bool)
+(lamN [uint64 uint64]
+  (letE : bool
+    (apN
+      (extern lean_uint64_dec_lt)
+      (var 0 : uint64)
+      (var 1 : uint64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUInt64_le : (fn [uint64 uint64] bool)
+(lamN [uint64 uint64]
+  (letE : bool
+    (apN
+      (extern lean_uint64_dec_le)
+      (var 1 : uint64)
+      (var 0 : uint64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUInt64_lt : (fn [uint64 uint64] bool)
+(lamN [uint64 uint64]
+  (letE : bool
+    (apN
+      (extern lean_uint64_dec_lt)
+      (var 1 : uint64)
+      (var 0 : uint64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUInt64_mul : (fn [uint64 uint64] uint64)
+(lamN [uint64 uint64]
+  (letE : uint64
+    (apN
+      (extern lean_uint64_mul)
+      (var 1 : uint64)
+      (var 0 : uint64)
+    )
+    (var 0 : uint64)
+  )
+)
+
+TestUInt64_ne : (fn [uint64 uint64] bool)
+(lamN [uint64 uint64]
+  (letE : bool
+    (apN
+      (global instDecidableEqUInt64)
+      (var 1 : uint64)
+      (var 0 : uint64)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (ite
+        (var 0 : bool)
+        (letE : bool
+          (lit false)
+          (var 0 : bool)
+        )
+        (letE : bool
+          (lit true)
+          (var 0 : bool)
+        )
+      )
+    )
+  )
+)
+
+TestUInt64_neg : (fn [uint64] uint64)
+(lamN [uint64]
+  (letE : uint64
+    (apN
+      (extern lean_uint64_neg)
+      (var 0 : uint64)
+    )
+    (var 0 : uint64)
+  )
+)
+
+TestUInt64_sub : (fn [uint64 uint64] uint64)
+(lamN [uint64 uint64]
+  (letE : uint64
+    (apN
+      (extern lean_uint64_sub)
+      (var 1 : uint64)
+      (var 0 : uint64)
+    )
+    (var 0 : uint64)
+  )
+)
+
+TestUSize_add : (fn [usize usize] usize)
+(lamN [usize usize]
+  (letE : usize
+    (apN
+      (extern lean_usize_add)
+      (var 1 : usize)
+      (var 0 : usize)
+    )
+    (var 0 : usize)
+  )
+)
+
+TestUSize_div : (fn [usize usize] usize)
+(lamN [usize usize]
+  (letE : usize
+    (apN
+      (extern lean_usize_div)
+      (var 1 : usize)
+      (var 0 : usize)
+    )
+    (var 0 : usize)
+  )
+)
+
+TestUSize_eq : (fn [usize usize] bool)
+(lamN [usize usize]
+  (letE : bool
+    (apN
+      (global instDecidableEqUSize)
+      (var 1 : usize)
+      (var 0 : usize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUSize_ge : (fn [usize usize] bool)
+(lamN [usize usize]
+  (letE : bool
+    (apN
+      (extern lean_usize_dec_le)
+      (var 0 : usize)
+      (var 1 : usize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUSize_gt : (fn [usize usize] bool)
+(lamN [usize usize]
+  (letE : bool
+    (apN
+      (extern lean_usize_dec_lt)
+      (var 0 : usize)
+      (var 1 : usize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUSize_le : (fn [usize usize] bool)
+(lamN [usize usize]
+  (letE : bool
+    (apN
+      (extern lean_usize_dec_le)
+      (var 1 : usize)
+      (var 0 : usize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUSize_lt : (fn [usize usize] bool)
+(lamN [usize usize]
+  (letE : bool
+    (apN
+      (extern lean_usize_dec_lt)
+      (var 1 : usize)
+      (var 0 : usize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (var 0 : bool)
+    )
+  )
+)
+
+TestUSize_mul : (fn [usize usize] usize)
+(lamN [usize usize]
+  (letE : usize
+    (apN
+      (extern lean_usize_mul)
+      (var 1 : usize)
+      (var 0 : usize)
+    )
+    (var 0 : usize)
+  )
+)
+
+TestUSize_ne : (fn [usize usize] bool)
+(lamN [usize usize]
+  (letE : bool
+    (apN
+      (global instDecidableEqUSize)
+      (var 1 : usize)
+      (var 0 : usize)
+    )
+    (letE : bool
+      (jsOp cast bool → bool
+        (var 0 : bool)
+      )
+      (ite
+        (var 0 : bool)
+        (letE : bool
+          (lit false)
+          (var 0 : bool)
+        )
+        (letE : bool
+          (lit true)
+          (var 0 : bool)
+        )
+      )
+    )
+  )
+)
+
+TestUSize_neg : (fn [usize] usize)
+(lamN [usize]
+  (letE : usize
+    (apN
+      (extern lean_usize_neg)
+      (var 0 : usize)
+    )
+    (var 0 : usize)
+  )
+)
+
+TestUSize_sub : (fn [usize usize] usize)
+(lamN [usize usize]
+  (letE : usize
+    (apN
+      (extern lean_usize_sub)
+      (var 1 : usize)
+      (var 0 : usize)
+    )
+    (var 0 : usize)
+  )
+)
+

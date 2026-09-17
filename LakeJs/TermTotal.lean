@@ -1,10 +1,6 @@
 module
-
 public import LakeJs.Expr
-
 @[expose] public section
-
-namespace LakeJs.TermTotal
 
 /-!
 # Why a `Term` cannot diverge
@@ -28,6 +24,13 @@ backend's job to establish it: a declaration only becomes a `Term` if Lean alrea
 proved it terminating, which is what `LakeJs.Totality` checks before the translation
 starts.
 -/
+
+namespace LakeJs.TermTotal
+
+open LakeJs
+open LakeJs.Expr
+open LakeJs.Ty
+open LakeJs.Layout (FieldLayout ObjLayout)
 
 /-! ## No type is its own argument type -/
 
@@ -136,7 +139,7 @@ def Term.loopCount {Sg : Sig} : ∀ {Γ τ}, Term Sg Γ τ → Nat
   | _, _, .tagOf e _ => Term.loopCount e
   | _, _, .ite c t e => Term.loopCount c + Term.loopCount t + Term.loopCount e
   | _, _, .letE e b => Term.loopCount e + Term.loopCount b
-  | _, _, .prim _ args => Spine.loopCount args
+  | _, _, .jsOp _ args => Spine.loopCount args
   | _, _, .lamProd rets => Spine.loopCount rets
   | _, _, .callProd f args _ => Term.loopCount f + Spine.loopCount args
   | _, _, .lamN b => Term.loopCount b
@@ -165,7 +168,8 @@ def Body.loopCount {Sg : Sig} : ∀ {Γ σs τ}, Body Sg Γ σs τ → Nat
 end
 
 /-- A term with no loop in it: it prints to straight-line JavaScript. -/
-def Term.isLoopFree {Sg : Sig} {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ) : Bool := t.loopCount == 0
+def Term.isLoopFree {Sg : Sig} {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ) : Bool :=
+  Term.loopCount t == 0
 
 /-- **No recursive definitions.**  Every constructor of `Term` other than `Term.loop`
     builds a term whose loop count is the sum of its children's, so repetition can only
@@ -173,34 +177,35 @@ def Term.isLoopFree {Sg : Sig} {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ) : Bool :
     Stated for the constructors a translated declaration is built from. -/
 theorem Term.loopCount_lam {Sg : Sig} {Γ : Ctx} {params : List Ty} {ret : Ty}
     (b : Term Sg (params.reverse ++ Γ) ret) :
-    (Term.lamN b).loopCount = b.loopCount := by
+    Term.loopCount (Term.lamN b) = Term.loopCount b := by
   simp [Term.loopCount]
 
 theorem Term.loopCount_ap {Sg : Sig} {Γ : Ctx} {params : List Ty} {ret : Ty}
     (f : Term Sg Γ (.fn params ret)) (args : Spine Sg Γ params) :
-    (Term.apN f args).loopCount = f.loopCount + args.loopCount := by
+    Term.loopCount (Term.apN f args) = Term.loopCount f + Spine.loopCount args := by
   simp [Term.loopCount]
 
 theorem Term.loopCount_let {Sg : Sig} {Γ : Ctx} {σ τ : Ty} (e : Term Sg Γ σ)
     (b : Term Sg (σ :: Γ) τ) :
-    (Term.letE e b).loopCount = e.loopCount + b.loopCount := by
+    Term.loopCount (Term.letE e b) = Term.loopCount e + Term.loopCount b := by
   simp [Term.loopCount]
 
 theorem Term.loopCount_loop {Sg : Sig} {Γ : Ctx} {σs : List Ty} {τ : Ty}
     (init : Spine Sg Γ σs) (body : Body Sg (σs.reverse ++ Γ) σs τ) :
-    (Term.loop init body).loopCount = 1 + init.loopCount + body.loopCount := by
+    Term.loopCount (Term.loop init body)
+      = 1 + Spine.loopCount init + Body.loopCount body := by
   simp [Term.loopCount]
 
 /-- The λ-fragment — variables, lambdas, applications, literals, `let` — is loop-free,
     so a term of it prints without a single `while`.  The Church numerals of
     `LakeJs.Expr` are instances of this. -/
 theorem Term.isLoopFree_two {Sg : Sig} {α : Ty} :
-    (Term.two (Sg := Sg) (α := α)).isLoopFree = true := by
+    Term.isLoopFree (Term.two (Sg := Sg) (α := α)) = true := by
   simp [Term.isLoopFree, Term.two, Term.lam, Term.ap, Term.loopCount, Spine.loopCount]
 
 /-- The hand-written translation of `Tco01`'s `test` has exactly one loop and no other
     repetition.  It mentions no global, so it is stated of the empty signature. -/
-theorem Term.loopCount_tco01 : (Term.tco01 (Sg := [])).loopCount = 1 := by
+theorem Term.loopCount_tco01 : Term.loopCount (Term.tco01 (Sg := [])) = 1 := by
   decide +kernel
 
 /-! ## A dispatch answers for every tag
@@ -235,7 +240,8 @@ def Alts.branches {Sg : Sig} {Γ : Ctx} {τ : Ty} :
     taken is one of the branches the case has.  There is nothing left for a `throw` to
     do. -/
 theorem Alts.select_mem_branches {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat} (a : Alts Sg Γ τ tags) (n : Nat), a.select n ∈ a.branches
+    ∀ {tags : List Nat} (a : Alts Sg Γ τ tags) (n : Nat),
+      Alts.select a n ∈ Alts.branches a
   | _, .deflt t, n => by simp [Alts.select, Alts.branches]
   | _, .cons tag t rest, n => by
       by_cases h : n = tag
@@ -245,7 +251,8 @@ theorem Alts.select_mem_branches {Sg : Sig} {Γ : Ctx} {τ : Ty} :
 
 /-- A tag no branch tests takes the default branch. -/
 theorem Alts.select_of_not_mem {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat} (a : Alts Sg Γ τ tags) (n : Nat), n ∉ tags → a.select n = a.deflt?
+    ∀ {tags : List Nat} (a : Alts Sg Γ τ tags) (n : Nat),
+      n ∉ tags → Alts.select a n = Alts.deflt? a
   | _, .deflt t, n, _ => by simp [Alts.select, Alts.deflt?]
   | _, .cons (tags := ts) tag _ rest, n, h => by
       have hne : n ≠ tag := fun hEq => h (by simp [hEq])
@@ -255,9 +262,39 @@ theorem Alts.select_of_not_mem {Sg : Sig} {Γ : Ctx} {τ : Ty} :
 
 /-- The number of branches a case answers with is the number it has. -/
 theorem Alts.length_branches {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat} (a : Alts Sg Γ τ tags), a.branches.length = a.length
+    ∀ {tags : List Nat} (a : Alts Sg Γ τ tags),
+      (Alts.branches a).length = Alts.length a
   | _, .deflt _ => by simp [Alts.branches, Alts.length]
   | _, .cons _ _ rest => by
       simp [Alts.branches, Alts.length, Alts.length_branches rest]
 
 end LakeJs.TermTotal
+
+/-! The totality API, under the namespaces of the types it is about. -/
+
+namespace LakeJs.Ty
+export LakeJs.TermTotal.Ty
+  (arrowDepth arrowDepthList arrowDepth_fn arrowDepthList_single ne_arrow_self
+   ne_self_arrow)
+end LakeJs.Ty
+
+namespace LakeJs.Expr.Term
+export LakeJs.TermTotal.Term
+  (loopCount isLoopFree loopCount_lam loopCount_ap loopCount_let loopCount_loop
+   isLoopFree_two loopCount_tco01 no_ctor_at_alias no_ctor_at_function
+   no_ctor_at_scalar no_ctor_at_typeParam no_proj_of_function no_self_application)
+end LakeJs.Expr.Term
+
+namespace LakeJs.Expr.Spine
+export LakeJs.TermTotal.Spine (loopCount)
+end LakeJs.Expr.Spine
+
+namespace LakeJs.Expr.Body
+export LakeJs.TermTotal.Body (loopCount)
+end LakeJs.Expr.Body
+
+namespace LakeJs.Expr.Alts
+export LakeJs.TermTotal.Alts
+  (loopCount branches deflt? select select_mem_branches select_of_not_mem
+   length_branches)
+end LakeJs.Expr.Alts

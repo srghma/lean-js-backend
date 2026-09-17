@@ -15,7 +15,15 @@ benchmarks are checked in so the numbers can be reproduced and re-run after each
 node scripts/bench-mutual-loop.mjs        [N] [iters]   # A vs B, plus two hybrids
 node scripts/bench-mutual-loop-steps.mjs  [N] [iters]   # one transformation at a time
 node scripts/bench-mutual-loop-robust.mjs [N] [iters]   # where the merged loop wins
+node scripts/bench-generated.mjs                        # the *generated* module, today
 ```
+
+The first three hold a copy of the output as it was when they were written, so they price
+one design against another; `scripts/bench-generated.mjs` imports
+`SnapshotsPBOPure/CaptureDerefRegression01.js` itself, so it tracks the compiler. With
+P1, P2 and P3 landed it reports **23 ms** against the expected shape's 12 ms, where the
+same comparison was 98 ms against 12 ms before scalarising and 251 ms against 34 ms when
+this document was written.
 
 Each benchmark first prints the result of every variant and they must all agree, so a
 variant that is accidentally not computing the same function is visible immediately.
@@ -98,7 +106,7 @@ i.e. within ~1.3× of the expected output's 34 ms and only ~2× off the best sha
 Ordered by measured payoff per unit of risk. Each item is independent of the others unless
 stated, and each ends with the check that should go into `lake test`.
 
-### [ ] P1. Scalarise loop accumulators (the 4× item)
+### [x] P1. Scalarise loop accumulators (the 4× item) — done
 
 When a loop variable's type is a **non-recursive record or single-constructor type** whose
 value is destructured and rebuilt inside the loop, and the value does not escape except at
@@ -148,8 +156,23 @@ const testEven = (n, b) => _mut$testEven(0, n, b._1, b._2);
 * Keep a boxed fallback so no snapshot can regress into an unsupported shape.
 * Check: `CaptureDerefRegression01.js` contains no `{ tag:` inside a `while` body; the
   benchmark records `S1`-level timing.
+* **Done**, in `LakeJs/Scalarise.lean`, in two steps that are each a function
+  `Term Sg Γ τ → Term Sg Γ τ`, so neither can produce a program that is not well-typed.
+  First, a constructor application bound to a name *nothing needs whole* — every use is a
+  field read — is moved to its use sites, where `LakeJs.Simp.projOfCtor?` turns each of
+  them into the field itself; the same happens when the one use is where the block ends,
+  which is the jump round the loop. Then a loop slot whose type has a single constructor
+  becomes one slot per field: the slot variable is *substituted* by the constructor
+  applied to the new field slots, which is the same value, and the jump's argument for
+  that slot becomes one projection per field — both of which the projection rule then
+  collapses. The object is therefore built only where the loop answers.
+  The escape condition is kept: a loop whose body needs the value whole anywhere but in
+  an answer is left boxed, and so is one that no jump rebuilds. Measured: 98 ms → 23 ms
+  on `scripts/bench-generated.mjs`. `lake test` asserts that no object is built inside
+  the loop body of `CaptureDerefRegression01`, and the check is itself checked against a
+  loop that does build one.
 
-### [ ] P2. Exit a loop with `return`, not a flag
+### [x] P2. Exit a loop with `return`, not a flag — done
 
 Before:
 
@@ -174,8 +197,12 @@ while (true) { … return v5; … }
   must be used instead.
 * Check: no `c$` / `r$` identifier in any generated file whose loop is the function body;
   ~1.2× on the benchmark.
+* **Done.** `LakeJs/EmitJs.lean` prints `while (true)` and leaves the loop with a
+  `return`; `lake test` now asserts it of every compiled module
+  (`LakeJsTest.JsShape.flagLoopIssues`), and that check is itself checked against a
+  flag-driven loop it must reject.
 
-### [ ] P3. Emit `n - 1` for the `Nat` predecessor when `n ≠ 0` is already known
+### [x] P3. Emit `n - 1` for the `Nat` predecessor when `n ≠ 0` is already known — done
 
 Before: `const v6 = Math.max(0, v4 - 1);` — after: `const v6 = v4 - 1;`.
 
@@ -187,8 +214,16 @@ Before: `const v6 = Math.max(0, v4 - 1);` — after: `const v6 = v4 - 1;`.
   exact. (Keep `Math.max` wherever the guard is absent.)
 * Check: ~1.18×; `Math.max` disappears from the `Tco*`, `MutualTail` and
   `CaptureDerefRegression01` outputs.
+* **Done**, in `LakeJs/Simp.lean`: `nonZeroGuard?` recognises a test of a `Nat` against
+  `0` — written inline, or bound to a name first, and through the reinterpretation a
+  `Decidable` read as a `Bool` is — and the branch it guards has `Nat.sub n 1`
+  rewritten to `JsOp.natSubExact`, the plain subtraction, at that one variable. Both operations have the same
+  type, so the branch is still the same term. `Math.max` is gone from `Tco01`, `Tco03`'s
+  `go`, `MutualTail` and `CaptureDerefRegression01`, and `lake test` asserts its absence;
+  it stays where no guard proves the subtraction exact, as in `Fusion02`'s `a - b` and
+  `Tco03`'s `k`, whose guard is `m === 100`.
 
-### [ ] P4. Fold literal copies in `Simp`
+### [x] P4. Fold literal copies in `Simp` — done
 
 Before: `const v9 = 1; const v10 = v9; const v11 = v8 + v10;`
 After: `const v11 = v8 + 1;`
@@ -198,8 +233,15 @@ After: `const v11 = v8 + 1;`
   a value, so no work is duplicated), and `let x = y; body` substitutes the variable.
 * No measurable runtime effect here; the point is output size and V8's inlining budget.
 * Check: generated files shrink; all snapshots still agree under `node`.
+* **Done.** `LakeJs/Simp.lean` has the rule, as `copyOfValue?`: a `let` whose value is a
+  variable, a literal, a top-level declaration or an extern is substituted away. All four
+  are values, so no work is duplicated, and the last three are *closed*, so they need no
+  renaming under binders — which is why the substitution is an instance of the renaming
+  that was already there (`RenTarget.closed` in `LakeJs/Rename.lean`). Measured on the
+  corpus: the generated JavaScript lost about a fifth of its lines, `lake test` still
+  passes for all 121 modules and every `*.test.js` suite still passes under `node`.
 
-### [ ] P5. Specialise the member tag away where the transition graph allows it
+### [x] P5. Specialise the member tag away where the transition graph allows it — done
 
 This is the only item that touches the merge decision itself. When the group's tag
 transitions are statically known at each `continue` (as here: `testEven` always continues
@@ -240,8 +282,24 @@ const testOdd = (n, b_1, b_2) => {
 * Check: `CaptureDerefRegression01.js` has no tag variable; `MutualTail`'s three-member
   group either specialises or keeps the merged loop, with the stack test still passing at
   depth 100 000.
+* **Implemented** in `LakeJs/Specialise.lean`, applied by `LakeJs.Compile.transGroup`.
+  The rule is the one above: every jump must supply a literal tag, the successor map must
+  be a single cycle through all the members, the cycle must be at most `maxCycleLength`
+  (3) long, and the resulting function must stay under `sizeBudget` (800) nodes.  A
+  member's body is moved into the unrolled loop by the type-preserving substitution of
+  `LakeJs/Scalarise.lean`, so a specialised group is a well-typed `Term` or it is not
+  built at all; a group that does not qualify keeps `_mut$…`, which remains the general
+  case.  The owner's function is uncurried, as the measurement asks.
 
-### [ ] P6. Stop widening slots to `Ty.typeParam`, and stop padding
+  `CaptureDerefRegression01`, `Tco04`, `Tco06` and both groups of `MutualTail` (the
+  2-cycle *and* the 3-cycle) are now `_spec$…`, with no tag variable and no dispatch;
+  `Tco03`, whose `go` jumps both to itself and to `k`, keeps `_mut$go`.  `lake test`
+  asserts the absence of `_mut$` in each specialised module, and all 61 Node suites — the
+  stack tests at depth 1 000 000 included — pass unchanged.  `scripts/bench-generated.mjs`
+  now reports 19 ms for the generated module against 13 ms for the hand-written expected
+  shape, where the merged dispatch loop measured 23 ms and the unoptimised merge 251 ms.
+
+### [x] P6. Stop widening slots to `Ty.typeParam`, and stop padding — done
 
 `groupTypes`/`unifyTy` give one slot vector to all members, typed `Ty.typeParam` wherever
 two members disagree, and pad short members with dummy values. Both make the slot
@@ -252,8 +310,25 @@ polymorphic, which defeats V8's unboxing.
   types agree pointwise and compile the rest as ordinary functions.
 * Check: no `Ty.typeParam` slot in the merged loops of `MutualTail`; no dummy `0` written
   into an unused slot.
+* **Padding is done.** A jump to a member that has no argument for a slot now leaves that
+  slot *as it is* rather than writing a dummy `0` into it: the member never reads it, and
+  an assignment of a slot to itself is not printed at all (`LakeJs/FromLcnf.lean`,
+  `mkSpineFill`, and the `Body.cont` case of `LakeJs/EmitJs.lean`, which also drops the
+  temporaries a slot assignment does not need). `MutualTail`'s three-member group no
+  longer writes `v7 = 0`.
+* **The widening is gone too.** `LakeJs/Compile.lean`'s `groupSlotAlloc` lays the
+  parameters of the members out over the slots of the merged loop, sharing a slot between
+  two members only where they *agree* on its type; a parameter whose type no free slot has
+  gets a slot of its own. No slot is `Ty.typeParam` any more, and a group whose members
+  agree pointwise — every group in the corpus — keeps exactly the layout it had, so
+  nothing in the snapshots moved. The value a wrapper passes for a slot its member does
+  not use is now the empty value of *that slot’s* type (`""`, `[]`, `false`) rather than a
+  `0` read at it, so the slot still holds values of one JavaScript type.
+  `SnapshotsMy/MutualSlots.lean` is the snapshot that exercises the disagreeing case: a
+  `Nat`/`String` pair and a `Nat`/`Nat` pair, three monomorphic slots, checked by
+  `SnapshotsMy/MutualSlots.test.js` and by `lake test`.
 
-### [ ] P7. Lock the numbers in
+### [~] P7. Lock the numbers in — the structural properties are asserted
 
 * Add `scripts/bench-mutual-loop*.mjs` to the test runner as a *reported* (not asserted)
   measurement, plus one asserted structural property per item above — those are stable,
@@ -261,6 +336,15 @@ polymorphic, which defeats V8's unboxing.
   in a guarded predecessor", "no tag variable for a statically-known 2-cycle".
 * Keep the stack test (`depth 100 000` and `1 000 000`) asserted: it is the property the
   merged loop exists for, and P5 must not lose it.
+* **Done for the properties that hold today**: `lake test` asserts "every loop is left
+  with a `return`" of every module, "no object is built inside the loop body" of
+  `CaptureDerefRegression01`, and "no `Math.max`" of the modules whose predecessors are
+  all guarded; `scripts/run_snapshots_nodejs_dot_tests` keeps the stack tests at depth
+  1 000 000 asserted. `scripts/bench-generated.mjs` reports the timing of the generated
+  module, and checks that it agrees with the expected shape before timing either. The
+  tag-variable property landed with P5: `lake test` asserts that the modules whose groups
+  are single cycles contain no `_mut$` at all, which is the absence of the tag slot and of
+  the dispatch that reads it.
 
 Expected outcome if P1–P5 land: 251 ms → ~20 ms on this benchmark, i.e. ahead of the
 expected output's 34 ms, with the merged loop retained as the fallback for the groups

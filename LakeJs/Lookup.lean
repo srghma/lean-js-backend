@@ -4,8 +4,6 @@ public import LakeJs.Expr
 
 @[expose] public section
 
-namespace LakeJs.Lookup
-
 /-!
 # Looking things up while building a `Term`
 
@@ -18,6 +16,11 @@ one the context has there.
 is no partial "equality where it can be had" any more, and nothing is refused because
 two types could not be compared.
 -/
+
+namespace LakeJs.Lookup
+
+open LakeJs
+open LakeJs.Expr
 
 /-- Look a name up in a signature, at a type that must agree with the declared one. -/
 def GlobalRef.find? : (Sg : Sig) → (name : String) → (τ : Ty) → Option (GlobalRef Sg τ)
@@ -61,3 +64,5 @@ def Spine.ofList? {Sg : Sig} {Γ : Ctx} :
   | _, _ => none
 
 end LakeJs.Lookup
+
+end

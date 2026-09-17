@@ -1,42 +1,30 @@
-const _mut$test1 = (v0, v1) => {
-  let v2 = v0, v3 = v1, c$2 = true, r$2;
-  while (c$2) {
-    if (v2 === 0) {
-      const v4 = 1;
-      const v5 = v4;
-      const v6 = Int_instDecidableEq(v3, v5);
-      if (v6) {
-        c$2 = false;
-        r$2 = v3;
-        continue;
-      } else {
-        const v7 = v3 - v5;
-        const t$2$0 = 1;
-        const t$2$1 = v7;
-        v2 = t$2$0;
-        v3 = t$2$1;
-        continue;
-      }
+import { Int_instDecidableEq } from "../runtime/lean_runtime.mjs";
+const _spec$test1 = (v0) => {
+  let v1 = v0;
+  while (true) {
+    const v2 = Int_instDecidableEq(v1, 1);
+    if (v2) {
+      return v1;
     } else {
-      const v4 = 2;
-      const v5 = v4;
-      const v6 = Int_instDecidableEq(v3, v5);
-      if (v6) {
-        c$2 = false;
-        r$2 = v3;
-        continue;
+      const v3 = v1 - 1;
+      const v4 = Int_instDecidableEq(v3, 2);
+      if (v4) {
+        return v3;
       } else {
-        const v7 = v3 - v5;
-        const t$2$0 = 0;
-        const t$2$1 = v7;
-        v2 = t$2$0;
-        v3 = t$2$1;
+        const v5 = v3 - 2;
+        v1 = v5;
         continue;
       }
     }
   }
-  return r$2;
 };
-const test1 = (v0) => _mut$test1(0, v0);
-const test2 = (v0) => _mut$test1(1, v0);
-export { test1, test2 };
+export const test1 = _spec$test1;
+export const test2 = (v0) => {
+  const v1 = Int_instDecidableEq(v0, 2);
+  if (v1) {
+    return v0;
+  } else {
+    const v2 = v0 - 2;
+    return _spec$test1(v2);
+  }
+};

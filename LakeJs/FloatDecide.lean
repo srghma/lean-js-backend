@@ -1,11 +1,3 @@
-module
-
-public import Lean
-
-@[expose] public meta section
-
-namespace LakeJs.FloatDecide
-
 /-
 # `float_decide` — a guarded wrapper around `native_decide`
 
@@ -30,10 +22,11 @@ and nothing else.  Concretely the goal must
 If either check fails the tactic fails with an explanatory message and the goal is left
 untouched, so a stray `native_decide` cannot creep into an unrelated proof.
 -/
-
+import Lean
 
 open Lean Elab Tactic Meta
 
+namespace LakeJs.FloatDecide
 
 /-- The floating point types `float_decide` is willing to evaluate natively. -/
 def floatTypeNames : List Name :=

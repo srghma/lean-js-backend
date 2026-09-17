@@ -1,0 +1,967 @@
+-- SnapshotsPBOPure.Fusion01  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+dropPrefix1 : (fn [string] (taggedUnion ()|(string)))
+(lamN [string]
+  (letE : string
+    (lit "1")
+    (letE : nat
+      (apN
+        (extern lean_string_utf8_byte_size)
+        (var 1 : string)
+      )
+      (letE : nat
+        (apN
+          (extern lean_string_utf8_byte_size)
+          (var 1 : string)
+        )
+        (letE : bool
+          (apN
+            (extern lean_nat_dec_le)
+            (var 0 : nat)
+            (var 1 : nat)
+          )
+          (ite
+            (var 0 : bool)
+            (letE : nat
+              (lit 0)
+              (letE : nat
+                (var 2 : nat)
+                (letE : nat
+                  (var 1 : nat)
+                  (letE : bool
+                    (apN
+                      (extern lean_string_memcmp)
+                      (var 7 : string)
+                      (var 6 : string)
+                      (jsOp cast nat → stringPos
+                        (var 0 : nat)
+                      )
+                      (jsOp cast nat → stringPos
+                        (var 0 : nat)
+                      )
+                      (jsOp cast nat → stringPos
+                        (var 1 : nat)
+                      )
+                    )
+                    (ite
+                      (var 0 : bool)
+                      (letE : nat
+                        (lit 1)
+                        (letE : nat
+                          (var 2 : nat)
+                          (letE : nat
+                            (var 8 : nat)
+                            (letE : nat
+                              (var 0 : nat)
+                              (letE : (record string nat nat)
+                                (ctor 0 : (record string nat nat)
+                                  (var 12 : string)
+                                  (var 2 : nat)
+                                  (var 0 : nat)
+                                )
+                                (letE : nat
+                                  (var 6 : nat)
+                                  (letE : nat
+                                    (apN
+                                      (global String_Slice_Pos_nextn)
+                                      (var 1 : (record string nat nat))
+                                      (var 0 : nat)
+                                      (var 5 : nat)
+                                    )
+                                    (letE : nat
+                                      (var 0 : nat)
+                                      (letE : nat
+                                        (var 0 : nat)
+                                        (letE : nat
+                                          (var 0 : nat)
+                                          (letE : nat
+                                            (var 0 : nat)
+                                            (letE : (record string nat nat)
+                                              (ctor 0 : (record string nat nat)
+                                                (var 19 : string)
+                                                (var 0 : nat)
+                                                (var 7 : nat)
+                                              )
+                                              (letE : string
+                                                (apN
+                                                  (global String_Slice_toString)
+                                                  (var 0 : (record string nat nat))
+                                                )
+                                                (letE : (taggedUnion ()|(string))
+                                                  (ctor 1 : (taggedUnion ()|(string))
+                                                    (var 0 : string)
+                                                  )
+                                                  (var 0 : (taggedUnion ()|(string)))
+                                                )
+                                              )
+                                            )
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                      (letE : (taggedUnion ()|(string))
+                        (ctor 0 : (taggedUnion ()|(string))
+                        )
+                        (var 0 : (taggedUnion ()|(string)))
+                      )
+                    )
+                  )
+                )
+              )
+            )
+            (letE : (taggedUnion ()|(string))
+              (ctor 0 : (taggedUnion ()|(string))
+              )
+              (var 0 : (taggedUnion ()|(string)))
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+filterF : (fn [(fn [typeParam] bool) (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+(lamN [(fn [typeParam] bool) (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))]
+  (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+    (lamN [(fn [typeParam] (fn [typeParam] typeParam)) typeParam]
+      (letE : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam)))
+        (lamN [typeParam typeParam]
+          (letE : bool
+            (apN
+              (var 5 : (fn [typeParam] bool))
+              (var 1 : typeParam)
+            )
+            (ite
+              (var 0 : bool)
+              (letE : typeParam
+                (apN
+                  (jsOp cast (fn [typeParam] (fn [typeParam] typeParam)) → (fn [typeParam typeParam] typeParam)
+                    (var 4 : (fn [typeParam] (fn [typeParam] typeParam)))
+                  )
+                  (var 2 : typeParam)
+                  (var 1 : typeParam)
+                )
+                (jsOp cast typeParam → (fn [typeParam] (fn [typeParam] typeParam))
+                  (var 0 : typeParam)
+                )
+              )
+              (jsOp cast typeParam → (fn [typeParam] (fn [typeParam] typeParam))
+                (var 1 : typeParam)
+              )
+            )
+          )
+        )
+        (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+          (var 3 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+          (letE : typeParam
+            (apN
+              (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)) → (fn [(fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) typeParam] typeParam)
+                (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+              )
+              (var 1 : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))))
+              (var 2 : typeParam)
+            )
+            (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+              (var 0 : typeParam)
+            )
+          )
+        )
+      )
+    )
+    (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+      (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))) → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+        (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))))
+      )
+      (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+    )
+  )
+)
+
+filterMapF : (fn [(fn [typeParam] (taggedUnion ()|(typeParam))) (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+(lamN [(fn [typeParam] (taggedUnion ()|(typeParam))) (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))]
+  (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+    (lamN [(fn [typeParam] (fn [typeParam] typeParam)) typeParam]
+      (letE : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam)))
+        (lamN [typeParam typeParam]
+          (letE : (taggedUnion ()|(typeParam))
+            (apN
+              (var 5 : (fn [typeParam] (taggedUnion ()|(typeParam))))
+              (var 1 : typeParam)
+            )
+            (ite
+              (apN
+                (extern lean_nat_dec_eq)
+                (tagOf
+                  (var 0 : (taggedUnion ()|(typeParam)))
+                )
+                (lit 0)
+              )
+              (jsOp cast typeParam → (fn [typeParam] (fn [typeParam] typeParam))
+                (var 1 : typeParam)
+              )
+              (letE : typeParam
+                (proj 1 0 : typeParam
+                  (var 0 : (taggedUnion ()|(typeParam)))
+                )
+                (letE : typeParam
+                  (apN
+                    (jsOp cast (fn [typeParam] (fn [typeParam] typeParam)) → (fn [typeParam typeParam] typeParam)
+                      (var 5 : (fn [typeParam] (fn [typeParam] typeParam)))
+                    )
+                    (var 0 : typeParam)
+                    (var 2 : typeParam)
+                  )
+                  (jsOp cast typeParam → (fn [typeParam] (fn [typeParam] typeParam))
+                    (var 0 : typeParam)
+                  )
+                )
+              )
+            )
+          )
+        )
+        (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+          (var 3 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+          (letE : typeParam
+            (apN
+              (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)) → (fn [(fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) typeParam] typeParam)
+                (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+              )
+              (var 1 : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))))
+              (var 2 : typeParam)
+            )
+            (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+              (var 0 : typeParam)
+            )
+          )
+        )
+      )
+    )
+    (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+      (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))) → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+        (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))))
+      )
+      (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+    )
+  )
+)
+
+fromArray : (fn [(array typeParam)] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+(lamN [(array typeParam)]
+  (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+    (lamN [(fn [typeParam] (fn [typeParam] typeParam)) typeParam]
+      (letE : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam)))
+        (lamN [typeParam typeParam]
+          (letE : typeParam
+            (apN
+              (jsOp cast (fn [typeParam] (fn [typeParam] typeParam)) → (fn [typeParam typeParam] typeParam)
+                (var 3 : (fn [typeParam] (fn [typeParam] typeParam)))
+              )
+              (var 1 : typeParam)
+              (var 0 : typeParam)
+            )
+            (jsOp cast typeParam → (fn [typeParam] (fn [typeParam] typeParam))
+              (var 0 : typeParam)
+            )
+          )
+        )
+        (letE : nat
+          (apN
+            (extern lean_array_get_size)
+            (var 3 : (array typeParam))
+          )
+          (letE : nat
+            (lit 0)
+            (letE : (record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam)))
+              (global Id_instMonad)
+              (letE : bool
+                (apN
+                  (extern lean_nat_dec_le)
+                  (var 2 : nat)
+                  (var 2 : nat)
+                )
+                (ite
+                  (var 0 : bool)
+                  (letE : bool
+                    (apN
+                      (extern lean_nat_dec_lt)
+                      (var 2 : nat)
+                      (var 3 : nat)
+                    )
+                    (ite
+                      (var 0 : bool)
+                      (letE : usize
+                        (apN
+                          (extern lean_usize_of_nat)
+                          (var 4 : nat)
+                        )
+                        (letE : nat
+                          (lit 0)
+                          (letE : typeParam
+                            (apN
+                              (jsOp cast (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam] (fn [typeParam] typeParam)) (array typeParam) usize usize typeParam] typeParam) → (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) (array typeParam) usize nat typeParam] typeParam)
+                                (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold)
+                              )
+                              (var 4 : (record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))))
+                              (var 7 : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))))
+                              (var 10 : (array typeParam))
+                              (var 1 : usize)
+                              (var 0 : nat)
+                              (var 8 : typeParam)
+                            )
+                            (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+                              (var 0 : typeParam)
+                            )
+                          )
+                        )
+                      )
+                      (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+                        (var 6 : typeParam)
+                      )
+                    )
+                  )
+                  (letE : bool
+                    (apN
+                      (extern lean_nat_dec_lt)
+                      (var 2 : nat)
+                      (var 3 : nat)
+                    )
+                    (ite
+                      (var 0 : bool)
+                      (letE : usize
+                        (apN
+                          (extern lean_usize_of_nat)
+                          (var 4 : nat)
+                        )
+                        (letE : nat
+                          (lit 0)
+                          (letE : typeParam
+                            (apN
+                              (jsOp cast (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam] (fn [typeParam] typeParam)) (array typeParam) usize usize typeParam] typeParam) → (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) (array typeParam) usize nat typeParam] typeParam)
+                                (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold)
+                              )
+                              (var 4 : (record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))))
+                              (var 7 : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))))
+                              (var 10 : (array typeParam))
+                              (var 1 : usize)
+                              (var 0 : nat)
+                              (var 8 : typeParam)
+                            )
+                            (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+                              (var 0 : typeParam)
+                            )
+                          )
+                        )
+                      )
+                      (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+                        (var 6 : typeParam)
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+    (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+      (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))) → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+        (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))))
+      )
+      (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+    )
+  )
+)
+
+mapF : (fn [(fn [typeParam] typeParam) (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+(lamN [(fn [typeParam] typeParam) (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))]
+  (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+    (lamN [(fn [typeParam] (fn [typeParam] typeParam)) typeParam]
+      (letE : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam)))
+        (lamN [typeParam typeParam]
+          (letE : typeParam
+            (apN
+              (var 5 : (fn [typeParam] typeParam))
+              (var 1 : typeParam)
+            )
+            (letE : typeParam
+              (apN
+                (jsOp cast (fn [typeParam] (fn [typeParam] typeParam)) → (fn [typeParam typeParam] typeParam)
+                  (var 4 : (fn [typeParam] (fn [typeParam] typeParam)))
+                )
+                (var 0 : typeParam)
+                (var 1 : typeParam)
+              )
+              (jsOp cast typeParam → (fn [typeParam] (fn [typeParam] typeParam))
+                (var 0 : typeParam)
+              )
+            )
+          )
+        )
+        (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+          (var 3 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+          (letE : typeParam
+            (apN
+              (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)) → (fn [(fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) typeParam] typeParam)
+                (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+              )
+              (var 1 : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))))
+              (var 2 : typeParam)
+            )
+            (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+              (var 0 : typeParam)
+            )
+          )
+        )
+      )
+    )
+    (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+      (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))) → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+        (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))))
+      )
+      (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+    )
+  )
+)
+
+overArray : (fn [(fn [(fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))) (array typeParam)] (array typeParam))
+(lamN [(fn [(fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))) (array typeParam)]
+  (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+    (lamN [(fn [typeParam] (fn [typeParam] typeParam)) typeParam]
+      (letE : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam)))
+        (lamN [typeParam typeParam]
+          (letE : typeParam
+            (apN
+              (jsOp cast (fn [typeParam] (fn [typeParam] typeParam)) → (fn [typeParam typeParam] typeParam)
+                (var 3 : (fn [typeParam] (fn [typeParam] typeParam)))
+              )
+              (var 1 : typeParam)
+              (var 0 : typeParam)
+            )
+            (jsOp cast typeParam → (fn [typeParam] (fn [typeParam] typeParam))
+              (var 0 : typeParam)
+            )
+          )
+        )
+        (letE : nat
+          (apN
+            (extern lean_array_get_size)
+            (var 3 : (array typeParam))
+          )
+          (letE : nat
+            (lit 0)
+            (letE : (record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam)))
+              (global Id_instMonad)
+              (letE : bool
+                (apN
+                  (extern lean_nat_dec_lt)
+                  (var 1 : nat)
+                  (var 2 : nat)
+                )
+                (ite
+                  (var 0 : bool)
+                  (letE : usize
+                    (apN
+                      (extern lean_usize_of_nat)
+                      (var 3 : nat)
+                    )
+                    (letE : nat
+                      (lit 0)
+                      (letE : typeParam
+                        (apN
+                          (jsOp cast (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam] (fn [typeParam] typeParam)) (array typeParam) usize usize typeParam] typeParam) → (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) (array typeParam) usize nat typeParam] typeParam)
+                            (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold)
+                          )
+                          (var 3 : (record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))))
+                          (var 6 : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))))
+                          (var 9 : (array typeParam))
+                          (var 1 : usize)
+                          (var 0 : nat)
+                          (var 7 : typeParam)
+                        )
+                        (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+                          (var 0 : typeParam)
+                        )
+                      )
+                    )
+                  )
+                  (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+                    (var 5 : typeParam)
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+    (letE : (fn [typeParam (list typeParam)] (fn [typeParam] (fn [(list typeParam)] (list typeParam))))
+      (lamN [typeParam (list typeParam)]
+        (letE : (list typeParam)
+          (ctor 1 : (list typeParam)
+            (var 1 : typeParam)
+            (var 0 : (list typeParam))
+          )
+          (jsOp cast (list typeParam) → (fn [typeParam] (fn [(list typeParam)] (list typeParam)))
+            (var 0 : (list typeParam))
+          )
+        )
+      )
+      (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+        (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))) → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+          (var 1 : (fn [(fn [typeParam] (fn [typeParam] typeParam)) typeParam] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))))
+        )
+        (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+          (apN
+            (var 4 : (fn [(fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))] (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))))
+            (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+          )
+          (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+            (var 0 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+            (letE : (list typeParam)
+              (ctor 0 : (list typeParam)
+              )
+              (letE : (list typeParam)
+                (apN
+                  (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)) → (fn [(fn [typeParam (list typeParam)] (fn [typeParam] (fn [(list typeParam)] (list typeParam)))) (list typeParam)] (list typeParam))
+                    (var 1 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+                  )
+                  (var 4 : (fn [typeParam (list typeParam)] (fn [typeParam] (fn [(list typeParam)] (list typeParam)))))
+                  (var 0 : (list typeParam))
+                )
+                (letE : (array typeParam)
+                  (apN
+                    (extern lean_array_mk)
+                    (var 0 : (list typeParam))
+                  )
+                  (var 0 : (array typeParam))
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+_private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold__at__test_spec_0 : (fn [(array int) usize usize (list string)] (list string))
+(lamN [(array int) usize usize (list string)]
+  (loop [(array int) usize usize (list string)]
+    (var 3 : (array int))
+    (var 2 : usize)
+    (var 1 : usize)
+    (var 0 : (list string))
+    (letB : (fn [string (list string)] (fn [string] (fn [(list string)] (list string))))
+      (lamN [string (list string)]
+        (letE : string
+          (lit "1")
+          (letE : nat
+            (apN
+              (extern lean_string_utf8_byte_size)
+              (var 2 : string)
+            )
+            (letE : nat
+              (apN
+                (extern lean_string_utf8_byte_size)
+                (var 1 : string)
+              )
+              (letE : bool
+                (apN
+                  (extern lean_nat_dec_le)
+                  (var 0 : nat)
+                  (var 1 : nat)
+                )
+                (ite
+                  (var 0 : bool)
+                  (letE : nat
+                    (lit 0)
+                    (letE : nat
+                      (var 2 : nat)
+                      (letE : nat
+                        (var 1 : nat)
+                        (letE : bool
+                          (apN
+                            (extern lean_string_memcmp)
+                            (var 8 : string)
+                            (var 6 : string)
+                            (jsOp cast nat → stringPos
+                              (var 0 : nat)
+                            )
+                            (jsOp cast nat → stringPos
+                              (var 0 : nat)
+                            )
+                            (jsOp cast nat → stringPos
+                              (var 1 : nat)
+                            )
+                          )
+                          (ite
+                            (var 0 : bool)
+                            (letE : nat
+                              (lit 1)
+                              (letE : nat
+                                (var 2 : nat)
+                                (letE : nat
+                                  (var 8 : nat)
+                                  (letE : nat
+                                    (var 0 : nat)
+                                    (letE : (record string nat nat)
+                                      (ctor 0 : (record string nat nat)
+                                        (var 13 : string)
+                                        (var 2 : nat)
+                                        (var 0 : nat)
+                                      )
+                                      (letE : nat
+                                        (var 6 : nat)
+                                        (letE : nat
+                                          (apN
+                                            (global String_Slice_Pos_nextn)
+                                            (var 1 : (record string nat nat))
+                                            (var 0 : nat)
+                                            (var 5 : nat)
+                                          )
+                                          (letE : nat
+                                            (var 0 : nat)
+                                            (letE : nat
+                                              (var 0 : nat)
+                                              (letE : nat
+                                                (var 0 : nat)
+                                                (letE : nat
+                                                  (var 0 : nat)
+                                                  (letE : (record string nat nat)
+                                                    (ctor 0 : (record string nat nat)
+                                                      (var 20 : string)
+                                                      (var 0 : nat)
+                                                      (var 7 : nat)
+                                                    )
+                                                    (letE : string
+                                                      (apN
+                                                        (global String_Slice_toString)
+                                                        (var 0 : (record string nat nat))
+                                                      )
+                                                      (letE : string
+                                                        (lit "2")
+                                                        (letE : string
+                                                          (apN
+                                                            (extern lean_string_append)
+                                                            (var 0 : string)
+                                                            (var 1 : string)
+                                                          )
+                                                          (letE : string
+                                                            (lit "wat")
+                                                            (letE : bool
+                                                              (apN
+                                                                (extern lean_string_dec_eq)
+                                                                (var 1 : string)
+                                                                (var 0 : string)
+                                                              )
+                                                              (letE : bool
+                                                                (jsOp cast bool → bool
+                                                                  (var 0 : bool)
+                                                                )
+                                                                (ite
+                                                                  (var 0 : bool)
+                                                                  (jsOp cast (list string) → (fn [string] (fn [(list string)] (list string)))
+                                                                    (var 26 : (list string))
+                                                                  )
+                                                                  (letE : string
+                                                                    (apN
+                                                                      (extern lean_string_append)
+                                                                      (var 3 : string)
+                                                                      (var 25 : string)
+                                                                    )
+                                                                    (letE : (list string)
+                                                                      (ctor 1 : (list string)
+                                                                        (var 0 : string)
+                                                                        (var 27 : (list string))
+                                                                      )
+                                                                      (jsOp cast (list string) → (fn [string] (fn [(list string)] (list string)))
+                                                                        (var 0 : (list string))
+                                                                      )
+                                                                    )
+                                                                  )
+                                                                )
+                                                              )
+                                                            )
+                                                          )
+                                                        )
+                                                      )
+                                                    )
+                                                  )
+                                                )
+                                              )
+                                            )
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                            (jsOp cast (list string) → (fn [string] (fn [(list string)] (list string)))
+                              (var 8 : (list string))
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                  (jsOp cast (list string) → (fn [string] (fn [(list string)] (list string)))
+                    (var 4 : (list string))
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+      (letB : bool
+        (apN
+          (global instDecidableEqUSize)
+          (var 3 : usize)
+          (var 2 : usize)
+        )
+        (letB : bool
+          (jsOp cast bool → bool
+            (var 0 : bool)
+          )
+          (iteB
+            (var 0 : bool)
+            (ret
+              (var 3 : (list string))
+            )
+            (letB : nat
+              (lit 1)
+              (letB : usize
+                (apN
+                  (extern lean_usize_sub)
+                  (var 6 : usize)
+                  (jsOp cast nat → usize
+                    (var 0 : nat)
+                  )
+                )
+                (letB : int
+                  (apN
+                    (extern lean_array_uget)
+                    (var 8 : (array int))
+                    (var 0 : usize)
+                  )
+                  (letB : nat
+                    (lit 1)
+                    (letB : int
+                      (jsOp cast nat → int
+                        (var 0 : nat)
+                      )
+                      (letB : int
+                        (apN
+                          (extern lean_int_add)
+                          (var 2 : int)
+                          (var 0 : int)
+                        )
+                        (iteB
+                          (apN
+                            (extern lean_int_dec_lt)
+                            (var 0 : int)
+                            (lit 0)
+                          )
+                          (letB : nat
+                            (jsOp cast int → nat
+                              (apN
+                                (extern lean_int_sub)
+                                (lit -1)
+                                (var 0 : int)
+                              )
+                            )
+                            (letB : string
+                              (lit "-")
+                              (letB : nat
+                                (apN
+                                  (extern lean_nat_add)
+                                  (var 1 : nat)
+                                  (lit 1)
+                                )
+                                (letB : string
+                                  (apN
+                                    (global Nat_reprFast)
+                                    (var 0 : nat)
+                                  )
+                                  (letB : string
+                                    (apN
+                                      (extern lean_string_append)
+                                      (var 2 : string)
+                                      (var 0 : string)
+                                    )
+                                    (letB : (list string)
+                                      (apN
+                                        (jsOp cast (fn [string (list string)] (fn [string] (fn [(list string)] (list string)))) → (fn [string (list string)] (list string))
+                                          (var 13 : (fn [string (list string)] (fn [string] (fn [(list string)] (list string)))))
+                                        )
+                                        (var 0 : string)
+                                        (var 14 : (list string))
+                                      )
+                                      (cont
+                                        (var 18 : (array int))
+                                        (var 10 : usize)
+                                        (var 16 : usize)
+                                        (var 0 : (list string))
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
+                          (letB : nat
+                            (jsOp cast int → nat
+                              (var 0 : int)
+                            )
+                            (letB : string
+                              (apN
+                                (global Nat_reprFast)
+                                (var 0 : nat)
+                              )
+                              (letB : (list string)
+                                (apN
+                                  (jsOp cast (fn [string (list string)] (fn [string] (fn [(list string)] (list string)))) → (fn [string (list string)] (list string))
+                                    (var 10 : (fn [string (list string)] (fn [string] (fn [(list string)] (list string)))))
+                                  )
+                                  (var 0 : string)
+                                  (var 11 : (list string))
+                                )
+                                (cont
+                                  (var 15 : (array int))
+                                  (var 7 : usize)
+                                  (var 13 : usize)
+                                  (var 0 : (list string))
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+test : (fn [(array int)] (array string))
+(lamN [(array int)]
+  (letE : (list string)
+    (ctor 0 : (list string)
+    )
+    (letE : nat
+      (apN
+        (extern lean_array_get_size)
+        (var 1 : (array int))
+      )
+      (letE : nat
+        (lit 0)
+        (letE : bool
+          (apN
+            (extern lean_nat_dec_lt)
+            (var 0 : nat)
+            (var 1 : nat)
+          )
+          (ite
+            (var 0 : bool)
+            (letE : usize
+              (apN
+                (extern lean_usize_of_nat)
+                (var 2 : nat)
+              )
+              (letE : nat
+                (lit 0)
+                (letE : (list string)
+                  (apN
+                    (jsOp cast (fn [(array int) usize usize (list string)] (list string)) → (fn [(array int) usize nat (list string)] (list string))
+                      (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold__at__test_spec_0)
+                    )
+                    (var 6 : (array int))
+                    (var 1 : usize)
+                    (var 0 : nat)
+                    (var 5 : (list string))
+                  )
+                  (letE : (array string)
+                    (apN
+                      (extern lean_array_mk)
+                      (var 0 : (list string))
+                    )
+                    (var 0 : (array string))
+                  )
+                )
+              )
+            )
+            (letE : (array string)
+              (apN
+                (extern lean_array_mk)
+                (var 3 : (list string))
+              )
+              (var 0 : (array string))
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+toArray : (fn [(fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))] (array typeParam))
+(lamN [(fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))]
+  (letE : (fn [typeParam (list typeParam)] (fn [typeParam] (fn [(list typeParam)] (list typeParam))))
+    (lamN [typeParam (list typeParam)]
+      (letE : (list typeParam)
+        (ctor 1 : (list typeParam)
+          (var 1 : typeParam)
+          (var 0 : (list typeParam))
+        )
+        (jsOp cast (list typeParam) → (fn [typeParam] (fn [(list typeParam)] (list typeParam)))
+          (var 0 : (list typeParam))
+        )
+      )
+    )
+    (letE : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
+      (var 1 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+      (letE : (list typeParam)
+        (ctor 0 : (list typeParam)
+        )
+        (letE : (list typeParam)
+          (apN
+            (jsOp cast (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)) → (fn [(fn [typeParam (list typeParam)] (fn [typeParam] (fn [(list typeParam)] (list typeParam)))) (list typeParam)] (list typeParam))
+              (var 1 : (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam)))
+            )
+            (var 2 : (fn [typeParam (list typeParam)] (fn [typeParam] (fn [(list typeParam)] (list typeParam)))))
+            (var 0 : (list typeParam))
+          )
+          (letE : (array typeParam)
+            (apN
+              (extern lean_array_mk)
+              (var 0 : (list typeParam))
+            )
+            (var 0 : (array typeParam))
+          )
+        )
+      )
+    )
+  )
+)
+

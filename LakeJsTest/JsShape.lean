@@ -71,6 +71,47 @@ partial def loopIssues : List String → List String
   | "for" :: rest => "a `for` that does not open a `for (…)`" :: loopIssues rest
   | _ :: rest => loopIssues rest
 
+/-- A loop that is driven by a flag rather than left with a `return`.  A `Body.ret` is
+    in tail position of the function the loop is the body of, so it prints as a
+    `return`, and the loop's own condition is the constant `true`; an exit flag and a
+    result variable would both be waste. -/
+partial def flagLoopIssuesOf : List String → List String
+  | "while" :: "(" :: "true" :: ")" :: rest => flagLoopIssuesOf rest
+  | "while" :: "(" :: c :: rest =>
+      s!"a `while` whose condition is `{c}` rather than `true`, so the loop is driven by a flag"
+        :: flagLoopIssuesOf rest
+  | _ :: rest => flagLoopIssuesOf rest
+  | [] => []
+
+/-- `flagLoopIssuesOf`, on the tokens of a module. -/
+def flagLoopIssues (js : String) : List String := flagLoopIssuesOf (tokens js.toList)
+
+/-- An object built *inside a loop body*, which is an allocation per iteration.  A loop
+    whose accumulator has been scalarised has none: the fields go round the loop as
+    scalars and the object is built where the loop answers.  This is not true of every
+    loop — one that builds a list builds a cell per iteration, and that is the answer,
+    not waste — so it is asked of the modules that name it. -/
+partial def allocInLoopIssuesOf : List String → List Bool → Bool → Bool → List String
+  | "while" :: "(" :: "true" :: ")" :: rest, stack, _, _ =>
+      allocInLoopIssuesOf rest stack true false
+  | "return" :: rest, stack, pending, _ => allocInLoopIssuesOf rest stack pending true
+  | ";" :: rest, stack, pending, _ => allocInLoopIssuesOf rest stack pending false
+  | "{" :: "tag" :: ":" :: rest, stack, pending, inReturn =>
+      -- an object built where the loop *answers* is built once, which is the point of
+      -- scalarising; one built anywhere else in the body is built once per iteration
+      let here :=
+        if stack.any id && !inReturn then ["an object is built inside a loop body"] else []
+      here ++ allocInLoopIssuesOf rest (false :: stack) pending inReturn
+  | "{" :: rest, stack, pending, inReturn =>
+      allocInLoopIssuesOf rest (pending :: stack) false inReturn
+  | "}" :: rest, stack, _, inReturn => allocInLoopIssuesOf rest stack.tail false inReturn
+  | _ :: rest, stack, pending, inReturn => allocInLoopIssuesOf rest stack pending inReturn
+  | [], _, _, _ => []
+
+/-- `allocInLoopIssuesOf`, on the tokens of a module, reported once. -/
+def allocInLoopIssues (js : String) : List String :=
+  (allocInLoopIssuesOf (tokens js.toList) [] false false).take 1
+
 /-- A self-application `x(x)`: the one term shape every untyped fixed point is built
     from, and one no `Term` has. -/
 partial def selfAppIssues : List String → List String

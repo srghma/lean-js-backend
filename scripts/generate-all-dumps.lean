@@ -1,9 +1,9 @@
 import Lean
 import Lean.Compiler.LCNF
 import Lean.Compiler.ClosedTermCache
-import LakeJs
+import LakeJs.Compile
 
-open Lean Lean.Compiler.LCNF Lean.Compiler.JS Lean.Compiler.JS.Backend
+open Lean Lean.Compiler.LCNF LakeJs LakeJs.Config
 
 set_option linter.unusedVariables false
 

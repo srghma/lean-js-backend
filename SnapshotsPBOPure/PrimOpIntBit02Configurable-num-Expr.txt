@@ -1,0 +1,701 @@
+-- SnapshotsPBOPure.PrimOpIntBit02Configurable  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+TestISize_complement : isize
+(letE : nat
+  (lit 3)
+  (letE : isize
+    (apN
+      (extern lean_isize_of_nat)
+      (var 0 : nat)
+    )
+    (letE : isize
+      (apN
+        (extern lean_isize_neg)
+        (var 0 : isize)
+      )
+      (letE : isize
+        (apN
+          (extern lean_isize_complement)
+          (var 0 : isize)
+        )
+        (var 0 : isize)
+      )
+    )
+  )
+)
+
+TestISize_land : isize
+(letE : nat
+  (lit 1023)
+  (letE : isize
+    (apN
+      (extern lean_isize_of_nat)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 8)
+      (letE : isize
+        (apN
+          (extern lean_isize_of_nat)
+          (var 0 : nat)
+        )
+        (letE : isize
+          (apN
+            (extern lean_isize_land)
+            (var 2 : isize)
+            (var 0 : isize)
+          )
+          (var 0 : isize)
+        )
+      )
+    )
+  )
+)
+
+TestISize_lor : isize
+(letE : nat
+  (lit 16)
+  (letE : isize
+    (apN
+      (extern lean_isize_of_nat)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 15)
+      (letE : isize
+        (apN
+          (extern lean_isize_of_nat)
+          (var 0 : nat)
+        )
+        (letE : isize
+          (apN
+            (extern lean_isize_lor)
+            (var 2 : isize)
+            (var 0 : isize)
+          )
+          (var 0 : isize)
+        )
+      )
+    )
+  )
+)
+
+TestISize_shiftLeft : isize
+(letE : nat
+  (lit 1023)
+  (letE : isize
+    (apN
+      (extern lean_isize_of_nat)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 2)
+      (letE : isize
+        (apN
+          (extern lean_isize_of_nat)
+          (var 0 : nat)
+        )
+        (letE : isize
+          (apN
+            (extern lean_isize_shift_left)
+            (var 2 : isize)
+            (var 0 : isize)
+          )
+          (var 0 : isize)
+        )
+      )
+    )
+  )
+)
+
+TestISize_shiftRight : isize
+(letE : nat
+  (lit 1023)
+  (letE : isize
+    (apN
+      (extern lean_isize_of_nat)
+      (var 0 : nat)
+    )
+    (letE : isize
+      (apN
+        (extern lean_isize_neg)
+        (var 0 : isize)
+      )
+      (letE : nat
+        (lit 2)
+        (letE : isize
+          (apN
+            (extern lean_isize_of_nat)
+            (var 0 : nat)
+          )
+          (letE : isize
+            (apN
+              (extern lean_isize_shift_right)
+              (var 2 : isize)
+              (var 0 : isize)
+            )
+            (var 0 : isize)
+          )
+        )
+      )
+    )
+  )
+)
+
+TestISize_xor : isize
+(letE : nat
+  (lit 15)
+  (letE : isize
+    (apN
+      (extern lean_isize_of_nat)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 12)
+      (letE : isize
+        (apN
+          (extern lean_isize_of_nat)
+          (var 0 : nat)
+        )
+        (letE : isize
+          (apN
+            (extern lean_isize_xor)
+            (var 2 : isize)
+            (var 0 : isize)
+          )
+          (var 0 : isize)
+        )
+      )
+    )
+  )
+)
+
+TestInt_complement : int
+(letE : nat
+  (lit 3)
+  (letE : int
+    (jsOp cast nat → int
+      (var 0 : nat)
+    )
+    (letE : int
+      (apN
+        (extern lean_int_neg)
+        (var 0 : int)
+      )
+      (letE : int
+        (apN
+          (global Int_not)
+          (var 0 : int)
+        )
+        (var 0 : int)
+      )
+    )
+  )
+)
+
+TestInt64_complement : int64
+(letE : nat
+  (lit 3)
+  (letE : int64
+    (apN
+      (extern lean_int64_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int64
+      (apN
+        (extern lean_int64_neg)
+        (var 0 : int64)
+      )
+      (letE : int64
+        (apN
+          (extern lean_int64_complement)
+          (var 0 : int64)
+        )
+        (var 0 : int64)
+      )
+    )
+  )
+)
+
+TestInt64_land : int64
+(letE : nat
+  (lit 1023)
+  (letE : int64
+    (apN
+      (extern lean_int64_of_nat)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 8)
+      (letE : int64
+        (apN
+          (extern lean_int64_of_nat)
+          (var 0 : nat)
+        )
+        (letE : int64
+          (apN
+            (extern lean_int64_land)
+            (var 2 : int64)
+            (var 0 : int64)
+          )
+          (var 0 : int64)
+        )
+      )
+    )
+  )
+)
+
+TestInt64_lor : int64
+(letE : nat
+  (lit 16)
+  (letE : int64
+    (apN
+      (extern lean_int64_of_nat)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 15)
+      (letE : int64
+        (apN
+          (extern lean_int64_of_nat)
+          (var 0 : nat)
+        )
+        (letE : int64
+          (apN
+            (extern lean_int64_lor)
+            (var 2 : int64)
+            (var 0 : int64)
+          )
+          (var 0 : int64)
+        )
+      )
+    )
+  )
+)
+
+TestInt64_shiftLeft : int64
+(letE : nat
+  (lit 1023)
+  (letE : int64
+    (apN
+      (extern lean_int64_of_nat)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 2)
+      (letE : int64
+        (apN
+          (extern lean_int64_of_nat)
+          (var 0 : nat)
+        )
+        (letE : int64
+          (apN
+            (extern lean_int64_shift_left)
+            (var 2 : int64)
+            (var 0 : int64)
+          )
+          (var 0 : int64)
+        )
+      )
+    )
+  )
+)
+
+TestInt64_shiftRight : int64
+(letE : nat
+  (lit 1023)
+  (letE : int64
+    (apN
+      (extern lean_int64_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int64
+      (apN
+        (extern lean_int64_neg)
+        (var 0 : int64)
+      )
+      (letE : nat
+        (lit 2)
+        (letE : int64
+          (apN
+            (extern lean_int64_of_nat)
+            (var 0 : nat)
+          )
+          (letE : int64
+            (apN
+              (extern lean_int64_shift_right)
+              (var 2 : int64)
+              (var 0 : int64)
+            )
+            (var 0 : int64)
+          )
+        )
+      )
+    )
+  )
+)
+
+TestInt64_xor : int64
+(letE : nat
+  (lit 15)
+  (letE : int64
+    (apN
+      (extern lean_int64_of_nat)
+      (var 0 : nat)
+    )
+    (letE : nat
+      (lit 12)
+      (letE : int64
+        (apN
+          (extern lean_int64_of_nat)
+          (var 0 : nat)
+        )
+        (letE : int64
+          (apN
+            (extern lean_int64_xor)
+            (var 2 : int64)
+            (var 0 : int64)
+          )
+          (var 0 : int64)
+        )
+      )
+    )
+  )
+)
+
+TestNat_land : nat
+(letE : nat
+  (lit 1023)
+  (letE : nat
+    (lit 8)
+    (letE : nat
+      (apN
+        (extern lean_nat_land)
+        (var 1 : nat)
+        (var 0 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestNat_lor : nat
+(letE : nat
+  (lit 16)
+  (letE : nat
+    (lit 15)
+    (letE : nat
+      (apN
+        (extern lean_nat_lor)
+        (var 1 : nat)
+        (var 0 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestNat_shiftLeft : nat
+(letE : nat
+  (lit 1023)
+  (letE : nat
+    (lit 2)
+    (letE : nat
+      (apN
+        (extern lean_nat_shiftl)
+        (var 1 : nat)
+        (var 0 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestNat_shiftRight : nat
+(letE : nat
+  (lit 1023)
+  (letE : nat
+    (lit 2)
+    (letE : nat
+      (apN
+        (extern lean_nat_shiftr)
+        (var 1 : nat)
+        (var 0 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestNat_xor : nat
+(letE : nat
+  (lit 15)
+  (letE : nat
+    (lit 12)
+    (letE : nat
+      (apN
+        (extern lean_nat_lxor)
+        (var 1 : nat)
+        (var 0 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestUInt64_complement : uint64
+(letE : nat
+  (lit 3)
+  (letE : uint64
+    (apN
+      (extern lean_uint64_neg)
+      (jsOp cast nat → uint64
+        (var 0 : nat)
+      )
+    )
+    (letE : uint64
+      (apN
+        (extern lean_uint64_complement)
+        (var 0 : uint64)
+      )
+      (var 0 : uint64)
+    )
+  )
+)
+
+TestUInt64_land : uint64
+(letE : nat
+  (lit 1023)
+  (letE : nat
+    (lit 8)
+    (letE : uint64
+      (apN
+        (extern lean_uint64_land)
+        (jsOp cast nat → uint64
+          (var 1 : nat)
+        )
+        (jsOp cast nat → uint64
+          (var 0 : nat)
+        )
+      )
+      (var 0 : uint64)
+    )
+  )
+)
+
+TestUInt64_lor : uint64
+(letE : nat
+  (lit 16)
+  (letE : nat
+    (lit 15)
+    (letE : uint64
+      (apN
+        (extern lean_uint64_lor)
+        (jsOp cast nat → uint64
+          (var 1 : nat)
+        )
+        (jsOp cast nat → uint64
+          (var 0 : nat)
+        )
+      )
+      (var 0 : uint64)
+    )
+  )
+)
+
+TestUInt64_shiftLeft : uint64
+(letE : nat
+  (lit 1023)
+  (letE : nat
+    (lit 2)
+    (letE : uint64
+      (apN
+        (extern lean_uint64_shift_left)
+        (jsOp cast nat → uint64
+          (var 1 : nat)
+        )
+        (jsOp cast nat → uint64
+          (var 0 : nat)
+        )
+      )
+      (var 0 : uint64)
+    )
+  )
+)
+
+TestUInt64_shiftRight : uint64
+(letE : nat
+  (lit 1023)
+  (letE : uint64
+    (apN
+      (extern lean_uint64_neg)
+      (jsOp cast nat → uint64
+        (var 0 : nat)
+      )
+    )
+    (letE : nat
+      (lit 2)
+      (letE : uint64
+        (apN
+          (extern lean_uint64_shift_right)
+          (var 1 : uint64)
+          (jsOp cast nat → uint64
+            (var 0 : nat)
+          )
+        )
+        (var 0 : uint64)
+      )
+    )
+  )
+)
+
+TestUInt64_xor : uint64
+(letE : nat
+  (lit 15)
+  (letE : nat
+    (lit 12)
+    (letE : uint64
+      (apN
+        (extern lean_uint64_xor)
+        (jsOp cast nat → uint64
+          (var 1 : nat)
+        )
+        (jsOp cast nat → uint64
+          (var 0 : nat)
+        )
+      )
+      (var 0 : uint64)
+    )
+  )
+)
+
+TestUSize_complement : usize
+(letE : nat
+  (lit 3)
+  (letE : usize
+    (apN
+      (extern lean_usize_neg)
+      (jsOp cast nat → usize
+        (var 0 : nat)
+      )
+    )
+    (letE : usize
+      (apN
+        (extern lean_usize_complement)
+        (var 0 : usize)
+      )
+      (var 0 : usize)
+    )
+  )
+)
+
+TestUSize_land : usize
+(letE : nat
+  (lit 1023)
+  (letE : nat
+    (lit 8)
+    (letE : usize
+      (apN
+        (extern lean_usize_land)
+        (jsOp cast nat → usize
+          (var 1 : nat)
+        )
+        (jsOp cast nat → usize
+          (var 0 : nat)
+        )
+      )
+      (var 0 : usize)
+    )
+  )
+)
+
+TestUSize_lor : usize
+(letE : nat
+  (lit 16)
+  (letE : nat
+    (lit 15)
+    (letE : usize
+      (apN
+        (extern lean_usize_lor)
+        (jsOp cast nat → usize
+          (var 1 : nat)
+        )
+        (jsOp cast nat → usize
+          (var 0 : nat)
+        )
+      )
+      (var 0 : usize)
+    )
+  )
+)
+
+TestUSize_shiftLeft : usize
+(letE : nat
+  (lit 1023)
+  (letE : nat
+    (lit 2)
+    (letE : usize
+      (apN
+        (extern lean_usize_shift_left)
+        (jsOp cast nat → usize
+          (var 1 : nat)
+        )
+        (jsOp cast nat → usize
+          (var 0 : nat)
+        )
+      )
+      (var 0 : usize)
+    )
+  )
+)
+
+TestUSize_shiftRight : usize
+(letE : nat
+  (lit 1023)
+  (letE : usize
+    (apN
+      (extern lean_usize_neg)
+      (jsOp cast nat → usize
+        (var 0 : nat)
+      )
+    )
+    (letE : nat
+      (lit 2)
+      (letE : usize
+        (apN
+          (extern lean_usize_shift_right)
+          (var 1 : usize)
+          (jsOp cast nat → usize
+            (var 0 : nat)
+          )
+        )
+        (var 0 : usize)
+      )
+    )
+  )
+)
+
+TestUSize_xor : usize
+(letE : nat
+  (lit 15)
+  (letE : nat
+    (lit 12)
+    (letE : usize
+      (apN
+        (extern lean_usize_xor)
+        (jsOp cast nat → usize
+          (var 1 : nat)
+        )
+        (jsOp cast nat → usize
+          (var 0 : nat)
+        )
+      )
+      (var 0 : usize)
+    )
+  )
+)
+

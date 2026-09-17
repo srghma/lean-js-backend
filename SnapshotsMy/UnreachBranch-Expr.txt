@@ -1,0 +1,110 @@
+-- SnapshotsMy.UnreachBranch  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+headOf : (fn [(list nat)] (fn [typeParam] nat))
+(lamN [(list nat)]
+  (letE : nat
+    (proj 1 0 : nat
+      (var 0 : (list nat))
+    )
+    (letE : (list nat)
+      (proj 1 1 : (list nat)
+        (var 1 : (list nat))
+      )
+      (jsOp cast nat → (fn [typeParam] nat)
+        (var 1 : nat)
+      )
+    )
+  )
+)
+
+small : (fn [nat] (fn [typeParam] nat))
+(lamN [nat]
+  (ite
+    (apN
+      (extern lean_nat_dec_eq)
+      (var 0 : nat)
+      (lit 0)
+    )
+    (letE : nat
+      (lit 10)
+      (jsOp cast nat → (fn [typeParam] nat)
+        (var 0 : nat)
+      )
+    )
+    (letE : nat
+      (apN
+        (extern lean_nat_sub)
+        (var 0 : nat)
+        (lit 1)
+      )
+      (ite
+        (apN
+          (extern lean_nat_dec_eq)
+          (var 0 : nat)
+          (lit 0)
+        )
+        (letE : nat
+          (lit 20)
+          (jsOp cast nat → (fn [typeParam] nat)
+            (var 0 : nat)
+          )
+        )
+        (letE : nat
+          (apN
+            (extern lean_nat_sub)
+            (var 0 : nat)
+            (lit 1)
+          )
+          (letE : nat
+            (lit 30)
+            (jsOp cast nat → (fn [typeParam] nat)
+              (var 0 : nat)
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+test : (fn [nat] nat)
+(lamN [nat]
+  (letE : nat
+    (lit 3)
+    (letE : bool
+      (apN
+        (extern lean_nat_dec_lt)
+        (var 1 : nat)
+        (var 0 : nat)
+      )
+      (ite
+        (var 0 : bool)
+        (letE : nat
+          (apN
+            (jsOp cast (fn [nat] (fn [typeParam] nat)) → (fn [nat] nat)
+              (global small)
+            )
+            (var 2 : nat)
+          )
+          (letE : nat
+            (apN
+              (extern lean_nat_add)
+              (var 0 : nat)
+              (var 3 : nat)
+            )
+            (var 0 : nat)
+          )
+        )
+        (letE : nat
+          (lit 0)
+          (var 0 : nat)
+        )
+      )
+    )
+  )
+)
+

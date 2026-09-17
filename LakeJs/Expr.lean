@@ -1,12 +1,8 @@
 module
-
 public import LakeJs.Ty
 public import LakeJs.Layout
-public import LakeJs.LeanPureExtern
-
+public import LakeJs.Externs
 @[expose] public section
-
-namespace LakeJs.Expr
 
 /-!
 # `Term`: the well-scoped, simply-typed core the backend compiles to
@@ -33,16 +29,23 @@ way it does:
   a de Bruijn index into the signature of the module being emitted, and the type `τ` it
   is used at is the type the signature gives it.  There is no way to build a call to an
   undeclared name, or to call a declared one at the wrong type.
-* **Every operation is applied at its own type.**  `JsPrim` is *indexed* by the list of
-  its argument types and by its result type, and `LeanPureExtern` (the catalogue of the
-  functions Lean implements with `@[extern]`, in `LakeJs.LeanPureExtern`) by its type, so
-  `Term.prim` and `Term.extern` cannot be applied to the wrong number of arguments or to
-  arguments of the wrong type.
+* **Every operation is applied at its own type.**  `Externs` (the catalogue of the
+  functions Lean implements with `@[extern]`, in `LakeJs.Externs`) is *indexed* by the
+  list of its argument types and by its result type, and `JsOp` — the few operations
+  that are not Lean functions at all — likewise, so neither `Term.extern` nor
+  `Term.jsOp` can be applied to the wrong number of arguments or to arguments of the
+  wrong type.
 
 So a declaration only reaches this language if the backend has already turned its
 recursion into iteration, and a declaration Lean did not prove terminating never gets
 that far: `LakeJs.Totality` refuses it before the translation starts.
 -/
+
+namespace LakeJs.Expr
+
+open LakeJs
+open LakeJs.Ty
+open LakeJs.Layout (FieldLayout ObjLayout)
 
 abbrev Ctx := List Ty
 
@@ -86,7 +89,27 @@ structure GlobalDecl where
 
 /-- The signature of the module being emitted: every top-level name a `Term` of it may
     mention. -/
-abbrev Sig := List GlobalDecl -- TODO names should be unique
+abbrev Sig := List GlobalDecl
+
+namespace Sig
+
+/-- The JavaScript names a signature declares, in order. -/
+def names (Sg : Sig) : List String := Sg.map (·.name)
+
+/-- Does the signature declare every name at most once?  A signature is a list, so
+    nothing in its *type* stops two entries from sharing a name; this is the side
+    condition that says they do not, and `LakeJs.Compile` checks it of the signature it
+    builds before any declaration is translated, so a module is never emitted against a
+    signature that names one JavaScript binding twice.
+
+    What it buys is `GlobalRef.ty_unique_of_namesUnique` below: under it, the name of a
+    reference determines the type the reference has, so reading a name out of the
+    signature cannot silently pick a different declaration's type. -/
+def namesUnique : Sig → Bool
+  | [] => true
+  | g :: rest => !(rest.any (·.name == g.name)) && namesUnique rest
+
+end Sig
 
 /-- A reference to a declaration of the signature — a de Bruijn index into `Sg`, whose
     type is the one the signature gives it.  There is no other way to name a global, so
@@ -101,6 +124,42 @@ def GlobalRef.name : ∀ {Sg : Sig} {τ : Ty}, GlobalRef Sg τ → String
   | _, _, .here (g := g) => g.name
   | _, _, .there r => r.name
 
+/-- The name of a reference is one of the names the signature declares. -/
+theorem GlobalRef.name_mem :
+    ∀ {Sg : Sig} {τ : Ty} (r : GlobalRef Sg τ), r.name ∈ Sig.names Sg
+  | _ :: _, _, .here => by simp [GlobalRef.name, Sig.names]
+  | _ :: _, _, .there r => by
+      have := GlobalRef.name_mem r
+      simp [GlobalRef.name, Sig.names] at this ⊢
+      exact Or.inr this
+
+/-- In a signature whose names are unique, the name of a reference determines its type:
+    two references with the same name are references at the same type.  This is what the
+    side condition `Sig.namesUnique` is for. -/
+theorem GlobalRef.ty_unique_of_namesUnique :
+    ∀ {Sg : Sig}, Sig.namesUnique Sg = true → ∀ {σ τ : Ty}
+      (r : GlobalRef Sg σ) (s : GlobalRef Sg τ), r.name = s.name → σ = τ
+  | _ :: _, _, _, _, .here, .here, _ => rfl
+  | _ :: _, h, _, _, .here, .there s, hname => by
+      exfalso
+      simp [Sig.namesUnique] at h
+      have hmem := GlobalRef.name_mem s
+      simp [Sig.names, List.mem_map] at hmem
+      obtain ⟨d, hd, hdn⟩ := hmem
+      simp [GlobalRef.name] at hname
+      exact h.1 d hd (hdn.trans hname.symm)
+  | _ :: _, h, _, _, .there r, .here, hname => by
+      exfalso
+      simp [Sig.namesUnique] at h
+      have hmem := GlobalRef.name_mem r
+      simp [Sig.names, List.mem_map] at hmem
+      obtain ⟨d, hd, hdn⟩ := hmem
+      simp [GlobalRef.name] at hname
+      exact h.1 d hd (hdn.trans hname)
+  | _ :: Sg, h, _, _, .there r, .there s, hname => by
+      have h' : Sig.namesUnique Sg = true := by simp [Sig.namesUnique] at h; exact h.2
+      exact GlobalRef.ty_unique_of_namesUnique h' r s (by simpa [GlobalRef.name] using hname)
+
 /-- Look a name up in a signature, whatever type it was declared at.  Looking one up
     *at* a given type is this together with `decide (σ = τ)`: `Ty` has ordinary
     decidable equality (`LakeJs.Ty`), so no partial equality of types is needed. -/
@@ -112,74 +171,100 @@ def GlobalRef.findAny? : (Sg : Sig) → (name : String) → Option (Σ τ : Ty, 
 
 /-! ## Literals -/
 
-/-- A constant of a terminal type. -/
-inductive Lit : Ty → Type
-  | nat    : Nat → Lit (.prim .nat)
-  | int    : Int → Lit (.prim .int)
-  | bool   : Bool → Lit (.prim .bool)
-  | str    : String → Lit (.prim .string)
-  | char   : Char → Lit (.prim .char)
-  /-- A `Float`, spelled by its decimal rendering so that the printer stays
-      deterministic. -/
-  | float  : String → Lit (.prim .float)
+/-- A constant of a terminal type: one constructor per constructor of `LeanPrimTy`,
+    holding the Lean value itself rather than a rendering of it, and indexed by the
+    terminal type it is a constant *of*.  So a literal is a constant of the Lean type
+    model, and turning it into JavaScript source is the printer's business alone
+    (`LakeJs.EmitJs.litExpr`).
 
-/-! ## Primitive operations
+    Three constructors of `LeanPrimTy` are missing here, on purpose: `.childProcess`,
+    `.shareCommonObject` and `.shareCommonState` are run-time handles, and a handle has
+    no constant — `Lit .childProcess` is an empty type, which is the right statement.
 
-`JsPrim σs τ` is an operation the backend prints inline — an operator or a method of the
-JavaScript standard library — *together with its type*: it takes arguments of types `σs`
-and answers with a `τ`.  Applying one to the wrong number of arguments, or to arguments
-of the wrong types, is therefore not a `Term`; the printer needs no fallback for an
-arity it does not know, because there is none. -/
+    `Float` and `Float32` are held as the Lean floats they are.  That is why
+    `LakeJs.FloatDecide` exists: a fact about them is settled by `float_decide`, a
+    `native_decide` that first checks the goal really is about floating point. -/
+inductive Lit : LeanPrimTy → Type
+  | bool   : Bool → Lit .bool
+  | nat    : Nat → Lit .nat
+  | int    : Int → Lit .int
+  | bitvec : ∀ {n : Nat} {h : 0 < n}, BitVec n → Lit (.bitvec n h)
+  | uint8  : UInt8 → Lit .uint8
+  | uint16 : UInt16 → Lit .uint16
+  | uint32 : UInt32 → Lit .uint32
+  | uint64 : UInt64 → Lit .uint64
+  | usize  : USize → Lit .usize
+  | int8   : Int8 → Lit .int8
+  | int16  : Int16 → Lit .int16
+  | int32  : Int32 → Lit .int32
+  | int64  : Int64 → Lit .int64
+  | isize  : ISize → Lit .isize
+  | char   : Char → Lit .char
+  | string : String → Lit .string
+  | byteArray : Array UInt8 → Lit .byteArray
+  | name   : Lean.Name → Lit .name
+  /-- A byte position in a string. -/
+  | stringPos : Nat → Lit .stringPos
+  /-- A substring: the string, and the byte positions it starts and stops at. -/
+  | substring : (str : String) → (startPos stopPos : Nat) → Lit .substring
+  /-- A string slice, which carries the same three fields. -/
+  | stringSlice : (str : String) → (startPos stopPos : Nat) → Lit .stringSlice
+  | float  : Float → Lit .float
+  | float32 : Float32 → Lit .float32
+  | floatArray : Array Float → Lit .floatArray
 
-inductive JsPrim : List Ty → Ty → Type where
-  /-- `a + b` on numbers of type `τ`. -/
-  | add (τ : Ty) : JsPrim [τ, τ] τ
-  /-- `a - b`, without the `Nat` truncation. -/
-  | sub (τ : Ty) : JsPrim [τ, τ] τ
-  /-- `Math.max(0, a - b)`: subtraction on `Nat`. -/
-  | natSub : JsPrim [.nat, .nat] .nat
-  | mul (τ : Ty) : JsPrim [τ, τ] τ
-  | div (τ : Ty) : JsPrim [τ, τ] τ
-  | mod (τ : Ty) : JsPrim [τ, τ] τ
-  | lt (τ : Ty) : JsPrim [τ, τ] .bool
-  | le (τ : Ty) : JsPrim [τ, τ] .bool
-  | gt (τ : Ty) : JsPrim [τ, τ] .bool
-  | ge (τ : Ty) : JsPrim [τ, τ] .bool
-  /-- `a === b`. -/
-  | beq (τ : Ty) : JsPrim [τ, τ] .bool
-  /-- `a !== b`. -/
-  | bne (τ : Ty) : JsPrim [τ, τ] .bool
-  | and : JsPrim [.bool, .bool] .bool
-  | or : JsPrim [.bool, .bool] .bool
-  | not : JsPrim [.bool] .bool
-  /-- `a + b` on strings. -/
-  | strAppend : JsPrim [.string, .string] .string
-  /-- `a.length`. -/
-  | strLength : JsPrim [.string] .nat
-  /-- `a.charAt(i)`. -/
-  | strGet : JsPrim [.string, .nat] .char
-  /-- `(a) | 0`: the 32-bit truncation Lean's `Int` arithmetic gets. -/
-  | toInt32 : JsPrim [.int] .int
-  /-- `a.length` of an array. -/
-  | arraySize (α : Ty) : JsPrim [.array α] .nat
-  /-- `a[i]`. -/
-  | arrayGet (α : Ty) : JsPrim [.array α, .nat] α
-  /-- `[...a, x]`. -/
-  | arrayPush (α : Ty) : JsPrim [.array α, α] (.array α)
-  /-- `[]`. -/
-  | arrayEmpty (α : Ty) : JsPrim [] (.array α)
-  /-- `a[a.length - 1]`. -/
-  | arrayBack (α : Ty) : JsPrim [.array α] α
-  /-- `String(a)`. -/
-  | toStr (τ : Ty) : JsPrim [τ] .string
-  /-- `Math.abs(a)`. -/
-  | natAbs : JsPrim [.int] .nat
+/-! ## The operations that are JavaScript's, not Lean's
+
+Every operation of the language that *is* a Lean function is a `Term.extern`: the
+catalogue `LakeJs.Externs` names the `@[extern]` function it is, and carries the types
+it takes and answers with, so `Nat.add` is `lean_nat_add` applied to two `Nat`s and
+nothing else.  `Term.extern` is the only way a `Term` mentions a Lean function that this
+module does not declare.
+
+What is left over is this handful of operations, which are *not* Lean functions and so
+have no entry in the catalogue:
+
+* reading a value at another type, which the translation records and the printer
+  forgets;
+* `Bool.and`, `Bool.or` and `Bool.not` — Lean functions, but not `@[extern]` ones, so no
+  runtime function implements them and the backend prints JavaScript's operators;
+* the *untruncated* subtraction of two `Nat`s, which no Lean function denotes: Lean's
+  `Nat.sub` truncates (`lean_nat_sub`), and this is what the optimiser puts in its
+  place where a guard has shown that the truncation cannot happen;
+* `String(a)`, which stands for a `ToString` instance the translation could not resolve
+  to a declaration.
+
+Like `Externs`, `JsOp` is *indexed* by the list of its argument types and by its result
+type, so applying one to the wrong number of arguments, or to arguments of the wrong
+types, is not a `Term`. -/
+
+inductive JsOp : List Ty → Ty → Type where
   /-- The argument itself, read at another type: a coercion that costs nothing at run
       time, such as the one between a `Decidable` and the boolean it decides, or the one
       between a value of a type parameter (`Ty.typeParam`) and the type the context
       knows it to have.  It prints as the argument, so the reinterpretation is visible
       in the term and invisible in the output. -/
-  | cast (σ τ : Ty) : JsPrim [σ] τ
+  | cast (σ τ : Ty) : JsOp [σ] τ
+  /-- `a && b`: `Bool.and`, which Lean implements in Lean rather than with `@[extern]`. -/
+  | boolAnd : JsOp [.bool, .bool] .bool
+  /-- `a || b`: `Bool.or`. -/
+  | boolOr : JsOp [.bool, .bool] .bool
+  /-- `!a`: `Bool.not`. -/
+  | boolNot : JsOp [.bool] .bool
+  /-- `a === b` on two `Bool`s: Lean decides `Bool` equality with a match on the two
+      constructors rather than with a runtime function, and the match is `===` on the
+      JavaScript booleans the backend represents them with. -/
+  | boolBEq : JsOp [.bool, .bool] .bool
+  /-- `a === b` on two `Char`s, which the backend represents as one-character strings. -/
+  | charBEq : JsOp [.char, .char] .bool
+  /-- `a - b` on two `Nat`s *without* the truncation to zero that `Nat.sub`
+      (`lean_nat_sub`, which prints as `Math.max(0, a - b)`) has.  No Lean function
+      denotes it: it is what `LakeJs.Simp` puts where the enclosing test has shown that
+      the subtraction cannot go below zero. -/
+  | natSubExact : JsOp [.nat, .nat] .nat
+  /-- `String(a)`: the rendering of a value whose `ToString` instance the translation
+      did not resolve to a declaration. -/
+  | toStr (τ : Ty) : JsOp [τ] .string
 
 /-! ## Terms -/
 
@@ -205,16 +290,19 @@ inductive Term (Sg : Sig) : Ctx → Ty → Type
   | callProd : ∀ {Γ params r1 rs},
       Term Sg Γ (.fn_returnsProd params r1 rs) → Spine Sg Γ params →
       (i : Fin (rs.length + 1)) → Term Sg Γ ((r1 :: rs).get i)
-  /-- A constant. -/
-  | lit : ∀ {Γ τ}, Lit τ → Term Sg Γ τ
+  /-- A constant of a terminal type. -/
+  | lit : ∀ {Γ} {p : LeanPrimTy}, Lit p → Term Sg Γ (.prim p)
   /-- A reference to a top-level declaration of the module's signature. -/
   | global : ∀ {Γ τ}, GlobalRef Sg τ → Term Sg Γ τ
   /-- A function Lean implements with `@[extern]`, named by the catalogue
-      `LakeJs.LeanPureExtern` and therefore carrying its own type. -/
-  | extern : ∀ {Γ τ}, LeanPureExtern τ → Term Sg Γ τ
-  /-- A primitive operation, printed inline, applied to exactly the arguments its type
-      asks for. -/
-  | prim : ∀ {Γ σs τ}, JsPrim σs τ → Spine Sg Γ σs → Term Sg Γ τ
+      `LakeJs.Externs`, which indexes it by the list of its argument types and by its
+      result type.  The term is therefore a *function* of exactly that type, and
+      `Term.apN` is the only way to call it: an extern cannot be applied to the wrong
+      number of arguments, nor to arguments of the wrong types. -/
+  | extern : ∀ {Γ σs τ}, Externs σs τ → Term Sg Γ (.fn σs τ)
+  /-- One of the operations that are JavaScript's rather than Lean's (`JsOp`), applied
+      to exactly the arguments its type asks for. -/
+  | jsOp : ∀ {Γ σs τ}, JsOp σs τ → Spine Sg Γ σs → Term Sg Γ τ
   /-- `let x = e; body` — `x` is de Bruijn index 0 of `body`. -/
   | letE : ∀ {Γ σ τ}, Term Sg Γ σ → Term Sg (σ :: Γ) τ → Term Sg Γ τ
   /-- `c ? t : e`. -/
@@ -291,6 +379,15 @@ def Term.ap {Sg : Sig} {Γ : Ctx} {τ1 τ2 : Ty}
     (f : Term Sg Γ (τ1 ⇒ τ2)) (a : Term Sg Γ τ1) : Term Sg Γ τ2 :=
   .apN f (.cons a .nil)
 
+/-- A Lean function the runtime implements, applied to exactly the arguments it takes:
+    `Term.apN` of `Term.extern`.  This is how every Lean operation the backend knows
+    about — arithmetic, comparison, the string and array library — appears in a term, and
+    `LakeJs.EmitJs` prints the ones that have a JavaScript operator as that operator
+    rather than as a call of the runtime. -/
+def Term.callExtern {Sg : Sig} {Γ : Ctx} {σs : List Ty} {τ : Ty}
+    (e : Externs σs τ) (args : Spine Sg Γ σs) : Term Sg Γ τ :=
+  .apN (.extern e) args
+
 -- Notation
 prefix:100 "ƛ " => Term.lam
 infixl:70 " ⬝ " => Term.ap
@@ -365,15 +462,16 @@ def fooReturnsProd {Sg : Sig} :
     Term Sg [] (.fn [Ty.int, Ty.float] (.fn_returnsProd [Ty.int, Ty.float] Ty.int [Ty.float])) :=
   .lamN (params := [Ty.int, Ty.float])
     (.lamProd (params := [Ty.int, Ty.float])
-      (.cons (.lit (.int 1)) (.cons (.lit (.float "1.0")) .nil)))
+      (.cons (.lit (.int 1)) (.cons (.lit (.float 1.0)) .nil)))
 
 /-- `test` of `Tco01`, by hand: `loop n { if (n === 0) return n; continue with n - 1 }`. -/
 def tco01 {Sg : Sig} : Term Sg [] (.fn [.nat] .nat) :=
   .lamN (params := [Ty.nat])
     (.loop (σs := [Ty.nat]) (.cons (♯0) .nil)
-      (.iteB (.prim (.beq Ty.nat) (.cons (♯0) (.cons (.lit (.nat 0)) .nil)))
+      (.iteB (.apN (.extern .lean_nat_dec_eq) (.cons (♯0) (.cons (.lit (.nat 0)) .nil)))
         (.ret (♯0))
-        (.cont (.cons (.prim .natSub (.cons (♯0) (.cons (.lit (.nat 1)) .nil))) .nil))))
+        (.cont (.cons (.apN (.extern .lean_nat_sub)
+          (.cons (♯0) (.cons (.lit (.nat 1)) .nil))) .nil))))
 
 end Term
 

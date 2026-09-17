@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Run the Node test suites of the generated JavaScript.
+#
+# Every module listed in `scripts/snapshot-files.txt` must have a `*.test.js` beside it;
+# the suites import the generated module and check its exported functions against the
+# answers Lean gives for the same arguments.  Nothing here compiles Lean: run
+# `scripts/regen-snapshots.sh` first if the backend has changed.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "node is not on the path" >&2
+  exit 1
+fi
+
+missing=0
+while read -r js _cfg; do
+  [ -z "$js" ] && continue
+  if [ ! -f "$js" ]; then
+    echo "missing generated module: $js" >&2
+    missing=1
+    continue
+  fi
+  # the generated module must at least parse
+  node --check "$js" >/dev/null 2>&1 || {
+    # `node --check` reads a script, not a module; parse it as a module instead
+    node --input-type=module -e "await import('./$js')" >/dev/null 2>&1 || {
+      echo "generated module does not load: $js" >&2
+      missing=1
+    }
+  }
+  test_js="${js%.js}.test.js"
+  if [ ! -f "$test_js" ]; then
+    echo "missing test suite: $test_js" >&2
+    missing=1
+  fi
+done < scripts/snapshot-files.txt
+
+if [ "$missing" -ne 0 ]; then
+  echo "=> some snapshots have no test suite" >&2
+  exit 1
+fi
+
+node scripts/check-prelude-imports.mjs
+
+echo "=> running the test suites of the generated modules"
+node --test "Snapshots"*/*.test.js

@@ -1,0 +1,389 @@
+-- SnapshotsMy.StringWalk  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+test1_go : (fn [string char nat nat] nat)
+(lamN [string char nat nat]
+  (loop [string char nat nat]
+    (var 3 : string)
+    (var 2 : char)
+    (var 1 : nat)
+    (var 0 : nat)
+    (letB : bool
+      (apN
+        (extern lean_string_pos_raw_at_end)
+        (var 3 : string)
+        (jsOp cast nat → stringPos
+          (var 1 : nat)
+        )
+      )
+      (iteB
+        (var 0 : bool)
+        (ret
+          (var 1 : nat)
+        )
+        (letB : stringPos
+          (apN
+            (extern lean_string_pos_raw_next)
+            (var 4 : string)
+            (jsOp cast nat → stringPos
+              (var 2 : nat)
+            )
+          )
+          (letB : char
+            (apN
+              (extern lean_string_pos_raw_get)
+              (var 5 : string)
+              (jsOp cast nat → stringPos
+                (var 3 : nat)
+              )
+            )
+            (letB : bool
+              (jsOp charBEq
+                (var 0 : char)
+                (var 5 : char)
+              )
+              (letB : bool
+                (jsOp cast bool → bool
+                  (var 0 : bool)
+                )
+                (iteB
+                  (var 0 : bool)
+                  (letB : nat
+                    (lit 1)
+                    (letB : nat
+                      (apN
+                        (extern lean_nat_add)
+                        (var 6 : nat)
+                        (var 0 : nat)
+                      )
+                      (cont
+                        (var 10 : string)
+                        (var 9 : char)
+                        (jsOp cast stringPos → nat
+                          (var 5 : stringPos)
+                        )
+                        (var 0 : nat)
+                      )
+                    )
+                  )
+                  (cont
+                    (var 8 : string)
+                    (var 7 : char)
+                    (jsOp cast stringPos → nat
+                      (var 3 : stringPos)
+                    )
+                    (var 5 : nat)
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+test1 : (fn [string char] nat)
+(lamN [string char]
+  (letE : nat
+    (lit 0)
+    (letE : nat
+      (var 0 : nat)
+      (letE : nat
+        (apN
+          (global test1_go)
+          (var 3 : string)
+          (var 2 : char)
+          (var 0 : nat)
+          (var 1 : nat)
+        )
+        (var 0 : nat)
+      )
+    )
+  )
+)
+
+test2_go : (fn [string char nat] nat)
+(lamN [string char nat]
+  (loop [string char nat]
+    (var 2 : string)
+    (var 1 : char)
+    (var 0 : nat)
+    (letB : bool
+      (apN
+        (extern lean_string_pos_raw_at_end)
+        (var 2 : string)
+        (jsOp cast nat → stringPos
+          (var 0 : nat)
+        )
+      )
+      (iteB
+        (var 0 : bool)
+        (ret
+          (var 1 : nat)
+        )
+        (letB : char
+          (apN
+            (extern lean_string_pos_raw_get)
+            (var 3 : string)
+            (jsOp cast nat → stringPos
+              (var 1 : nat)
+            )
+          )
+          (letB : bool
+            (jsOp charBEq
+              (var 0 : char)
+              (var 3 : char)
+            )
+            (letB : bool
+              (jsOp cast bool → bool
+                (var 0 : bool)
+              )
+              (iteB
+                (var 0 : bool)
+                (ret
+                  (var 4 : nat)
+                )
+                (letB : stringPos
+                  (apN
+                    (extern lean_string_pos_raw_next)
+                    (var 6 : string)
+                    (jsOp cast nat → stringPos
+                      (var 4 : nat)
+                    )
+                  )
+                  (cont
+                    (var 7 : string)
+                    (var 6 : char)
+                    (jsOp cast stringPos → nat
+                      (var 0 : stringPos)
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+test2 : (fn [string char] nat)
+(lamN [string char]
+  (letE : nat
+    (lit 0)
+    (letE : nat
+      (var 0 : nat)
+      (letE : nat
+        (apN
+          (global test2_go)
+          (var 3 : string)
+          (var 2 : char)
+          (var 0 : nat)
+        )
+        (var 0 : nat)
+      )
+    )
+  )
+)
+
+_private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test3_spec_0 : (fn [(record nat nat nat) (record nat string) nat] (fn [typeParam] (fn [typeParam] (record nat string))))
+(lamN [(record nat nat nat) (record nat string) nat]
+  (loop [(record nat nat nat) (record nat string) nat]
+    (var 2 : (record nat nat nat))
+    (var 1 : (record nat string))
+    (var 0 : nat)
+    (letB : nat
+      (proj 0 1 : nat
+        (var 2 : (record nat nat nat))
+      )
+      (letB : bool
+        (apN
+          (extern lean_nat_dec_lt)
+          (var 1 : nat)
+          (var 0 : nat)
+        )
+        (iteB
+          (var 0 : bool)
+          (letB : nat
+            (proj 0 0 : nat
+              (var 3 : (record nat string))
+            )
+            (letB : string
+              (proj 0 1 : string
+                (var 4 : (record nat string))
+              )
+              (letB : nat
+                (apN
+                  (extern lean_string_utf8_byte_size)
+                  (var 0 : string)
+                )
+                (letB : nat
+                  (apN
+                    (extern lean_nat_add)
+                    (var 2 : nat)
+                    (var 0 : nat)
+                  )
+                  (letB : char
+                    (lit 'x')
+                    (letB : string
+                      (apN
+                        (extern lean_string_push)
+                        (var 3 : string)
+                        (var 0 : char)
+                      )
+                      (letB : (record nat string)
+                        (ctor 0 : (record nat string)
+                          (var 2 : nat)
+                          (var 0 : string)
+                        )
+                        (letB : nat
+                          (proj 0 2 : nat
+                            (var 11 : (record nat nat nat))
+                          )
+                          (letB : nat
+                            (apN
+                              (extern lean_nat_add)
+                              (var 10 : nat)
+                              (var 0 : nat)
+                            )
+                            (cont
+                              (var 13 : (record nat nat nat))
+                              (var 2 : (record nat string))
+                              (var 0 : nat)
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+          (ret
+            (jsOp cast (record nat string) → (fn [typeParam] (fn [typeParam] (record nat string)))
+              (var 3 : (record nat string))
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+test3 : (fn [string nat] nat)
+(lamN [string nat]
+  (letE : nat
+    (lit 0)
+    (letE : nat
+      (lit 1)
+      (letE : (record nat nat nat)
+        (ctor 0 : (record nat nat nat)
+          (var 1 : nat)
+          (var 2 : nat)
+          (var 0 : nat)
+        )
+        (letE : (record nat string)
+          (ctor 0 : (record nat string)
+            (var 2 : nat)
+            (var 4 : string)
+          )
+          (letE : (record nat string)
+            (apN
+              (jsOp cast (fn [(record nat nat nat) (record nat string) nat] (fn [typeParam] (fn [typeParam] (record nat string)))) → (fn [(record nat nat nat) (record nat string) nat] (record nat string))
+                (global _private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test3_spec_0)
+              )
+              (var 1 : (record nat nat nat))
+              (var 0 : (record nat string))
+              (var 3 : nat)
+            )
+            (letE : nat
+              (proj 0 0 : nat
+                (var 0 : (record nat string))
+              )
+              (letE : string
+                (proj 0 1 : string
+                  (var 1 : (record nat string))
+                )
+                (var 1 : nat)
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+test4_go : (fn [string nat nat] nat)
+(lamN [string nat nat]
+  (loop [string nat nat]
+    (var 2 : string)
+    (var 1 : nat)
+    (var 0 : nat)
+    (letB : nat
+      (apN
+        (extern lean_string_length)
+        (var 2 : string)
+      )
+      (letB : bool
+        (apN
+          (extern lean_nat_dec_lt)
+          (var 2 : nat)
+          (var 0 : nat)
+        )
+        (iteB
+          (var 0 : bool)
+          (letB : nat
+            (lit 1)
+            (letB : nat
+              (apN
+                (extern lean_nat_add)
+                (var 4 : nat)
+                (var 0 : nat)
+              )
+              (letB : nat
+                (apN
+                  (extern lean_nat_add)
+                  (var 4 : nat)
+                  (var 5 : nat)
+                )
+                (cont
+                  (var 7 : string)
+                  (var 1 : nat)
+                  (var 0 : nat)
+                )
+              )
+            )
+          )
+          (ret
+            (var 2 : nat)
+          )
+        )
+      )
+    )
+  )
+)
+
+test4 : (fn [string] nat)
+(lamN [string]
+  (letE : nat
+    (lit 0)
+    (letE : nat
+      (apN
+        (global test4_go)
+        (var 1 : string)
+        (var 0 : nat)
+        (var 0 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+

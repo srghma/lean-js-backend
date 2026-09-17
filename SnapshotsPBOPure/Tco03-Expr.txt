@@ -1,0 +1,164 @@
+-- SnapshotsPBOPure.Tco03  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+_mut$go : (fn [nat nat] typeParam)
+(lamN [nat nat]
+  (loop [nat nat]
+    (var 1 : nat)
+    (var 0 : nat)
+    (iteB
+      (apN
+        (extern lean_nat_dec_eq)
+        (var 1 : nat)
+        (lit 0)
+      )
+      (letB : nat
+        (lit 0)
+        (letB : bool
+          (apN
+            (extern lean_nat_dec_eq)
+            (var 1 : nat)
+            (var 0 : nat)
+          )
+          (iteB
+            (var 0 : bool)
+            (ret
+              (jsOp cast nat → typeParam
+                (var 2 : nat)
+              )
+            )
+            (letB : nat
+              (lit 100)
+              (letB : bool
+                (apN
+                  (extern lean_nat_dec_le)
+                  (var 3 : nat)
+                  (var 0 : nat)
+                )
+                (iteB
+                  (var 0 : bool)
+                  (letB : nat
+                    (lit 1)
+                    (letB : nat
+                      (apN
+                        (extern lean_nat_sub)
+                        (var 5 : nat)
+                        (var 0 : nat)
+                      )
+                      (cont
+                        (lit 0)
+                        (var 0 : nat)
+                      )
+                    )
+                  )
+                  (letB : nat
+                    (lit 1)
+                    (letB : nat
+                      (apN
+                        (extern lean_nat_sub)
+                        (var 5 : nat)
+                        (var 0 : nat)
+                      )
+                      (cont
+                        (lit 1)
+                        (var 0 : nat)
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+      (letB : nat
+        (lit 100)
+        (letB : bool
+          (apN
+            (extern lean_nat_dec_eq)
+            (var 1 : nat)
+            (var 0 : nat)
+          )
+          (iteB
+            (var 0 : bool)
+            (letB : nat
+              (lit 1)
+              (letB : nat
+                (apN
+                  (extern lean_nat_sub)
+                  (var 3 : nat)
+                  (var 0 : nat)
+                )
+                (cont
+                  (lit 0)
+                  (var 0 : nat)
+                )
+              )
+            )
+            (letB : nat
+              (lit 900)
+              (letB : bool
+                (apN
+                  (extern lean_nat_dec_eq)
+                  (var 3 : nat)
+                  (var 0 : nat)
+                )
+                (iteB
+                  (var 0 : bool)
+                  (letB : nat
+                    (lit 42)
+                    (ret
+                      (jsOp cast nat → typeParam
+                        (var 0 : nat)
+                      )
+                    )
+                  )
+                  (letB : nat
+                    (lit 1)
+                    (letB : nat
+                      (apN
+                        (extern lean_nat_sub)
+                        (var 5 : nat)
+                        (var 0 : nat)
+                      )
+                      (cont
+                        (lit 1)
+                        (var 0 : nat)
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+go : (fn [nat] nat)
+(lamN [nat]
+  (jsOp cast typeParam → nat
+    (apN
+      (global _mut$go)
+      (lit 0)
+      (var 0 : nat)
+    )
+  )
+)
+
+k : (fn [nat] (fn [typeParam] nat))
+(lamN [nat]
+  (jsOp cast typeParam → (fn [typeParam] nat)
+    (apN
+      (global _mut$go)
+      (lit 1)
+      (var 0 : nat)
+    )
+  )
+)
+

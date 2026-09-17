@@ -1,6 +1,6 @@
 name = "LakeJs"
 version = "0.1.0"
-defaultTargets = ["LakeJs"]
+defaultTargets = ["LakeJs", "lean-to-js-backend"]
 testDriver = "LakeJsTest"
 
 # [[require]]
@@ -19,8 +19,20 @@ scope = "leanprover-community"
 rev = "v4.28.0"
 
 [[lean_lib]]
+name = "MiniAST"
+roots = ["MiniAST"]
+
+[[lean_lib]]
+name = "LanguageJavascript"
+globs = ["LanguageJavascript.+"]
+
+[[lean_lib]]
+name = "LanguageJavascriptMini"
+globs = ["LanguageJavascriptMini.+"]
+
+[[lean_lib]]
 name = "LakeJs"
-roots = ["LakeJs"]
+globs = ["LakeJs", "LakeJs.*"]
 
 [[lean_lib]]
 name = "NonEmpty"
@@ -28,8 +40,28 @@ globs = ["NonEmpty.*"]
 
 [[lean_lib]]
 name = "SnapshotsPBOPure"
-globs = ["SnapshotsPBOPure.*"]
+globs = ["SnapshotsPBOPure.+"]
+
+[[lean_lib]]
+name = "SnapshotsPBOPartial"
+globs = ["SnapshotsPBOPartial.+"]
+
+[[lean_lib]]
+name = "SnapshotsMy"
+globs = ["SnapshotsMy.+"]
+
+[[lean_lib]]
+name = "LakeJsTestLib"
+globs = ["LakeJsTest.+"]
 
 [[lean_exe]]
 name = "LakeJsTest"
 root = "LakeJsTest.Main"
+supportInterpreter = true
+# the test run compiles the snapshots out of their `.olean`s, so they have to be built
+extraDepTargets = ["SnapshotsPBOPure", "SnapshotsPBOPartial", "SnapshotsMy"]
+
+[[lean_exe]]
+name = "lean-to-js-backend"
+root = "Main"
+supportInterpreter = true

@@ -5,7 +5,7 @@ public import Init.Data.ToString.Basic
 
 @[expose] public section
 
-namespace LakeJs.LeanPrimTy
+namespace LakeJs
 
 /-!
 # `LeanPrimTy`: the terminal (leaf) types
@@ -96,9 +96,6 @@ inductive LeanPrimTy where
   | float32   : LeanPrimTy
   /-- In JS: `Float64Array`. -/
   | floatArray : LeanPrimTy
-  /-- In JS: `-1 | 0 | 1` (int8).  A special enum: without special treatment it would
-      be compiled as `"LT" | "EQ" | "GT"` or `0 | 1 | 2`, but it is optimized. -/
-  | ordering  : LeanPrimTy
   /-- In JS (node only): a `ChildProcess` handle. -/
   | childProcess : LeanPrimTy
   /-- In JS: `object` / `any`. -/
@@ -120,7 +117,7 @@ def pretty : LeanPrimTy → String
   | .char => "char" | .string => "string" | .byteArray => "byteArray" | .name => "name"
   | .stringPos => "stringPos" | .substring => "substring" | .stringSlice => "stringSlice"
   | .float => "float" | .float32 => "float32" | .floatArray => "floatArray"
-  | .ordering => "ordering" | .childProcess => "childProcess"
+  | .childProcess => "childProcess"
   | .shareCommonObject => "shareCommonObject" | .shareCommonState => "shareCommonState"
 
 instance : ToString LeanPrimTy where
@@ -135,4 +132,6 @@ def isNumberConfigurable : LeanPrimTy → Bool
 
 end LeanPrimTy
 
-end LakeJs.LeanPrimTy
+end LakeJs
+
+end

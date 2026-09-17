@@ -1,46 +1,90 @@
-// UInt64, USize, Nat, Int64, ISize, Int in this file are configured with
-// `*Repr = "num"` (natRepr/intRepr/usizeRepr/uint64Repr/int64Repr = "num").
-// All values are represented as plain JS Numbers (IEEE-754 double-precision floats,
-// safe up to Number.MAX_SAFE_INTEGER = 2^53 - 1).
-
-// ---------------- TestUInt64 ----------------
-
-export const TestUInt64$test1 = 20000000000000000000;
-export const TestUInt64$test2 = -9000000000000000000;
-export const TestUInt64$test3 = 25000000000000000000;
-export const TestUInt64$test4 = (a) => a + 20000000000000000000;
-
-// ---------------- TestUSize ----------------
-
-export const TestUSize$test1 = 20000000000000000000;
-export const TestUSize$test2 = -9000000000000000000;
-export const TestUSize$test3 = 25000000000000000000;
-export const TestUSize$test4 = (a) => a + 20000000000000000000;
-
-// ---------------- TestNat ----------------
-
-export const TestNat$test1 = 4000000000;
-export const TestNat$test2 = 0; // Math.max(0, 1000000000 - 2000000000)
-export const TestNat$test3 = 4000000000000000000;
-export const TestNat$test4 = (a) => a + 4000000000;
-
-// ---------------- TestInt64 ----------------
-
-export const TestInt64$test1 = 10000000000000000000;
-export const TestInt64$test2 = -10000000000000000000;
-export const TestInt64$test3 = 25000000000000000000;
-export const TestInt64$test4 = (a) => a + 10000000000000000000;
-
-// ---------------- TestISize ----------------
-
-export const TestISize$test1 = 10000000000000000000;
-export const TestISize$test2 = -10000000000000000000;
-export const TestISize$test3 = 25000000000000000000;
-export const TestISize$test4 = (a) => a + 10000000000000000000;
-
-// ---------------- TestInt ----------------
-
-export const TestInt$test1 = 4000000000;
-export const TestInt$test2 = -4000000000;
-export const TestInt$test3 = 4000000000000000000;
-export const TestInt$test4 = (a) => a + 4000000000;
+import {
+  $lean_int64_add,
+  $lean_int64_mul,
+  $lean_int64_neg,
+  $lean_int64_of_nat,
+  $lean_int64_sub,
+  $lean_int_neg,
+  $lean_isize_add,
+  $lean_isize_mul,
+  $lean_isize_neg,
+  $lean_isize_of_nat,
+  $lean_isize_sub,
+  $lean_uint64_add,
+  $lean_usize_add,
+  $lean_usize_mul,
+  $lean_usize_sub,
+} from "../runtime/lean_runtime.mjs";
+export const TestUSize_test4 = (v0) => {
+  const v1 = $lean_usize_add(10000000000000000000, v0);
+  return $lean_usize_add(v1, 10000000000000000000);
+};
+export const TestUSize_test3 = $lean_usize_mul(5000000000, 5000000000);
+export const TestUSize_test2 = $lean_usize_sub(
+  1000000000000000000,
+  10000000000000000000,
+);
+export const TestUSize_test1 = $lean_usize_add(
+  10000000000000000000,
+  10000000000000000000,
+);
+export const TestUInt64_test4 = (v0) => {
+  const v1 = $lean_uint64_add(10000000000000000000, v0);
+  return $lean_uint64_add(v1, 10000000000000000000);
+};
+export const TestUInt64_test3 = 6553255926290448384;
+export const TestUInt64_test2 = 9446744073709551616;
+export const TestUInt64_test1 = 1553255926290448384;
+export const TestNat_test4 = (v0) => {
+  const v1 = 2000000000 + v0;
+  return v1 + 2000000000;
+};
+export const TestNat_test3 = 4000000000000000000;
+export const TestNat_test2 = 0;
+export const TestNat_test1 = 4000000000;
+export const TestInt64_test4 = (v0) => {
+  const v1 = $lean_int64_of_nat(5000000000000000000);
+  const v2 = $lean_int64_add(v1, v0);
+  return $lean_int64_add(v2, v1);
+};
+export const TestInt64_test3 = (() => {
+  const v0 = $lean_int64_of_nat(5000000000);
+  return $lean_int64_mul(v0, v0);
+})();
+export const TestInt64_test2 = (() => {
+  const v0 = $lean_int64_of_nat(5000000000000000000);
+  const v1 = $lean_int64_neg(v0);
+  return $lean_int64_sub(v1, v0);
+})();
+export const TestInt64_test1 = (() => {
+  const v0 = $lean_int64_of_nat(5000000000000000000);
+  return $lean_int64_add(v0, v0);
+})();
+export const TestInt_test4 = (v0) => {
+  const v1 = 2000000000 + v0;
+  return v1 + 2000000000;
+};
+export const TestInt_test3 = 2000000000 * 2000000000;
+export const TestInt_test2 = (() => {
+  const v0 = $lean_int_neg(2000000000);
+  return v0 - 2000000000;
+})();
+export const TestInt_test1 = 2000000000 + 2000000000;
+export const TestISize_test4 = (v0) => {
+  const v1 = $lean_isize_of_nat(5000000000000000000);
+  const v2 = $lean_isize_add(v1, v0);
+  return $lean_isize_add(v2, v1);
+};
+export const TestISize_test3 = (() => {
+  const v0 = $lean_isize_of_nat(5000000000);
+  return $lean_isize_mul(v0, v0);
+})();
+export const TestISize_test2 = (() => {
+  const v0 = $lean_isize_of_nat(5000000000000000000);
+  const v1 = $lean_isize_neg(v0);
+  return $lean_isize_sub(v1, v0);
+})();
+export const TestISize_test1 = (() => {
+  const v0 = $lean_isize_of_nat(5000000000000000000);
+  return $lean_isize_add(v0, v0);
+})();

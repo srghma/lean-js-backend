@@ -1,11 +1,5 @@
-module
-
-public import Lean
-public import Lean.Compiler.LCNF
-
-@[expose] public section
-
-namespace LakeJs.Totality
+import Lean
+import Lean.Compiler.LCNF
 
 /-!
 # Refusing what the backend must not compile
@@ -40,6 +34,7 @@ that reached it, so the message points at the user's `def` rather than at a comp
 generated helper twelve calls down.
 -/
 
+namespace LakeJs.Totality
 
 open Lean Lean.Compiler.LCNF
 
@@ -69,13 +64,13 @@ def specializationOrigin (n : Name) : Name :=
   | none => n
 
 /-- The head constant of a type, after all its parameters. -/
-def resultHead (type : Expr) : Option Name :=
+private def resultHead (type : Expr) : Option Name :=
   match type with
   | .forallE _ _ body _ => resultHead body
   | e => e.getAppFn.constName?
 
 /-- The monads whose values are not pure. -/
-def ioHeads : List Name :=
+private def ioHeads : List Name :=
   [``IO, ``EIO, ``BaseIO, ``ST, ``EST, ``EStateM, ``IO.Ref, ``ST.Ref]
 
 /-- Does this type describe a computation in an IO-like monad? -/

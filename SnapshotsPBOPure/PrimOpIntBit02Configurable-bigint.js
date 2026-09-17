@@ -1,73 +1,134 @@
-// This is the "bigint" output for natRepr/intRepr/usizeRepr/uint64Repr/int64Repr
-// = .bigint. Every value here is a native JS `BigInt`, so — unlike the -num.js
-// sibling file — there is NO precision boundary at all: this file is exact for
-// every value these types can hold, full stop.
-//
-// Verified against Lean core's actual semantics (Init/Data/UInt/Bitwise.lean):
-// UInt8/16/32/64/USize's `<<<`/`>>>` reduce the shift amount mod the type's bit
-// width *before* shifting (e.g. `UInt64.toNat_shiftLeft : (a <<< b).toNat =
-// a.toNat <<< (b.toNat % 64) % 2^64`), and `shiftLeft`'s result is truncated mod
-// 2^width. So normalizing the shift amount mod width below is correct — Lean
-// does NOT zero out shifts that are `>= width` the way a naive BitVec-width
-// truncation might suggest.
-//
-// Nat/Int need no width-specific handling at all in this file: JS BigInt is
-// itself arbitrary-precision, so it's already an exact model of Lean's Nat/Int —
-// no hi/lo splitting, no masking, just the native operators.
-
-const MASK64 = (1n << 64n) - 1n;
-const SIGN64 = 1n << 63n;
-const TWO64 = 1n << 64n;
-
-function mod64(n) {
-  return ((n % 64n) + 64n) % 64n;
-}
-
-// ---------------- TestUSize / TestUInt64 (unsigned 64-bit) ----------------
-
-export const TestUSize$land = (a) => (b) => (a & b) & MASK64;
-export const TestUSize$lor = (a) => (b) => (a | b) & MASK64;
-export const TestUSize$xor = (a) => (b) => (a ^ b) & MASK64;
-export const TestUSize$complement = (a) => (~a) & MASK64;
-export const TestUSize$shiftLeft = (a) => (b) => (a << mod64(b)) & MASK64;
-export const TestUSize$shiftRight = (a) => (b) => a >> mod64(b);
-
-export const TestUInt64$land = TestUSize$land;
-export const TestUInt64$lor = TestUSize$lor;
-export const TestUInt64$xor = TestUSize$xor;
-export const TestUInt64$complement = TestUSize$complement;
-export const TestUInt64$shiftLeft = TestUSize$shiftLeft;
-export const TestUInt64$shiftRight = TestUSize$shiftRight;
-
-// ---------------- TestInt64 / TestISize (signed 64-bit) ----------------
-
-export const TestInt64$land = (a) => (b) => a & b;
-export const TestInt64$lor = (a) => (b) => a | b;
-export const TestInt64$xor = (a) => (b) => a ^ b;
-export const TestInt64$complement = (a) => ~a;
-export const TestInt64$shiftRight = (a) => (b) => a >> mod64(b);
-export const TestInt64$shiftLeft = (a) => (b) => {
-  const amt = mod64(b);
-  const au = a < 0n ? a + TWO64 : a;
-  const r = (au << amt) & MASK64;
-  return r >= SIGN64 ? r - TWO64 : r;
-};
-
-export const TestISize$land = TestInt64$land;
-export const TestISize$lor = TestInt64$lor;
-export const TestISize$xor = TestInt64$xor;
-export const TestISize$complement = TestInt64$complement;
-export const TestISize$shiftLeft = TestInt64$shiftLeft;
-export const TestISize$shiftRight = TestInt64$shiftRight;
-
-// ---------------- TestNat (arbitrary precision, unsigned, no complement) ----------------
-
-export const TestNat$land = (a) => (b) => a & b;
-export const TestNat$lor = (a) => (b) => a | b;
-export const TestNat$xor = (a) => (b) => a ^ b;
-export const TestNat$shiftLeft = (a) => (b) => a << b;
-export const TestNat$shiftRight = (a) => (b) => a >> b;
-
-// ---------------- TestInt (arbitrary precision signed, only complement defined) ----------------
-
-export const TestInt$complement = (a) => ~a;
+import {
+  $lean_int64_complement,
+  $lean_int64_land,
+  $lean_int64_lor,
+  $lean_int64_neg,
+  $lean_int64_of_nat,
+  $lean_int64_shift_left,
+  $lean_int64_shift_right,
+  $lean_int64_xor,
+  $lean_int_neg,
+  $lean_isize_complement,
+  $lean_isize_land,
+  $lean_isize_lor,
+  $lean_isize_neg,
+  $lean_isize_of_nat,
+  $lean_isize_shift_left,
+  $lean_isize_shift_right,
+  $lean_isize_xor,
+  $lean_nat_land,
+  $lean_nat_lor,
+  $lean_nat_lxor,
+  $lean_nat_shiftl,
+  $lean_nat_shiftr,
+  $lean_uint64_complement,
+  $lean_uint64_land,
+  $lean_uint64_lor,
+  $lean_uint64_neg,
+  $lean_uint64_shift_left,
+  $lean_uint64_shift_right,
+  $lean_uint64_xor,
+  $lean_usize_complement,
+  $lean_usize_land,
+  $lean_usize_lor,
+  $lean_usize_neg,
+  $lean_usize_shift_left,
+  $lean_usize_shift_right,
+  $lean_usize_xor,
+  Int_not,
+} from "../runtime/lean_runtime_bigint.mjs";
+export const TestUSize_xor = $lean_usize_xor(15n, 12n);
+export const TestUSize_shiftRight = (() => {
+  const v0 = $lean_usize_neg(1023n);
+  return $lean_usize_shift_right(v0, 2n);
+})();
+export const TestUSize_shiftLeft = $lean_usize_shift_left(1023n, 2n);
+export const TestUSize_lor = $lean_usize_lor(16n, 15n);
+export const TestUSize_land = $lean_usize_land(1023n, 8n);
+export const TestUSize_complement = (() => {
+  const v0 = $lean_usize_neg(3n);
+  return $lean_usize_complement(v0);
+})();
+export const TestUInt64_xor = $lean_uint64_xor(15n, 12n);
+export const TestUInt64_shiftRight = (() => {
+  const v0 = $lean_uint64_neg(1023n);
+  return $lean_uint64_shift_right(v0, 2n);
+})();
+export const TestUInt64_shiftLeft = $lean_uint64_shift_left(1023n, 2n);
+export const TestUInt64_lor = $lean_uint64_lor(16n, 15n);
+export const TestUInt64_land = $lean_uint64_land(1023n, 8n);
+export const TestUInt64_complement = (() => {
+  const v0 = $lean_uint64_neg(3n);
+  return $lean_uint64_complement(v0);
+})();
+export const TestNat_xor = $lean_nat_lxor(15n, 12n);
+export const TestNat_shiftRight = $lean_nat_shiftr(1023n, 2n);
+export const TestNat_shiftLeft = $lean_nat_shiftl(1023n, 2n);
+export const TestNat_lor = $lean_nat_lor(16n, 15n);
+export const TestNat_land = $lean_nat_land(1023n, 8n);
+export const TestInt64_xor = (() => {
+  const v0 = $lean_int64_of_nat(15n);
+  const v1 = $lean_int64_of_nat(12n);
+  return $lean_int64_xor(v0, v1);
+})();
+export const TestInt64_shiftRight = (() => {
+  const v0 = $lean_int64_of_nat(1023n);
+  const v1 = $lean_int64_neg(v0);
+  const v2 = $lean_int64_of_nat(2n);
+  return $lean_int64_shift_right(v1, v2);
+})();
+export const TestInt64_shiftLeft = (() => {
+  const v0 = $lean_int64_of_nat(1023n);
+  const v1 = $lean_int64_of_nat(2n);
+  return $lean_int64_shift_left(v0, v1);
+})();
+export const TestInt64_lor = (() => {
+  const v0 = $lean_int64_of_nat(16n);
+  const v1 = $lean_int64_of_nat(15n);
+  return $lean_int64_lor(v0, v1);
+})();
+export const TestInt64_land = (() => {
+  const v0 = $lean_int64_of_nat(1023n);
+  const v1 = $lean_int64_of_nat(8n);
+  return $lean_int64_land(v0, v1);
+})();
+export const TestInt64_complement = (() => {
+  const v0 = $lean_int64_of_nat(3n);
+  const v1 = $lean_int64_neg(v0);
+  return $lean_int64_complement(v1);
+})();
+export const TestInt_complement = (() => {
+  const v0 = $lean_int_neg(3n);
+  return Int_not(v0);
+})();
+export const TestISize_xor = (() => {
+  const v0 = $lean_isize_of_nat(15n);
+  const v1 = $lean_isize_of_nat(12n);
+  return $lean_isize_xor(v0, v1);
+})();
+export const TestISize_shiftRight = (() => {
+  const v0 = $lean_isize_of_nat(1023n);
+  const v1 = $lean_isize_neg(v0);
+  const v2 = $lean_isize_of_nat(2n);
+  return $lean_isize_shift_right(v1, v2);
+})();
+export const TestISize_shiftLeft = (() => {
+  const v0 = $lean_isize_of_nat(1023n);
+  const v1 = $lean_isize_of_nat(2n);
+  return $lean_isize_shift_left(v0, v1);
+})();
+export const TestISize_lor = (() => {
+  const v0 = $lean_isize_of_nat(16n);
+  const v1 = $lean_isize_of_nat(15n);
+  return $lean_isize_lor(v0, v1);
+})();
+export const TestISize_land = (() => {
+  const v0 = $lean_isize_of_nat(1023n);
+  const v1 = $lean_isize_of_nat(8n);
+  return $lean_isize_land(v0, v1);
+})();
+export const TestISize_complement = (() => {
+  const v0 = $lean_isize_of_nat(3n);
+  const v1 = $lean_isize_neg(v0);
+  return $lean_isize_complement(v1);
+})();
