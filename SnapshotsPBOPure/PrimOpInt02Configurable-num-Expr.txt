@@ -1,4 +1,4 @@
--- SnapshotsPBOPure.PrimOpInt02Configurable  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- SnapshotsPBOPure.PrimOpInt02Configurable  [nat=num int=num usize=num uint64=num int64=num isize=num bitvec=num]
 -- The terms of this module as the translation produced them, *before* the
 -- optimiser ran; the `.js` file beside this one holds what the optimiser made of
 -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
@@ -6117,63 +6117,59 @@ TestNat_test9 : (array nat)
 
 TestUInt64_intValues : (fn [(fn [uint64] (fn [uint64] typeParam))] (array typeParam))
 (lamN [(fn [uint64] (fn [uint64] typeParam))]
-  (letE : nat
-    (lit 1)
+  (letE : uint64
+    (lit 1u64)
     (letE : typeParam
       (apN
-        (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [nat nat] typeParam)
+        (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [uint64 uint64] typeParam)
           (var 1 : (fn [uint64] (fn [uint64] typeParam)))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : uint64)
+        (var 0 : uint64)
       )
-      (letE : nat
-        (lit 2)
+      (letE : uint64
+        (lit 2u64)
         (letE : typeParam
           (apN
-            (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [nat nat] typeParam)
+            (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [uint64 uint64] typeParam)
               (var 3 : (fn [uint64] (fn [uint64] typeParam)))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : uint64)
+            (var 0 : uint64)
           )
           (letE : typeParam
             (apN
-              (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [nat nat] typeParam)
+              (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [uint64 uint64] typeParam)
                 (var 4 : (fn [uint64] (fn [uint64] typeParam)))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : uint64)
+              (var 3 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_neg)
-                (jsOp cast nat → uint64
-                  (var 2 : nat)
-                )
+                (var 2 : uint64)
               )
               (letE : typeParam
                 (apN
-                  (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [nat uint64] typeParam)
+                  (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [uint64 uint64] typeParam)
                     (var 6 : (fn [uint64] (fn [uint64] typeParam)))
                   )
-                  (var 5 : nat)
+                  (var 5 : uint64)
                   (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
                     (extern lean_uint64_neg)
-                    (jsOp cast nat → uint64
-                      (var 6 : nat)
-                    )
+                    (var 6 : uint64)
                   )
                   (letE : typeParam
                     (apN
-                      (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [uint64 nat] typeParam)
+                      (jsOp cast (fn [uint64] (fn [uint64] typeParam)) → (fn [uint64 uint64] typeParam)
                         (var 8 : (fn [uint64] (fn [uint64] typeParam)))
                       )
                       (var 0 : uint64)
-                      (var 5 : nat)
+                      (var 5 : uint64)
                     )
                     (letE : typeParam
                       (apN
@@ -6248,41 +6244,33 @@ TestUInt64_intValues : (fn [(fn [uint64] (fn [uint64] typeParam))] (array typePa
 )
 
 TestUInt64_test1 : (array uint64)
-(letE : nat
-  (lit 1)
-  (letE : nat
-    (lit 2)
-    (letE : nat
-      (lit 3)
+(letE : uint64
+  (lit 1u64)
+  (letE : uint64
+    (lit 2u64)
+    (letE : uint64
+      (lit 3u64)
       (letE : uint64
         (apN
           (extern lean_uint64_neg)
-          (jsOp cast nat → uint64
-            (var 1 : nat)
-          )
+          (var 1 : uint64)
         )
         (letE : uint64
           (apN
             (extern lean_uint64_add)
-            (jsOp cast nat → uint64
-              (var 3 : nat)
-            )
+            (var 3 : uint64)
             (var 0 : uint64)
           )
           (letE : uint64
             (apN
               (extern lean_uint64_neg)
-              (jsOp cast nat → uint64
-                (var 4 : nat)
-              )
+              (var 4 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_add)
                 (var 0 : uint64)
-                (jsOp cast nat → uint64
-                  (var 4 : nat)
-                )
+                (var 4 : uint64)
               )
               (letE : uint64
                 (apN
@@ -6301,25 +6289,19 @@ TestUInt64_test1 : (array uint64)
                       (apN
                         (extern lean_array_push)
                         (var 0 : (array uint64))
-                        (jsOp cast nat → uint64
-                          (var 8 : nat)
-                        )
+                        (var 8 : uint64)
                       )
                       (letE : (array uint64)
                         (apN
                           (extern lean_array_push)
                           (var 0 : (array uint64))
-                          (jsOp cast nat → uint64
-                            (var 8 : nat)
-                          )
+                          (var 8 : uint64)
                         )
                         (letE : (array uint64)
                           (apN
                             (extern lean_array_push)
                             (var 0 : (array uint64))
-                            (jsOp cast nat → uint64
-                              (var 9 : nat)
-                            )
+                            (var 9 : uint64)
                           )
                           (letE : (array uint64)
                             (apN
@@ -6358,41 +6340,33 @@ TestUInt64_test1 : (array uint64)
 )
 
 TestUInt64_test10 : (array uint64)
-(letE : nat
-  (lit 1)
-  (letE : nat
-    (lit 2)
-    (letE : nat
-      (lit 0)
+(letE : uint64
+  (lit 1u64)
+  (letE : uint64
+    (lit 2u64)
+    (letE : uint64
+      (lit 0u64)
       (letE : uint64
         (apN
           (extern lean_uint64_neg)
-          (jsOp cast nat → uint64
-            (var 1 : nat)
-          )
+          (var 1 : uint64)
         )
         (letE : uint64
           (apN
             (extern lean_uint64_div)
-            (jsOp cast nat → uint64
-              (var 3 : nat)
-            )
+            (var 3 : uint64)
             (var 0 : uint64)
           )
           (letE : uint64
             (apN
               (extern lean_uint64_neg)
-              (jsOp cast nat → uint64
-                (var 4 : nat)
-              )
+              (var 4 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_shift_right)
                 (var 0 : uint64)
-                (jsOp cast nat → uint64
-                  (var 5 : nat)
-                )
+                (var 5 : uint64)
               )
               (letE : uint64
                 (apN
@@ -6411,25 +6385,19 @@ TestUInt64_test10 : (array uint64)
                       (apN
                         (extern lean_array_push)
                         (var 0 : (array uint64))
-                        (jsOp cast nat → uint64
-                          (var 9 : nat)
-                        )
+                        (var 9 : uint64)
                       )
                       (letE : (array uint64)
                         (apN
                           (extern lean_array_push)
                           (var 0 : (array uint64))
-                          (jsOp cast nat → uint64
-                            (var 8 : nat)
-                          )
+                          (var 8 : uint64)
                         )
                         (letE : (array uint64)
                           (apN
                             (extern lean_array_push)
                             (var 0 : (array uint64))
-                            (jsOp cast nat → uint64
-                              (var 10 : nat)
-                            )
+                            (var 10 : uint64)
                           )
                           (letE : (array uint64)
                             (apN
@@ -6468,14 +6436,12 @@ TestUInt64_test10 : (array uint64)
 )
 
 TestUInt64_test11 : (array uint64)
-(letE : nat
-  (lit 1)
+(letE : uint64
+  (lit 1u64)
   (letE : uint64
     (apN
       (extern lean_uint64_neg)
-      (jsOp cast nat → uint64
-        (var 0 : nat)
-      )
+      (var 0 : uint64)
     )
     (letE : uint64
       (apN
@@ -6511,43 +6477,35 @@ TestUInt64_test11 : (array uint64)
 )
 
 TestUInt64_test2 : (array uint64)
-(letE : nat
-  (lit 1)
-  (letE : nat
-    (lit 0)
-    (letE : nat
-      (lit 2)
-      (letE : nat
-        (lit 18446744073709551615)
+(letE : uint64
+  (lit 1u64)
+  (letE : uint64
+    (lit 0u64)
+    (letE : uint64
+      (lit 2u64)
+      (letE : uint64
+        (lit 18446744073709551615u64)
         (letE : uint64
           (apN
             (extern lean_uint64_neg)
-            (jsOp cast nat → uint64
-              (var 1 : nat)
-            )
+            (var 1 : uint64)
           )
           (letE : uint64
             (apN
               (extern lean_uint64_sub)
-              (jsOp cast nat → uint64
-                (var 4 : nat)
-              )
+              (var 4 : uint64)
               (var 0 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_neg)
-                (jsOp cast nat → uint64
-                  (var 5 : nat)
-                )
+                (var 5 : uint64)
               )
               (letE : uint64
                 (apN
                   (extern lean_uint64_sub)
                   (var 0 : uint64)
-                  (jsOp cast nat → uint64
-                    (var 4 : nat)
-                  )
+                  (var 4 : uint64)
                 )
                 (letE : uint64
                   (apN
@@ -6566,25 +6524,19 @@ TestUInt64_test2 : (array uint64)
                         (apN
                           (extern lean_array_push)
                           (var 0 : (array uint64))
-                          (jsOp cast nat → uint64
-                            (var 9 : nat)
-                          )
+                          (var 9 : uint64)
                         )
                         (letE : (array uint64)
                           (apN
                             (extern lean_array_push)
                             (var 0 : (array uint64))
-                            (jsOp cast nat → uint64
-                              (var 8 : nat)
-                            )
+                            (var 8 : uint64)
                           )
                           (letE : (array uint64)
                             (apN
                               (extern lean_array_push)
                               (var 0 : (array uint64))
-                              (jsOp cast nat → uint64
-                                (var 12 : nat)
-                              )
+                              (var 12 : uint64)
                             )
                             (letE : (array uint64)
                               (apN
@@ -6642,63 +6594,59 @@ TestUInt64_test3 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : uint64
+    (lit 1u64)
     (letE : bool
       (apN
-        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
           (var 1 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : uint64)
+        (var 0 : uint64)
       )
-      (letE : nat
-        (lit 2)
+      (letE : uint64
+        (lit 2u64)
         (letE : bool
           (apN
-            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
               (var 3 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : uint64)
+            (var 0 : uint64)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                 (var 4 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : uint64)
+              (var 3 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_neg)
-                (jsOp cast nat → uint64
-                  (var 2 : nat)
-                )
+                (var 2 : uint64)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat uint64] bool)
+                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                     (var 6 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : uint64)
                   (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
                     (extern lean_uint64_neg)
-                    (jsOp cast nat → uint64
-                      (var 6 : nat)
-                    )
+                    (var 6 : uint64)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 nat] bool)
+                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                         (var 8 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                       )
                       (var 0 : uint64)
-                      (var 5 : nat)
+                      (var 5 : uint64)
                     )
                     (letE : bool
                       (apN
@@ -6803,63 +6751,59 @@ TestUInt64_test4 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : uint64
+    (lit 1u64)
     (letE : bool
       (apN
-        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
           (var 1 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : uint64)
+        (var 0 : uint64)
       )
-      (letE : nat
-        (lit 2)
+      (letE : uint64
+        (lit 2u64)
         (letE : bool
           (apN
-            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
               (var 3 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : uint64)
+            (var 0 : uint64)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                 (var 4 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : uint64)
+              (var 3 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_neg)
-                (jsOp cast nat → uint64
-                  (var 2 : nat)
-                )
+                (var 2 : uint64)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat uint64] bool)
+                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                     (var 6 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : uint64)
                   (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
                     (extern lean_uint64_neg)
-                    (jsOp cast nat → uint64
-                      (var 6 : nat)
-                    )
+                    (var 6 : uint64)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 nat] bool)
+                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                         (var 8 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                       )
                       (var 0 : uint64)
-                      (var 5 : nat)
+                      (var 5 : uint64)
                     )
                     (letE : bool
                       (apN
@@ -6952,63 +6896,59 @@ TestUInt64_test5 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : uint64
+    (lit 1u64)
     (letE : bool
       (apN
-        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
           (var 1 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : uint64)
+        (var 0 : uint64)
       )
-      (letE : nat
-        (lit 2)
+      (letE : uint64
+        (lit 2u64)
         (letE : bool
           (apN
-            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
               (var 3 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : uint64)
+            (var 0 : uint64)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                 (var 4 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : uint64)
+              (var 3 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_neg)
-                (jsOp cast nat → uint64
-                  (var 2 : nat)
-                )
+                (var 2 : uint64)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat uint64] bool)
+                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                     (var 6 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : uint64)
                   (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
                     (extern lean_uint64_neg)
-                    (jsOp cast nat → uint64
-                      (var 6 : nat)
-                    )
+                    (var 6 : uint64)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 nat] bool)
+                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                         (var 8 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                       )
                       (var 0 : uint64)
-                      (var 5 : nat)
+                      (var 5 : uint64)
                     )
                     (letE : bool
                       (apN
@@ -7101,63 +7041,59 @@ TestUInt64_test6 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : uint64
+    (lit 1u64)
     (letE : bool
       (apN
-        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
           (var 1 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : uint64)
+        (var 0 : uint64)
       )
-      (letE : nat
-        (lit 2)
+      (letE : uint64
+        (lit 2u64)
         (letE : bool
           (apN
-            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
               (var 3 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : uint64)
+            (var 0 : uint64)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                 (var 4 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : uint64)
+              (var 3 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_neg)
-                (jsOp cast nat → uint64
-                  (var 2 : nat)
-                )
+                (var 2 : uint64)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat uint64] bool)
+                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                     (var 6 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : uint64)
                   (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
                     (extern lean_uint64_neg)
-                    (jsOp cast nat → uint64
-                      (var 6 : nat)
-                    )
+                    (var 6 : uint64)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 nat] bool)
+                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                         (var 8 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                       )
                       (var 0 : uint64)
-                      (var 5 : nat)
+                      (var 5 : uint64)
                     )
                     (letE : bool
                       (apN
@@ -7250,63 +7186,59 @@ TestUInt64_test7 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : uint64
+    (lit 1u64)
     (letE : bool
       (apN
-        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
           (var 1 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : uint64)
+        (var 0 : uint64)
       )
-      (letE : nat
-        (lit 2)
+      (letE : uint64
+        (lit 2u64)
         (letE : bool
           (apN
-            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
               (var 3 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : uint64)
+            (var 0 : uint64)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                 (var 4 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : uint64)
+              (var 3 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_neg)
-                (jsOp cast nat → uint64
-                  (var 2 : nat)
-                )
+                (var 2 : uint64)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat uint64] bool)
+                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                     (var 6 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : uint64)
                   (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
                     (extern lean_uint64_neg)
-                    (jsOp cast nat → uint64
-                      (var 6 : nat)
-                    )
+                    (var 6 : uint64)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 nat] bool)
+                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                         (var 8 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                       )
                       (var 0 : uint64)
-                      (var 5 : nat)
+                      (var 5 : uint64)
                     )
                     (letE : bool
                       (apN
@@ -7399,63 +7331,59 @@ TestUInt64_test8 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : uint64
+    (lit 1u64)
     (letE : bool
       (apN
-        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
           (var 1 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : uint64)
+        (var 0 : uint64)
       )
-      (letE : nat
-        (lit 2)
+      (letE : uint64
+        (lit 2u64)
         (letE : bool
           (apN
-            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
               (var 3 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : uint64)
+            (var 0 : uint64)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                 (var 4 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : uint64)
+              (var 3 : uint64)
             )
             (letE : uint64
               (apN
                 (extern lean_uint64_neg)
-                (jsOp cast nat → uint64
-                  (var 2 : nat)
-                )
+                (var 2 : uint64)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [nat uint64] bool)
+                  (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                     (var 6 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : uint64)
                   (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
                     (extern lean_uint64_neg)
-                    (jsOp cast nat → uint64
-                      (var 6 : nat)
-                    )
+                    (var 6 : uint64)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 nat] bool)
+                      (jsOp cast (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))) → (fn [uint64 uint64] bool)
                         (var 8 : (fn [uint64 uint64] (fn [uint64] (fn [uint64] bool))))
                       )
                       (var 0 : uint64)
-                      (var 5 : nat)
+                      (var 5 : uint64)
                     )
                     (letE : bool
                       (apN
@@ -7530,31 +7458,25 @@ TestUInt64_test8 : (array bool)
 )
 
 TestUInt64_test9 : (array uint64)
-(letE : nat
-  (lit 1)
-  (letE : nat
-    (lit 2)
+(letE : uint64
+  (lit 1u64)
+  (letE : uint64
+    (lit 2u64)
     (letE : uint64
       (apN
         (extern lean_uint64_neg)
-        (jsOp cast nat → uint64
-          (var 0 : nat)
-        )
+        (var 0 : uint64)
       )
       (letE : uint64
         (apN
           (extern lean_uint64_neg)
-          (jsOp cast nat → uint64
-            (var 2 : nat)
-          )
+          (var 2 : uint64)
         )
         (letE : uint64
           (apN
             (extern lean_uint64_shift_left)
             (var 0 : uint64)
-            (jsOp cast nat → uint64
-              (var 3 : nat)
-            )
+            (var 3 : uint64)
           )
           (letE : uint64
             (apN
@@ -7573,25 +7495,19 @@ TestUInt64_test9 : (array uint64)
                   (apN
                     (extern lean_array_push)
                     (var 0 : (array uint64))
-                    (jsOp cast nat → uint64
-                      (var 7 : nat)
-                    )
+                    (var 7 : uint64)
                   )
                   (letE : (array uint64)
                     (apN
                       (extern lean_array_push)
                       (var 0 : (array uint64))
-                      (jsOp cast nat → uint64
-                        (var 7 : nat)
-                      )
+                      (var 7 : uint64)
                     )
                     (letE : (array uint64)
                       (apN
                         (extern lean_array_push)
                         (var 0 : (array uint64))
-                        (jsOp cast nat → uint64
-                          (var 8 : nat)
-                        )
+                        (var 8 : uint64)
                       )
                       (letE : (array uint64)
                         (apN
@@ -7629,63 +7545,59 @@ TestUInt64_test9 : (array uint64)
 
 TestUSize_intValues : (fn [(fn [usize] (fn [usize] typeParam))] (array typeParam))
 (lamN [(fn [usize] (fn [usize] typeParam))]
-  (letE : nat
-    (lit 1)
+  (letE : usize
+    (lit 1usize)
     (letE : typeParam
       (apN
-        (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [nat nat] typeParam)
+        (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [usize usize] typeParam)
           (var 1 : (fn [usize] (fn [usize] typeParam)))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : usize)
+        (var 0 : usize)
       )
-      (letE : nat
-        (lit 2)
+      (letE : usize
+        (lit 2usize)
         (letE : typeParam
           (apN
-            (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [nat nat] typeParam)
+            (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [usize usize] typeParam)
               (var 3 : (fn [usize] (fn [usize] typeParam)))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : usize)
+            (var 0 : usize)
           )
           (letE : typeParam
             (apN
-              (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [nat nat] typeParam)
+              (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [usize usize] typeParam)
                 (var 4 : (fn [usize] (fn [usize] typeParam)))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : usize)
+              (var 3 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_neg)
-                (jsOp cast nat → usize
-                  (var 2 : nat)
-                )
+                (var 2 : usize)
               )
               (letE : typeParam
                 (apN
-                  (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [nat usize] typeParam)
+                  (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [usize usize] typeParam)
                     (var 6 : (fn [usize] (fn [usize] typeParam)))
                   )
-                  (var 5 : nat)
+                  (var 5 : usize)
                   (var 0 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_neg)
-                    (jsOp cast nat → usize
-                      (var 6 : nat)
-                    )
+                    (var 6 : usize)
                   )
                   (letE : typeParam
                     (apN
-                      (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [usize nat] typeParam)
+                      (jsOp cast (fn [usize] (fn [usize] typeParam)) → (fn [usize usize] typeParam)
                         (var 8 : (fn [usize] (fn [usize] typeParam)))
                       )
                       (var 0 : usize)
-                      (var 5 : nat)
+                      (var 5 : usize)
                     )
                     (letE : typeParam
                       (apN
@@ -7760,69 +7672,49 @@ TestUSize_intValues : (fn [(fn [usize] (fn [usize] typeParam))] (array typeParam
 )
 
 TestUSize_test1 : (array usize)
-(letE : nat
-  (lit 1)
+(letE : usize
+  (lit 1usize)
   (letE : usize
     (apN
       (extern lean_usize_add)
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
+      (var 0 : usize)
+      (var 0 : usize)
     )
-    (letE : nat
-      (lit 2)
+    (letE : usize
+      (lit 2usize)
       (letE : usize
         (apN
           (extern lean_usize_add)
-          (jsOp cast nat → usize
-            (var 2 : nat)
-          )
-          (jsOp cast nat → usize
-            (var 0 : nat)
-          )
+          (var 2 : usize)
+          (var 0 : usize)
         )
         (letE : usize
           (apN
             (extern lean_usize_add)
-            (jsOp cast nat → usize
-              (var 1 : nat)
-            )
-            (jsOp cast nat → usize
-              (var 3 : nat)
-            )
+            (var 1 : usize)
+            (var 3 : usize)
           )
           (letE : usize
             (apN
               (extern lean_usize_neg)
-              (jsOp cast nat → usize
-                (var 2 : nat)
-              )
+              (var 2 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_add)
-                (jsOp cast nat → usize
-                  (var 5 : nat)
-                )
+                (var 5 : usize)
                 (var 0 : usize)
               )
               (letE : usize
                 (apN
                   (extern lean_usize_neg)
-                  (jsOp cast nat → usize
-                    (var 6 : nat)
-                  )
+                  (var 6 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_add)
                     (var 0 : usize)
-                    (jsOp cast nat → usize
-                      (var 5 : nat)
-                    )
+                    (var 5 : usize)
                   )
                   (letE : usize
                     (apN
@@ -7894,69 +7786,49 @@ TestUSize_test1 : (array usize)
 )
 
 TestUSize_test10 : (array usize)
-(letE : nat
-  (lit 1)
+(letE : usize
+  (lit 1usize)
   (letE : usize
     (apN
       (extern lean_usize_div)
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
+      (var 0 : usize)
+      (var 0 : usize)
     )
-    (letE : nat
-      (lit 2)
+    (letE : usize
+      (lit 2usize)
       (letE : usize
         (apN
           (extern lean_usize_div)
-          (jsOp cast nat → usize
-            (var 2 : nat)
-          )
-          (jsOp cast nat → usize
-            (var 0 : nat)
-          )
+          (var 2 : usize)
+          (var 0 : usize)
         )
         (letE : usize
           (apN
             (extern lean_usize_div)
-            (jsOp cast nat → usize
-              (var 1 : nat)
-            )
-            (jsOp cast nat → usize
-              (var 3 : nat)
-            )
+            (var 1 : usize)
+            (var 3 : usize)
           )
           (letE : usize
             (apN
               (extern lean_usize_neg)
-              (jsOp cast nat → usize
-                (var 2 : nat)
-              )
+              (var 2 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_div)
-                (jsOp cast nat → usize
-                  (var 5 : nat)
-                )
+                (var 5 : usize)
                 (var 0 : usize)
               )
               (letE : usize
                 (apN
                   (extern lean_usize_neg)
-                  (jsOp cast nat → usize
-                    (var 6 : nat)
-                  )
+                  (var 6 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_div)
                     (var 0 : usize)
-                    (jsOp cast nat → usize
-                      (var 5 : nat)
-                    )
+                    (var 5 : usize)
                   )
                   (letE : usize
                     (apN
@@ -8028,14 +7900,12 @@ TestUSize_test10 : (array usize)
 )
 
 TestUSize_test11 : (array usize)
-(letE : nat
-  (lit 1)
+(letE : usize
+  (lit 1usize)
   (letE : usize
     (apN
       (extern lean_usize_neg)
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
+      (var 0 : usize)
     )
     (letE : usize
       (apN
@@ -8071,69 +7941,49 @@ TestUSize_test11 : (array usize)
 )
 
 TestUSize_test2 : (array usize)
-(letE : nat
-  (lit 1)
+(letE : usize
+  (lit 1usize)
   (letE : usize
     (apN
       (extern lean_usize_sub)
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
+      (var 0 : usize)
+      (var 0 : usize)
     )
-    (letE : nat
-      (lit 2)
+    (letE : usize
+      (lit 2usize)
       (letE : usize
         (apN
           (extern lean_usize_sub)
-          (jsOp cast nat → usize
-            (var 2 : nat)
-          )
-          (jsOp cast nat → usize
-            (var 0 : nat)
-          )
+          (var 2 : usize)
+          (var 0 : usize)
         )
         (letE : usize
           (apN
             (extern lean_usize_sub)
-            (jsOp cast nat → usize
-              (var 1 : nat)
-            )
-            (jsOp cast nat → usize
-              (var 3 : nat)
-            )
+            (var 1 : usize)
+            (var 3 : usize)
           )
           (letE : usize
             (apN
               (extern lean_usize_neg)
-              (jsOp cast nat → usize
-                (var 2 : nat)
-              )
+              (var 2 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_sub)
-                (jsOp cast nat → usize
-                  (var 5 : nat)
-                )
+                (var 5 : usize)
                 (var 0 : usize)
               )
               (letE : usize
                 (apN
                   (extern lean_usize_neg)
-                  (jsOp cast nat → usize
-                    (var 6 : nat)
-                  )
+                  (var 6 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_sub)
                     (var 0 : usize)
-                    (jsOp cast nat → usize
-                      (var 5 : nat)
-                    )
+                    (var 5 : usize)
                   )
                   (letE : usize
                     (apN
@@ -8223,63 +8073,59 @@ TestUSize_test3 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : usize
+    (lit 1usize)
     (letE : bool
       (apN
-        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
           (var 1 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : usize)
+        (var 0 : usize)
       )
-      (letE : nat
-        (lit 2)
+      (letE : usize
+        (lit 2usize)
         (letE : bool
           (apN
-            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
               (var 3 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : usize)
+            (var 0 : usize)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                 (var 4 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : usize)
+              (var 3 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_neg)
-                (jsOp cast nat → usize
-                  (var 2 : nat)
-                )
+                (var 2 : usize)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat usize] bool)
+                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                     (var 6 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : usize)
                   (var 0 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_neg)
-                    (jsOp cast nat → usize
-                      (var 6 : nat)
-                    )
+                    (var 6 : usize)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize nat] bool)
+                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                         (var 8 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                       )
                       (var 0 : usize)
-                      (var 5 : nat)
+                      (var 5 : usize)
                     )
                     (letE : bool
                       (apN
@@ -8384,63 +8230,59 @@ TestUSize_test4 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : usize
+    (lit 1usize)
     (letE : bool
       (apN
-        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
           (var 1 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : usize)
+        (var 0 : usize)
       )
-      (letE : nat
-        (lit 2)
+      (letE : usize
+        (lit 2usize)
         (letE : bool
           (apN
-            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
               (var 3 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : usize)
+            (var 0 : usize)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                 (var 4 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : usize)
+              (var 3 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_neg)
-                (jsOp cast nat → usize
-                  (var 2 : nat)
-                )
+                (var 2 : usize)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat usize] bool)
+                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                     (var 6 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : usize)
                   (var 0 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_neg)
-                    (jsOp cast nat → usize
-                      (var 6 : nat)
-                    )
+                    (var 6 : usize)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize nat] bool)
+                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                         (var 8 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                       )
                       (var 0 : usize)
-                      (var 5 : nat)
+                      (var 5 : usize)
                     )
                     (letE : bool
                       (apN
@@ -8533,63 +8375,59 @@ TestUSize_test5 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : usize
+    (lit 1usize)
     (letE : bool
       (apN
-        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
           (var 1 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : usize)
+        (var 0 : usize)
       )
-      (letE : nat
-        (lit 2)
+      (letE : usize
+        (lit 2usize)
         (letE : bool
           (apN
-            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
               (var 3 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : usize)
+            (var 0 : usize)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                 (var 4 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : usize)
+              (var 3 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_neg)
-                (jsOp cast nat → usize
-                  (var 2 : nat)
-                )
+                (var 2 : usize)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat usize] bool)
+                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                     (var 6 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : usize)
                   (var 0 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_neg)
-                    (jsOp cast nat → usize
-                      (var 6 : nat)
-                    )
+                    (var 6 : usize)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize nat] bool)
+                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                         (var 8 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                       )
                       (var 0 : usize)
-                      (var 5 : nat)
+                      (var 5 : usize)
                     )
                     (letE : bool
                       (apN
@@ -8682,63 +8520,59 @@ TestUSize_test6 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : usize
+    (lit 1usize)
     (letE : bool
       (apN
-        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
           (var 1 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : usize)
+        (var 0 : usize)
       )
-      (letE : nat
-        (lit 2)
+      (letE : usize
+        (lit 2usize)
         (letE : bool
           (apN
-            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
               (var 3 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : usize)
+            (var 0 : usize)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                 (var 4 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : usize)
+              (var 3 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_neg)
-                (jsOp cast nat → usize
-                  (var 2 : nat)
-                )
+                (var 2 : usize)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat usize] bool)
+                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                     (var 6 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : usize)
                   (var 0 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_neg)
-                    (jsOp cast nat → usize
-                      (var 6 : nat)
-                    )
+                    (var 6 : usize)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize nat] bool)
+                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                         (var 8 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                       )
                       (var 0 : usize)
-                      (var 5 : nat)
+                      (var 5 : usize)
                     )
                     (letE : bool
                       (apN
@@ -8831,63 +8665,59 @@ TestUSize_test7 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : usize
+    (lit 1usize)
     (letE : bool
       (apN
-        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
           (var 1 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : usize)
+        (var 0 : usize)
       )
-      (letE : nat
-        (lit 2)
+      (letE : usize
+        (lit 2usize)
         (letE : bool
           (apN
-            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
               (var 3 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : usize)
+            (var 0 : usize)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                 (var 4 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : usize)
+              (var 3 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_neg)
-                (jsOp cast nat → usize
-                  (var 2 : nat)
-                )
+                (var 2 : usize)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat usize] bool)
+                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                     (var 6 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : usize)
                   (var 0 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_neg)
-                    (jsOp cast nat → usize
-                      (var 6 : nat)
-                    )
+                    (var 6 : usize)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize nat] bool)
+                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                         (var 8 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                       )
                       (var 0 : usize)
-                      (var 5 : nat)
+                      (var 5 : usize)
                     )
                     (letE : bool
                       (apN
@@ -8980,63 +8810,59 @@ TestUSize_test8 : (array bool)
       )
     )
   )
-  (letE : nat
-    (lit 1)
+  (letE : usize
+    (lit 1usize)
     (letE : bool
       (apN
-        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+        (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
           (var 1 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
         )
-        (var 0 : nat)
-        (var 0 : nat)
+        (var 0 : usize)
+        (var 0 : usize)
       )
-      (letE : nat
-        (lit 2)
+      (letE : usize
+        (lit 2usize)
         (letE : bool
           (apN
-            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+            (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
               (var 3 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
             )
-            (var 2 : nat)
-            (var 0 : nat)
+            (var 2 : usize)
+            (var 0 : usize)
           )
           (letE : bool
             (apN
-              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat nat] bool)
+              (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                 (var 4 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
               )
-              (var 1 : nat)
-              (var 3 : nat)
+              (var 1 : usize)
+              (var 3 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_neg)
-                (jsOp cast nat → usize
-                  (var 2 : nat)
-                )
+                (var 2 : usize)
               )
               (letE : bool
                 (apN
-                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [nat usize] bool)
+                  (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                     (var 6 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                   )
-                  (var 5 : nat)
+                  (var 5 : usize)
                   (var 0 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_neg)
-                    (jsOp cast nat → usize
-                      (var 6 : nat)
-                    )
+                    (var 6 : usize)
                   )
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize nat] bool)
+                      (jsOp cast (fn [usize usize] (fn [usize] (fn [usize] bool))) → (fn [usize usize] bool)
                         (var 8 : (fn [usize usize] (fn [usize] (fn [usize] bool))))
                       )
                       (var 0 : usize)
-                      (var 5 : nat)
+                      (var 5 : usize)
                     )
                     (letE : bool
                       (apN
@@ -9111,69 +8937,49 @@ TestUSize_test8 : (array bool)
 )
 
 TestUSize_test9 : (array usize)
-(letE : nat
-  (lit 1)
+(letE : usize
+  (lit 1usize)
   (letE : usize
     (apN
       (extern lean_usize_mul)
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
+      (var 0 : usize)
+      (var 0 : usize)
     )
-    (letE : nat
-      (lit 2)
+    (letE : usize
+      (lit 2usize)
       (letE : usize
         (apN
           (extern lean_usize_mul)
-          (jsOp cast nat → usize
-            (var 2 : nat)
-          )
-          (jsOp cast nat → usize
-            (var 0 : nat)
-          )
+          (var 2 : usize)
+          (var 0 : usize)
         )
         (letE : usize
           (apN
             (extern lean_usize_mul)
-            (jsOp cast nat → usize
-              (var 1 : nat)
-            )
-            (jsOp cast nat → usize
-              (var 3 : nat)
-            )
+            (var 1 : usize)
+            (var 3 : usize)
           )
           (letE : usize
             (apN
               (extern lean_usize_neg)
-              (jsOp cast nat → usize
-                (var 2 : nat)
-              )
+              (var 2 : usize)
             )
             (letE : usize
               (apN
                 (extern lean_usize_mul)
-                (jsOp cast nat → usize
-                  (var 5 : nat)
-                )
+                (var 5 : usize)
                 (var 0 : usize)
               )
               (letE : usize
                 (apN
                   (extern lean_usize_neg)
-                  (jsOp cast nat → usize
-                    (var 6 : nat)
-                  )
+                  (var 6 : usize)
                 )
                 (letE : usize
                   (apN
                     (extern lean_usize_mul)
                     (var 0 : usize)
-                    (jsOp cast nat → usize
-                      (var 5 : nat)
-                    )
+                    (var 5 : usize)
                   )
                   (letE : usize
                     (apN

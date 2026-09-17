@@ -1,4 +1,4 @@
--- SnapshotsMy.HashContainers  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- SnapshotsMy.HashContainers  [nat=num int=num usize=num uint64=num int64=num isize=num bitvec=num]
 -- The terms of this module as the translation produced them, *before* the
 -- optimiser ran; the `.js` file beside this one holds what the optimiser made of
 -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
@@ -87,15 +87,13 @@ Std_DHashMap_Internal_Raw__Const_getD__at__test1_spec_0 : (fn [(record (record n
               (extern lean_string_hash)
               (var 5 : string)
             )
-            (letE : nat
-              (lit 32)
+            (letE : uint64
+              (lit 32u64)
               (letE : uint64
                 (apN
                   (extern lean_uint64_shift_right)
                   (var 1 : uint64)
-                  (jsOp cast nat → uint64
-                    (var 0 : nat)
-                  )
+                  (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
@@ -103,15 +101,13 @@ Std_DHashMap_Internal_Raw__Const_getD__at__test1_spec_0 : (fn [(record (record n
                     (var 2 : uint64)
                     (var 0 : uint64)
                   )
-                  (letE : nat
-                    (lit 16)
+                  (letE : uint64
+                    (lit 16u64)
                     (letE : uint64
                       (apN
                         (extern lean_uint64_shift_right)
                         (var 1 : uint64)
-                        (jsOp cast nat → uint64
-                          (var 0 : nat)
-                        )
+                        (var 0 : uint64)
                       )
                       (letE : uint64
                         (apN
@@ -129,15 +125,13 @@ Std_DHashMap_Internal_Raw__Const_getD__at__test1_spec_0 : (fn [(record (record n
                               (extern lean_usize_of_nat)
                               (var 8 : nat)
                             )
-                            (letE : nat
-                              (lit 1)
+                            (letE : usize
+                              (lit 1usize)
                               (letE : usize
                                 (apN
                                   (extern lean_usize_sub)
                                   (var 1 : usize)
-                                  (jsOp cast nat → usize
-                                    (var 0 : nat)
-                                  )
+                                  (var 0 : usize)
                                 )
                                 (letE : usize
                                   (apN
@@ -223,15 +217,13 @@ Std_DHashMap_Internal_AssocList_foldlM__at___private_Std_Data_DHashMap_Internal_
                     (extern lean_string_hash)
                     (var 4 : string)
                   )
-                  (letB : nat
-                    (lit 32)
+                  (letB : uint64
+                    (lit 32u64)
                     (letB : uint64
                       (apN
                         (extern lean_uint64_shift_right)
                         (var 1 : uint64)
-                        (jsOp cast nat → uint64
-                          (var 0 : nat)
-                        )
+                        (var 0 : uint64)
                       )
                       (letB : uint64
                         (apN
@@ -239,15 +231,13 @@ Std_DHashMap_Internal_AssocList_foldlM__at___private_Std_Data_DHashMap_Internal_
                           (var 2 : uint64)
                           (var 0 : uint64)
                         )
-                        (letB : nat
-                          (lit 16)
+                        (letB : uint64
+                          (lit 16u64)
                           (letB : uint64
                             (apN
                               (extern lean_uint64_shift_right)
                               (var 1 : uint64)
-                              (jsOp cast nat → uint64
-                                (var 0 : nat)
-                              )
+                              (var 0 : uint64)
                             )
                             (letB : uint64
                               (apN
@@ -265,15 +255,13 @@ Std_DHashMap_Internal_AssocList_foldlM__at___private_Std_Data_DHashMap_Internal_
                                     (extern lean_usize_of_nat)
                                     (var 8 : nat)
                                   )
-                                  (letB : nat
-                                    (lit 1)
+                                  (letB : usize
+                                    (lit 1usize)
                                     (letB : usize
                                       (apN
                                         (extern lean_usize_sub)
                                         (var 1 : usize)
-                                        (jsOp cast nat → usize
-                                          (var 0 : nat)
-                                        )
+                                        (var 0 : usize)
                                       )
                                       (letB : usize
                                         (apN
@@ -613,15 +601,13 @@ Std_DHashMap_Internal_Raw__insert__at__test1_spec_1 : (fn [(record (record nat (
               (extern lean_string_hash)
               (var 5 : string)
             )
-            (letE : nat
-              (lit 32)
+            (letE : uint64
+              (lit 32u64)
               (letE : uint64
                 (apN
                   (extern lean_uint64_shift_right)
                   (var 1 : uint64)
-                  (jsOp cast nat → uint64
-                    (var 0 : nat)
-                  )
+                  (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
@@ -629,15 +615,13 @@ Std_DHashMap_Internal_Raw__insert__at__test1_spec_1 : (fn [(record (record nat (
                     (var 2 : uint64)
                     (var 0 : uint64)
                   )
-                  (letE : nat
-                    (lit 16)
+                  (letE : uint64
+                    (lit 16u64)
                     (letE : uint64
                       (apN
                         (extern lean_uint64_shift_right)
                         (var 1 : uint64)
-                        (jsOp cast nat → uint64
-                          (var 0 : nat)
-                        )
+                        (var 0 : uint64)
                       )
                       (letE : uint64
                         (apN
@@ -655,15 +639,13 @@ Std_DHashMap_Internal_Raw__insert__at__test1_spec_1 : (fn [(record (record nat (
                               (extern lean_usize_of_nat)
                               (var 8 : nat)
                             )
-                            (letE : nat
-                              (lit 1)
+                            (letE : usize
+                              (lit 1usize)
                               (letE : usize
                                 (apN
                                   (extern lean_usize_sub)
                                   (var 1 : usize)
-                                  (jsOp cast nat → usize
-                                    (var 0 : nat)
-                                  )
+                                  (var 0 : usize)
                                 )
                                 (letE : usize
                                   (apN
@@ -1130,15 +1112,13 @@ Std_DHashMap_Internal_Raw__Const_get___at__test2_spec_2 : (fn [(record (record n
               (extern lean_uint64_of_nat)
               (var 4 : nat)
             )
-            (letE : nat
-              (lit 32)
+            (letE : uint64
+              (lit 32u64)
               (letE : uint64
                 (apN
                   (extern lean_uint64_shift_right)
                   (var 1 : uint64)
-                  (jsOp cast nat → uint64
-                    (var 0 : nat)
-                  )
+                  (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
@@ -1146,15 +1126,13 @@ Std_DHashMap_Internal_Raw__Const_get___at__test2_spec_2 : (fn [(record (record n
                     (var 2 : uint64)
                     (var 0 : uint64)
                   )
-                  (letE : nat
-                    (lit 16)
+                  (letE : uint64
+                    (lit 16u64)
                     (letE : uint64
                       (apN
                         (extern lean_uint64_shift_right)
                         (var 1 : uint64)
-                        (jsOp cast nat → uint64
-                          (var 0 : nat)
-                        )
+                        (var 0 : uint64)
                       )
                       (letE : uint64
                         (apN
@@ -1172,15 +1150,13 @@ Std_DHashMap_Internal_Raw__Const_get___at__test2_spec_2 : (fn [(record (record n
                               (extern lean_usize_of_nat)
                               (var 8 : nat)
                             )
-                            (letE : nat
-                              (lit 1)
+                            (letE : usize
+                              (lit 1usize)
                               (letE : usize
                                 (apN
                                   (extern lean_usize_sub)
                                   (var 1 : usize)
-                                  (jsOp cast nat → usize
-                                    (var 0 : nat)
-                                  )
+                                  (var 0 : usize)
                                 )
                                 (letE : usize
                                   (apN
@@ -1265,15 +1241,13 @@ Std_DHashMap_Internal_AssocList_foldlM__at___private_Std_Data_DHashMap_Internal_
                     (extern lean_uint64_of_nat)
                     (var 4 : nat)
                   )
-                  (letB : nat
-                    (lit 32)
+                  (letB : uint64
+                    (lit 32u64)
                     (letB : uint64
                       (apN
                         (extern lean_uint64_shift_right)
                         (var 1 : uint64)
-                        (jsOp cast nat → uint64
-                          (var 0 : nat)
-                        )
+                        (var 0 : uint64)
                       )
                       (letB : uint64
                         (apN
@@ -1281,15 +1255,13 @@ Std_DHashMap_Internal_AssocList_foldlM__at___private_Std_Data_DHashMap_Internal_
                           (var 2 : uint64)
                           (var 0 : uint64)
                         )
-                        (letB : nat
-                          (lit 16)
+                        (letB : uint64
+                          (lit 16u64)
                           (letB : uint64
                             (apN
                               (extern lean_uint64_shift_right)
                               (var 1 : uint64)
-                              (jsOp cast nat → uint64
-                                (var 0 : nat)
-                              )
+                              (var 0 : uint64)
                             )
                             (letB : uint64
                               (apN
@@ -1307,15 +1279,13 @@ Std_DHashMap_Internal_AssocList_foldlM__at___private_Std_Data_DHashMap_Internal_
                                     (extern lean_usize_of_nat)
                                     (var 8 : nat)
                                   )
-                                  (letB : nat
-                                    (lit 1)
+                                  (letB : usize
+                                    (lit 1usize)
                                     (letB : usize
                                       (apN
                                         (extern lean_usize_sub)
                                         (var 1 : usize)
-                                        (jsOp cast nat → usize
-                                          (var 0 : nat)
-                                        )
+                                        (var 0 : usize)
                                       )
                                       (letB : usize
                                         (apN
@@ -1655,15 +1625,13 @@ Std_DHashMap_Internal_Raw__insert__at__test2_spec_0 : (fn [(record (record nat (
               (extern lean_uint64_of_nat)
               (var 5 : nat)
             )
-            (letE : nat
-              (lit 32)
+            (letE : uint64
+              (lit 32u64)
               (letE : uint64
                 (apN
                   (extern lean_uint64_shift_right)
                   (var 1 : uint64)
-                  (jsOp cast nat → uint64
-                    (var 0 : nat)
-                  )
+                  (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
@@ -1671,15 +1639,13 @@ Std_DHashMap_Internal_Raw__insert__at__test2_spec_0 : (fn [(record (record nat (
                     (var 2 : uint64)
                     (var 0 : uint64)
                   )
-                  (letE : nat
-                    (lit 16)
+                  (letE : uint64
+                    (lit 16u64)
                     (letE : uint64
                       (apN
                         (extern lean_uint64_shift_right)
                         (var 1 : uint64)
-                        (jsOp cast nat → uint64
-                          (var 0 : nat)
-                        )
+                        (var 0 : uint64)
                       )
                       (letE : uint64
                         (apN
@@ -1697,15 +1663,13 @@ Std_DHashMap_Internal_Raw__insert__at__test2_spec_0 : (fn [(record (record nat (
                               (extern lean_usize_of_nat)
                               (var 8 : nat)
                             )
-                            (letE : nat
-                              (lit 1)
+                            (letE : usize
+                              (lit 1usize)
                               (letE : usize
                                 (apN
                                   (extern lean_usize_sub)
                                   (var 1 : usize)
-                                  (jsOp cast nat → usize
-                                    (var 0 : nat)
-                                  )
+                                  (var 0 : usize)
                                 )
                                 (letE : usize
                                   (apN
@@ -2102,15 +2066,13 @@ Std_DHashMap_Internal_Raw__insertIfNew__at__test3_spec_0 : (fn [(record (record 
               (extern lean_string_hash)
               (var 5 : string)
             )
-            (letE : nat
-              (lit 32)
+            (letE : uint64
+              (lit 32u64)
               (letE : uint64
                 (apN
                   (extern lean_uint64_shift_right)
                   (var 1 : uint64)
-                  (jsOp cast nat → uint64
-                    (var 0 : nat)
-                  )
+                  (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
@@ -2118,15 +2080,13 @@ Std_DHashMap_Internal_Raw__insertIfNew__at__test3_spec_0 : (fn [(record (record 
                     (var 2 : uint64)
                     (var 0 : uint64)
                   )
-                  (letE : nat
-                    (lit 16)
+                  (letE : uint64
+                    (lit 16u64)
                     (letE : uint64
                       (apN
                         (extern lean_uint64_shift_right)
                         (var 1 : uint64)
-                        (jsOp cast nat → uint64
-                          (var 0 : nat)
-                        )
+                        (var 0 : uint64)
                       )
                       (letE : uint64
                         (apN
@@ -2144,15 +2104,13 @@ Std_DHashMap_Internal_Raw__insertIfNew__at__test3_spec_0 : (fn [(record (record 
                               (extern lean_usize_of_nat)
                               (var 8 : nat)
                             )
-                            (letE : nat
-                              (lit 1)
+                            (letE : usize
+                              (lit 1usize)
                               (letE : usize
                                 (apN
                                   (extern lean_usize_sub)
                                   (var 1 : usize)
-                                  (jsOp cast nat → usize
-                                    (var 0 : nat)
-                                  )
+                                  (var 0 : usize)
                                 )
                                 (letE : usize
                                   (apN
@@ -2414,15 +2372,13 @@ Std_DHashMap_Internal_Raw__contains__at__test3_spec_2 : (fn [(record (record nat
               (extern lean_string_hash)
               (var 4 : string)
             )
-            (letE : nat
-              (lit 32)
+            (letE : uint64
+              (lit 32u64)
               (letE : uint64
                 (apN
                   (extern lean_uint64_shift_right)
                   (var 1 : uint64)
-                  (jsOp cast nat → uint64
-                    (var 0 : nat)
-                  )
+                  (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
@@ -2430,15 +2386,13 @@ Std_DHashMap_Internal_Raw__contains__at__test3_spec_2 : (fn [(record (record nat
                     (var 2 : uint64)
                     (var 0 : uint64)
                   )
-                  (letE : nat
-                    (lit 16)
+                  (letE : uint64
+                    (lit 16u64)
                     (letE : uint64
                       (apN
                         (extern lean_uint64_shift_right)
                         (var 1 : uint64)
-                        (jsOp cast nat → uint64
-                          (var 0 : nat)
-                        )
+                        (var 0 : uint64)
                       )
                       (letE : uint64
                         (apN
@@ -2456,15 +2410,13 @@ Std_DHashMap_Internal_Raw__contains__at__test3_spec_2 : (fn [(record (record nat
                               (extern lean_usize_of_nat)
                               (var 8 : nat)
                             )
-                            (letE : nat
-                              (lit 1)
+                            (letE : usize
+                              (lit 1usize)
                               (letE : usize
                                 (apN
                                   (extern lean_usize_sub)
                                   (var 1 : usize)
-                                  (jsOp cast nat → usize
-                                    (var 0 : nat)
-                                  )
+                                  (var 0 : usize)
                                 )
                                 (letE : usize
                                   (apN
@@ -3034,15 +2986,13 @@ Std_DHashMap_Internal_Raw__erase__at__test5_spec_0 : (fn [(record (record nat (a
               (extern lean_string_hash)
               (var 4 : string)
             )
-            (letE : nat
-              (lit 32)
+            (letE : uint64
+              (lit 32u64)
               (letE : uint64
                 (apN
                   (extern lean_uint64_shift_right)
                   (var 1 : uint64)
-                  (jsOp cast nat → uint64
-                    (var 0 : nat)
-                  )
+                  (var 0 : uint64)
                 )
                 (letE : uint64
                   (apN
@@ -3050,15 +3000,13 @@ Std_DHashMap_Internal_Raw__erase__at__test5_spec_0 : (fn [(record (record nat (a
                     (var 2 : uint64)
                     (var 0 : uint64)
                   )
-                  (letE : nat
-                    (lit 16)
+                  (letE : uint64
+                    (lit 16u64)
                     (letE : uint64
                       (apN
                         (extern lean_uint64_shift_right)
                         (var 1 : uint64)
-                        (jsOp cast nat → uint64
-                          (var 0 : nat)
-                        )
+                        (var 0 : uint64)
                       )
                       (letE : uint64
                         (apN
@@ -3076,15 +3024,13 @@ Std_DHashMap_Internal_Raw__erase__at__test5_spec_0 : (fn [(record (record nat (a
                               (extern lean_usize_of_nat)
                               (var 8 : nat)
                             )
-                            (letE : nat
-                              (lit 1)
+                            (letE : usize
+                              (lit 1usize)
                               (letE : usize
                                 (apN
                                   (extern lean_usize_sub)
                                   (var 1 : usize)
-                                  (jsOp cast nat → usize
-                                    (var 0 : nat)
-                                  )
+                                  (var 0 : usize)
                                 )
                                 (letE : usize
                                   (apN
@@ -3457,15 +3403,13 @@ _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold__at__test6_spec_2 : (fn
           (ret
             (var 2 : (list (record string nat)))
           )
-          (letB : nat
-            (lit 1)
+          (letB : usize
+            (lit 1usize)
             (letB : usize
               (apN
                 (extern lean_usize_sub)
                 (var 5 : usize)
-                (jsOp cast nat → usize
-                  (var 0 : nat)
-                )
+                (var 0 : usize)
               )
               (letB : (recTaggedUnion ()|(string nat self#0))
                 (apN
@@ -3585,16 +3529,14 @@ test6 : (fn [(list string)] (list string))
                                           (extern lean_usize_of_nat)
                                           (var 1 : nat)
                                         )
-                                        (letE : nat
-                                          (lit 0)
+                                        (letE : usize
+                                          (lit 0usize)
                                           (letE : (list (record string nat))
                                             (apN
-                                              (jsOp cast (fn [(array (recTaggedUnion ()|(string nat self#0))) usize usize (list (record string nat))] (list (record string nat))) → (fn [(array (recTaggedUnion ()|(string nat self#0))) usize nat (list (record string nat))] (list (record string nat)))
-                                                (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold__at__test6_spec_2)
-                                              )
+                                              (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold__at__test6_spec_2)
                                               (var 4 : (array (recTaggedUnion ()|(string nat self#0))))
                                               (var 1 : usize)
-                                              (var 0 : nat)
+                                              (var 0 : usize)
                                               (var 5 : (list (record string nat)))
                                             )
                                             (letE : (list (record string nat))

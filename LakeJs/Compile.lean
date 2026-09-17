@@ -626,6 +626,22 @@ def moduleDecls (env : Environment) (mod : Name) : Array Name := Id.run do
             ns := ns.push n
   return ns.qsort Name.lt
 
+/-- One translated declaration, as text: what the emitted program binds it to, its type
+    and its term, together with the Lean declarations it came from.  A unit of the
+    translation can bind more than one name — an instance is unboxed into one declaration
+    per field, a mutually recursive group into one merged loop and a wrapper each — so
+    `source` is a list. -/
+structure ExprDecl where
+  /-- The Lean declarations this one was translated from. -/
+  source : List Name
+  /-- The name the emitted program binds it to. -/
+  name : String
+  /-- Its type, as `LakeJs.TyPretty` writes it. -/
+  ty : String
+  /-- Its term, as `LakeJs.TermPretty` writes it. -/
+  term : String
+  deriving Inhabited
+
 /-- What a module compiles to: the text of the `.js` file, or the reasons it was
     refused. -/
 structure Result where
@@ -647,6 +663,10 @@ structure Result where
   /-- The terms of the module as the translation produced them, before the optimiser
       ran, rendered by `LakeJs.TermPretty`: what `<Module>-Expr.txt` holds. -/
   exprs : String := ""
+  /-- The same terms, one entry per emitted declaration rather than as one block of
+      text.  A caller that renders the program its own way — `LakeJs.Program` does —
+      reads this. -/
+  exprDecls : Array ExprDecl := #[]
 
 /-- The first of `base`, `base$1`, `base$2`, … all of whose names (`binds`) are still
     free.  A declaration binds more than one name when it is an instance the backend
@@ -770,25 +790,56 @@ def renderExprs (cfg : LakeJs.Config.JsConfig) {Sg : Sig} (mod : Name)
   header ++ String.join (decls.map fun d =>
     s!"{d.name} : {Ty.pretty d.value.1}\n" ++ LakeJs.TermPretty.Term.pretty d.value.2 ++ "\n\n")
 
-/-- Compile one module: the declarations it declares, and the declarations of the same
-    module that they call. -/
-def compileModule (mod : Name) (preludeDepth : Nat := 1)
+/-- What one run of the compiler is asked to produce: which declarations the emitted
+    program exports, which of the declarations they reach belong to the program (the
+    rest are names the program imports), and which modules the totality gate reads as
+    “being compiled”.
+
+    A *module* is one such program — its own declarations, the roots being the ones the
+    module declares.  The closure of a single declaration (`LakeJs.Program`) is another:
+    there the roots are that one declaration, and a reachable declaration belongs to the
+    program whenever the backend can read a body for it, whatever module it came from. -/
+structure ProgramSpec where
+  /-- What the program is called, in the header of the rendered terms. -/
+  label : Name
+  /-- The declarations the program exports. -/
+  roots : Array Name
+  /-- Does this reachable declaration belong to the program?  A declaration that does
+      not is an *import*: the signature records its type and the emitted code calls it
+      by name. -/
+  own : Name → CoreM Bool
+  /-- The modules whose `partial`, `unsafe` and `@[extern]` declarations the totality
+      gate refuses outright, rather than reading as a primitive of the library. -/
+  totalityMods : Array Nat
+  /-- The sentence a refusal is reported under. -/
+  refusalHeader : String := "this module cannot be compiled to JavaScript"
+
+/-- The program one module is: the declarations it declares, and the declarations of the
+    same module that they call. -/
+def moduleSpec (env : Environment) (mod : Name) (idx : ModuleIdx) : ProgramSpec where
+  label := mod
+  roots := moduleDecls env mod
+  own := fun n => pure (env.getModuleIdxFor? n == some idx)
+  totalityMods := #[idx.toNat]
+
+/-- Compile a program: the declarations `spec` exports, and everything they call that
+    `spec` says belongs to the program. -/
+def compileSpec (spec : ProgramSpec) (preludeDepth : Nat := 1)
     (cfg : LakeJs.Config.JsConfig := .presetPBO) : CoreM Result := do
   unless cfg.isUniform do
     throwError "this configuration mixes JavaScript numbers and `BigInt`s, and there is \
       no runtime prelude for it: every configurable type has to have the same \
       representation"
   let env ← getEnv
-  let some idx := env.getModuleIdx? mod
-    | throwError s!"module `{mod}` was not imported"
-  let roots := moduleDecls env mod
+  let mod := spec.label
+  let roots := spec.roots
   -- 1. the totality gate
-  let rejections ← LakeJs.Totality.check #[idx.toNat] roots
+  let rejections ← LakeJs.Totality.check spec.totalityMods roots
   if !rejections.isEmpty then
     let msgs := rejections.map (·.message)
-    throwError ("this module cannot be compiled to JavaScript:\n  "
+    throwError (spec.refusalHeader ++ ":\n  "
       ++ String.intercalate "\n  " msgs.toList)
-  -- 2. every declaration of the module that is reachable from a root
+  -- 2. every declaration of the program that is reachable from a root
   let mut order : Array Name := #[]
   let mut seen : NameSet := {}
   let mut todo := roots.toList
@@ -797,7 +848,7 @@ def compileModule (mod : Name) (preludeDepth : Nat := 1)
     todo := todo.tail!
     if seen.contains n then continue
     seen := seen.insert n
-    if env.getModuleIdxFor? n != some idx then continue
+    unless ← spec.own n do continue
     match ← getBaseDecl? n with
     | none => pure ()
     | some d =>
@@ -1031,6 +1082,19 @@ def compileModule (mod : Name) (preludeDepth : Nat := 1)
       if ps.isEmpty then none else some (d.name, ps)).toArray
   return { js := render cfg decls preludeDepth, failures := failures, compiled := compiled,
            deadLets := deadLets, unusedParams := unusedParams,
-           exprs := renderExprs cfg mod rawDecls }
+           exprs := renderExprs cfg mod rawDecls,
+           exprDecls := (rawUnits.filter fun u => liveKeys.contains u.1).flatMap fun u =>
+             u.2.toArray.map fun d =>
+               { source := u.1, name := d.name, ty := Ty.pretty d.value.1,
+                 term := LakeJs.TermPretty.Term.pretty d.value.2 } }
+
+/-- Compile one module: the declarations it declares, and the declarations of the same
+    module that they call. -/
+def compileModule (mod : Name) (preludeDepth : Nat := 1)
+    (cfg : LakeJs.Config.JsConfig := .presetPBO) : CoreM Result := do
+  let env ← getEnv
+  let some idx := env.getModuleIdx? mod
+    | throwError s!"module `{mod}` was not imported"
+  compileSpec (moduleSpec env mod idx) preludeDepth cfg
 
 end LakeJs.Compile

@@ -1,4 +1,5 @@
 import LakeJs.Compile
+import LakeJs.Program
 import LakeJsTest.JsShape
 
 /-!
@@ -267,6 +268,9 @@ def myModules : List Name :=
 def rejected : List (Name × String) :=
   [ (`SnapshotsPBOPartial.RecursiveBindingGroup01, "partial def")
   , (`SnapshotsPBOPure.Html, "partial def")
+    -- `deriving Repr` writes a `partial def` beside the type, so the *module* is out;
+    -- the program of one of its declarations is not (`checkDeclProgram` below)
+  , (`SnapshotsMy.Html, "partial def")
     -- the translation must keep refusing an effect: a `Term` is a value, and a value
     -- may be reordered, duplicated or dropped, which `IO.println` may not be
   , (`SnapshotsMy.IoEntry, "IO type")
@@ -324,6 +328,39 @@ def modulesOfDir (dir : System.FilePath) (root : Name) : IO (Array Name) := do
     if f.endsWith ".lean" then
       out := out.push (root ++ Name.mkSimple (f.dropEnd 5).toString)
   return out.qsort fun a b => a.toString < b.toString
+
+/-- The names a module of the runtime prelude exports: the `export const <name> =`
+    lines of it. -/
+def exportedNames (src : String) : List String :=
+  (("\n" ++ src).splitOn "\nexport const ").drop 1 |>.filterMap fun s =>
+    let n := (s.takeWhile fun c => c != ' ' && c != '=' && c != '\n').toString
+    if n.isEmpty then none else some n
+
+/-- The runtime prelude is split by knob, and the split must be exactly what
+    `LakeJs.Config` says it is: every configurable group has a module per
+    representation, that module exports every name the group claims, and it exports
+    nothing else — a runtime function whose answer a knob decides but that sits in the
+    part no knob changes would be read at the wrong representation, and one that is in
+    no file at all is a `SyntaxError` at load time. -/
+def checkRuntimeSplit : IO (List String) := do
+  let mut bad : List String := []
+  for g in LakeJs.Config.RuntimeGroup.all do
+    match g.knob? with
+    | none => pure ()
+    | some knob =>
+      for repr in ["num", "bigint"] do
+        let path := s!"runtime/lean_runtime_{knob}_{repr}.mjs"
+        if !(← System.FilePath.pathExists path) then
+          bad := bad ++ [s!"there is no {path}"]
+        else
+          let exported := exportedNames (← IO.FS.readFile path)
+          for n in g.names do
+            if !exported.contains n then
+              bad := bad ++ [s!"{path} does not export {n}"]
+          for n in exported do
+            if !g.names.contains n then
+              bad := bad ++ [s!"{path} exports {n}, which the group does not claim"]
+  return bad
 
 /-- Is `node` on the path? -/
 def haveNode : IO Bool :=
@@ -394,6 +431,52 @@ def checkModule (useNode : Bool) (e : Expectation) : IO (List String) := do
       IO.println s!"note {e.mod}: `{nm}` never reads its parameter(s) {ps}"
     return bad
 
+/-- The program of a single declaration: what `#lean_to_lean_term` prints.
+
+    `SnapshotsMy.Html` is a module the backend refuses — `deriving Repr` writes a
+    `partial def` beside the type — so it is exactly the case the declaration-rooted
+    compiler is for: `test` itself calls nothing partial, and its closure compiles.  The
+    closure is followed across modules and stops at the functions the runtime
+    implements, and a root with no body to read is refused. -/
+def checkDeclProgram : IO (List String) := do
+  let mut bad : List String := []
+  let run (act : CoreM String) : IO (Except String String) := do
+    try
+      pure (Except.ok (← withModule `SnapshotsMy.Html act))
+    catch ex => pure (Except.error (toString ex))
+  match ← run (LakeJs.Program.programOf `test) with
+  | .error msg => bad := bad ++ [s!"the program of `test` was refused: {msg}"]
+  | .ok text =>
+      -- the type of the recursive `inductive` it builds, the primitive the runtime
+      -- implements, the helpers it calls and the root itself
+      for needle in ["recTaggedUnion", "HtmlM", "7 declarations",
+                     "(extern lean_array_push)", "-- from `mkElem`",
+                     "\ntest : (fn [string]"] do
+        unless occurs text needle do
+          bad := bad ++ [s!"the program of `test` does not mention `{needle}`"]
+      -- a name the runtime implements is *not* a declaration of the program
+      if occurs text "-- from `Array.push`" then
+        bad := bad ++ ["the program of `test` translated `Array.push`, which is a \
+          primitive of the runtime"]
+  -- the same closure, emitted: one module, exporting the root
+  match ← run (LakeJs.Program.javascriptOf `test) with
+  | .error msg => bad := bad ++ [s!"the JavaScript of `test` was refused: {msg}"]
+  | .ok js =>
+      unless occurs js "export const test" do
+        bad := bad ++ ["the JavaScript of `test` does not export it"]
+      let issues := LakeJsTest.JsShape.issues js
+      unless issues.isEmpty do
+        bad := bad ++ [s!"the JavaScript of `test` is not of the shape the backend \
+          promises: {issues}"]
+  -- a root the backend has no body for is refused rather than printed empty
+  match ← run (LakeJs.Program.programOf `Nat.add) with
+  | .ok _ => bad := bad ++ ["the program of `Nat.add` was printed, but it is a \
+      primitive of the runtime"]
+  | .error msg =>
+      unless occurs msg "no body the backend can read" do
+        bad := bad ++ [s!"the program of `Nat.add` was refused for the wrong reason: {msg}"]
+  return bad
+
 def main : IO UInt32 := do
   let useNode ← haveNode
   if !useNode then
@@ -433,6 +516,20 @@ def main : IO UInt32 := do
     if !bad.isEmpty then
       IO.eprintln s!"FAIL the allocation check rejects {what}: {bad}"
       failures := failures + 1
+  -- the split of the runtime prelude is the one `LakeJs.Config` describes
+  let splitBad ← checkRuntimeSplit
+  if splitBad.isEmpty then
+    IO.println "ok   the runtime prelude is split exactly as the configuration says"
+  else
+    for b in splitBad do IO.eprintln s!"FAIL the runtime split: {b}"
+    failures := failures + 1
+  -- the program of one declaration, followed across modules
+  let declBad ← checkDeclProgram
+  if declBad.isEmpty then
+    IO.println "ok   the program of a single declaration (`#lean_to_lean_term test`)"
+  else
+    for b in declBad do IO.eprintln s!"FAIL the program of a declaration: {b}"
+    failures := failures + 1
   -- a configuration that mixes the two representations has no prelude, and is refused
   let mixed : LakeJs.Config.JsConfig := { natRepr := .num, intRepr := .bigint }
   let mixedOutcome ←

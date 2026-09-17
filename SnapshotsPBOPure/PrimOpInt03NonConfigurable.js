@@ -1,48 +1,95 @@
-// UInt8, UInt16, UInt32, Int8, Int16, Int32 are always representable exactly as a
-// JS Number (max magnitude 2^32 < Number.MAX_SAFE_INTEGER = 2^53 - 1), so there is
-// only one output mode for these — no BigInt needed, ever.
-//
-// In `PrimOpInt03`, static constants in `test1`–`test3` are inlined and computed
-// with wrapping, and `test4` preserves the non-constant expression.
-
-// ---------------- TestUInt8 ----------------
-
-export const TestUInt8$test1 = 144; // (200 + 200) & 0xff
-export const TestUInt8$test2 = 106; // (50 - 200) & 0xff
-export const TestUInt8$test3 = 144; // (20 * 20) & 0xff
-export const TestUInt8$test4 = (a) => (a + 144) & 0xff;
-
-// ---------------- TestUInt16 ----------------
-
-export const TestUInt16$test1 = 34464; // (50000 + 50000) & 0xffff
-export const TestUInt16$test2 = 25536; // (10000 - 50000) & 0xffff
-export const TestUInt16$test3 = 16960; // (1000 * 1000) & 0xffff
-export const TestUInt16$test4 = (a) => (a + 34464) & 0xffff;
-
-// ---------------- TestUInt32 ----------------
-
-export const TestUInt32$test1 = 1705032704; // (3000000000 + 3000000000) >>> 0
-export const TestUInt32$test2 = 2294967296; // (1000000000 - 3000000000) >>> 0
-export const TestUInt32$test3 = 2690588672; // Math.imul(2000000000, 2000000000) >>> 0
-export const TestUInt32$test4 = /* #__PURE__ */ (a) => (a + 1705032704) >>> 0;
-
-// ---------------- TestInt8 ----------------
-
-export const TestInt8$test1 = -56;  // ((100 + 100) << 24) >> 24
-export const TestInt8$test2 = 56;   // ((-100 - 100) << 24) >> 24
-export const TestInt8$test3 = -112; // ((20 * 20) << 24) >> 24
-export const TestInt8$test4 = /* #__PURE__ */ (a) => ((a - 56) << 24) >> 24;
-
-// ---------------- TestInt16 ----------------
-
-export const TestInt16$test1 = -25536; // ((20000 + 20000) << 16) >> 16
-export const TestInt16$test2 = 25536;  // ((-20000 - 20000) << 16) >> 16
-export const TestInt16$test3 = 16960;  // ((1000 * 1000) << 16) >> 16
-export const TestInt16$test4 = /* #__PURE__ */ (a) => ((a - 25536) << 16) >> 16;
-
-// ---------------- TestInt32 ----------------
-
-export const TestInt32$test1 = -294967296;  // (2000000000 + 2000000000) | 0
-export const TestInt32$test2 = 294967296;   // (-2000000000 - 2000000000) | 0
-export const TestInt32$test3 = -1604378624; // Math.imul(2000000000, 2000000000) | 0
-export const TestInt32$test4 = /* #__PURE__ */ (a) => (a - 294967296) | 0;
+import {
+  $lean_int16_add,
+  $lean_int16_mul,
+  $lean_int16_neg,
+  $lean_int16_of_nat,
+  $lean_int16_sub,
+  $lean_int32_add,
+  $lean_int32_mul,
+  $lean_int32_neg,
+  $lean_int32_of_nat,
+  $lean_int32_sub,
+  $lean_int8_add,
+  $lean_int8_mul,
+  $lean_int8_neg,
+  $lean_int8_of_nat,
+  $lean_int8_sub,
+  $lean_uint16_add,
+  $lean_uint32_add,
+  $lean_uint8_add,
+} from "../runtime/lean_runtime_non_configurable.mjs";
+export const TestUInt8_test4 = (v0) => {
+  const v1 = $lean_uint8_add(200, v0);
+  return $lean_uint8_add(v1, 200);
+};
+export const TestUInt8_test3 = 144;
+export const TestUInt8_test2 = 106;
+export const TestUInt8_test1 = 144;
+export const TestUInt32_test4 = (v0) => {
+  const v1 = $lean_uint32_add(3000000000, v0);
+  return $lean_uint32_add(v1, 3000000000);
+};
+export const TestUInt32_test3 = 2643460096;
+export const TestUInt32_test2 = 2294967296;
+export const TestUInt32_test1 = 1705032704;
+export const TestUInt16_test4 = (v0) => {
+  const v1 = $lean_uint16_add(50000, v0);
+  return $lean_uint16_add(v1, 50000);
+};
+export const TestUInt16_test3 = 16960;
+export const TestUInt16_test2 = 25536;
+export const TestUInt16_test1 = 34464;
+export const TestInt8_test4 = (v0) => {
+  const v1 = 100;
+  const v2 = $lean_int8_add(v1, v0);
+  return $lean_int8_add(v2, v1);
+};
+export const TestInt8_test3 = (() => {
+  const v0 = 20;
+  return $lean_int8_mul(v0, v0);
+})();
+export const TestInt8_test2 = (() => {
+  const v0 = 100;
+  const v1 = $lean_int8_neg(v0);
+  return $lean_int8_sub(v1, v0);
+})();
+export const TestInt8_test1 = (() => {
+  const v0 = 100;
+  return $lean_int8_add(v0, v0);
+})();
+export const TestInt32_test4 = (v0) => {
+  const v1 = 2000000000;
+  const v2 = $lean_int32_add(v1, v0);
+  return $lean_int32_add(v2, v1);
+};
+export const TestInt32_test3 = (() => {
+  const v0 = 2000000001;
+  return $lean_int32_mul(v0, v0);
+})();
+export const TestInt32_test2 = (() => {
+  const v0 = 2000000000;
+  const v1 = $lean_int32_neg(v0);
+  return $lean_int32_sub(v1, v0);
+})();
+export const TestInt32_test1 = (() => {
+  const v0 = 2000000000;
+  return $lean_int32_add(v0, v0);
+})();
+export const TestInt16_test4 = (v0) => {
+  const v1 = 20000;
+  const v2 = $lean_int16_add(v1, v0);
+  return $lean_int16_add(v2, v1);
+};
+export const TestInt16_test3 = (() => {
+  const v0 = 1000;
+  return $lean_int16_mul(v0, v0);
+})();
+export const TestInt16_test2 = (() => {
+  const v0 = 20000;
+  const v1 = $lean_int16_neg(v0);
+  return $lean_int16_sub(v1, v0);
+})();
+export const TestInt16_test1 = (() => {
+  const v0 = 20000;
+  return $lean_int16_add(v0, v0);
+})();

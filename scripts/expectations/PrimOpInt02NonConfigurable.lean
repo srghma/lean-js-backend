@@ -30,6 +30,7 @@ instance : Render UInt64 := ⟨fun a => toString a.toNat⟩
 instance : Render USize := ⟨fun a => toString a.toNat⟩
 instance : Render Int64 := ⟨fun a => toString a.toInt⟩
 instance : Render ISize := ⟨fun a => toString a.toInt⟩
+instance {w : Nat} : Render (BitVec w) := ⟨fun a => toString a.toNat⟩
 instance [Render α] : Render (Array α) :=
   ⟨fun xs => "[" ++ String.intercalate "," (xs.toList.map render) ++ "]"⟩
 

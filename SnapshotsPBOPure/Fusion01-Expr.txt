@@ -1,4 +1,4 @@
--- SnapshotsPBOPure.Fusion01  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- SnapshotsPBOPure.Fusion01  [nat=num int=num usize=num uint64=num int64=num isize=num bitvec=num]
 -- The terms of this module as the translation produced them, *before* the
 -- optimiser ran; the `.js` file beside this one holds what the optimiser made of
 -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
@@ -306,18 +306,18 @@ fromArray : (fn [(array typeParam)] (fn [(fn [typeParam] (fn [typeParam] typePar
                           (extern lean_usize_of_nat)
                           (var 4 : nat)
                         )
-                        (letE : nat
-                          (lit 0)
+                        (letE : usize
+                          (lit 0usize)
                           (letE : typeParam
                             (apN
-                              (jsOp cast (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam] (fn [typeParam] typeParam)) (array typeParam) usize usize typeParam] typeParam) → (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) (array typeParam) usize nat typeParam] typeParam)
+                              (jsOp cast (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam] (fn [typeParam] typeParam)) (array typeParam) usize usize typeParam] typeParam) → (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) (array typeParam) usize usize typeParam] typeParam)
                                 (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold)
                               )
                               (var 4 : (record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))))
                               (var 7 : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))))
                               (var 10 : (array typeParam))
                               (var 1 : usize)
-                              (var 0 : nat)
+                              (var 0 : usize)
                               (var 8 : typeParam)
                             )
                             (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
@@ -344,18 +344,18 @@ fromArray : (fn [(array typeParam)] (fn [(fn [typeParam] (fn [typeParam] typePar
                           (extern lean_usize_of_nat)
                           (var 4 : nat)
                         )
-                        (letE : nat
-                          (lit 0)
+                        (letE : usize
+                          (lit 0usize)
                           (letE : typeParam
                             (apN
-                              (jsOp cast (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam] (fn [typeParam] typeParam)) (array typeParam) usize usize typeParam] typeParam) → (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) (array typeParam) usize nat typeParam] typeParam)
+                              (jsOp cast (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam] (fn [typeParam] typeParam)) (array typeParam) usize usize typeParam] typeParam) → (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) (array typeParam) usize usize typeParam] typeParam)
                                 (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold)
                               )
                               (var 4 : (record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))))
                               (var 7 : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))))
                               (var 10 : (array typeParam))
                               (var 1 : usize)
-                              (var 0 : nat)
+                              (var 0 : usize)
                               (var 8 : typeParam)
                             )
                             (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
@@ -477,18 +477,18 @@ overArray : (fn [(fn [(fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typ
                       (extern lean_usize_of_nat)
                       (var 3 : nat)
                     )
-                    (letE : nat
-                      (lit 0)
+                    (letE : usize
+                      (lit 0usize)
                       (letE : typeParam
                         (apN
-                          (jsOp cast (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam] (fn [typeParam] typeParam)) (array typeParam) usize usize typeParam] typeParam) → (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) (array typeParam) usize nat typeParam] typeParam)
+                          (jsOp cast (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam] (fn [typeParam] typeParam)) (array typeParam) usize usize typeParam] typeParam) → (fn [(record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))) (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))) (array typeParam) usize usize typeParam] typeParam)
                             (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold)
                           )
                           (var 3 : (record (record (record (fn [(fn [typeParam] typeParam)] (fn [typeParam] typeParam)) (fn [typeParam] (fn [typeParam] typeParam))) (fn [typeParam] typeParam) (fn [(fn [typeParam] typeParam)] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam)) (fn [typeParam] (fn [(fn [(enum 1 0)] typeParam)] typeParam))) (fn [typeParam] (fn [(fn [typeParam] typeParam)] typeParam))))
                           (var 6 : (fn [typeParam typeParam] (fn [typeParam] (fn [typeParam] typeParam))))
                           (var 9 : (array typeParam))
                           (var 1 : usize)
-                          (var 0 : nat)
+                          (var 0 : usize)
                           (var 7 : typeParam)
                         )
                         (jsOp cast typeParam → (fn [(fn [typeParam] (fn [typeParam] typeParam))] (fn [typeParam] typeParam))
@@ -743,15 +743,13 @@ _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold__at__test_spec_0 : (fn 
             (ret
               (var 3 : (list string))
             )
-            (letB : nat
-              (lit 1)
+            (letB : usize
+              (lit 1usize)
               (letB : usize
                 (apN
                   (extern lean_usize_sub)
                   (var 6 : usize)
-                  (jsOp cast nat → usize
-                    (var 0 : nat)
-                  )
+                  (var 0 : usize)
                 )
                 (letB : int
                   (apN
@@ -889,16 +887,14 @@ test : (fn [(array int)] (array string))
                 (extern lean_usize_of_nat)
                 (var 2 : nat)
               )
-              (letE : nat
-                (lit 0)
+              (letE : usize
+                (lit 0usize)
                 (letE : (list string)
                   (apN
-                    (jsOp cast (fn [(array int) usize usize (list string)] (list string)) → (fn [(array int) usize nat (list string)] (list string))
-                      (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold__at__test_spec_0)
-                    )
+                    (global _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold__at__test_spec_0)
                     (var 6 : (array int))
                     (var 1 : usize)
-                    (var 0 : nat)
+                    (var 0 : usize)
                     (var 5 : (list string))
                   )
                   (letE : (array string)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Regenerate `scripts/expectations/<Module>.json`: what Lean answers for every export of
-# the `PrimOp*Configurable` snapshots.
+# the `PrimOp*Configurable` and `PrimOp*NonConfigurable` snapshots.
 #
 # The Lean programs that print them are themselves generated, by
 # `scripts/gen-primop-expectations.py`; the snapshots declare the same names, so there
@@ -14,7 +14,14 @@ for module in \
   PrimOpInt02Configurable \
   PrimOpInt03Configurable \
   PrimOpIntBit01Configurable \
-  PrimOpIntBit02Configurable; do
+  PrimOpIntBit02Configurable \
+  PrimOpBitVec01Configurable \
+  PrimOpBitVec02Configurable \
+  PrimOpInt01NonConfigurable \
+  PrimOpInt02NonConfigurable \
+  PrimOpInt03NonConfigurable \
+  PrimOpIntBit01NonConfigurable \
+  PrimOpIntBit02NonConfigurable; do
   echo "=> scripts/expectations/$module.json"
   lake env lean --run "scripts/expectations/$module.lean" \
     > "scripts/expectations/$module.json"

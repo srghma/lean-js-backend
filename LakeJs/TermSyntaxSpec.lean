@@ -339,4 +339,46 @@ example : constants =
               (.cons (.lit (.byteArray #[1, 2, 255]))
                 (.cons (.lit (.bitvec (n := 8) (h := by decide) 200)) .nil)))))) := rfl
 
+/-! ## The header sections may be written in any order, and may be left out
+
+The delaborator writes `sig`, then `glob`, then `vars`, then the code, but the parser
+takes the three sections in whatever order they come and fills in what is missing from
+the type the fragment is elaborated against: an omitted `sig` is the expected type, an
+omitted `glob` the empty signature, an omitted `vars` the empty context. -/
+
+/-- `arraySize`, with the header sections in the reverse order. -/
+example : arraySize = [LEAN|
+vars v0 : (array nat)
+|glob gcd : (fn [nat, nat] nat), pi : float
+|sig nat
+|
+(app
+  (extern lean_array_get_size nat)
+  v0
+)
+] := rfl
+
+/-- `arraySize` again, with `sig` left out: the type it is checked against says it. -/
+example : arraySize = [LEAN|
+glob gcd : (fn [nat, nat] nat), pi : float
+|vars v0 : (array nat)
+|
+(app
+  (extern lean_array_get_size nat)
+  v0
+)
+] := rfl
+
+/-- `addOne` with no header at all: it names no declaration and reads no variable of
+    the context it is written in, so there is nothing for the header to say. -/
+example : addOne = [LEAN|
+(fn [v0 : nat]
+  (app
+    (extern lean_nat_add)
+    v0
+    (lit nat 1)
+  )
+)
+] := rfl
+
 end LakeJs.TermSyntaxSpec

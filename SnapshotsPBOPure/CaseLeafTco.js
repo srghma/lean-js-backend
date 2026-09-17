@@ -2,7 +2,7 @@ import {
   Array_append,
   Array_back_,
   Int_instDecidableEq,
-} from "../runtime/lean_runtime.mjs";
+} from "../runtime/lean_runtime_non_configurable.mjs";
 export const test1Fuel = (v0, v1, v2) => {
   let v3 = v0, v4 = v1, v5 = v2;
   while (true) {

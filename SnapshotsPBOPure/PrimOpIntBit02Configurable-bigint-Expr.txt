@@ -1,4 +1,4 @@
--- SnapshotsPBOPure.PrimOpIntBit02Configurable  [nat=bigint int=bigint usize=bigint uint64=bigint int64=bigint isize=bigint]
+-- SnapshotsPBOPure.PrimOpIntBit02Configurable  [nat=bigint int=bigint usize=bigint uint64=bigint int64=bigint isize=bigint bitvec=bigint]
 -- The terms of this module as the translation produced them, *before* the
 -- optimiser ran; the `.js` file beside this one holds what the optimiser made of
 -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
@@ -448,14 +448,12 @@ TestNat_xor : nat
 )
 
 TestUInt64_complement : uint64
-(letE : nat
-  (lit 3)
+(letE : uint64
+  (lit 3u64)
   (letE : uint64
     (apN
       (extern lean_uint64_neg)
-      (jsOp cast nat → uint64
-        (var 0 : nat)
-      )
+      (var 0 : uint64)
     )
     (letE : uint64
       (apN
@@ -468,19 +466,15 @@ TestUInt64_complement : uint64
 )
 
 TestUInt64_land : uint64
-(letE : nat
-  (lit 1023)
-  (letE : nat
-    (lit 8)
+(letE : uint64
+  (lit 1023u64)
+  (letE : uint64
+    (lit 8u64)
     (letE : uint64
       (apN
         (extern lean_uint64_land)
-        (jsOp cast nat → uint64
-          (var 1 : nat)
-        )
-        (jsOp cast nat → uint64
-          (var 0 : nat)
-        )
+        (var 1 : uint64)
+        (var 0 : uint64)
       )
       (var 0 : uint64)
     )
@@ -488,19 +482,15 @@ TestUInt64_land : uint64
 )
 
 TestUInt64_lor : uint64
-(letE : nat
-  (lit 16)
-  (letE : nat
-    (lit 15)
+(letE : uint64
+  (lit 16u64)
+  (letE : uint64
+    (lit 15u64)
     (letE : uint64
       (apN
         (extern lean_uint64_lor)
-        (jsOp cast nat → uint64
-          (var 1 : nat)
-        )
-        (jsOp cast nat → uint64
-          (var 0 : nat)
-        )
+        (var 1 : uint64)
+        (var 0 : uint64)
       )
       (var 0 : uint64)
     )
@@ -508,19 +498,15 @@ TestUInt64_lor : uint64
 )
 
 TestUInt64_shiftLeft : uint64
-(letE : nat
-  (lit 1023)
-  (letE : nat
-    (lit 2)
+(letE : uint64
+  (lit 1023u64)
+  (letE : uint64
+    (lit 2u64)
     (letE : uint64
       (apN
         (extern lean_uint64_shift_left)
-        (jsOp cast nat → uint64
-          (var 1 : nat)
-        )
-        (jsOp cast nat → uint64
-          (var 0 : nat)
-        )
+        (var 1 : uint64)
+        (var 0 : uint64)
       )
       (var 0 : uint64)
     )
@@ -528,24 +514,20 @@ TestUInt64_shiftLeft : uint64
 )
 
 TestUInt64_shiftRight : uint64
-(letE : nat
-  (lit 1023)
+(letE : uint64
+  (lit 1023u64)
   (letE : uint64
     (apN
       (extern lean_uint64_neg)
-      (jsOp cast nat → uint64
-        (var 0 : nat)
-      )
+      (var 0 : uint64)
     )
-    (letE : nat
-      (lit 2)
+    (letE : uint64
+      (lit 2u64)
       (letE : uint64
         (apN
           (extern lean_uint64_shift_right)
           (var 1 : uint64)
-          (jsOp cast nat → uint64
-            (var 0 : nat)
-          )
+          (var 0 : uint64)
         )
         (var 0 : uint64)
       )
@@ -554,19 +536,15 @@ TestUInt64_shiftRight : uint64
 )
 
 TestUInt64_xor : uint64
-(letE : nat
-  (lit 15)
-  (letE : nat
-    (lit 12)
+(letE : uint64
+  (lit 15u64)
+  (letE : uint64
+    (lit 12u64)
     (letE : uint64
       (apN
         (extern lean_uint64_xor)
-        (jsOp cast nat → uint64
-          (var 1 : nat)
-        )
-        (jsOp cast nat → uint64
-          (var 0 : nat)
-        )
+        (var 1 : uint64)
+        (var 0 : uint64)
       )
       (var 0 : uint64)
     )
@@ -574,14 +552,12 @@ TestUInt64_xor : uint64
 )
 
 TestUSize_complement : usize
-(letE : nat
-  (lit 3)
+(letE : usize
+  (lit 3usize)
   (letE : usize
     (apN
       (extern lean_usize_neg)
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
+      (var 0 : usize)
     )
     (letE : usize
       (apN
@@ -594,19 +570,15 @@ TestUSize_complement : usize
 )
 
 TestUSize_land : usize
-(letE : nat
-  (lit 1023)
-  (letE : nat
-    (lit 8)
+(letE : usize
+  (lit 1023usize)
+  (letE : usize
+    (lit 8usize)
     (letE : usize
       (apN
         (extern lean_usize_land)
-        (jsOp cast nat → usize
-          (var 1 : nat)
-        )
-        (jsOp cast nat → usize
-          (var 0 : nat)
-        )
+        (var 1 : usize)
+        (var 0 : usize)
       )
       (var 0 : usize)
     )
@@ -614,19 +586,15 @@ TestUSize_land : usize
 )
 
 TestUSize_lor : usize
-(letE : nat
-  (lit 16)
-  (letE : nat
-    (lit 15)
+(letE : usize
+  (lit 16usize)
+  (letE : usize
+    (lit 15usize)
     (letE : usize
       (apN
         (extern lean_usize_lor)
-        (jsOp cast nat → usize
-          (var 1 : nat)
-        )
-        (jsOp cast nat → usize
-          (var 0 : nat)
-        )
+        (var 1 : usize)
+        (var 0 : usize)
       )
       (var 0 : usize)
     )
@@ -634,19 +602,15 @@ TestUSize_lor : usize
 )
 
 TestUSize_shiftLeft : usize
-(letE : nat
-  (lit 1023)
-  (letE : nat
-    (lit 2)
+(letE : usize
+  (lit 1023usize)
+  (letE : usize
+    (lit 2usize)
     (letE : usize
       (apN
         (extern lean_usize_shift_left)
-        (jsOp cast nat → usize
-          (var 1 : nat)
-        )
-        (jsOp cast nat → usize
-          (var 0 : nat)
-        )
+        (var 1 : usize)
+        (var 0 : usize)
       )
       (var 0 : usize)
     )
@@ -654,24 +618,20 @@ TestUSize_shiftLeft : usize
 )
 
 TestUSize_shiftRight : usize
-(letE : nat
-  (lit 1023)
+(letE : usize
+  (lit 1023usize)
   (letE : usize
     (apN
       (extern lean_usize_neg)
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
+      (var 0 : usize)
     )
-    (letE : nat
-      (lit 2)
+    (letE : usize
+      (lit 2usize)
       (letE : usize
         (apN
           (extern lean_usize_shift_right)
           (var 1 : usize)
-          (jsOp cast nat → usize
-            (var 0 : nat)
-          )
+          (var 0 : usize)
         )
         (var 0 : usize)
       )
@@ -680,19 +640,15 @@ TestUSize_shiftRight : usize
 )
 
 TestUSize_xor : usize
-(letE : nat
-  (lit 15)
-  (letE : nat
-    (lit 12)
+(letE : usize
+  (lit 15usize)
+  (letE : usize
+    (lit 12usize)
     (letE : usize
       (apN
         (extern lean_usize_xor)
-        (jsOp cast nat → usize
-          (var 1 : nat)
-        )
-        (jsOp cast nat → usize
-          (var 0 : nat)
-        )
+        (var 1 : usize)
+        (var 0 : usize)
       )
       (var 0 : usize)
     )

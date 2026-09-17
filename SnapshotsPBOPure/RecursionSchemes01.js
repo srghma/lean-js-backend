@@ -1,4 +1,4 @@
-import { Function_const } from "../runtime/lean_runtime.mjs";
+import { Function_const } from "../runtime/lean_runtime_non_configurable.mjs";
 export const mapExprF = (v0, v1) => {
   if (v1.tag === 0) {
     const v2 = v1._1;

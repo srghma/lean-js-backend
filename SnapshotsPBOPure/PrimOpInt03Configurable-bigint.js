@@ -1,20 +1,24 @@
+import { $lean_int_neg } from "../runtime/lean_runtime_int_bigint.mjs";
+import {
+  $lean_usize_add,
+  $lean_usize_mul,
+  $lean_usize_sub,
+} from "../runtime/lean_runtime_usize_bigint.mjs";
+import { $lean_uint64_add } from "../runtime/lean_runtime_uint64_bigint.mjs";
 import {
   $lean_int64_add,
   $lean_int64_mul,
   $lean_int64_neg,
   $lean_int64_of_nat,
   $lean_int64_sub,
-  $lean_int_neg,
+} from "../runtime/lean_runtime_int64_bigint.mjs";
+import {
   $lean_isize_add,
   $lean_isize_mul,
   $lean_isize_neg,
   $lean_isize_of_nat,
   $lean_isize_sub,
-  $lean_uint64_add,
-  $lean_usize_add,
-  $lean_usize_mul,
-  $lean_usize_sub,
-} from "../runtime/lean_runtime_bigint.mjs";
+} from "../runtime/lean_runtime_isize_bigint.mjs";
 export const TestUSize_test4 = (v0) => {
   const v1 = $lean_usize_add(10000000000000000000n, v0);
   return $lean_usize_add(v1, 10000000000000000000n);

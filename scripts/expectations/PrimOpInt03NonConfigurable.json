@@ -1,0 +1,30 @@
+{
+  "calls": [
+    {"fn": "TestUInt8_test4", "args": ["3"], "expected": "147"},
+    {"fn": "TestUInt16_test4", "args": ["3"], "expected": "34467"},
+    {"fn": "TestUInt32_test4", "args": ["3"], "expected": "1705032707"},
+    {"fn": "TestInt8_test4", "args": ["3"], "expected": "-53"},
+    {"fn": "TestInt16_test4", "args": ["3"], "expected": "-25533"},
+    {"fn": "TestInt32_test4", "args": ["3"], "expected": "-294967293"}
+  ],
+  "values": [
+    {"name": "TestUInt8_test1", "expected": "144"},
+    {"name": "TestUInt8_test2", "expected": "106"},
+    {"name": "TestUInt8_test3", "expected": "144"},
+    {"name": "TestUInt16_test1", "expected": "34464"},
+    {"name": "TestUInt16_test2", "expected": "25536"},
+    {"name": "TestUInt16_test3", "expected": "16960"},
+    {"name": "TestUInt32_test1", "expected": "1705032704"},
+    {"name": "TestUInt32_test2", "expected": "2294967296"},
+    {"name": "TestUInt32_test3", "expected": "2643460096"},
+    {"name": "TestInt8_test1", "expected": "-56"},
+    {"name": "TestInt8_test2", "expected": "56"},
+    {"name": "TestInt8_test3", "expected": "-112"},
+    {"name": "TestInt16_test1", "expected": "-25536"},
+    {"name": "TestInt16_test2", "expected": "25536"},
+    {"name": "TestInt16_test3", "expected": "16960"},
+    {"name": "TestInt32_test1", "expected": "-294967296"},
+    {"name": "TestInt32_test2", "expected": "294967296"},
+    {"name": "TestInt32_test3", "expected": "-1946474495"}
+  ]
+}

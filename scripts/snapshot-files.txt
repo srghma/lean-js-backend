@@ -17,16 +17,25 @@ SnapshotsMy/MutualSlots.js
 SnapshotsMy/MutualTail.js
 SnapshotsMy/StringWalk.js
 SnapshotsMy/UnreachBranch.js
-SnapshotsPBOPure/PrimOpIntDivConfigurable-num.js pbo
-SnapshotsPBOPure/PrimOpIntDivConfigurable-bigint.js faithful
+SnapshotsPBOPure/PrimOpIntDivConfigurable-num.js
+SnapshotsPBOPure/PrimOpIntDivConfigurable-bigint.js
 SnapshotsPBOPure/PrimOpIntDivNonConfigurable.js
-SnapshotsPBOPure/PrimOpInt01Configurable-num.js pbo
-SnapshotsPBOPure/PrimOpInt01Configurable-bigint.js faithful
-SnapshotsPBOPure/PrimOpInt02Configurable-num.js pbo
-SnapshotsPBOPure/PrimOpInt02Configurable-bigint.js faithful
-SnapshotsPBOPure/PrimOpInt03Configurable-num.js pbo
-SnapshotsPBOPure/PrimOpInt03Configurable-bigint.js faithful
-SnapshotsPBOPure/PrimOpIntBit01Configurable-num.js pbo
-SnapshotsPBOPure/PrimOpIntBit01Configurable-bigint.js faithful
-SnapshotsPBOPure/PrimOpIntBit02Configurable-num.js pbo
-SnapshotsPBOPure/PrimOpIntBit02Configurable-bigint.js faithful
+SnapshotsPBOPure/PrimOpInt01Configurable-num.js
+SnapshotsPBOPure/PrimOpInt01Configurable-bigint.js
+SnapshotsPBOPure/PrimOpInt02Configurable-num.js
+SnapshotsPBOPure/PrimOpInt02Configurable-bigint.js
+SnapshotsPBOPure/PrimOpInt03Configurable-num.js
+SnapshotsPBOPure/PrimOpInt03Configurable-bigint.js
+SnapshotsPBOPure/PrimOpIntBit01Configurable-num.js
+SnapshotsPBOPure/PrimOpIntBit01Configurable-bigint.js
+SnapshotsPBOPure/PrimOpIntBit02Configurable-num.js
+SnapshotsPBOPure/PrimOpIntBit02Configurable-bigint.js
+SnapshotsPBOPure/PrimOpInt01NonConfigurable.js
+SnapshotsPBOPure/PrimOpInt02NonConfigurable.js
+SnapshotsPBOPure/PrimOpInt03NonConfigurable.js
+SnapshotsPBOPure/PrimOpIntBit01NonConfigurable.js
+SnapshotsPBOPure/PrimOpIntBit02NonConfigurable.js
+SnapshotsPBOPure/PrimOpBitVec01Configurable-num.js
+SnapshotsPBOPure/PrimOpBitVec01Configurable-bigint.js
+SnapshotsPBOPure/PrimOpBitVec02Configurable-num.js
+SnapshotsPBOPure/PrimOpBitVec02Configurable-bigint.js

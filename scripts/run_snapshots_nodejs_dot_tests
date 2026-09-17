@@ -36,6 +36,25 @@ while read -r js _cfg; do
   fi
 done < scripts/snapshot-files.txt
 
+# the programs of single declarations, listed as `<Module.lean> <declaration>`
+while read -r src decl; do
+  [ -z "$src" ] && continue
+  js="${src%.lean}-$decl.js"
+  if [ ! -f "$js" ]; then
+    echo "missing generated program: $js" >&2
+    missing=1
+    continue
+  fi
+  if [ ! -f "${src%.lean}-$decl-Program.txt" ]; then
+    echo "missing rendered program: ${src%.lean}-$decl-Program.txt" >&2
+    missing=1
+  fi
+  if [ ! -f "${js%.js}.test.js" ]; then
+    echo "missing test suite: ${js%.js}.test.js" >&2
+    missing=1
+  fi
+done < scripts/snapshot-decls.txt
+
 if [ "$missing" -ne 0 ]; then
   echo "=> some snapshots have no test suite" >&2
   exit 1

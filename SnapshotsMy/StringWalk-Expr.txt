@@ -1,4 +1,4 @@
--- SnapshotsMy.StringWalk  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- SnapshotsMy.StringWalk  [nat=num int=num usize=num uint64=num int64=num isize=num bitvec=num]
 -- The terms of this module as the translation produced them, *before* the
 -- optimiser ran; the `.js` file beside this one holds what the optimiser made of
 -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index

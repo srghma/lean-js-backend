@@ -1,23 +1,33 @@
 import {
-  $lean_int64_div,
-  $lean_int64_neg,
-  $lean_int64_of_nat,
-  $lean_int_ediv,
-  $lean_int_neg,
-  $lean_isize_div,
-  $lean_isize_neg,
-  $lean_isize_of_nat,
-  $lean_nat_div,
-  $lean_uint64_div,
-  $lean_uint64_neg,
-  $lean_usize_div,
-  $lean_usize_neg,
   Int_instDecidableEq,
   instDecidableEqISize,
   instDecidableEqInt64,
   instDecidableEqUInt64,
   instDecidableEqUSize,
-} from "../runtime/lean_runtime_bigint.mjs";
+} from "../runtime/lean_runtime_non_configurable.mjs";
+import { $lean_nat_div } from "../runtime/lean_runtime_nat_bigint.mjs";
+import {
+  $lean_int_ediv,
+  $lean_int_neg,
+} from "../runtime/lean_runtime_int_bigint.mjs";
+import {
+  $lean_usize_div,
+  $lean_usize_neg,
+} from "../runtime/lean_runtime_usize_bigint.mjs";
+import {
+  $lean_uint64_div,
+  $lean_uint64_neg,
+} from "../runtime/lean_runtime_uint64_bigint.mjs";
+import {
+  $lean_int64_div,
+  $lean_int64_neg,
+  $lean_int64_of_nat,
+} from "../runtime/lean_runtime_int64_bigint.mjs";
+import {
+  $lean_isize_div,
+  $lean_isize_neg,
+  $lean_isize_of_nat,
+} from "../runtime/lean_runtime_isize_bigint.mjs";
 export const TestUSize_divNoInline = (v0, v1) => $lean_usize_div(v0, v1);
 export const TestUSize_test3m2_shouldBeTrue = (() => {
   const v0 = $lean_usize_neg(2n);

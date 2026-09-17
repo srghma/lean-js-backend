@@ -1,36 +1,46 @@
 import {
-  $lean_int64_add,
   $lean_int64_dec_le,
   $lean_int64_dec_lt,
-  $lean_int64_div,
-  $lean_int64_mul,
-  $lean_int64_neg,
-  $lean_int64_sub,
-  $lean_int_ediv,
-  $lean_int_neg,
-  $lean_isize_add,
   $lean_isize_dec_le,
   $lean_isize_dec_lt,
-  $lean_isize_div,
-  $lean_isize_mul,
-  $lean_isize_neg,
-  $lean_isize_sub,
-  $lean_uint64_add,
-  $lean_uint64_div,
-  $lean_uint64_mul,
-  $lean_uint64_neg,
-  $lean_uint64_sub,
-  $lean_usize_add,
-  $lean_usize_div,
-  $lean_usize_mul,
-  $lean_usize_neg,
-  $lean_usize_sub,
   Int_instDecidableEq,
   instDecidableEqISize,
   instDecidableEqInt64,
   instDecidableEqUInt64,
   instDecidableEqUSize,
-} from "../runtime/lean_runtime.mjs";
+} from "../runtime/lean_runtime_non_configurable.mjs";
+import {
+  $lean_int_ediv,
+  $lean_int_neg,
+} from "../runtime/lean_runtime_int_num.mjs";
+import {
+  $lean_usize_add,
+  $lean_usize_div,
+  $lean_usize_mul,
+  $lean_usize_neg,
+  $lean_usize_sub,
+} from "../runtime/lean_runtime_usize_num.mjs";
+import {
+  $lean_uint64_add,
+  $lean_uint64_div,
+  $lean_uint64_mul,
+  $lean_uint64_neg,
+  $lean_uint64_sub,
+} from "../runtime/lean_runtime_uint64_num.mjs";
+import {
+  $lean_int64_add,
+  $lean_int64_div,
+  $lean_int64_mul,
+  $lean_int64_neg,
+  $lean_int64_sub,
+} from "../runtime/lean_runtime_int64_num.mjs";
+import {
+  $lean_isize_add,
+  $lean_isize_div,
+  $lean_isize_mul,
+  $lean_isize_neg,
+  $lean_isize_sub,
+} from "../runtime/lean_runtime_isize_num.mjs";
 export const TestUSize_sub = (v0, v1) => $lean_usize_sub(v0, v1);
 export const TestUSize_neg = (v0) => $lean_usize_neg(v0);
 export const TestUSize_ne = (v0, v1) => {

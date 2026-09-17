@@ -1,0 +1,399 @@
+-- SnapshotsPBOPure.PrimOpInt03NonConfigurable  [nat=num int=num usize=num uint64=num int64=num isize=num bitvec=num]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+TestInt16_test1 : int16
+(letE : nat
+  (lit 20000)
+  (letE : int16
+    (apN
+      (extern lean_int16_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int16
+      (apN
+        (extern lean_int16_add)
+        (var 0 : int16)
+        (var 0 : int16)
+      )
+      (var 0 : int16)
+    )
+  )
+)
+
+TestInt16_test2 : int16
+(letE : nat
+  (lit 20000)
+  (letE : int16
+    (apN
+      (extern lean_int16_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int16
+      (apN
+        (extern lean_int16_neg)
+        (var 0 : int16)
+      )
+      (letE : int16
+        (apN
+          (extern lean_int16_sub)
+          (var 0 : int16)
+          (var 1 : int16)
+        )
+        (var 0 : int16)
+      )
+    )
+  )
+)
+
+TestInt16_test3 : int16
+(letE : nat
+  (lit 1000)
+  (letE : int16
+    (apN
+      (extern lean_int16_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int16
+      (apN
+        (extern lean_int16_mul)
+        (var 0 : int16)
+        (var 0 : int16)
+      )
+      (var 0 : int16)
+    )
+  )
+)
+
+TestInt16_test4 : (fn [int16] int16)
+(lamN [int16]
+  (letE : nat
+    (lit 20000)
+    (letE : int16
+      (apN
+        (extern lean_int16_of_nat)
+        (var 0 : nat)
+      )
+      (letE : int16
+        (apN
+          (extern lean_int16_add)
+          (var 0 : int16)
+          (var 2 : int16)
+        )
+        (letE : int16
+          (apN
+            (extern lean_int16_add)
+            (var 0 : int16)
+            (var 1 : int16)
+          )
+          (var 0 : int16)
+        )
+      )
+    )
+  )
+)
+
+TestInt32_test1 : int32
+(letE : nat
+  (lit 2000000000)
+  (letE : int32
+    (apN
+      (extern lean_int32_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int32
+      (apN
+        (extern lean_int32_add)
+        (var 0 : int32)
+        (var 0 : int32)
+      )
+      (var 0 : int32)
+    )
+  )
+)
+
+TestInt32_test2 : int32
+(letE : nat
+  (lit 2000000000)
+  (letE : int32
+    (apN
+      (extern lean_int32_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int32
+      (apN
+        (extern lean_int32_neg)
+        (var 0 : int32)
+      )
+      (letE : int32
+        (apN
+          (extern lean_int32_sub)
+          (var 0 : int32)
+          (var 1 : int32)
+        )
+        (var 0 : int32)
+      )
+    )
+  )
+)
+
+TestInt32_test3 : int32
+(letE : nat
+  (lit 2000000001)
+  (letE : int32
+    (apN
+      (extern lean_int32_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int32
+      (apN
+        (extern lean_int32_mul)
+        (var 0 : int32)
+        (var 0 : int32)
+      )
+      (var 0 : int32)
+    )
+  )
+)
+
+TestInt32_test4 : (fn [int32] int32)
+(lamN [int32]
+  (letE : nat
+    (lit 2000000000)
+    (letE : int32
+      (apN
+        (extern lean_int32_of_nat)
+        (var 0 : nat)
+      )
+      (letE : int32
+        (apN
+          (extern lean_int32_add)
+          (var 0 : int32)
+          (var 2 : int32)
+        )
+        (letE : int32
+          (apN
+            (extern lean_int32_add)
+            (var 0 : int32)
+            (var 1 : int32)
+          )
+          (var 0 : int32)
+        )
+      )
+    )
+  )
+)
+
+TestInt8_test1 : int8
+(letE : nat
+  (lit 100)
+  (letE : int8
+    (apN
+      (extern lean_int8_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int8
+      (apN
+        (extern lean_int8_add)
+        (var 0 : int8)
+        (var 0 : int8)
+      )
+      (var 0 : int8)
+    )
+  )
+)
+
+TestInt8_test2 : int8
+(letE : nat
+  (lit 100)
+  (letE : int8
+    (apN
+      (extern lean_int8_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int8
+      (apN
+        (extern lean_int8_neg)
+        (var 0 : int8)
+      )
+      (letE : int8
+        (apN
+          (extern lean_int8_sub)
+          (var 0 : int8)
+          (var 1 : int8)
+        )
+        (var 0 : int8)
+      )
+    )
+  )
+)
+
+TestInt8_test3 : int8
+(letE : nat
+  (lit 20)
+  (letE : int8
+    (apN
+      (extern lean_int8_of_nat)
+      (var 0 : nat)
+    )
+    (letE : int8
+      (apN
+        (extern lean_int8_mul)
+        (var 0 : int8)
+        (var 0 : int8)
+      )
+      (var 0 : int8)
+    )
+  )
+)
+
+TestInt8_test4 : (fn [int8] int8)
+(lamN [int8]
+  (letE : nat
+    (lit 100)
+    (letE : int8
+      (apN
+        (extern lean_int8_of_nat)
+        (var 0 : nat)
+      )
+      (letE : int8
+        (apN
+          (extern lean_int8_add)
+          (var 0 : int8)
+          (var 2 : int8)
+        )
+        (letE : int8
+          (apN
+            (extern lean_int8_add)
+            (var 0 : int8)
+            (var 1 : int8)
+          )
+          (var 0 : int8)
+        )
+      )
+    )
+  )
+)
+
+TestUInt16_test1 : uint16
+(letE : uint16
+  (lit 34464u16)
+  (var 0 : uint16)
+)
+
+TestUInt16_test2 : uint16
+(letE : uint16
+  (lit 25536u16)
+  (var 0 : uint16)
+)
+
+TestUInt16_test3 : uint16
+(letE : uint16
+  (lit 16960u16)
+  (var 0 : uint16)
+)
+
+TestUInt16_test4 : (fn [uint16] uint16)
+(lamN [uint16]
+  (letE : uint16
+    (lit 50000u16)
+    (letE : uint16
+      (apN
+        (extern lean_uint16_add)
+        (var 0 : uint16)
+        (var 1 : uint16)
+      )
+      (letE : uint16
+        (apN
+          (extern lean_uint16_add)
+          (var 0 : uint16)
+          (var 1 : uint16)
+        )
+        (var 0 : uint16)
+      )
+    )
+  )
+)
+
+TestUInt32_test1 : uint32
+(letE : uint32
+  (lit 1705032704u32)
+  (var 0 : uint32)
+)
+
+TestUInt32_test2 : uint32
+(letE : uint32
+  (lit 2294967296u32)
+  (var 0 : uint32)
+)
+
+TestUInt32_test3 : uint32
+(letE : uint32
+  (lit 2643460096u32)
+  (var 0 : uint32)
+)
+
+TestUInt32_test4 : (fn [uint32] uint32)
+(lamN [uint32]
+  (letE : uint32
+    (lit 3000000000u32)
+    (letE : uint32
+      (apN
+        (extern lean_uint32_add)
+        (var 0 : uint32)
+        (var 1 : uint32)
+      )
+      (letE : uint32
+        (apN
+          (extern lean_uint32_add)
+          (var 0 : uint32)
+          (var 1 : uint32)
+        )
+        (var 0 : uint32)
+      )
+    )
+  )
+)
+
+TestUInt8_test1 : uint8
+(letE : uint8
+  (lit 144u8)
+  (var 0 : uint8)
+)
+
+TestUInt8_test2 : uint8
+(letE : uint8
+  (lit 106u8)
+  (var 0 : uint8)
+)
+
+TestUInt8_test3 : uint8
+(letE : uint8
+  (lit 144u8)
+  (var 0 : uint8)
+)
+
+TestUInt8_test4 : (fn [uint8] uint8)
+(lamN [uint8]
+  (letE : uint8
+    (lit 200u8)
+    (letE : uint8
+      (apN
+        (extern lean_uint8_add)
+        (var 0 : uint8)
+        (var 1 : uint8)
+      )
+      (letE : uint8
+        (apN
+          (extern lean_uint8_add)
+          (var 0 : uint8)
+          (var 1 : uint8)
+        )
+        (var 0 : uint8)
+      )
+    )
+  )
+)
+

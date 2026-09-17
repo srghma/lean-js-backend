@@ -1,4 +1,4 @@
--- SnapshotsPBOPure.PrimOpInt01Configurable  [nat=bigint int=bigint usize=bigint uint64=bigint int64=bigint isize=bigint]
+-- SnapshotsPBOPure.PrimOpInt01Configurable  [nat=bigint int=bigint usize=bigint uint64=bigint int64=bigint isize=bigint bitvec=bigint]
 -- The terms of this module as the translation produced them, *before* the
 -- optimiser ran; the `.js` file beside this one holds what the optimiser made of
 -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index

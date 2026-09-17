@@ -1,4 +1,6 @@
-import { Int_instDecidableEq } from "../runtime/lean_runtime.mjs";
+import {
+  Int_instDecidableEq,
+} from "../runtime/lean_runtime_non_configurable.mjs";
 const _spec$test1 = (v0) => {
   let v1 = v0;
   while (true) {

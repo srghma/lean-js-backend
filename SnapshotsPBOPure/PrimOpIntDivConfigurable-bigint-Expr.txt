@@ -1,4 +1,4 @@
--- SnapshotsPBOPure.PrimOpIntDivConfigurable  [nat=bigint int=bigint usize=bigint uint64=bigint int64=bigint isize=bigint]
+-- SnapshotsPBOPure.PrimOpIntDivConfigurable  [nat=bigint int=bigint usize=bigint uint64=bigint int64=bigint isize=bigint bitvec=bigint]
 -- The terms of this module as the translation produced them, *before* the
 -- optimiser ran; the `.js` file beside this one holds what the optimiser made of
 -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
@@ -856,24 +856,20 @@ TestUInt64_divNoInline : (fn [uint64 uint64] uint64)
 )
 
 TestUInt64_test1_0_shouldBeTrue : bool
-(letE : nat
-  (lit 1)
-  (letE : nat
-    (lit 0)
+(letE : uint64
+  (lit 1u64)
+  (letE : uint64
+    (lit 0u64)
     (letE : uint64
       (apN
-        (jsOp cast (fn [uint64 uint64] uint64) → (fn [nat nat] uint64)
-          (global TestUInt64_divNoInline)
-        )
-        (var 1 : nat)
-        (var 0 : nat)
+        (global TestUInt64_divNoInline)
+        (var 1 : uint64)
+        (var 0 : uint64)
       )
       (letE : bool
         (apN
-          (jsOp cast (fn [uint64 uint64] bool) → (fn [nat uint64] bool)
-            (global instDecidableEqUInt64)
-          )
-          (var 1 : nat)
+          (global instDecidableEqUInt64)
+          (var 1 : uint64)
           (var 0 : uint64)
         )
         (letE : bool
@@ -884,11 +880,9 @@ TestUInt64_test1_0_shouldBeTrue : bool
             (var 0 : bool)
             (letE : bool
               (apN
-                (jsOp cast (fn [uint64 uint64] bool) → (fn [nat nat] bool)
-                  (global instDecidableEqUInt64)
-                )
-                (var 3 : nat)
-                (var 3 : nat)
+                (global instDecidableEqUInt64)
+                (var 3 : uint64)
+                (var 3 : uint64)
               )
               (letE : bool
                 (jsOp cast bool → bool
@@ -906,26 +900,22 @@ TestUInt64_test1_0_shouldBeTrue : bool
 )
 
 TestUInt64_test3_2_shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
-    (letE : nat
-      (lit 1)
+(letE : uint64
+  (lit 3u64)
+  (letE : uint64
+    (lit 2u64)
+    (letE : uint64
+      (lit 1u64)
       (letE : uint64
         (apN
-          (jsOp cast (fn [uint64 uint64] uint64) → (fn [nat nat] uint64)
-            (global TestUInt64_divNoInline)
-          )
-          (var 2 : nat)
-          (var 1 : nat)
+          (global TestUInt64_divNoInline)
+          (var 2 : uint64)
+          (var 1 : uint64)
         )
         (letE : bool
           (apN
-            (jsOp cast (fn [uint64 uint64] bool) → (fn [nat uint64] bool)
-              (global instDecidableEqUInt64)
-            )
-            (var 1 : nat)
+            (global instDecidableEqUInt64)
+            (var 1 : uint64)
             (var 0 : uint64)
           )
           (letE : bool
@@ -936,11 +926,9 @@ TestUInt64_test3_2_shouldBeTrue : bool
               (var 0 : bool)
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint64 uint64] bool) → (fn [nat nat] bool)
-                    (global instDecidableEqUInt64)
-                  )
-                  (var 3 : nat)
-                  (var 3 : nat)
+                  (global instDecidableEqUInt64)
+                  (var 3 : uint64)
+                  (var 3 : uint64)
                 )
                 (letE : bool
                   (jsOp cast bool → bool
@@ -959,31 +947,25 @@ TestUInt64_test3_2_shouldBeTrue : bool
 )
 
 TestUInt64_test3m2_shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
+(letE : uint64
+  (lit 3u64)
+  (letE : uint64
+    (lit 2u64)
     (letE : uint64
       (apN
         (extern lean_uint64_neg)
-        (jsOp cast nat → uint64
-          (var 0 : nat)
-        )
+        (var 0 : uint64)
       )
       (letE : uint64
         (apN
           (extern lean_uint64_div)
-          (jsOp cast nat → uint64
-            (var 2 : nat)
-          )
+          (var 2 : uint64)
           (var 0 : uint64)
         )
         (letE : uint64
           (apN
-            (jsOp cast (fn [uint64 uint64] uint64) → (fn [nat uint64] uint64)
-              (global TestUInt64_divNoInline)
-            )
-            (var 3 : nat)
+            (global TestUInt64_divNoInline)
+            (var 3 : uint64)
             (var 1 : uint64)
           )
           (letE : bool
@@ -998,15 +980,13 @@ TestUInt64_test3m2_shouldBeTrue : bool
               )
               (ite
                 (var 0 : bool)
-                (letE : nat
-                  (lit 0)
+                (letE : uint64
+                  (lit 0u64)
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint64 uint64] bool) → (fn [uint64 nat] bool)
-                        (global instDecidableEqUInt64)
-                      )
+                      (global instDecidableEqUInt64)
                       (var 4 : uint64)
-                      (var 0 : nat)
+                      (var 0 : uint64)
                     )
                     (letE : bool
                       (jsOp cast bool → bool
@@ -1039,27 +1019,21 @@ TestUSize_divNoInline : (fn [usize usize] usize)
 )
 
 TestUSize_test1_0_shouldBeTrue : bool
-(letE : nat
-  (lit 1)
-  (letE : nat
-    (lit 0)
+(letE : usize
+  (lit 1usize)
+  (letE : usize
+    (lit 0usize)
     (letE : usize
       (apN
         (extern lean_usize_div)
-        (jsOp cast nat → usize
-          (var 1 : nat)
-        )
-        (jsOp cast nat → usize
-          (var 0 : nat)
-        )
+        (var 1 : usize)
+        (var 0 : usize)
       )
       (letE : usize
         (apN
-          (jsOp cast (fn [usize usize] usize) → (fn [nat nat] usize)
-            (global TestUSize_divNoInline)
-          )
-          (var 2 : nat)
-          (var 1 : nat)
+          (global TestUSize_divNoInline)
+          (var 2 : usize)
+          (var 1 : usize)
         )
         (letE : bool
           (apN
@@ -1075,11 +1049,9 @@ TestUSize_test1_0_shouldBeTrue : bool
               (var 0 : bool)
               (letE : bool
                 (apN
-                  (jsOp cast (fn [usize usize] bool) → (fn [usize nat] bool)
-                    (global instDecidableEqUSize)
-                  )
+                  (global instDecidableEqUSize)
                   (var 3 : usize)
-                  (var 4 : nat)
+                  (var 4 : usize)
                 )
                 (letE : bool
                   (jsOp cast bool → bool
@@ -1098,27 +1070,21 @@ TestUSize_test1_0_shouldBeTrue : bool
 )
 
 TestUSize_test3_2_shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
+(letE : usize
+  (lit 3usize)
+  (letE : usize
+    (lit 2usize)
     (letE : usize
       (apN
         (extern lean_usize_div)
-        (jsOp cast nat → usize
-          (var 1 : nat)
-        )
-        (jsOp cast nat → usize
-          (var 0 : nat)
-        )
+        (var 1 : usize)
+        (var 0 : usize)
       )
       (letE : usize
         (apN
-          (jsOp cast (fn [usize usize] usize) → (fn [nat nat] usize)
-            (global TestUSize_divNoInline)
-          )
-          (var 2 : nat)
-          (var 1 : nat)
+          (global TestUSize_divNoInline)
+          (var 2 : usize)
+          (var 1 : usize)
         )
         (letE : bool
           (apN
@@ -1132,15 +1098,13 @@ TestUSize_test3_2_shouldBeTrue : bool
             )
             (ite
               (var 0 : bool)
-              (letE : nat
-                (lit 1)
+              (letE : usize
+                (lit 1usize)
                 (letE : bool
                   (apN
-                    (jsOp cast (fn [usize usize] bool) → (fn [usize nat] bool)
-                      (global instDecidableEqUSize)
-                    )
+                    (global instDecidableEqUSize)
                     (var 4 : usize)
-                    (var 0 : nat)
+                    (var 0 : usize)
                   )
                   (letE : bool
                     (jsOp cast bool → bool
@@ -1160,31 +1124,25 @@ TestUSize_test3_2_shouldBeTrue : bool
 )
 
 TestUSize_test3m2_shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
+(letE : usize
+  (lit 3usize)
+  (letE : usize
+    (lit 2usize)
     (letE : usize
       (apN
         (extern lean_usize_neg)
-        (jsOp cast nat → usize
-          (var 0 : nat)
-        )
+        (var 0 : usize)
       )
       (letE : usize
         (apN
           (extern lean_usize_div)
-          (jsOp cast nat → usize
-            (var 2 : nat)
-          )
+          (var 2 : usize)
           (var 0 : usize)
         )
         (letE : usize
           (apN
-            (jsOp cast (fn [usize usize] usize) → (fn [nat usize] usize)
-              (global TestUSize_divNoInline)
-            )
-            (var 3 : nat)
+            (global TestUSize_divNoInline)
+            (var 3 : usize)
             (var 1 : usize)
           )
           (letE : bool
@@ -1199,15 +1157,13 @@ TestUSize_test3m2_shouldBeTrue : bool
               )
               (ite
                 (var 0 : bool)
-                (letE : nat
-                  (lit 0)
+                (letE : usize
+                  (lit 0usize)
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [usize usize] bool) → (fn [usize nat] bool)
-                        (global instDecidableEqUSize)
-                      )
+                      (global instDecidableEqUSize)
                       (var 4 : usize)
-                      (var 0 : nat)
+                      (var 0 : usize)
                     )
                     (letE : bool
                       (jsOp cast bool → bool

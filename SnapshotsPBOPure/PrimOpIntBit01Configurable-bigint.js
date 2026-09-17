@@ -1,35 +1,43 @@
 import {
-  $lean_int64_complement,
-  $lean_int64_land,
-  $lean_int64_lor,
-  $lean_int64_shift_left,
-  $lean_int64_shift_right,
-  $lean_int64_xor,
-  $lean_isize_complement,
-  $lean_isize_land,
-  $lean_isize_lor,
-  $lean_isize_shift_left,
-  $lean_isize_shift_right,
-  $lean_isize_xor,
   $lean_nat_land,
   $lean_nat_lor,
   $lean_nat_lxor,
   $lean_nat_shiftl,
   $lean_nat_shiftr,
-  $lean_uint64_complement,
-  $lean_uint64_land,
-  $lean_uint64_lor,
-  $lean_uint64_shift_left,
-  $lean_uint64_shift_right,
-  $lean_uint64_xor,
+} from "../runtime/lean_runtime_nat_bigint.mjs";
+import { Int_not } from "../runtime/lean_runtime_int_bigint.mjs";
+import {
   $lean_usize_complement,
   $lean_usize_land,
   $lean_usize_lor,
   $lean_usize_shift_left,
   $lean_usize_shift_right,
   $lean_usize_xor,
-  Int_not,
-} from "../runtime/lean_runtime_bigint.mjs";
+} from "../runtime/lean_runtime_usize_bigint.mjs";
+import {
+  $lean_uint64_complement,
+  $lean_uint64_land,
+  $lean_uint64_lor,
+  $lean_uint64_shift_left,
+  $lean_uint64_shift_right,
+  $lean_uint64_xor,
+} from "../runtime/lean_runtime_uint64_bigint.mjs";
+import {
+  $lean_int64_complement,
+  $lean_int64_land,
+  $lean_int64_lor,
+  $lean_int64_shift_left,
+  $lean_int64_shift_right,
+  $lean_int64_xor,
+} from "../runtime/lean_runtime_int64_bigint.mjs";
+import {
+  $lean_isize_complement,
+  $lean_isize_land,
+  $lean_isize_lor,
+  $lean_isize_shift_left,
+  $lean_isize_shift_right,
+  $lean_isize_xor,
+} from "../runtime/lean_runtime_isize_bigint.mjs";
 export const TestUSize_xor = (v0, v1) => $lean_usize_xor(v0, v1);
 export const TestUSize_shiftRight = (v0, v1) => $lean_usize_shift_right(v0, v1);
 export const TestUSize_shiftLeft = (v0, v1) => $lean_usize_shift_left(v0, v1);

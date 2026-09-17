@@ -2,16 +2,20 @@ import {
   $lean_array_mk,
   $lean_array_uget,
   $lean_string_memcmp,
-  $lean_string_utf8_byte_size,
-  $lean_usize_of_nat,
-  $lean_usize_sub,
   Id_instMonad,
   Nat_reprFast,
   String_Slice_Pos_nextn,
   String_Slice_toString,
   _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold,
   instDecidableEqUSize,
-} from "../runtime/lean_runtime.mjs";
+} from "../runtime/lean_runtime_non_configurable.mjs";
+import {
+  $lean_string_utf8_byte_size,
+} from "../runtime/lean_runtime_nat_num.mjs";
+import {
+  $lean_usize_of_nat,
+  $lean_usize_sub,
+} from "../runtime/lean_runtime_usize_num.mjs";
 const _private_Init_Data_Array_Basic_0_Array_foldrMUnsafe_fold__at__test_spec_0 = (
   v0,
   v1,

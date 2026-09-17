@@ -1,4 +1,4 @@
--- SnapshotsPBOPure.PrimOpInt03Configurable  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- SnapshotsPBOPure.PrimOpInt03Configurable  [nat=num int=num usize=num uint64=num int64=num isize=num bitvec=num]
 -- The terms of this module as the translation produced them, *before* the
 -- optimiser ran; the `.js` file beside this one holds what the optimiser made of
 -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
@@ -314,48 +314,38 @@ TestNat_test4 : (fn [nat] nat)
 )
 
 TestUInt64_test1 : uint64
-(letE : nat
-  (lit 1553255926290448384)
-  (jsOp cast nat → uint64
-    (var 0 : nat)
-  )
+(letE : uint64
+  (lit 1553255926290448384u64)
+  (var 0 : uint64)
 )
 
 TestUInt64_test2 : uint64
-(letE : nat
-  (lit 9446744073709551616)
-  (jsOp cast nat → uint64
-    (var 0 : nat)
-  )
+(letE : uint64
+  (lit 9446744073709551616u64)
+  (var 0 : uint64)
 )
 
 TestUInt64_test3 : uint64
-(letE : nat
-  (lit 6553255926290448384)
-  (jsOp cast nat → uint64
-    (var 0 : nat)
-  )
+(letE : uint64
+  (lit 6553255926290448384u64)
+  (var 0 : uint64)
 )
 
 TestUInt64_test4 : (fn [uint64] uint64)
 (lamN [uint64]
-  (letE : nat
-    (lit 10000000000000000000)
+  (letE : uint64
+    (lit 10000000000000000000u64)
     (letE : uint64
       (apN
         (extern lean_uint64_add)
-        (jsOp cast nat → uint64
-          (var 0 : nat)
-        )
+        (var 0 : uint64)
         (var 1 : uint64)
       )
       (letE : uint64
         (apN
           (extern lean_uint64_add)
           (var 0 : uint64)
-          (jsOp cast nat → uint64
-            (var 1 : nat)
-          )
+          (var 1 : uint64)
         )
         (var 0 : uint64)
       )
@@ -364,36 +354,28 @@ TestUInt64_test4 : (fn [uint64] uint64)
 )
 
 TestUSize_test1 : usize
-(letE : nat
-  (lit 10000000000000000000)
+(letE : usize
+  (lit 10000000000000000000usize)
   (letE : usize
     (apN
       (extern lean_usize_add)
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
+      (var 0 : usize)
+      (var 0 : usize)
     )
     (var 0 : usize)
   )
 )
 
 TestUSize_test2 : usize
-(letE : nat
-  (lit 1000000000000000000)
-  (letE : nat
-    (lit 10000000000000000000)
+(letE : usize
+  (lit 1000000000000000000usize)
+  (letE : usize
+    (lit 10000000000000000000usize)
     (letE : usize
       (apN
         (extern lean_usize_sub)
-        (jsOp cast nat → usize
-          (var 1 : nat)
-        )
-        (jsOp cast nat → usize
-          (var 0 : nat)
-        )
+        (var 1 : usize)
+        (var 0 : usize)
       )
       (var 0 : usize)
     )
@@ -401,17 +383,13 @@ TestUSize_test2 : usize
 )
 
 TestUSize_test3 : usize
-(letE : nat
-  (lit 5000000000)
+(letE : usize
+  (lit 5000000000usize)
   (letE : usize
     (apN
       (extern lean_usize_mul)
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
-      (jsOp cast nat → usize
-        (var 0 : nat)
-      )
+      (var 0 : usize)
+      (var 0 : usize)
     )
     (var 0 : usize)
   )
@@ -419,23 +397,19 @@ TestUSize_test3 : usize
 
 TestUSize_test4 : (fn [usize] usize)
 (lamN [usize]
-  (letE : nat
-    (lit 10000000000000000000)
+  (letE : usize
+    (lit 10000000000000000000usize)
     (letE : usize
       (apN
         (extern lean_usize_add)
-        (jsOp cast nat → usize
-          (var 0 : nat)
-        )
+        (var 0 : usize)
         (var 1 : usize)
       )
       (letE : usize
         (apN
           (extern lean_usize_add)
           (var 0 : usize)
-          (jsOp cast nat → usize
-            (var 1 : nat)
-          )
+          (var 1 : usize)
         )
         (var 0 : usize)
       )

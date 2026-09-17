@@ -1,4 +1,7 @@
-import { Repr_addAppParen, String_quote } from "../runtime/lean_runtime.mjs";
+import {
+  Repr_addAppParen,
+  String_quote,
+} from "../runtime/lean_runtime_non_configurable.mjs";
 const traverseFun1D__at__rewriteBottomUpM__at__rewriteBottomUp_spec_0_spec_0 = (
   v0,
   v1,

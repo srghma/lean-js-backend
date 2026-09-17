@@ -1,4 +1,30 @@
 import {
+  $lean_nat_land,
+  $lean_nat_lor,
+  $lean_nat_lxor,
+  $lean_nat_shiftl,
+  $lean_nat_shiftr,
+} from "../runtime/lean_runtime_nat_num.mjs";
+import { $lean_int_neg, Int_not } from "../runtime/lean_runtime_int_num.mjs";
+import {
+  $lean_usize_complement,
+  $lean_usize_land,
+  $lean_usize_lor,
+  $lean_usize_neg,
+  $lean_usize_shift_left,
+  $lean_usize_shift_right,
+  $lean_usize_xor,
+} from "../runtime/lean_runtime_usize_num.mjs";
+import {
+  $lean_uint64_complement,
+  $lean_uint64_land,
+  $lean_uint64_lor,
+  $lean_uint64_neg,
+  $lean_uint64_shift_left,
+  $lean_uint64_shift_right,
+  $lean_uint64_xor,
+} from "../runtime/lean_runtime_uint64_num.mjs";
+import {
   $lean_int64_complement,
   $lean_int64_land,
   $lean_int64_lor,
@@ -7,7 +33,8 @@ import {
   $lean_int64_shift_left,
   $lean_int64_shift_right,
   $lean_int64_xor,
-  $lean_int_neg,
+} from "../runtime/lean_runtime_int64_num.mjs";
+import {
   $lean_isize_complement,
   $lean_isize_land,
   $lean_isize_lor,
@@ -16,27 +43,7 @@ import {
   $lean_isize_shift_left,
   $lean_isize_shift_right,
   $lean_isize_xor,
-  $lean_nat_land,
-  $lean_nat_lor,
-  $lean_nat_lxor,
-  $lean_nat_shiftl,
-  $lean_nat_shiftr,
-  $lean_uint64_complement,
-  $lean_uint64_land,
-  $lean_uint64_lor,
-  $lean_uint64_neg,
-  $lean_uint64_shift_left,
-  $lean_uint64_shift_right,
-  $lean_uint64_xor,
-  $lean_usize_complement,
-  $lean_usize_land,
-  $lean_usize_lor,
-  $lean_usize_neg,
-  $lean_usize_shift_left,
-  $lean_usize_shift_right,
-  $lean_usize_xor,
-  Int_not,
-} from "../runtime/lean_runtime.mjs";
+} from "../runtime/lean_runtime_isize_num.mjs";
 export const TestUSize_xor = $lean_usize_xor(15, 12);
 export const TestUSize_shiftRight = (() => {
   const v0 = $lean_usize_neg(1023);

@@ -3,8 +3,10 @@ import {
   $lean_string_pos_raw_get,
   $lean_string_pos_raw_next,
   $lean_string_push,
+} from "../runtime/lean_runtime_non_configurable.mjs";
+import {
   $lean_string_utf8_byte_size,
-} from "../runtime/lean_runtime.mjs";
+} from "../runtime/lean_runtime_nat_num.mjs";
 const _private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test3_spec_0 = (
   v0,
   v1,

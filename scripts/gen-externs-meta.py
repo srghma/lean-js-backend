@@ -114,10 +114,25 @@ def Externs.cName : \u2200 {\u03c3s : List Ty} {\u03c4 : Ty}, Externs \u03c3s \u
             f.write('  | _, _, %s => "%s"\n' % (pat(name, nty), name))
         f.write(
             """
+/-- The type arguments a polymorphic extern carries, in the order its constructor takes
+    them; the empty list for a monomorphic one.  This is what a rendering of a term has
+    to write down for the extern to read back. -/
+def Externs.tyArgs : \u2200 {\u03c3s : List Ty} {\u03c4 : Ty}, Externs \u03c3s \u03c4 \u2192 List Ty
+"""
+        )
+        for name, nty, _arity, _lean in cons:
+            if nty == 0:
+                f.write('  | _, _, .%s => []\n' % name)
+            elif nty == 1:
+                f.write('  | _, _, .%s \u03b1 => [\u03b1]\n' % name)
+            else:
+                f.write('  | _, _, .%s \u03b1 \u03b2 => [\u03b1, \u03b2]\n' % name)
+        f.write(
+            """
 end LakeJs.ExternsMeta
 
 namespace LakeJs.Externs
-export LakeJs.ExternsMeta.Externs (cName)
+export LakeJs.ExternsMeta.Externs (cName tyArgs)
 end LakeJs.Externs
 
 end

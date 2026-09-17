@@ -3,20 +3,24 @@ import {
   $lean_array_uget,
   $lean_array_uset,
   $lean_mk_array,
-  $lean_string_hash,
-  $lean_uint64_of_nat,
-  $lean_uint64_shift_right,
-  $lean_uint64_to_usize,
-  $lean_uint64_xor,
-  $lean_usize_land,
-  $lean_usize_of_nat,
-  $lean_usize_sub,
   List_reverse,
   instBEqOfDecidableEq,
   instDecidableEqUSize,
+} from "../runtime/lean_runtime_non_configurable.mjs";
+import {
+  $lean_uint64_to_usize,
+  $lean_usize_land,
+  $lean_usize_of_nat,
+  $lean_usize_sub,
+} from "../runtime/lean_runtime_usize_num.mjs";
+import {
+  $lean_string_hash,
+  $lean_uint64_of_nat,
+  $lean_uint64_shift_right,
+  $lean_uint64_xor,
   instHashableNat,
   instHashableString,
-} from "../runtime/lean_runtime.mjs";
+} from "../runtime/lean_runtime_uint64_num.mjs";
 const Std_DHashMap_Internal_AssocList_foldlM__at___private_Std_Data_DHashMap_Internal_Defs_0_Std_DHashMap_Internal_Raw__expand_go__at__Std_DHashMap_Internal_Raw__expand__at__Std_DHashMap_Internal_Raw__insert__at__test2_spec_0_spec_1_spec_2_spec_5 = (
   v0,
   v1,

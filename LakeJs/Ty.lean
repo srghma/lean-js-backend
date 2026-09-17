@@ -104,16 +104,6 @@ inductive Shape (α : Type) where
       The list of results is non-empty by construction, spelled as a first result and
       the rest. -/
   | fn_returnsProd : (params : List α) → (ret1 : α) → (retRest : List α) → Shape α
-  /-- Always a JS array. -/
-  | array : α → Shape α
-  /-- A cons list. -/
-  | list : α → Shape α
-  /-- In JS: `Promise<α>` (async task / worker). -/
-  | task : α → Shape α
-  /-- In JS: `Promise<α>`. -/
-  | promise : α → Shape α
-  /-- In JS: `(fn) => { let r; return () => (r === undefined ? (r = fn()) : r); }`. -/
-  | thunk : α → Shape α
 
 end Ty
 

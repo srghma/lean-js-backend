@@ -1,0 +1,436 @@
+-- SnapshotsPBOPure.PrimOpBitVec01Configurable  [nat=num int=num usize=num uint64=num int64=num isize=num bitvec=num]
+-- The terms of this module as the translation produced them, *before* the
+-- optimiser ran; the `.js` file beside this one holds what the optimiser made of
+-- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
+-- of the binder it belongs to, and every binding form names the types it binds.
+
+TestBitVec32_add : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : nat
+      (apN
+        (global BitVec_add)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestBitVec32_div : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : nat
+      (apN
+        (global BitVec_udiv)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestBitVec32_eq : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : bool
+      (apN
+        (global instDecidableEqBitVec)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec32_ge : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : bool
+      (apN
+        (global instDecidableLeBitVec)
+        (var 0 : nat)
+        (var 1 : nat)
+        (var 2 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec32_gt : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : bool
+      (apN
+        (global instDecidableLtBitVec)
+        (var 0 : nat)
+        (var 1 : nat)
+        (var 2 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec32_le : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : bool
+      (apN
+        (global instDecidableLeBitVec)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec32_lt : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : bool
+      (apN
+        (global instDecidableLtBitVec)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec32_mul : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : nat
+      (apN
+        (global BitVec_mul)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestBitVec32_ne : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : bool
+      (apN
+        (global instDecidableEqBitVec)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (ite
+          (var 0 : bool)
+          (letE : bool
+            (lit false)
+            (var 0 : bool)
+          )
+          (letE : bool
+            (lit true)
+            (var 0 : bool)
+          )
+        )
+      )
+    )
+  )
+)
+
+TestBitVec32_neg : (fn [nat] nat)
+(lamN [nat]
+  (letE : nat
+    (lit 32)
+    (letE : nat
+      (apN
+        (global BitVec_neg)
+        (var 0 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestBitVec32_sub : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (lit 32)
+    (letE : nat
+      (apN
+        (global BitVec_sub)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestBitVec64_add : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : nat
+      (apN
+        (global BitVec_add)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestBitVec64_div : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : nat
+      (apN
+        (global BitVec_udiv)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestBitVec64_eq : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : bool
+      (apN
+        (global instDecidableEqBitVec)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec64_ge : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : bool
+      (apN
+        (global instDecidableLeBitVec)
+        (var 0 : nat)
+        (var 1 : nat)
+        (var 2 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec64_gt : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : bool
+      (apN
+        (global instDecidableLtBitVec)
+        (var 0 : nat)
+        (var 1 : nat)
+        (var 2 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec64_le : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : bool
+      (apN
+        (global instDecidableLeBitVec)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec64_lt : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : bool
+      (apN
+        (global instDecidableLtBitVec)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (var 0 : bool)
+      )
+    )
+  )
+)
+
+TestBitVec64_mul : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : nat
+      (apN
+        (global BitVec_mul)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestBitVec64_ne : (fn [nat nat] bool)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : bool
+      (apN
+        (global instDecidableEqBitVec)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (letE : bool
+        (jsOp cast bool → bool
+          (var 0 : bool)
+        )
+        (ite
+          (var 0 : bool)
+          (letE : bool
+            (lit false)
+            (var 0 : bool)
+          )
+          (letE : bool
+            (lit true)
+            (var 0 : bool)
+          )
+        )
+      )
+    )
+  )
+)
+
+TestBitVec64_neg : (fn [nat] nat)
+(lamN [nat]
+  (letE : nat
+    (lit 64)
+    (letE : nat
+      (apN
+        (global BitVec_neg)
+        (var 0 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+
+TestBitVec64_sub : (fn [nat nat] nat)
+(lamN [nat nat]
+  (letE : nat
+    (lit 64)
+    (letE : nat
+      (apN
+        (global BitVec_sub)
+        (var 0 : nat)
+        (var 2 : nat)
+        (var 1 : nat)
+      )
+      (var 0 : nat)
+    )
+  )
+)
+

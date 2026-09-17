@@ -1,10 +1,12 @@
 import {
   $lean_string_memcmp,
-  $lean_string_utf8_byte_size,
   Nat_reprFast,
   String_Slice_Pos_nextn,
   String_Slice_toString,
-} from "../runtime/lean_runtime.mjs";
+} from "../runtime/lean_runtime_non_configurable.mjs";
+import {
+  $lean_string_utf8_byte_size,
+} from "../runtime/lean_runtime_nat_num.mjs";
 export const toArrayLoop = (v0, v1, v2) => {
   let v3 = v0, v4 = v1, v5 = v2;
   while (true) {

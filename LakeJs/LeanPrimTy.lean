@@ -1,11 +1,15 @@
 module
 
+prelude
 public import Init.Prelude
+public import Init.Data.Format.Basic
 public import Init.Data.ToString.Basic
 
 @[expose] public section
 
 namespace LakeJs
+
+open Std (Format ToFormat)
 
 /-!
 # `LeanPrimTy`: the terminal (leaf) types
@@ -47,15 +51,28 @@ AND ONLY THEN (maybe optimized again and) printed into javascript). -/
 inductive LeanPrimTy where
   /-- In JS: `boolean`. -/
   | bool      : LeanPrimTy
-  /-- In JS: configurable (`number` or `bigint`). -/
+  /-- In JS: configurable:
+    - if `number` then in `MoreJsTy` will be modeled by `UInt53` (if overflow already happened during `LeanTy` phase - throw and dont attempt to convert to `MoreJsTy`)
+      a. `+,-,*,** : UInt53 -> UInt53 -> UInt53` are throwing if overflow during optimization
+      b. `/,% : UInt53 -> UInt53 -> UInt53` are throwing if the divisor is 0 during optimization (TODO: unless required by algorithm? should there be optimization at `MoreJsTy` stage at all?)
+      then printed as js `number`
+    - if `bigint` then in `MoreJsTy` will be modeled by `Nat` then printed as js `bigint`.
+  -/
   | nat       : LeanPrimTy
-  /-- In JS: configurable (`number` or `bigint`). -/
+  /-- In JS: configurable:
+    - if `number` then in `MoreJsTy` will be modeled by `Int53` then printed as js `number`.
+    - if `bigint` then in `MoreJsTy` will be modeled by `Int` then printed as js `bigint`.
+  -/
   | int       : LeanPrimTy
-  /-- IF `n` is less THEN 32 then nonconfigurable (`number`), ELSE configurable
-      (`number` or `bigint`).  `BitVec 0` has a single value, i.e. it is a unit type,
-      so `n` must be positive — the proof is an auto-param, so `.bitvec 32` just
-      works. -/
-  | bitvec    : (n : Nat) → (h_pos : 0 < n := by decide) → LeanPrimTy
+  /-- IF `n ≤ 53` then nonconfigurable then in `MoreJsTy` modeled by
+    `bitvec_small : (n : Nat) → (h_le_53 : n ≤ 53 := by decide) → (h_positive : 0 < n := by decide) → MoreJsTy`
+    then printed as js number
+
+      ELSE IF `n > 53` then configurable:
+        if `number` then (unless already overflown during `LeanTy` optimization phase) in `MoreJsTy` modeled by `UInt53` then printed as js `number`.
+        if `bigint` then in `MoreJsTy` modeled by `bitvec_big : (n : Nat) → (h_g_53 : 53 < n := by decide)` then printed as js `bigint`.
+  -/
+  | bitvec    : (n : Nat) → (h_positive : 0 < n := by decide /- bc Unit-like types should be erased -/) → LeanPrimTy
   /-- In JS: `number`. -/
   | uint8     : LeanPrimTy
   /-- In JS: `number`. -/
@@ -64,8 +81,6 @@ inductive LeanPrimTy where
   | uint32    : LeanPrimTy
   /-- In JS: configurable (`number` or `bigint`). -/
   | uint64    : LeanPrimTy
-  /-- In JS: configurable (`number` or `bigint`). -/
-  | usize     : LeanPrimTy
   /-- In JS: `number`. -/
   | int8      : LeanPrimTy
   /-- In JS: `number`. -/
@@ -74,16 +89,12 @@ inductive LeanPrimTy where
   | int32     : LeanPrimTy
   /-- In JS: configurable (`number` or `bigint`). -/
   | int64     : LeanPrimTy
-  /-- In JS: configurable (`number` or `bigint`). -/
-  | isize     : LeanPrimTy
   /-- In JS: `string`. -/
   | char      : LeanPrimTy
   /-- In JS: `string`. -/
   | string    : LeanPrimTy
-  /-- In JS: `Uint8Array` / `ArrayBuffer`. -/
-  | byteArray : LeanPrimTy
-  /-- A `Lean.Name`. In JS: `string`. -/
-  | name      : LeanPrimTy
+  -- /-- In JS: `Uint8Array` / `ArrayBuffer`. -/
+  -- | byteArray : LeanPrimTy -- in this `LeanPrimTy` mapped to `Array UInt8`. Then in `MoreJsTy` as `Uint8Array`
   /-- A position in a string — like `.uint32`, but strictly non-negative. -/
   | stringPos : LeanPrimTy
   /-- In JS: `{ str: string, startPos: number, stopPos: number }`. -/
@@ -94,39 +105,44 @@ inductive LeanPrimTy where
   | float     : LeanPrimTy
   /-- In JS: `number` (IEEE 754 32-bit, `Math.fround`). -/
   | float32   : LeanPrimTy
-  /-- In JS: `Float64Array`. -/
-  | floatArray : LeanPrimTy
+  -- /-- In JS: `Float64Array`. -/
+  -- | floatArray : LeanPrimTy -- in this `LeanPrimTy` mapped to `Array Float`. Then in `MoreJsTy` as `Float64Array`
   /-- In JS (node only): a `ChildProcess` handle. -/
   | childProcess : LeanPrimTy
-  /-- In JS: `object` / `any`. -/
+  /-- In JS: `object`? / `any`?. -/
   | shareCommonObject : LeanPrimTy
-  /-- In JS: a `Map` / cache object. -/
+  /-- In JS: a `Map`? / cache object?. -/
   | shareCommonState  : LeanPrimTy
   deriving Repr, DecidableEq, Inhabited
 
 namespace LeanPrimTy
 
-/-- A one-word rendering, for debugging and error messages. -/
-def pretty : LeanPrimTy → String
-  | .bitvec n _ => "(bitvec " ++ toString n ++ ")"
+abbrev usize : LeanPrimTy := uint64
+abbrev isize : LeanPrimTy := int64
+-- TODO: name should be constructed as recTaggedUnion
+
+/-- A rendering for debugging and error messages. -/
+def format : LeanPrimTy → Format
+  | .bitvec n _ => "(bitvec " ++ Std.format n ++ ")"
   | .bool => "bool" | .nat => "nat" | .int => "int"
   | .uint8 => "uint8" | .uint16 => "uint16" | .uint32 => "uint32" | .uint64 => "uint64"
-  | .usize => "usize"
   | .int8 => "int8" | .int16 => "int16" | .int32 => "int32" | .int64 => "int64"
-  | .isize => "isize"
-  | .char => "char" | .string => "string" | .byteArray => "byteArray" | .name => "name"
+  | .char => "char" | .string => "string"
   | .stringPos => "stringPos" | .substring => "substring" | .stringSlice => "stringSlice"
-  | .float => "float" | .float32 => "float32" | .floatArray => "floatArray"
+  | .float => "float" | .float32 => "float32"
   | .childProcess => "childProcess"
   | .shareCommonObject => "shareCommonObject" | .shareCommonState => "shareCommonState"
 
+instance : ToFormat LeanPrimTy where
+  format := format
+
 instance : ToString LeanPrimTy where
-  toString := pretty
+  toString x := toString (format x)
 
 /-- Is the JavaScript representation of this type configurable (`number` vs
     `bigint`)?  A bit vector of fewer than 32 bits always fits in a `number`. -/
 def isNumberConfigurable : LeanPrimTy → Bool
-  | .nat | .int | .uint64 | .usize | .int64 | .isize => true
+  | .nat | .int | .uint64 | .int64 => true
   | .bitvec n _ => 32 ≤ n
   | _ => false
 
@@ -135,3 +151,41 @@ end LeanPrimTy
 end LakeJs
 
 end
+
+/-
+In JavaScript (❌ means will not be emitted by `lean-to-js` backend (but maybe support will be added anyway for custom functions))
+
+### 1. Typed Arrays (Binary Data Arrays)
+Typed Arrays represent fixed-length arrays where every element is of a specific numerical data type. They are backed by an underlying memory buffer (`ArrayBuffer`).
+
+#### **Signed Integers (Two’s complement)**
+* **`Int8Array`**: 8-bit signed integers (`-128` to `127`).
+* **`Int16Array`**: 16-bit signed integers (`-32,768` to `32,767`).
+* **`Int32Array`**: 32-bit signed integers (`-2,147,483,648` to `2,147,483,647`).
+
+#### **Unsigned Integers**
+* **`Uint8Array`**: 8-bit unsigned integers (`0` to `255`). Widely used for binary file processing, cryptographic tasks, and networking.
+* **`Uint16Array`**: 16-bit unsigned integers (`0` to `65,535`).
+* **`Uint32Array`**: 32-bit unsigned integers (`0` to `4,294,967,295`).
+
+#### **Specialized Clamped Integer Array**
+* ❌ **`Uint8ClampedArray`**: 8-bit unsigned integers (`0` to `255`).
+  * **What makes it specialized:** Standard `Uint8Array` handles overflow/underflow using modulo arithmetic (e.g., `256` wraps around to `0`). `Uint8ClampedArray` instead **clamps** the value (e.g., `300` becomes `255`, `-10` becomes `0`). It was designed specifically for canvas pixel manipulation (`ImageData.data`).
+
+#### **Floating-Point Numbers**
+* ❌ **`Float16Array`**: 16-bit half-precision floating-point numbers (introduced in modern ECMAScript for machine learning, graphics, and reduced-memory workloads).
+* **`Float32Array`**: 32-bit single-precision IEEE 754 floats. Common in WebGL and 3D graphics.
+* **`Float64Array`**: 64-bit double-precision IEEE 754 floats (the format used by standard JavaScript `Number`).
+
+#### **64-bit BigInt Arrays**
+* **`BigInt64Array`**: 64-bit signed integers (`-2^63` to `2^63 - 1`). Reads/writes native JavaScript `BigInt` values.
+* **`BigUint64Array`**: 64-bit unsigned integers (`0` to `2^64 - 1`).
+
+---
+
+### 2. Closely Related Binary Memory Structures
+While not technically array subclasses, these are companion structures for working with array-like binary memory:
+
+* ❌ **`ArrayBuffer` / `SharedArrayBuffer`**: The underlying raw byte buffer holding the actual memory that Typed Arrays view and manipulate.
+* ❌ **`DataView`**: A low-level view over an `ArrayBuffer` that allows arbitrary reading/writing of different data types at specified byte offsets and explicit endianness (big-endian or little-endian).
+-/

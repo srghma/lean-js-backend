@@ -1,4 +1,4 @@
--- SnapshotsPBOPure.PrimOpIntDivNonConfigurable  [nat=num int=num usize=num uint64=num int64=num isize=num]
+-- SnapshotsPBOPure.PrimOpIntDivNonConfigurable  [nat=num int=num usize=num uint64=num int64=num isize=num bitvec=num]
 -- The terms of this module as the translation produced them, *before* the
 -- optimiser ran; the `.js` file beside this one holds what the optimiser made of
 -- them.  The rendering is `LakeJs.TermPretty`: a variable is the de Bruijn index
@@ -710,24 +710,20 @@ TestUInt16_divNoInline : (fn [uint16 uint16] uint16)
 )
 
 TestUInt16_test1_0__shouldBeTrue : bool
-(letE : nat
-  (lit 1)
-  (letE : nat
-    (lit 0)
+(letE : uint16
+  (lit 1u16)
+  (letE : uint16
+    (lit 0u16)
     (letE : uint16
       (apN
-        (jsOp cast (fn [uint16 uint16] uint16) → (fn [nat nat] uint16)
-          (global TestUInt16_divNoInline)
-        )
-        (var 1 : nat)
-        (var 0 : nat)
+        (global TestUInt16_divNoInline)
+        (var 1 : uint16)
+        (var 0 : uint16)
       )
       (letE : bool
         (apN
-          (jsOp cast (fn [uint16 uint16] bool) → (fn [nat uint16] bool)
-            (global instDecidableEqUInt16)
-          )
-          (var 1 : nat)
+          (global instDecidableEqUInt16)
+          (var 1 : uint16)
           (var 0 : uint16)
         )
         (letE : bool
@@ -738,11 +734,9 @@ TestUInt16_test1_0__shouldBeTrue : bool
             (var 0 : bool)
             (letE : bool
               (apN
-                (jsOp cast (fn [uint16 uint16] bool) → (fn [nat nat] bool)
-                  (global instDecidableEqUInt16)
-                )
-                (var 3 : nat)
-                (var 3 : nat)
+                (global instDecidableEqUInt16)
+                (var 3 : uint16)
+                (var 3 : uint16)
               )
               (letE : bool
                 (jsOp cast bool → bool
@@ -760,26 +754,22 @@ TestUInt16_test1_0__shouldBeTrue : bool
 )
 
 TestUInt16_test3_2__shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
-    (letE : nat
-      (lit 1)
+(letE : uint16
+  (lit 3u16)
+  (letE : uint16
+    (lit 2u16)
+    (letE : uint16
+      (lit 1u16)
       (letE : uint16
         (apN
-          (jsOp cast (fn [uint16 uint16] uint16) → (fn [nat nat] uint16)
-            (global TestUInt16_divNoInline)
-          )
-          (var 2 : nat)
-          (var 1 : nat)
+          (global TestUInt16_divNoInline)
+          (var 2 : uint16)
+          (var 1 : uint16)
         )
         (letE : bool
           (apN
-            (jsOp cast (fn [uint16 uint16] bool) → (fn [nat uint16] bool)
-              (global instDecidableEqUInt16)
-            )
-            (var 1 : nat)
+            (global instDecidableEqUInt16)
+            (var 1 : uint16)
             (var 0 : uint16)
           )
           (letE : bool
@@ -790,11 +780,9 @@ TestUInt16_test3_2__shouldBeTrue : bool
               (var 0 : bool)
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint16 uint16] bool) → (fn [nat nat] bool)
-                    (global instDecidableEqUInt16)
-                  )
-                  (var 3 : nat)
-                  (var 3 : nat)
+                  (global instDecidableEqUInt16)
+                  (var 3 : uint16)
+                  (var 3 : uint16)
                 )
                 (letE : bool
                   (jsOp cast bool → bool
@@ -813,31 +801,25 @@ TestUInt16_test3_2__shouldBeTrue : bool
 )
 
 TestUInt16_test3m2__shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
+(letE : uint16
+  (lit 3u16)
+  (letE : uint16
+    (lit 2u16)
     (letE : uint16
       (apN
         (extern lean_uint16_neg)
-        (jsOp cast nat → uint16
-          (var 0 : nat)
-        )
+        (var 0 : uint16)
       )
       (letE : uint16
         (apN
           (extern lean_uint16_div)
-          (jsOp cast nat → uint16
-            (var 2 : nat)
-          )
+          (var 2 : uint16)
           (var 0 : uint16)
         )
         (letE : uint16
           (apN
-            (jsOp cast (fn [uint16 uint16] uint16) → (fn [nat uint16] uint16)
-              (global TestUInt16_divNoInline)
-            )
-            (var 3 : nat)
+            (global TestUInt16_divNoInline)
+            (var 3 : uint16)
             (var 1 : uint16)
           )
           (letE : bool
@@ -852,15 +834,13 @@ TestUInt16_test3m2__shouldBeTrue : bool
               )
               (ite
                 (var 0 : bool)
-                (letE : nat
-                  (lit 0)
+                (letE : uint16
+                  (lit 0u16)
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint16 uint16] bool) → (fn [uint16 nat] bool)
-                        (global instDecidableEqUInt16)
-                      )
+                      (global instDecidableEqUInt16)
                       (var 4 : uint16)
-                      (var 0 : nat)
+                      (var 0 : uint16)
                     )
                     (letE : bool
                       (jsOp cast bool → bool
@@ -893,24 +873,20 @@ TestUInt32_divNoInline : (fn [uint32 uint32] uint32)
 )
 
 TestUInt32_test1_0_shouldBeTrue : bool
-(letE : nat
-  (lit 1)
-  (letE : nat
-    (lit 0)
+(letE : uint32
+  (lit 1u32)
+  (letE : uint32
+    (lit 0u32)
     (letE : uint32
       (apN
-        (jsOp cast (fn [uint32 uint32] uint32) → (fn [nat nat] uint32)
-          (global TestUInt32_divNoInline)
-        )
-        (var 1 : nat)
-        (var 0 : nat)
+        (global TestUInt32_divNoInline)
+        (var 1 : uint32)
+        (var 0 : uint32)
       )
       (letE : bool
         (apN
-          (jsOp cast (fn [uint32 uint32] bool) → (fn [nat uint32] bool)
-            (global instDecidableEqUInt32)
-          )
-          (var 1 : nat)
+          (global instDecidableEqUInt32)
+          (var 1 : uint32)
           (var 0 : uint32)
         )
         (letE : bool
@@ -921,11 +897,9 @@ TestUInt32_test1_0_shouldBeTrue : bool
             (var 0 : bool)
             (letE : bool
               (apN
-                (jsOp cast (fn [uint32 uint32] bool) → (fn [nat nat] bool)
-                  (global instDecidableEqUInt32)
-                )
-                (var 3 : nat)
-                (var 3 : nat)
+                (global instDecidableEqUInt32)
+                (var 3 : uint32)
+                (var 3 : uint32)
               )
               (letE : bool
                 (jsOp cast bool → bool
@@ -943,26 +917,22 @@ TestUInt32_test1_0_shouldBeTrue : bool
 )
 
 TestUInt32_test3_2_shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
-    (letE : nat
-      (lit 1)
+(letE : uint32
+  (lit 3u32)
+  (letE : uint32
+    (lit 2u32)
+    (letE : uint32
+      (lit 1u32)
       (letE : uint32
         (apN
-          (jsOp cast (fn [uint32 uint32] uint32) → (fn [nat nat] uint32)
-            (global TestUInt32_divNoInline)
-          )
-          (var 2 : nat)
-          (var 1 : nat)
+          (global TestUInt32_divNoInline)
+          (var 2 : uint32)
+          (var 1 : uint32)
         )
         (letE : bool
           (apN
-            (jsOp cast (fn [uint32 uint32] bool) → (fn [nat uint32] bool)
-              (global instDecidableEqUInt32)
-            )
-            (var 1 : nat)
+            (global instDecidableEqUInt32)
+            (var 1 : uint32)
             (var 0 : uint32)
           )
           (letE : bool
@@ -973,11 +943,9 @@ TestUInt32_test3_2_shouldBeTrue : bool
               (var 0 : bool)
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint32 uint32] bool) → (fn [nat nat] bool)
-                    (global instDecidableEqUInt32)
-                  )
-                  (var 3 : nat)
-                  (var 3 : nat)
+                  (global instDecidableEqUInt32)
+                  (var 3 : uint32)
+                  (var 3 : uint32)
                 )
                 (letE : bool
                   (jsOp cast bool → bool
@@ -996,31 +964,25 @@ TestUInt32_test3_2_shouldBeTrue : bool
 )
 
 TestUInt32_test3m2_shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
+(letE : uint32
+  (lit 3u32)
+  (letE : uint32
+    (lit 2u32)
     (letE : uint32
       (apN
         (extern lean_uint32_neg)
-        (jsOp cast nat → uint32
-          (var 0 : nat)
-        )
+        (var 0 : uint32)
       )
       (letE : uint32
         (apN
           (extern lean_uint32_div)
-          (jsOp cast nat → uint32
-            (var 2 : nat)
-          )
+          (var 2 : uint32)
           (var 0 : uint32)
         )
         (letE : uint32
           (apN
-            (jsOp cast (fn [uint32 uint32] uint32) → (fn [nat uint32] uint32)
-              (global TestUInt32_divNoInline)
-            )
-            (var 3 : nat)
+            (global TestUInt32_divNoInline)
+            (var 3 : uint32)
             (var 1 : uint32)
           )
           (letE : bool
@@ -1035,15 +997,13 @@ TestUInt32_test3m2_shouldBeTrue : bool
               )
               (ite
                 (var 0 : bool)
-                (letE : nat
-                  (lit 0)
+                (letE : uint32
+                  (lit 0u32)
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint32 uint32] bool) → (fn [uint32 nat] bool)
-                        (global instDecidableEqUInt32)
-                      )
+                      (global instDecidableEqUInt32)
                       (var 4 : uint32)
-                      (var 0 : nat)
+                      (var 0 : uint32)
                     )
                     (letE : bool
                       (jsOp cast bool → bool
@@ -1076,24 +1036,20 @@ _private_SnapshotsPBOPure_PrimOpIntDivNonConfigurable_0_TestUInt8_divNoInline : 
 )
 
 TestUInt8_test1_0__shouldBeTrue : bool
-(letE : nat
-  (lit 1)
-  (letE : nat
-    (lit 0)
+(letE : uint8
+  (lit 1u8)
+  (letE : uint8
+    (lit 0u8)
     (letE : uint8
       (apN
-        (jsOp cast (fn [uint8 uint8] uint8) → (fn [nat nat] uint8)
-          (global _private_SnapshotsPBOPure_PrimOpIntDivNonConfigurable_0_TestUInt8_divNoInline)
-        )
-        (var 1 : nat)
-        (var 0 : nat)
+        (global _private_SnapshotsPBOPure_PrimOpIntDivNonConfigurable_0_TestUInt8_divNoInline)
+        (var 1 : uint8)
+        (var 0 : uint8)
       )
       (letE : bool
         (apN
-          (jsOp cast (fn [uint8 uint8] bool) → (fn [nat uint8] bool)
-            (global instDecidableEqUInt8)
-          )
-          (var 1 : nat)
+          (global instDecidableEqUInt8)
+          (var 1 : uint8)
           (var 0 : uint8)
         )
         (letE : bool
@@ -1104,11 +1060,9 @@ TestUInt8_test1_0__shouldBeTrue : bool
             (var 0 : bool)
             (letE : bool
               (apN
-                (jsOp cast (fn [uint8 uint8] bool) → (fn [nat nat] bool)
-                  (global instDecidableEqUInt8)
-                )
-                (var 3 : nat)
-                (var 3 : nat)
+                (global instDecidableEqUInt8)
+                (var 3 : uint8)
+                (var 3 : uint8)
               )
               (letE : bool
                 (jsOp cast bool → bool
@@ -1126,26 +1080,22 @@ TestUInt8_test1_0__shouldBeTrue : bool
 )
 
 TestUInt8_test3_2__shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
-    (letE : nat
-      (lit 1)
+(letE : uint8
+  (lit 3u8)
+  (letE : uint8
+    (lit 2u8)
+    (letE : uint8
+      (lit 1u8)
       (letE : uint8
         (apN
-          (jsOp cast (fn [uint8 uint8] uint8) → (fn [nat nat] uint8)
-            (global _private_SnapshotsPBOPure_PrimOpIntDivNonConfigurable_0_TestUInt8_divNoInline)
-          )
-          (var 2 : nat)
-          (var 1 : nat)
+          (global _private_SnapshotsPBOPure_PrimOpIntDivNonConfigurable_0_TestUInt8_divNoInline)
+          (var 2 : uint8)
+          (var 1 : uint8)
         )
         (letE : bool
           (apN
-            (jsOp cast (fn [uint8 uint8] bool) → (fn [nat uint8] bool)
-              (global instDecidableEqUInt8)
-            )
-            (var 1 : nat)
+            (global instDecidableEqUInt8)
+            (var 1 : uint8)
             (var 0 : uint8)
           )
           (letE : bool
@@ -1156,11 +1106,9 @@ TestUInt8_test3_2__shouldBeTrue : bool
               (var 0 : bool)
               (letE : bool
                 (apN
-                  (jsOp cast (fn [uint8 uint8] bool) → (fn [nat nat] bool)
-                    (global instDecidableEqUInt8)
-                  )
-                  (var 3 : nat)
-                  (var 3 : nat)
+                  (global instDecidableEqUInt8)
+                  (var 3 : uint8)
+                  (var 3 : uint8)
                 )
                 (letE : bool
                   (jsOp cast bool → bool
@@ -1179,31 +1127,25 @@ TestUInt8_test3_2__shouldBeTrue : bool
 )
 
 TestUInt8_test3m2__shouldBeTrue : bool
-(letE : nat
-  (lit 3)
-  (letE : nat
-    (lit 2)
+(letE : uint8
+  (lit 3u8)
+  (letE : uint8
+    (lit 2u8)
     (letE : uint8
       (apN
         (extern lean_uint8_neg)
-        (jsOp cast nat → uint8
-          (var 0 : nat)
-        )
+        (var 0 : uint8)
       )
       (letE : uint8
         (apN
           (extern lean_uint8_div)
-          (jsOp cast nat → uint8
-            (var 2 : nat)
-          )
+          (var 2 : uint8)
           (var 0 : uint8)
         )
         (letE : uint8
           (apN
-            (jsOp cast (fn [uint8 uint8] uint8) → (fn [nat uint8] uint8)
-              (global _private_SnapshotsPBOPure_PrimOpIntDivNonConfigurable_0_TestUInt8_divNoInline)
-            )
-            (var 3 : nat)
+            (global _private_SnapshotsPBOPure_PrimOpIntDivNonConfigurable_0_TestUInt8_divNoInline)
+            (var 3 : uint8)
             (var 1 : uint8)
           )
           (letE : bool
@@ -1218,15 +1160,13 @@ TestUInt8_test3m2__shouldBeTrue : bool
               )
               (ite
                 (var 0 : bool)
-                (letE : nat
-                  (lit 0)
+                (letE : uint8
+                  (lit 0u8)
                   (letE : bool
                     (apN
-                      (jsOp cast (fn [uint8 uint8] bool) → (fn [uint8 nat] bool)
-                        (global instDecidableEqUInt8)
-                      )
+                      (global instDecidableEqUInt8)
                       (var 4 : uint8)
-                      (var 0 : nat)
+                      (var 0 : uint8)
                     )
                     (letE : bool
                       (jsOp cast bool → bool

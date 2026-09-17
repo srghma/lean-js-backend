@@ -266,9 +266,9 @@ def ofNatLitU (w : Nat) (a : MiniExpr) : Option MiniExpr :=
     `w` bits, read as a signed number. -/
 def ofNatLitS (w : Nat) (a : MiniExpr) : Option MiniExpr :=
   (natOfLit? a).map fun n =>
-    let m := 2 ^ w
-    let r := n % m
-    intLit (if m / 2 ≤ r then (r : Int) - m else (r : Int))
+    let m : Nat := 2 ^ w
+    let r : Nat := n % m
+    intLit (if m / 2 ≤ r then (r : Int) - (m : Int) else (r : Int))
 
 /-- Is this expression safe to mention twice — a name or a literal, which has no
     subexpression to evaluate and hence no work to repeat and no effect to repeat? -/
