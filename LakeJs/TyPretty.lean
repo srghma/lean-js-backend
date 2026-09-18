@@ -27,24 +27,17 @@ mutual
 /-- A one-line rendering of a closed type, for debugging and error messages. -/
 def Ty.pretty : Ty → String
   | .prim p         => p.pretty
-  | .typeParam      => "typeParam"
-  | .fnTy s         => Ty.prettyFn s
+  | .fn a b         => "(fn " ++ Ty.pretty a ++ " " ++ Ty.pretty b ++ ")"
+
   | .primCovariant s => Ty.prettyCov s
   | .enum s         =>
       "(enum " ++ toString s.nOfConstructors ++ " " ++ toString s.shift ++ ")"
   | .record fs      => "(record " ++ Ty.prettyA2 fs ++ ")"
   | .taggedUnion l  => "(taggedUnion " ++ Ty.prettyTU l ++ ")"
-  | .recTaggedUnion ⟨l⟩ => "(recTaggedUnion " ++ RTy.prettyTU l ++ ")"
-  | .recObject ⟨fs⟩ => "(recObject " ++ RTy.prettyA2 fs ++ ")"
-  | .recAlias ⟨b⟩   => "(recAlias " ++ RTy.pretty b ++ ")"
-  | .mutualRecursiveFamily f => FamMember.prettyFamily f
-
-/-- The function type formers, over closed types. -/
-def Ty.prettyFn : TyFn Ty → String
-  | .fn args ret    => "(fn [" ++ Ty.prettyList args ++ "] " ++ Ty.pretty ret ++ ")"
-  | .fn_returnsProd args r1 rs =>
-      "(fn [" ++ Ty.prettyList args ++ "] ["
-        ++ Ty.pretty r1 ++ (if rs.isEmpty then "" else "," ++ Ty.prettyList rs) ++ "])"
+  | .recTaggedUnion l _ => "(recTaggedUnion " ++ RTy.prettyTU l ++ ")"
+  | .recObject fs _ => "(recObject " ++ RTy.prettyA2 fs ++ ")"
+  | .recAlias b _   => "(recAlias " ++ RTy.pretty b ++ ")"
+  | .mutualRecursiveFamily f _ => FamMember.prettyFamily f
 
 /-- The invariant type formers, over closed types. -/
 def Ty.prettyCov : LeanPrimTyCovariant Ty → String
@@ -94,24 +87,17 @@ def Ty.prettyCP : CtorsWithPayload Ty → String
 def RTy.pretty : RTy → String
   | .self i         => "self#" ++ toString i
   | .prim p         => p.pretty
-  | .typeParam      => "typeParam"
-  | .fnTy s         => RTy.prettyFn s
+  | .fn a b         => "(fn " ++ RTy.pretty a ++ " " ++ RTy.pretty b ++ ")"
+
   | .primCovariant s => RTy.prettyCov s
   | .enum s         =>
       "(enum " ++ toString s.nOfConstructors ++ " " ++ toString s.shift ++ ")"
   | .record fs      => "(record " ++ RTy.prettyA2 fs ++ ")"
   | .taggedUnion l  => "(taggedUnion " ++ RTy.prettyTU l ++ ")"
-  | .recTaggedUnion ⟨l⟩ => "(recTaggedUnion " ++ RTy.prettyTU l ++ ")"
-  | .recObject ⟨fs⟩ => "(recObject " ++ RTy.prettyA2 fs ++ ")"
-  | .recAlias ⟨b⟩   => "(recAlias " ++ RTy.pretty b ++ ")"
+  | .recTaggedUnion l => "(recTaggedUnion " ++ RTy.prettyTU l ++ ")"
+  | .recObject fs => "(recObject " ++ RTy.prettyA2 fs ++ ")"
+  | .recAlias b   => "(recAlias " ++ RTy.pretty b ++ ")"
   | .mutualRecursiveFamily f => FamMember.prettyFamily f
-
-/-- The function type formers, over types that may mention `.self`. -/
-def RTy.prettyFn : TyFn RTy → String
-  | .fn args ret    => "(fn [" ++ RTy.prettyList args ++ "] " ++ RTy.pretty ret ++ ")"
-  | .fn_returnsProd args r1 rs =>
-      "(fn [" ++ RTy.prettyList args ++ "] ["
-        ++ RTy.pretty r1 ++ (if rs.isEmpty then "" else "," ++ RTy.prettyList rs) ++ "])"
 
 /-- The invariant type formers, over types that may mention `.self`. -/
 def RTy.prettyCov : LeanPrimTyCovariant RTy → String
@@ -201,11 +187,11 @@ end LakeJs.TyPretty
 /-! The renderings, under the namespaces of the types they render. -/
 
 namespace LakeJs.Ty
-export LakeJs.TyPretty.Ty (pretty prettyFn prettyCov prettyList prettyCtors prettyA2 prettyNE prettyTU prettyCP)
+export LakeJs.TyPretty.Ty (pretty prettyCov prettyList prettyCtors prettyA2 prettyNE prettyTU prettyCP)
 end LakeJs.Ty
 
 namespace LakeJs.Ty.RTy
-export LakeJs.TyPretty.RTy (pretty prettyFn prettyCov prettyList prettyCtors prettyA2 prettyNE prettyTU prettyCP)
+export LakeJs.TyPretty.RTy (pretty prettyCov prettyList prettyCtors prettyA2 prettyNE prettyTU prettyCP)
 end LakeJs.Ty.RTy
 
 namespace LakeJs.Ty.FamMember

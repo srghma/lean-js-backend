@@ -1,1072 +1,712 @@
-import LakeJs.Simp
-import LakeJs.Inline
-import LakeJs.Scalarise
-import LakeJs.DeadSlot
-import LakeJs.Contify
+module
+
+public import LakeJs.Subst
+public import LakeJs.ExternEval1
+public import LakeJs.ExternEval2
+public import LakeJs.ExternEvalMisc
+
+@[expose] public section
 
 /-!
-# The optimiser as a relation
+# The evaluator: what a `Term` *means*
 
-`LakeJs/Simp.lean` is the optimiser as a *function*: it takes a term and gives back a
-better one.  That is what the backend runs, but it is not something one can state a
-property of — "is the optimiser confluent?", "is it idempotent?", "does rule A commute
-with rule B?" are all questions about the **individual rewrites**, and a function that
-applies all of them at once in one bottom-up sweep has none of them written down.
+This module is the operational semantics of `LakeJs.Expr`, and nothing else.  There is no
+optimiser here: a `Term` is the language the front end produces, and what this file says
+is how one **runs**.
 
-So the rewrites are written down here, as an inductive relation:
-
-```
-t —→[tbl] t'   means   t' is t with one rewrite of the optimiser applied somewhere inside it
-```
-
-`Step` has one constructor per *rule* — the projection of a constructor application, the
-dead `let`, the copy, the eta-contraction, the guarded `Nat` predecessor, and the two
-rules of the inliner — and one per *position* a rewrite may be made in, which is what
-makes the relation a congruence.  Its reflexive-transitive closure `Chain` is "reduces
-to", written `—↠[tbl]`.
-
-`tbl` is the table of declarations a call of which may be inlined
-(`LakeJs.Inline.Table`), and it is what the rules `delta` and `deltaLit` read: unfolding a
-call is justified by the *definition* of the callee, and a `Sig` records only names and
-types, so the definitions have to be given.  Every other rule ignores it, which is why the
-relation is one relation rather than two.
-
-The relation and the functions are then tied together: `Term.simp_chain` (and its three
-companions for spines, branches and loop blocks) proves
+The semantics is a call-by-value small step relation, `Step` on terms and `StepT` on the
+tails of a block, whose central rule is **β**:
 
 ```
-t —↠[tbl] Term.simp t
+Step (.ap (.lam b) a) (b.subst0 a)      -- when `a` is a value
 ```
 
-and `Term.inlineCalls_chain`, with the same three companions, proves
+with the other rules doing the same thing for the other binders and eliminators:
 
-```
-t —↠[tbl] LakeJs.Inline.Term.inlineCalls tbl t
-```
+| term                                        | steps to                                 |
+| :------------------------------------------ | :--------------------------------------- |
+| `(fun x => b) v`                             | `b[x := v]`                               |
+| `let x = v; b`                               | `b[x := v]`                               |
+| `if true then t else e`                      | `t`                                       |
+| `force (delay e)`                            | `e`                                       |
+| `(ctor 0 args).j`                            | `args[j]`                                 |
+| `tag (ctor i args)`                          | `i`                                       |
+| `case (ctor i args) of …`                    | the branch for `i`                        |
+| `block (ret t)`                              | `t`                                       |
+| `label l(ps) = body; rest` (shared tail)     | `rest` with every jump to `l` replaced    |
+| `label l(ps) = body; rest` (loop)            | the same, a jump re-entering the loop     |
 
-that is: **every term the optimiser produces is reachable from the input by the rules of
-this relation.**  The function is an *implementation* of the relation — a particular
-strategy for applying the rules, bottom up, once each — rather than a separate thing that
-happens to agree with it, and a property proved of `Step` is therefore a property of what
-the backend actually emits.
+## One rule for both kinds of label
 
-Two things this file deliberately does not claim.
+A label is bound by `Tail.label`, and it reduces by **substituting the label away**
+(`Tail.lsubst0`): every jump to it in the rest of the block becomes the block it names,
+with the arguments of the jump bound in front of it.  The two kinds of label differ only
+in *what* is substituted.
 
-* Nothing here says that `Step` is confluent — and `LakeJs/ReduceConfluence.lean` proves
-  that it is not, not even locally: a wrapper `fun (x0, x1) => add2(x0, x1)` around an
-  inlinable declaration eta-contracts to `add2` and delta-expands to
-  `fun (x0, x1) => x0 + x1`, which eta-contracts to the extern, and those two normal
-  forms are different terms (`step_not_locallyConfluent`, `step_not_confluent`).  The
-  two are the same *function*, so the emitted module is right whichever it prints; what
-  fails is that the answer does not depend on the order the rules fire in, which is why
-  the backend fixes an order rather than chasing the relation to a normal form.
-* `LakeJs/Specialise.lean` is not part of the relation.  It does not rewrite one term
-  into another: it takes the *bodies of a whole group* of declarations and builds one
-  loop that the members enter, so what it relates is a module, not a term.
-  `LakeJs/Scalarise.lean`, on the other hand, *is* part of it (`letCtorInline`,
-  `scalariseSlot`): splitting a loop slot into its fields changes the slots the loop
-  carries, but the slots of a loop are not part of the type of the term the loop is, so
-  such a rewrite is still an endorelation on `Term Sg Γ τ`.
+* A **shared tail** (`self = false`) is replaced by its body, which cannot jump to it.
+* A **loop** (`self = true`) is replaced by `Tail.loopEntry body`: the loop again, entered
+  with the arguments of the jump.  So a loop needs no unrolling rule of its own —
+  re-entering it *is* jumping to it — and a loop that never answers shows up as an
+  infinite reduction sequence, which is the honest statement: a self-label is the one
+  construct of this language that can fail to terminate, and no termination theorem is
+  claimed for it.
 
-Everything in `Step` is type-preserving by construction: both sides of every constructor
-are terms of the same `Term Sg Γ τ`, so "the optimiser cannot produce an ill-typed
-program" is not a theorem here but a property of the statement.
+## Where the relation lives
+
+`Step` relates terms, and a term holds no labels at all, so nothing has to be said about
+free jumps.  `StepT` relates the tails of a block in the **empty** label context: a tail
+that jumps out of the block being run is a part of a program, not a program, and in the
+empty label context `Tail.jmp` has no target to name.
+
+## Call by value, and the price of a control transfer
+
+Every rule that substitutes asks first that what it substitutes is an answer: `Step.beta`
+asks `Value a` and `StepT.letV` asks `Value e`.  A jump does not substitute its arguments
+at all: `Tail.lsubst` binds every argument with a `let` in front of the block
+(`Tail.letSpine`), so a control transfer can neither duplicate a computation nor delay
+one.
+
+## What is proved
+
+* The answers are described by `Value`, and the ones the language cannot run any further
+  because they reach out of it — a reference to a top-level declaration, a variable, a
+  constant of the host platform — are `Neutral`.  A closed term over the empty
+  signature whose externs all have a meaning has no neutral subterm, and then `Value`
+  means what it should: a literal, a delayed value, a lambda, or a **constructor of one
+  of the schemas applied to values**.
+* `canonical_prim`, `canonical_fn`, `canonical_lazy`, `canonical_bool` and
+  `canonical_oneCtor` are the canonical-forms lemmas that say so: what an answer of each
+  shape of type can be.
+* `DeltaRedex.steps`: **a δ-redex takes a step** — a function of the runtime applied to
+  as many literals as it takes is never stuck.
+* `quickAp_steps`, `quickAp_steps_of_steps`, `not_neutral_quickAp`, `step_quickAp_inv`:
+  **hash-consing is erasure** — `lean_sharecommon_quick` answers its argument, at every
+  type, and an application of it is never an answer
+  (`SHARECOMMON_EMULATION.md`, option A).
+* The examples at the end of the file are proofs that `lean_nat_add 1 2` runs to `3`,
+  that `lean_float_sin 1.0` runs to the sine of `1.0`, and that a function of the runtime
+  waiting for a further argument is an answer.
+
+The progress theorem — *every* closed term is an answer or takes a step, with no shape
+left out — is `Term.progress`, in `LakeJs.Progress`.
 -/
 
-namespace LakeJs.Reduce
+namespace LakeJs.Expr
 
 open LakeJs
 open LakeJs.Ty
-open LakeJs.Layout (FieldLayout ObjLayout)
-open LakeJs.Expr
-open LakeJs.Lookup
-open LakeJs.Rename
-open LakeJs.Simp
-open LakeJs.Inline
-open LakeJs.Scalarise
 
-open LakeJs.Simp
+variable {Sg : Sig}
 
-/-! ## One rewrite -/
+/-! ## Reading a spine, and choosing a branch -/
+
+/-- The `j`-th term of a spine, at the type the list of types gives it. -/
+def Spine.get? {Γ : Ctx} :
+    ∀ {σs : List Ty} {τ : Ty}, Spine Sg Γ σs → (j : Nat) → σs[j]? = some τ →
+      Term Sg Γ τ
+  | _ :: _, _, .cons t _, 0, h => by
+      simp only [List.getElem?_cons_zero, Option.some.injEq] at h
+      exact h ▸ t
+  | _ :: _, _, .cons _ rest, j + 1, h => rest.get? j (by simpa using h)
+
+/-- The branch a dispatch takes for tag `i`: the branch that tests it, the default branch
+    if none does — and, when the dispatch is exhaustive and so has no default branch, the
+    branch the coverage proof `hcov` says is there. -/
+def Alts.select {Γ : Ctx} {τ : Ty} :
+    ∀ {tags : List Nat} {full : Bool}, Alts Sg Γ τ tags full → (i : Nat) →
+      (hcov : full = true → i ∈ tags) → Term Sg Γ τ
+  | _, _, .deflt t, _, _ => t
+  | _, _, .nilFull, _, hcov => absurd (hcov rfl) (by simp)
+  | _, _, .cons tag t rest, i, hcov =>
+      if h : tag = i then t
+      else
+        rest.select i (fun hf => by
+          have hmem := hcov hf
+          rcases List.mem_cons.mp hmem with heq | hrest
+          · exact absurd heq.symm h
+          · exact hrest)
+
+/-- The same, for the branches of a dispatch inside a block. -/
+def AltsT.select {Γ : Ctx} {Ω : LCtx} {τ : Ty} :
+    ∀ {tags : List Nat} {full : Bool}, AltsT Sg Γ Ω τ tags full → (i : Nat) →
+      (hcov : full = true → i ∈ tags) → Tail Sg Γ Ω τ
+  | _, _, .deflt b, _, _ => b
+  | _, _, .nilFull, _, hcov => absurd (hcov rfl) (by simp)
+  | _, _, .cons tag b rest, i, hcov =>
+      if h : tag = i then b
+      else
+        rest.select i (fun hf => by
+          have hmem := hcov hf
+          rcases List.mem_cons.mp hmem with heq | hrest
+          · exact absurd heq.symm h
+          · exact hrest)
+
+/-! ## δ: running a function of the runtime
+
+`Term.extern` is a *curried* term, so a function of the runtime applied to all of its
+arguments is a tower of `Term.ap`s over it.  When every one of those arguments is a
+literal, the whole tower is a **δ-redex** and steps in one go to the literal of
+`e.eval …` — the catalogue's meaning of the entry at those values, which is a **total**
+function, so there is no side condition and no way for the evaluator to stop in front of
+a saturated call.  Nothing partial is a redex: `lean_nat_add 1` is a function still
+waiting for its second argument, and it is an answer. -/
+
+/-- A term the evaluator can run because it is a function of the runtime applied to as
+    many literals as it takes — or because it is `lean_sharecommon_quick` applied to
+    anything, which is the identity. -/
+inductive DeltaRedex {Γ : Ctx} : ∀ {τ : Ty}, Term Sg Γ τ → Prop
+  /-- A constant of the runtime.  (`LeanInitPureExternLazy` is empty today, so this
+      constructor has no instance; see `(‡)` in `LakeJs.LeanInitPureExterns`.) -/
+  | const {p : LeanPrimTy} (e : LeanInitPureExternLazy p) :
+      DeltaRedex (Term.extern (Sg := Sg) (Γ := Γ) (.const e))
+  /-- A one-argument function of the runtime, applied to a literal. -/
+  | prim1 {a b : LeanPrimTy} (e : LeanInitPureExtern1OnlyPrim a b) (l : LeanPrimLit a) :
+      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ) (.extern (.prim1 e)) (.lit l))
+  /-- A two-argument function of the runtime, applied to two literals. -/
+  | prim2 {a b c : LeanPrimTy} (e : LeanInitPureExtern2OnlyPrim a b c) (l1 : LeanPrimLit a)
+      (l2 : LeanPrimLit b) :
+      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ)
+        (.ap (.extern (.prim2 e)) (.lit l1)) (.lit l2))
+  /-- A three-argument function of the runtime, applied to three literals. -/
+  | prim3 {a b c d : LeanPrimTy} (e : LeanInitPureExtern3OnlyPrim a b c d)
+      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) (l3 : LeanPrimLit c) :
+      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ)
+        (.ap (.ap (.extern (.prim3 e)) (.lit l1)) (.lit l2)) (.lit l3))
+  /-- A five-argument function of the runtime, applied to five literals. -/
+  | prim5 {a b c d e' f : LeanPrimTy} (e : LeanInitPureExtern5 a b c d e' f)
+      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) (l3 : LeanPrimLit c) (l4 : LeanPrimLit d)
+      (l5 : LeanPrimLit e') :
+      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ)
+        (.ap (.ap (.ap (.ap (.extern (.prim5 e)) (.lit l1)) (.lit l2)) (.lit l3)) (.lit l4))
+        (.lit l5))
+  /-- **Hash-consing is the identity on values.**  `lean_sharecommon_quick` answers a
+      value equal to its argument — it only replaces subterms by copies already in the
+      runtime's table, which is invisible to this language — so it is a redex at *every*
+      type, not only at the terminal ones the `eval` tables speak about.  See
+      `SHARECOMMON_EMULATION.md`.
+
+      Unlike the other five, this one does not ask that its argument is an answer.  It
+      cannot: `Neutral` asks that a term is *not* a δ-redex, so `DeltaRedex` occurs
+      negatively in it and cannot be defined together with `Value`.  Nothing is lost by
+      firing early, because the rule keeps the argument exactly as it is — the argument
+      is then evaluated where it stands, rather than under the identity. -/
+  | quick {τ : Ty} {t : Term Sg Γ τ} :
+      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ)
+        (.extern (.poly1 (.lean_sharecommon_quick τ))) t)
+
+/-! ## Values, and where the language stops -/
 
 mutual
 
-/-- `Step tbl t t'`: `t'` is `t` with one rewrite of the optimiser applied, either at the
-    root (the first group of constructors, one per rule) or inside one of its
-    subterms (the second group, one per position). -/
-inductive Step {Sg : Sig} (tbl : Inline.Table Sg) :
-    {Γ : Ctx} → {τ : Ty} → Term Sg Γ τ → Term Sg Γ τ → Prop
-  /-- Reading a field of a value built right here is the field itself. -/
-  | projOfCtor {Γ : Ctx} {σ τ : Ty} {e : Term Sg Γ σ} {i j : Nat}
-      {h : σ.fieldTy? i j = some τ} {t : Term Sg Γ τ} :
-      projOfCtor? e i j = some t → Step tbl (.proj e i j h) t
-  /-- The `else` of a test against `0` knows the value is not zero, so the truncating
-      subtraction in it is the plain one. -/
-  | iteGuard {Γ : Ctx} {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t u : Term Sg Γ τ}
-      {i : Nat} :
-      nonZeroGuard? c = some i → Step tbl (.ite c t u) (.ite c t (Term.assumeNonZero i u))
-  /-- `let x = e; cast x` is `cast e`: a cast is not a value, it is the record that the
-      value was read at another type. -/
-  | letCast {Γ : Ctx} {σ τ : Ty} {e : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ}
-      {rebuild : Term Sg Γ σ → Term Sg Γ τ} :
-      castOfHead? b = some rebuild → Step tbl (.letE e b) (rebuild e)
-  /-- A `let` whose value is a test against `0` teaches the branch it guards the same
-      thing `iteGuard` does. -/
-  | letGuard {Γ : Ctx} {σ τ : Ty} {e : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ} {i : Nat} :
-      nonZeroGuard? e = some i →
-      Step tbl (.letE e b) (.letE e (Term.guardNonZero 0 (i + 1) b))
-  /-- `let x = e; x` is `e`. -/
-  | letId {Γ : Ctx} {σ : Ty} {e : Term Sg Γ σ} : Step tbl (.letE e (.var .head)) e
-  /-- `let x = e; b` is `b` when `b` never reads `x`.  Every term is a pure, total
-      value, so a binding nobody reads can go. -/
-  | letDead {Γ : Ctx} {σ τ : Ty} {e : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ}
-      {b' : Term Sg Γ τ} :
-      Term.strengthen? b = some b' → Step tbl (.letE e b) b'
-  /-- `let x = y; b`, `let x = 1; b`, `let x = f; b`: the bound value is a copy of
-      something that is already a value, so it goes where the variable was. -/
-  | letCopy {Γ : Ctx} {σ τ : Ty} {e : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ}
-      {r : Ren Sg (σ :: Γ) Γ} {b' : Term Sg Γ τ} :
-      copyOfValue? e = some r → Term.rename? r b = some b' → Step tbl (.letE e b) b'
-  /-- A lambda whose body applies a context-independent head to its own parameters in
-      order is that head. -/
-  | eta {Γ : Ctx} {ps : List Ty} {ret : Ty} {b : Term Sg (ps.reverse ++ Γ) ret}
-      {t : Term Sg Γ (.fn ps ret)} :
-      etaTarget? (ps := ps) b = some t → Step tbl (.lamN b) t
-  /-- A saturated call of a declaration of the table is that declaration's body, with
-      the arguments of the call in place of its parameters
-      (`LakeJs.Inline.betaGlobal?`).  This is the one rule that reads the table: it is
-      the *definition* of the callee that justifies the rewrite, and a `Sig` records only
-      names and types, so the definitions have to be given. -/
-  | delta {Γ : Ctx} {ps : List Ty} {ret : Ty} {r : GlobalRef Sg (.fn ps ret)}
-      {args : Spine Sg Γ ps} {t : Term Sg Γ ret} :
-      LakeJs.Inline.betaGlobal? tbl r args = some t →
-        Step tbl (.apN (.global r) args) t
-  /-- A reference to a declaration of the table whose body is a literal is that
-      literal. -/
-  | deltaLit {Γ : Ctx} {τ : Ty} {r : GlobalRef Sg τ} {t : Term Sg Γ τ} :
-      LakeJs.Inline.litGlobal? tbl r = some t → Step tbl (.global r) t
-  /-- A `let` of a constructor application that nothing needs whole goes to its uses:
-      `LakeJs.Scalarise.mapTerm` puts the application at each of them, where it is a
-      field read that `projOfCtor` then turns into the field itself, so the object is
-      never built at all. -/
-  | letCtorInline {Γ : Ctx} {σ τ : Ty} {v : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ}
-      {b' : Term Sg Γ τ} :
-      Scalarise.mapTerm (Scalarise.substHead v) b = some b' → Step tbl (.letE v b) b'
-  /-- A loop slot whose value the body only takes apart and builds again becomes one slot
-      per field (`LakeJs.Scalarise.scalariseSlot?`).  The loop that comes out carries
-      *different slots* from the one that went in — and is a term of the same type, since
-      the slots of a loop are not part of the type of the term the loop is, which is what
-      lets this pass be a rule of the same relation as the rest. -/
-  | scalariseSlot {Γ : Ctx} {σs : List Ty} {τ : Ty} {init : Spine Sg Γ σs}
-      {body : Body Sg (σs.reverse ++ Γ) σs τ} {p : Nat} {t : Term Sg Γ τ} :
-      Scalarise.scalariseSlot? init body p = some t → Step tbl (.loop init body) t
-  /-- A loop slot no iteration reads is dropped (`LakeJs.DeadSlot.dropSlot?`): the loop
-      starts with one value fewer and hands one value fewer round, and — as with
-      `scalariseSlot` — the slots of a loop are not part of the type of the term the loop
-      is, so the smaller loop is a term of the same type. -/
-  | dropDeadSlot {Γ : Ctx} {σs : List Ty} {τ : Ty} {init : Spine Sg Γ σs}
-      {body : Body Sg (σs.reverse ++ Γ) σs τ} {p : Nat} {t : Term Sg Γ τ} :
-      DeadSlot.dropSlot? init body p = some t → Step tbl (.loop init body) t
-  /-- A `let` of a lambda that is only ever *called* — never used as a value, never
-      called from under a binder — is a join point (`LakeJs.Contify.contifiable`): the
-      same body, bound by `Term.joinPoint`, and every call of it in the rest turned into
-      a `Term.jump`.  Both sides bind the same body and run it on the same arguments at
-      the same places; what changes is that the term now *says* the name never escapes,
-      which is what `LakeJs.Usage` asks of a join point. -/
-  | contify {Γ : Ctx} {ps : List Ty} {ret τ : Ty} {body : Term Sg (ps.reverse ++ Γ) ret}
-      {b : Term Sg (.fn ps ret :: Γ) τ} :
-      Contify.contifiable body b = true →
-        Step tbl (.letE (.lamN body) b) (.joinPoint body (Contify.toJumps 0 b))
-  -- the positions: a rewrite inside a subterm is a rewrite of the term
-  | projArg {Γ : Ctx} {σ τ : Ty} {e e' : Term Sg Γ σ} {i j : Nat}
-      {h : σ.fieldTy? i j = some τ} :
-      Step tbl e e' → Step tbl (.proj e i j h) (.proj e' i j h)
-  | tagOfArg {Γ : Ctx} {σ : Ty} {e e' : Term Sg Γ σ} {h : σ.isTagged = true} :
-      Step tbl e e' → Step tbl (.tagOf e h) (.tagOf e' h)
-  | lazyMkBody {Γ : Ctx} {τ : Ty} {e e' : Term Sg Γ τ} :
-      Step tbl e e' → Step tbl (.lazyMk e) (.lazyMk e')
-  | lazyForceArg {Γ : Ctx} {τ : Ty} {e e' : Term Sg Γ (.lazy τ)} :
-      Step tbl e e' → Step tbl (.lazyForce e) (.lazyForce e')
-  | iteCond {Γ : Ctx} {τ : Ty} {c c' : Term Sg Γ (.prim .bool)} {t u : Term Sg Γ τ} :
-      Step tbl c c' → Step tbl (.ite c t u) (.ite c' t u)
-  | iteThen {Γ : Ctx} {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t t' u : Term Sg Γ τ} :
-      Step tbl t t' → Step tbl (.ite c t u) (.ite c t' u)
-  | iteElse {Γ : Ctx} {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t u u' : Term Sg Γ τ} :
-      Step tbl u u' → Step tbl (.ite c t u) (.ite c t u')
-  | letVal {Γ : Ctx} {σ τ : Ty} {e e' : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ} :
-      Step tbl e e' → Step tbl (.letE e b) (.letE e' b)
-  | letBody {Γ : Ctx} {σ τ : Ty} {e : Term Sg Γ σ} {b b' : Term Sg (σ :: Γ) τ} :
-      Step tbl b b' → Step tbl (.letE e b) (.letE e b')
-  | lamBody {Γ : Ctx} {ps : List Ty} {ret : Ty} {b b' : Term Sg (ps.reverse ++ Γ) ret} :
-      Step tbl b b' → Step tbl (.lamN (params := ps) b) (.lamN b')
-  | apFun {Γ : Ctx} {ps : List Ty} {ret : Ty} {f f' : Term Sg Γ (.fn ps ret)}
-      {args : Spine Sg Γ ps} :
-      Step tbl f f' → Step tbl (.apN f args) (.apN f' args)
-  | apArgs {Γ : Ctx} {ps : List Ty} {ret : Ty} {f : Term Sg Γ (.fn ps ret)}
-      {args args' : Spine Sg Γ ps} :
-      SpineStep tbl args args' → Step tbl (.apN (ret := ret) f args) (.apN f args')
-  | lamProdRets {Γ : Ctx} {ps : List Ty} {r1 : Ty} {rs : List Ty}
-      {rets rets' : Spine Sg (ps.reverse ++ Γ) (r1 :: rs)} :
-      SpineStep tbl rets rets' →
-      Step tbl (.lamProd (params := ps) rets) (.lamProd rets')
-  | callProdFun {Γ : Ctx} {ps : List Ty} {r1 : Ty} {rs : List Ty}
-      {f f' : Term Sg Γ (.fn_returnsProd ps r1 rs)} {args : Spine Sg Γ ps}
-      {i : Fin (rs.length + 1)} :
-      Step tbl f f' → Step tbl (.callProd f args i) (.callProd f' args i)
-  | callProdArgs {Γ : Ctx} {ps : List Ty} {r1 : Ty} {rs : List Ty}
-      {f : Term Sg Γ (.fn_returnsProd ps r1 rs)} {args args' : Spine Sg Γ ps}
-      {i : Fin (rs.length + 1)} :
-      SpineStep tbl args args' → Step tbl (.callProd f args i) (.callProd f args' i)
-  | jsOpArgs {Γ : Ctx} {σs : List Ty} {τ : Ty} {op : JsOp σs τ}
-      {args args' : Spine Sg Γ σs} :
-      SpineStep tbl args args' → Step tbl (.jsOp op args) (.jsOp op args')
-  | ctorArgs {Γ : Ctx} {τ : Ty} {i : Nat} {fs : FieldLayout}
-      {h : τ.ctorFields? i = some fs} {args args' : Spine Sg Γ fs} :
-      SpineStep tbl args args' → Step tbl (.ctor i fs h args) (.ctor i fs h args')
-  | caseScrut {Γ : Ctx} {σ τ : Ty} {tags : List Nat} {s s' : Term Sg Γ σ}
-      {alts : Alts Sg Γ τ tags} {h : σ.caseOk tags = true} :
-      Step tbl s s' → Step tbl (.caseTag s alts h) (.caseTag s' alts h)
-  | caseAlts {Γ : Ctx} {σ τ : Ty} {tags : List Nat} {s : Term Sg Γ σ}
-      {alts alts' : Alts Sg Γ τ tags} {h : σ.caseOk tags = true} :
-      AltsStep tbl alts alts' → Step tbl (.caseTag s alts h) (.caseTag s alts' h)
-  | loopInit {Γ : Ctx} {σs : List Ty} {τ : Ty} {init init' : Spine Sg Γ σs}
-      {body : Body Sg (σs.reverse ++ Γ) σs τ} :
-      SpineStep tbl init init' → Step tbl (.loop init body) (.loop init' body)
-  | loopBody {Γ : Ctx} {σs : List Ty} {τ : Ty} {init : Spine Sg Γ σs}
-      {body body' : Body Sg (σs.reverse ++ Γ) σs τ} :
-      BodyStep tbl body body' → Step tbl (.loop init body) (.loop init body')
-  | joinBody {Γ : Ctx} {ps : List Ty} {σ τ : Ty}
-      {body body' : Term Sg (ps.reverse ++ Γ) σ} {rest : Term Sg (.fn ps σ :: Γ) τ} :
-      Step tbl body body' → Step tbl (.joinPoint body rest) (.joinPoint body' rest)
-  | joinRest {Γ : Ctx} {ps : List Ty} {σ τ : Ty}
-      {body : Term Sg (ps.reverse ++ Γ) σ} {rest rest' : Term Sg (.fn ps σ :: Γ) τ} :
-      Step tbl rest rest' → Step tbl (.joinPoint body rest) (.joinPoint body rest')
-  | jumpArgs {Γ : Ctx} {ps : List Ty} {σ : Ty} {v : Γ ∋ (.fn ps σ)}
-      {args args' : Spine Sg Γ ps} :
-      SpineStep tbl args args' → Step tbl (.jump v args) (.jump v args')
+/-- A **neutral** term: one the language cannot run, because what it is waiting for is
+    outside the language.  A variable, a reference to a top-level declaration, a function
+    the runtime implements, and every eliminator applied to one of those. -/
+inductive Neutral {Γ : Ctx} : ∀ {τ : Ty}, Term Sg Γ τ → Prop
+  | var {τ : Ty} (v : Γ ∋ τ) : Neutral (.var v)
+  | global {τ : Ty} (r : GlobalRef Sg.decls τ) : Neutral (.global r)
+  | extern {σs : List Ty} {τ : Ty} (e : Externs σs τ)
+      (h : ¬ DeltaRedex (Term.extern (Sg := Sg) (Γ := Γ) e)) :
+      Neutral (.extern e)
+  | ap {σ τ : Ty} {f : Term Sg Γ (σ ⇒ τ)} {a : Term Sg Γ σ} :
+      Neutral f → Value a → ¬ DeltaRedex (.ap f a) → Neutral (.ap f a)
+  | proj {σ τ : Ty} {e : Term Sg Γ σ} (i j : Nat) (hOne : σ.numCtors? = some 1)
+      (h : σ.fieldTy? i j = some τ) : Neutral e → Neutral (.proj e i j hOne h)
+  | tagOf {σ : Ty} {e : Term Sg Γ σ} (h : σ.isTagged = true) :
+      Neutral e → Neutral (.tagOf e h)
+  | caseTag {σ τ : Ty} {tags : List Nat} {full : Bool} {e : Term Sg Γ σ}
+      {alts : Alts Sg Γ τ tags full} (h : σ.caseOkAlts full tags = true) :
+      Neutral e → Neutral (.caseTag e alts h)
+  | ite {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t e : Term Sg Γ τ} :
+      Neutral c → Neutral (.ite c t e)
+  | lazyForce {τ : Ty} {e : Term Sg Γ (.lazy τ)} : Neutral e → Neutral (.lazyForce e)
+  /-- A block whose tail waits for something outside the language.  A block that
+      *answers* is not neutral: `Step.blockRet` runs it. -/
+  | block {τ : Ty} {b : Tail Sg Γ [] τ} : TailNeutral b → Neutral (.block b)
 
-/-- A rewrite inside one argument of a spine. -/
-inductive SpineStep {Sg : Sig} (tbl : Inline.Table Sg) : {Γ : Ctx} → {σs : List Ty} →
-    Spine Sg Γ σs → Spine Sg Γ σs → Prop
-  | head {Γ : Ctx} {σ : Ty} {σs : List Ty} {t t' : Term Sg Γ σ} {rest : Spine Sg Γ σs} :
-      Step tbl t t' → SpineStep tbl (.cons t rest) (.cons t' rest)
-  | tail {Γ : Ctx} {σ : Ty} {σs : List Ty} {t : Term Sg Γ σ}
-      {rest rest' : Spine Sg Γ σs} :
-      SpineStep tbl rest rest' → SpineStep tbl (.cons t rest) (.cons t rest')
+/-- A tail the evaluator cannot run: its head — the condition of a branch, the scrutinee
+    of a dispatch — is waiting for something outside the language.  Every other shape of
+    tail either answers (`Tail.ret`, which the enclosing block returns) or steps. -/
+inductive TailNeutral {Γ : Ctx} : ∀ {τ : Ty}, Tail Sg Γ [] τ → Prop
+  | iteT {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t e : Tail Sg Γ [] τ} :
+      Neutral c → TailNeutral (.iteT c t e)
+  | caseT {σ τ : Ty} {tags : List Nat} {full : Bool} {e : Term Sg Γ σ}
+      {alts : AltsT Sg Γ [] τ tags full} (h : σ.caseOkAlts full tags = true) :
+      Neutral e → TailNeutral (.caseT e alts h)
 
-/-- A rewrite inside one branch of a case. -/
-inductive AltsStep {Sg : Sig} (tbl : Inline.Table Sg) :
-    {Γ : Ctx} → {τ : Ty} → {tags : List Nat} → Alts Sg Γ τ tags → Alts Sg Γ τ tags → Prop
-  | deflt {Γ : Ctx} {τ : Ty} {t t' : Term Sg Γ τ} :
-      Step tbl t t' → AltsStep tbl (.deflt t) (.deflt t')
-  | head {Γ : Ctx} {τ : Ty} {tags : List Nat} {tag : Nat} {t t' : Term Sg Γ τ}
-      {rest : Alts Sg Γ τ tags} :
-      Step tbl t t' → AltsStep tbl (.cons tag t rest) (.cons tag t' rest)
-  | tail {Γ : Ctx} {τ : Ty} {tags : List Nat} {tag : Nat} {t : Term Sg Γ τ}
-      {rest rest' : Alts Sg Γ τ tags} :
-      AltsStep tbl rest rest' → AltsStep tbl (.cons tag t rest) (.cons tag t rest')
+/-- An **answer**: a term the evaluator is done with. -/
+inductive Value {Γ : Ctx} : ∀ {τ : Ty}, Term Sg Γ τ → Prop
+  /-- A function. -/
+  | lam {σ τ : Ty} (b : Term Sg (σ :: Γ) τ) : Value (.lam b)
+  /-- A constant of a terminal type. -/
+  | lit {p : LeanPrimTy} (l : LeanPrimLit p) : Value (.lit l)
+  /-- A delayed value: what is inside is *not* run. -/
+  | lazyMk {τ : Ty} (e : Term Sg Γ τ) : Value (.lazyMk e)
+  /-- A constructor of one of the schemas, applied to answers.  A **boolean** is the
+      one type that has a layout and a literal both, and the literal is the answer:
+      `Step.ctorBool` turns a constructor of `Ty.bool` into `true` or `false`, so a
+      constructor at that type is not an answer. -/
+  | ctor {τ : Ty} (i : Nat) (fs : Layout.FieldLayout) (h : τ.ctorFields? i = some fs)
+      (hb : τ ≠ Ty.bool) {args : Spine Sg Γ fs} :
+      SpineValue args → Value (.ctor i fs h args)
+  /-- A term the language cannot run any further. -/
+  | neutral {τ : Ty} {t : Term Sg Γ τ} : Neutral t → Value t
 
-/-- A rewrite in a loop block: the rules of the `let` of a block, and the positions. -/
-inductive BodyStep {Sg : Sig} (tbl : Inline.Table Sg) :
-    {Γ : Ctx} → {σs : List Ty} → {τ : Ty} → Body Sg Γ σs τ → Body Sg Γ σs τ → Prop
-  /-- The block's `let` of a test against `0` teaches the rest of the block that the
-      value it tests is not zero. -/
-  | letGuard {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty} {e : Term Sg Γ σ}
-      {b : Body Sg (σ :: Γ) σs τ} {i : Nat} :
-      nonZeroGuard? e = some i →
-      BodyStep tbl (.letB e b) (.letB e (Body.guardNonZero 0 (i + 1) b))
-  /-- A block's `let` that the rest of the block never reads. -/
-  | letDead {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty} {e : Term Sg Γ σ}
-      {b : Body Sg (σ :: Γ) σs τ} {b' : Body Sg Γ σs τ} :
-      Body.strengthen? b = some b' → BodyStep tbl (.letB e b) b'
-  /-- A block's `let` of a constructor application that nothing needs whole, which goes
-      to its uses exactly as `Step.letCtorInline` does. -/
-  | letCtorInline {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty} {v : Term Sg Γ σ}
-      {b : Body Sg (σ :: Γ) σs τ} {b' : Body Sg Γ σs τ} :
-      Scalarise.mapBody (Scalarise.substHead v) b = some b' →
-        BodyStep tbl (.letB v b) b'
-  /-- A block's `let` of a copy. -/
-  | letCopy {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty} {e : Term Sg Γ σ}
-      {b : Body Sg (σ :: Γ) σs τ} {r : Ren Sg (σ :: Γ) Γ} {b' : Body Sg Γ σs τ} :
-      copyOfValue? e = some r → Body.rename? r b = some b' → BodyStep tbl (.letB e b) b'
-  /-- The guarded predecessor, in a block. -/
-  | iteGuard {Γ : Ctx} {σs : List Ty} {τ : Ty} {c : Term Sg Γ (.prim .bool)}
-      {t u : Body Sg Γ σs τ} {i : Nat} :
-      nonZeroGuard? c = some i →
-      BodyStep tbl (.iteB c t u) (.iteB c t (Body.assumeNonZero i u))
-  -- the positions
-  | retTerm {Γ : Ctx} {σs : List Ty} {τ : Ty} {t t' : Term Sg Γ τ} :
-      Step tbl t t' → BodyStep tbl (σs := σs) (.ret t) (.ret t')
-  | contArgs {Γ : Ctx} {σs : List Ty} {τ : Ty} {args args' : Spine Sg Γ σs} :
-      SpineStep tbl args args' → BodyStep tbl (τ := τ) (.cont args) (.cont args')
-  | letBVal {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty} {e e' : Term Sg Γ σ}
-      {b : Body Sg (σ :: Γ) σs τ} :
-      Step tbl e e' → BodyStep tbl (.letB e b) (.letB e' b)
-  | letBBody {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty} {e : Term Sg Γ σ}
-      {b b' : Body Sg (σ :: Γ) σs τ} :
-      BodyStep tbl b b' → BodyStep tbl (.letB e b) (.letB e b')
-  | iteBCond {Γ : Ctx} {σs : List Ty} {τ : Ty} {c c' : Term Sg Γ (.prim .bool)}
-      {t u : Body Sg Γ σs τ} :
-      Step tbl c c' → BodyStep tbl (.iteB c t u) (.iteB c' t u)
-  | iteBThen {Γ : Ctx} {σs : List Ty} {τ : Ty} {c : Term Sg Γ (.prim .bool)}
-      {t t' u : Body Sg Γ σs τ} :
-      BodyStep tbl t t' → BodyStep tbl (.iteB c t u) (.iteB c t' u)
-  | iteBElse {Γ : Ctx} {σs : List Ty} {τ : Ty} {c : Term Sg Γ (.prim .bool)}
-      {t u u' : Body Sg Γ σs τ} :
-      BodyStep tbl u u' → BodyStep tbl (.iteB c t u) (.iteB c t u')
-  /-- The block's `let` of a lambda that is only ever called is a join point of the
-      block (`LakeJs.Contify.contifiableB`): `Step.contify`, one layer in. -/
-  | contifyB {Γ : Ctx} {ps : List Ty} {ret : Ty} {σs : List Ty} {τ : Ty}
-      {body : Term Sg (ps.reverse ++ Γ) ret} {b : Body Sg (.fn ps ret :: Γ) σs τ} :
-      Contify.contifiableB body b = true →
-        BodyStep tbl (.letB (.lamN body) b) (.joinPointB body (Contify.toJumpsBody 0 b))
-  | joinBBody {Γ : Ctx} {ps : List Ty} {σ : Ty} {σs : List Ty} {τ : Ty}
-      {body body' : Term Sg (ps.reverse ++ Γ) σ} {rest : Body Sg (.fn ps σ :: Γ) σs τ} :
-      Step tbl body body' →
-        BodyStep tbl (.joinPointB body rest) (.joinPointB body' rest)
-  | joinBRest {Γ : Ctx} {ps : List Ty} {σ : Ty} {σs : List Ty} {τ : Ty}
-      {body : Term Sg (ps.reverse ++ Γ) σ} {rest rest' : Body Sg (.fn ps σ :: Γ) σs τ} :
-      BodyStep tbl rest rest' →
-        BodyStep tbl (.joinPointB body rest) (.joinPointB body rest')
+/-- Every term of a spine is an answer. -/
+inductive SpineValue {Γ : Ctx} : ∀ {σs : List Ty}, Spine Sg Γ σs → Prop
+  | nil : SpineValue .nil
+  | cons {σ : Ty} {σs : List Ty} {t : Term Sg Γ σ} {rest : Spine Sg Γ σs} :
+      Value t → SpineValue rest → SpineValue (.cons t rest)
 
 end
 
-/-- `t —→[tbl] t'`: one rewrite of the optimiser, where `tbl` is the table of
-    declarations a call of which may be inlined (`LakeJs.Inline.Table`). -/
-scoped notation:40 t:41 " —→[" tbl "] " t':41 => Step tbl t t'
+/-! ## The step relation -/
 
-/-! ## Reducing to -/
+mutual
 
-/-- The reflexive-transitive closure of a relation: `a` reduces to `b` in zero or more
-    steps. -/
-inductive Chain {α : Sort u} (R : α → α → Prop) : α → α → Prop
-  /-- No rewrite at all. -/
-  | refl {a : α} : Chain R a a
-  /-- One rewrite, then the rest. -/
-  | head {a b c : α} : R a b → Chain R b c → Chain R a c
+/-- One step of call-by-value evaluation. -/
+inductive Step {Γ : Ctx} : ∀ {τ : Ty}, Term Sg Γ τ → Term Sg Γ τ → Prop
+  /-- **β**. -/
+  | beta {σ τ : Ty} {b : Term Sg (σ :: Γ) τ} {a : Term Sg Γ σ} :
+      Value a → Step (.ap (.lam b) a) (b.subst0 a)
+  /-- **δ**: a constant of the runtime is its value, delayed.  (No instance today:
+      `LeanInitPureExternLazy` is empty, see `(‡)` in `LakeJs.LeanInitPureExterns`.) -/
+  | deltaConst {p : LeanPrimTy} (e : LeanInitPureExternLazy p) :
+      Step (Term.extern (.const e)) (.lazyMk (.lit (LeanPrimLit.ofVal p e.eval)))
+  /-- **δ**: a one-argument function of the runtime, run on a literal. -/
+  | deltaPrim1 {a b : LeanPrimTy} (e : LeanInitPureExtern1OnlyPrim a b) (l : LeanPrimLit a) :
+      Step (Term.ap (.extern (.prim1 e)) (.lit l)) (.lit (LeanPrimLit.ofVal b (e.eval l.val)))
+  /-- **δ**: a two-argument function of the runtime, run on two literals. -/
+  | deltaPrim2 {a b c : LeanPrimTy} (e : LeanInitPureExtern2OnlyPrim a b c)
+      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) :
+      Step (Term.ap (.ap (.extern (.prim2 e)) (.lit l1)) (.lit l2))
+        (.lit (LeanPrimLit.ofVal c (e.eval l1.val l2.val)))
+  /-- **δ**: a three-argument function of the runtime, run on three literals. -/
+  | deltaPrim3 {a b c d : LeanPrimTy} (e : LeanInitPureExtern3OnlyPrim a b c d)
+      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) (l3 : LeanPrimLit c) :
+      Step (Term.ap (.ap (.ap (.extern (.prim3 e)) (.lit l1)) (.lit l2)) (.lit l3))
+        (.lit (LeanPrimLit.ofVal d (e.eval l1.val l2.val l3.val)))
+  /-- **δ**: a five-argument function of the runtime, run on five literals. -/
+  | deltaPrim5 {a b c d e' f : LeanPrimTy} (e : LeanInitPureExtern5 a b c d e' f)
+      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) (l3 : LeanPrimLit c) (l4 : LeanPrimLit d)
+      (l5 : LeanPrimLit e') :
+      Step (Term.ap (.ap (.ap (.ap (.ap (.extern (.prim5 e)) (.lit l1)) (.lit l2))
+        (.lit l3)) (.lit l4)) (.lit l5))
+        (.lit (LeanPrimLit.ofVal f (e.eval l1.val l2.val l3.val l4.val l5.val)))
+  /-- **δ at every type**: `lean_sharecommon_quick` is the identity on values.  Sharing
+      is a property of the runtime's representation, not of the value, so the term it
+      answers with is the term it was given.  See `SHARECOMMON_EMULATION.md`. -/
+  | quick {τ : Ty} {t : Term Sg Γ τ} :
+      Step (Term.ap (.extern (.poly1 (.lean_sharecommon_quick τ))) t) t
+  /-- Run the function of an application first. -/
+  | apFun {σ τ : Ty} {f f' : Term Sg Γ (σ ⇒ τ)} {a : Term Sg Γ σ} :
+      Step f f' → Step (.ap f a) (.ap f' a)
+  /-- Then its argument. -/
+  | apArg {σ τ : Ty} {f : Term Sg Γ (σ ⇒ τ)} {a a' : Term Sg Γ σ} :
+      Value f → Step a a' → Step (.ap f a) (.ap f a')
+  /-- A `let` of an answer is a substitution. -/
+  | letV {σ τ : Ty} {e : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ} :
+      Value e → Step (.letE e b) (b.subst0 e)
+  /-- Run what a `let` binds first. -/
+  | letStep {σ τ : Ty} {e e' : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ} :
+      Step e e' → Step (.letE e b) (.letE e' b)
+  /-- `if true`. -/
+  | iteTrue {τ : Ty} {t e : Term Sg Γ τ} :
+      Step (.ite (.lit (.bool true)) t e) t
+  /-- `if false`. -/
+  | iteFalse {τ : Ty} {t e : Term Sg Γ τ} :
+      Step (.ite (.lit (.bool false)) t e) e
+  /-- Run the condition first. -/
+  | iteCond {τ : Ty} {c c' : Term Sg Γ (.prim .bool)} {t e : Term Sg Γ τ} :
+      Step c c' → Step (.ite c t e) (.ite c' t e)
+  /-- Running a delayed value gives what was delayed.  **Unmemoised**: forcing the same
+      delay twice runs what it delays twice, exactly as `() => …` does in the target. -/
+  | force {τ : Ty} {e : Term Sg Γ τ} : Step (.lazyForce (.lazyMk e)) e
+  /-- Run what is being forced first. -/
+  | forceStep {τ : Ty} {e e' : Term Sg Γ (.lazy τ)} :
+      Step e e' → Step (.lazyForce e) (.lazyForce e')
+  /-- Reading a field of a constructor gives the field.  The type has one constructor
+      (`hOne`), so the constructor the value carries is the one the projection reads. -/
+  | projCtor {σ τ : Ty} {fs : Layout.FieldLayout} {args : Spine Sg Γ fs} {i j : Nat}
+      {hc : σ.ctorFields? i = some fs} {hOne : σ.numCtors? = some 1}
+      {h : σ.fieldTy? i j = some τ} (hg : fs[j]? = some τ) :
+      Step (.proj (.ctor i fs hc args) i j hOne h) (args.get? j hg)
+  /-- Run the value a field is read of first. -/
+  | projStep {σ τ : Ty} {e e' : Term Sg Γ σ} {i j : Nat}
+      {hOne : σ.numCtors? = some 1} {h : σ.fieldTy? i j = some τ} :
+      Step e e' → Step (.proj e i j hOne h) (.proj e' i j hOne h)
+  /-- The tag of a constructor is its number. -/
+  | tagOfCtor {σ : Ty} {fs : Layout.FieldLayout} {args : Spine Sg Γ fs} {i : Nat}
+      {hc : σ.ctorFields? i = some fs} {h : σ.isTagged = true} :
+      Step (.tagOf (.ctor i fs hc args) h) (.lit (.nat i))
+  /-- A boolean *is* the two-constructor sum, so it has a tag: `false` is `0`. -/
+  | tagOfBool {b : Bool} {h : Ty.bool.isTagged = true} :
+      Step (.tagOf (.lit (.bool b)) h) (.lit (.nat (if b then 1 else 0)))
+  /-- Run the value whose tag is read first. -/
+  | tagOfStep {σ : Ty} {e e' : Term Sg Γ σ} {h : σ.isTagged = true} :
+      Step e e' → Step (.tagOf e h) (.tagOf e' h)
+  /-- A dispatch on a constructor takes the branch for its tag. -/
+  | caseCtor {σ τ : Ty} {tags : List Nat} {full : Bool} {fs : Layout.FieldLayout}
+      {args : Spine Sg Γ fs} {i : Nat} {hc : σ.ctorFields? i = some fs}
+      {alts : Alts Sg Γ τ tags full} {h : σ.caseOkAlts full tags = true} :
+      Step (.caseTag (.ctor i fs hc args) alts h)
+        (alts.select i (Ty.mem_of_caseOkAlts h hc))
+  /-- A dispatch on a boolean takes the branch for `0` or for `1`. -/
+  | caseBool {τ : Ty} {tags : List Nat} {full : Bool} {b : Bool}
+      {alts : Alts Sg Γ τ tags full} {h : Ty.bool.caseOkAlts full tags = true} :
+      Step (.caseTag (.lit (.bool b)) alts h)
+        (alts.select (if b then 1 else 0)
+          (Ty.mem_of_caseOkAlts h (Ty.bool_ctorFields b)))
+  /-- Run the scrutinee first. -/
+  | caseStep {σ τ : Ty} {tags : List Nat} {full : Bool} {e e' : Term Sg Γ σ}
+      {alts : Alts Sg Γ τ tags full} {h : σ.caseOkAlts full tags = true} :
+      Step e e' → Step (.caseTag e alts h) (.caseTag e' alts h)
+  /-- A constructor of `Ty.bool` is a boolean literal: the two-constructor field-less
+      sum *is* the boolean, and `false`/`true` are its constructors `0`/`1`. -/
+  | ctorBool {i : Nat} {fs : Layout.FieldLayout} {h : Ty.bool.ctorFields? i = some fs}
+      {args : Spine Sg Γ fs} :
+      Step (.ctor i fs h args) (.lit (.bool (decide (i = 1))))
+  /-- Run the fields of a constructor. -/
+  | ctorStep {τ : Ty} {i : Nat} {fs : Layout.FieldLayout} {h : τ.ctorFields? i = some fs}
+      {args args' : Spine Sg Γ fs} :
+      SpineStep args args' → Step (.ctor i fs h args) (.ctor i fs h args')
+  /-- **Answer with the answer of the block.**  A block whose tail is `ret` is the term
+      that tail answers with; this is the one rule that leaves the block grammar. -/
+  | blockRet {τ : Ty} {t : Term Sg Γ τ} : Step (.block (.ret t)) t
+  /-- Run the tail of a block. -/
+  | blockStep {τ : Ty} {b b' : Tail Sg Γ [] τ} : StepT b b' → Step (.block b) (.block b')
 
-/-- `t —↠[tbl] t'`: zero or more rewrites of the optimiser. -/
-scoped notation:20 t:21 " —↠[" tbl "] " t':21 => Chain (Step tbl) t t'
+/-- One step of the tail of a block, in the **empty** label context: there is nothing to
+    jump out to, so a `Tail.jmp` has no target here and every other shape either answers
+    or steps. -/
+inductive StepT {Γ : Ctx} : ∀ {τ : Ty}, Tail Sg Γ [] τ → Tail Sg Γ [] τ → Prop
+  /-- Run the term a block answers with. -/
+  | retStep {τ : Ty} {t t' : Term Sg Γ τ} : Step t t' → StepT (.ret t) (.ret t')
+  /-- A `let` of an answer is a substitution. -/
+  | letV {σ τ : Ty} {e : Term Sg Γ σ} {b : Tail Sg (σ :: Γ) [] τ} :
+      Value e → StepT (.letT e b) (b.subst0 e)
+  /-- Run what a `let` binds first. -/
+  | letStep {σ τ : Ty} {e e' : Term Sg Γ σ} {b : Tail Sg (σ :: Γ) [] τ} :
+      Step e e' → StepT (.letT e b) (.letT e' b)
+  /-- `if true`. -/
+  | iteTrue {τ : Ty} {t e : Tail Sg Γ [] τ} :
+      StepT (.iteT (.lit (.bool true)) t e) t
+  /-- `if false`. -/
+  | iteFalse {τ : Ty} {t e : Tail Sg Γ [] τ} :
+      StepT (.iteT (.lit (.bool false)) t e) e
+  /-- Run the condition first. -/
+  | iteCond {τ : Ty} {c c' : Term Sg Γ (.prim .bool)} {t e : Tail Sg Γ [] τ} :
+      Step c c' → StepT (.iteT c t e) (.iteT c' t e)
+  /-- A dispatch on a constructor takes the branch for its tag. -/
+  | caseCtor {σ τ : Ty} {tags : List Nat} {full : Bool} {fs : Layout.FieldLayout}
+      {args : Spine Sg Γ fs} {i : Nat} {hc : σ.ctorFields? i = some fs}
+      {alts : AltsT Sg Γ [] τ tags full} {h : σ.caseOkAlts full tags = true} :
+      StepT (.caseT (.ctor i fs hc args) alts h)
+        (alts.select i (Ty.mem_of_caseOkAlts h hc))
+  /-- A dispatch on a boolean takes the branch for `0` or for `1`. -/
+  | caseBool {τ : Ty} {tags : List Nat} {full : Bool} {b : Bool}
+      {alts : AltsT Sg Γ [] τ tags full} {h : Ty.bool.caseOkAlts full tags = true} :
+      StepT (.caseT (.lit (.bool b)) alts h)
+        (alts.select (if b then 1 else 0)
+          (Ty.mem_of_caseOkAlts h (Ty.bool_ctorFields b)))
+  /-- Run the scrutinee first. -/
+  | caseStep {σ τ : Ty} {tags : List Nat} {full : Bool} {e e' : Term Sg Γ σ}
+      {alts : AltsT Sg Γ [] τ tags full} {h : σ.caseOkAlts full tags = true} :
+      Step e e' → StepT (.caseT e alts h) (.caseT e' alts h)
+  /-- **A shared tail is inlined at its jumps.**  This is the β rule of the label
+      context: the rest of the block, with every jump to the label just bound replaced by
+      the block it names, the arguments of the jump bound in front of it by
+      `Tail.letSpine` rather than substituted into it. -/
+  | labelJoin {ps : List Ty} {τ : Ty} {body : Tail Sg (ps ++ Γ) [] τ}
+      {rest : Tail Sg Γ [ps] τ} :
+      StepT (.label false body rest) (rest.lsubst0 body)
+  /-- **A loop is re-entered at its jumps.**  The same rule, with the loop itself
+      substituted for the label (`Tail.loopEntry`): a jump to a self-label runs the loop
+      again with the arguments of the jump.  This is the one rule of the language that
+      can repeat work. -/
+  | labelLoop {ps : List Ty} {τ : Ty} {body : Tail Sg (ps ++ Γ) [ps] τ}
+      {rest : Tail Sg Γ [ps] τ} :
+      StepT (.label true body rest) (rest.lsubst0 (Tail.loopEntry body))
 
-namespace Chain
+/-- One step inside a spine, from the left. -/
+inductive SpineStep {Γ : Ctx} :
+    ∀ {σs : List Ty}, Spine Sg Γ σs → Spine Sg Γ σs → Prop
+  | head {σ : Ty} {σs : List Ty} {t t' : Term Sg Γ σ} {rest : Spine Sg Γ σs} :
+      Step t t' → SpineStep (.cons t rest) (.cons t' rest)
+  | tail {σ : Ty} {σs : List Ty} {t : Term Sg Γ σ} {rest rest' : Spine Sg Γ σs} :
+      Value t → SpineStep rest rest' → SpineStep (.cons t rest) (.cons t rest')
 
-/-- One rewrite is a reduction. -/
-theorem single {α : Sort u} {R : α → α → Prop} {a b : α} (h : R a b) : Chain R a b :=
-  .head h .refl
+end
+
+/-- Zero or more steps. -/
+inductive Steps {Γ : Ctx} {τ : Ty} : Term Sg Γ τ → Term Sg Γ τ → Prop
+  | refl {t} : Steps t t
+  | tail {t u v} : Steps t u → Step u v → Steps t v
+
+/-! ## Canonical forms
+
+What an answer of each shape of type can be.  These are what the progress proof runs
+on, and together they are the statement that an answer is a literal, a lambda, a delayed
+value or a constructor of one of the schemas — unless it is neutral, i.e. unless it is
+waiting for something outside the language. -/
+
+/-- A function type has no layout, so nothing can be built at one. -/
+theorem isTagged_fn (σ τ : Ty) : (σ ⇒ τ).isTagged = false := rfl
+
+/-- An answer of function type is a lambda or neutral. -/
+theorem canonical_fn {Γ : Ctx} {σ τ : Ty} {t : Term Sg Γ (σ ⇒ τ)} :
+    Value t → (∃ b : Term Sg (σ :: Γ) τ, t = .lam b) ∨ Neutral t := by
+  intro hv
+  cases hv with
+  | lam b => exact Or.inl ⟨b, rfl⟩
+  | ctor i fs h _ _ => exact absurd h (by simp [Ty.ctorFields?, Ty.layout?])
+  | neutral hn => exact Or.inr hn
+
+/-- An answer of a delayed type is a delay or neutral. -/
+theorem canonical_lazy {Γ : Ctx} {τ : Ty} {t : Term Sg Γ (.lazy τ)} :
+    Value t → (∃ e : Term Sg Γ τ, t = .lazyMk e) ∨ Neutral t := by
+  intro hv
+  cases hv with
+  | lazyMk e => exact Or.inl ⟨e, rfl⟩
+  | ctor i fs h _ _ => exact absurd h (by simp [Ty.ctorFields?, Ty.layout?])
+  | neutral hn => exact Or.inr hn
+
+/-- An answer of a terminal type is a literal or neutral. -/
+theorem canonical_prim {Γ : Ctx} {p : LeanPrimTy} {t : Term Sg Γ (.prim p)} :
+    Value t → (∃ l : LeanPrimLit p, t = .lit l) ∨ Neutral t := by
+  intro hv
+  cases hv with
+  | lit l => exact Or.inl ⟨l, rfl⟩
+  | ctor i fs h hb _ =>
+      exact absurd h (by cases p <;> first
+        | exact absurd rfl hb
+        | simp [Ty.ctorFields?, Ty.layout?])
+  | neutral hn => exact Or.inr hn
+
+/-- An answer of a **boolean** type is `true`, `false`, or neutral: a boolean is the
+    two-constructor field-less sum, and `Term.ctor` can build one. -/
+theorem canonical_bool {Γ : Ctx} {t : Term Sg Γ Ty.bool} :
+    Value t → (∃ b : Bool, t = .lit (.bool b)) ∨ Neutral t := by
+  intro hv
+  rcases canonical_prim hv with ⟨l, rfl⟩ | hn
+  · cases l with
+    | bool b => exact Or.inl ⟨b, rfl⟩
+  · exact Or.inr hn
+
+/-- **An answer of a type with exactly one constructor is that constructor, or neutral.**
+    This is the canonical-forms lemma `Term.proj` rests on: a record is built one way, so
+    reading a field of one is never stuck. -/
+theorem canonical_oneCtor {Γ : Ctx} {σ : Ty} {t : Term Sg Γ σ}
+    (hOne : σ.numCtors? = some 1) (hv : Value t) :
+    (∃ (fs : Layout.FieldLayout) (h : σ.ctorFields? 0 = some fs)
+      (args : Spine Sg Γ fs), t = .ctor 0 fs h args ∧ SpineValue args) ∨ Neutral t := by
+  cases hv with
+  | lam b => exact absurd hOne (by simp [Ty.numCtors?, Ty.layout?])
+  | lazyMk e => exact absurd hOne (by simp [Ty.numCtors?, Ty.layout?])
+  | lit l =>
+      exact absurd hOne (by
+        cases l <;> simp [Ty.numCtors?, Ty.layout?])
+  | ctor i fs h hb hsv =>
+      have hi : i = 0 := Ty.eq_zero_of_ctorFields?_of_numCtors?_one hOne h
+      subst hi
+      exact Or.inl ⟨fs, h, _, rfl, hsv⟩
+  | neutral hn => exact Or.inr hn
+
+/-- **A δ-redex takes a step**: a function of the runtime applied to as many literals as
+    it takes is never stuck. -/
+theorem DeltaRedex.steps {Γ : Ctx} {τ : Ty} {t : Term Sg Γ τ}
+    (h : DeltaRedex t) : ∃ t' : Term Sg Γ τ, Step t t' := by
+  cases h with
+  | const e => exact ⟨_, .deltaConst e⟩
+  | prim1 e l => exact ⟨_, .deltaPrim1 e l⟩
+  | prim2 e l1 l2 => exact ⟨_, .deltaPrim2 e l1 l2⟩
+  | prim3 e l1 l2 l3 => exact ⟨_, .deltaPrim3 e l1 l2 l3⟩
+  | prim5 e l1 l2 l3 l4 l5 => exact ⟨_, .deltaPrim5 e l1 l2 l3 l4 l5⟩
+  | quick => exact ⟨_, .quick⟩
+
+/-! ## A saturated call of the runtime always runs
+
+Since every entry of the terminal families denotes a **total** function of the values of
+its arguments (`LakeJs.ExternEval1`, `LakeJs.ExternEval2`, `LakeJs.ExternEvalMisc`), the
+δ-rules carry no side condition, and a function of the runtime applied to as many
+literals as it takes is never an answer: it runs. -/
+
+/-- A one-argument function of the runtime, on a literal, runs. -/
+theorem steps_prim1 {Γ : Ctx} {a b : LeanPrimTy}
+    (e : LeanInitPureExtern1OnlyPrim a b) (l : LeanPrimLit a) :
+    ∃ t' : Term Sg Γ (.prim b), Step (Term.ap (.extern (.prim1 e)) (.lit l)) t' :=
+  (DeltaRedex.prim1 e l).steps
+
+/-- A two-argument one, on two literals, runs. -/
+theorem steps_prim2 {Γ : Ctx} {a b c : LeanPrimTy}
+    (e : LeanInitPureExtern2OnlyPrim a b c) (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) :
+    ∃ t' : Term Sg Γ (.prim c),
+      Step (Term.ap (.ap (.extern (.prim2 e)) (.lit l1)) (.lit l2)) t' :=
+  (DeltaRedex.prim2 e l1 l2).steps
+
+/-- A three-argument one, on three literals, runs. -/
+theorem steps_prim3 {Γ : Ctx} {a b c d : LeanPrimTy}
+    (e : LeanInitPureExtern3OnlyPrim a b c d) (l1 : LeanPrimLit a) (l2 : LeanPrimLit b)
+    (l3 : LeanPrimLit c) :
+    ∃ t' : Term Sg Γ (.prim d),
+      Step (Term.ap (.ap (.ap (.extern (.prim3 e)) (.lit l1)) (.lit l2)) (.lit l3)) t' :=
+  (DeltaRedex.prim3 e l1 l2 l3).steps
+
+/-! ## Hash-consing is erasure
+
+The one `ShareCommon` entry the catalogue keeps, `lean_sharecommon_quick`, is the
+identity on values (`SHARECOMMON_EMULATION.md`, option A).  Three facts say that the
+evaluator treats it as one: an application of it is never stuck, it answers exactly its
+argument, and it cannot delay or change what its argument answers. -/
+
+/-- The term `lean_sharecommon_quick t`. -/
+abbrev quickAp {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ) : Term Sg Γ τ :=
+  .ap (.extern (.poly1 (.lean_sharecommon_quick τ))) t
 
 /-- Reductions compose. -/
-theorem trans {α : Sort u} {R : α → α → Prop} {a b c : α}
-    (h₁ : Chain R a b) (h₂ : Chain R b c) : Chain R a c := by
-  induction h₁ with
-  | refl => exact h₂
-  | head hab _ ih => exact .head hab (ih h₂)
-
-/-- A reduction followed by one more rewrite. -/
-theorem tail {α : Sort u} {R : α → α → Prop} {a b c : α}
-    (h₁ : Chain R a b) (h₂ : R b c) : Chain R a c :=
-  h₁.trans (single h₂)
-
-/-- A reduction inside a position is a reduction: `f` carries every rewrite over. -/
-theorem congr {α : Sort u} {β : Sort v} {R : α → α → Prop} {S : β → β → Prop}
-    (f : α → β) (hf : ∀ {a b : α}, R a b → S (f a) (f b)) {a b : α}
-    (h : Chain R a b) : Chain S (f a) (f b) := by
-  induction h with
-  | refl => exact .refl
-  | head hab _ ih => exact .head (hf hab) ih
-
-end Chain
-
-/-! ## Reducing inside a position
-
-One lemma per position of the language: a reduction of a subterm is a reduction of the
-term.  Each is `Chain.congr` of the corresponding constructor of `Step`. -/
-
-namespace Chain
-
-variable {Sg : Sig} {tbl : Inline.Table Sg}
-
-theorem projArg {Γ : Ctx} {σ τ : Ty} {e e' : Term Sg Γ σ} {i j : Nat}
-    {h : σ.fieldTy? i j = some τ} (hc : e —↠[tbl] e') :
-    (Term.proj e i j h) —↠[tbl] (Term.proj e' i j h) :=
-  Chain.congr (fun x => Term.proj x i j h) (fun hs => .projArg hs) hc
-
-theorem tagOfArg {Γ : Ctx} {σ : Ty} {e e' : Term Sg Γ σ} {h : σ.isTagged = true}
-    (hc : e —↠[tbl] e') : (Term.tagOf e h) —↠[tbl] (Term.tagOf e' h) :=
-  Chain.congr (fun x => Term.tagOf x h) (fun hs => .tagOfArg hs) hc
-
-theorem lazyMkBody {Γ : Ctx} {τ : Ty} {e e' : Term Sg Γ τ}
-    (hc : e —↠[tbl] e') : (Term.lazyMk e) —↠[tbl] (Term.lazyMk e') :=
-  Chain.congr (fun x => Term.lazyMk x) (fun hs => .lazyMkBody hs) hc
-
-theorem lazyForceArg {Γ : Ctx} {τ : Ty} {e e' : Term Sg Γ (.lazy τ)}
-    (hc : e —↠[tbl] e') : (Term.lazyForce e) —↠[tbl] (Term.lazyForce e') :=
-  Chain.congr (fun x => Term.lazyForce x) (fun hs => .lazyForceArg hs) hc
-
-theorem iteCond {Γ : Ctx} {τ : Ty} {c c' : Term Sg Γ (.prim .bool)} {t u : Term Sg Γ τ}
-    (hc : c —↠[tbl] c') : (Term.ite c t u) —↠[tbl] (Term.ite c' t u) :=
-  Chain.congr (fun x => Term.ite x t u) (fun hs => .iteCond hs) hc
-
-theorem iteThen {Γ : Ctx} {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t t' u : Term Sg Γ τ}
-    (hc : t —↠[tbl] t') : (Term.ite c t u) —↠[tbl] (Term.ite c t' u) :=
-  Chain.congr (fun x => Term.ite c x u) (fun hs => .iteThen hs) hc
-
-theorem iteElse {Γ : Ctx} {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t u u' : Term Sg Γ τ}
-    (hc : u —↠[tbl] u') : (Term.ite c t u) —↠[tbl] (Term.ite c t u') :=
-  Chain.congr (fun x => Term.ite c t x) (fun hs => .iteElse hs) hc
-
-theorem letVal {Γ : Ctx} {σ τ : Ty} {e e' : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ}
-    (hc : e —↠[tbl] e') : (Term.letE e b) —↠[tbl] (Term.letE e' b) :=
-  Chain.congr (fun x => Term.letE x b) (fun hs => .letVal hs) hc
-
-theorem letBody {Γ : Ctx} {σ τ : Ty} {e : Term Sg Γ σ} {b b' : Term Sg (σ :: Γ) τ}
-    (hc : b —↠[tbl] b') : (Term.letE e b) —↠[tbl] (Term.letE e b') :=
-  Chain.congr (fun x => Term.letE e x) (fun hs => .letBody hs) hc
-
-theorem lamBody {Γ : Ctx} {ps : List Ty} {ret : Ty} {b b' : Term Sg (ps.reverse ++ Γ) ret}
-    (hc : b —↠[tbl] b') : (Term.lamN (params := ps) b) —↠[tbl] (Term.lamN b') :=
-  Chain.congr (fun x => Term.lamN (params := ps) x) (fun hs => .lamBody hs) hc
-
-theorem apFun {Γ : Ctx} {ps : List Ty} {ret : Ty} {f f' : Term Sg Γ (.fn ps ret)}
-    {args : Spine Sg Γ ps} (hc : f —↠[tbl] f') :
-    (Term.apN f args) —↠[tbl] (Term.apN f' args) :=
-  Chain.congr (fun x => Term.apN x args) (fun hs => .apFun hs) hc
-
-theorem apArgs {Γ : Ctx} {ps : List Ty} {ret : Ty} {f : Term Sg Γ (.fn ps ret)}
-    {args args' : Spine Sg Γ ps} (hc : Chain (SpineStep tbl) args args') :
-    (Term.apN f args) —↠[tbl] (Term.apN f args') :=
-  Chain.congr (fun x => Term.apN f x) (fun hs => .apArgs hs) hc
-
-theorem lamProdRets {Γ : Ctx} {ps : List Ty} {r1 : Ty} {rs : List Ty}
-    {rets rets' : Spine Sg (ps.reverse ++ Γ) (r1 :: rs)}
-    (hc : Chain (SpineStep tbl) rets rets') :
-    (Term.lamProd (params := ps) rets) —↠[tbl] (Term.lamProd rets') :=
-  Chain.congr (fun x => Term.lamProd (params := ps) x) (fun hs => .lamProdRets hs) hc
-
-theorem callProdFun {Γ : Ctx} {ps : List Ty} {r1 : Ty} {rs : List Ty}
-    {f f' : Term Sg Γ (.fn_returnsProd ps r1 rs)} {args : Spine Sg Γ ps}
-    {i : Fin (rs.length + 1)} (hc : f —↠[tbl] f') :
-    (Term.callProd f args i) —↠[tbl] (Term.callProd f' args i) :=
-  Chain.congr (fun x => Term.callProd x args i) (fun hs => .callProdFun hs) hc
-
-theorem callProdArgs {Γ : Ctx} {ps : List Ty} {r1 : Ty} {rs : List Ty}
-    {f : Term Sg Γ (.fn_returnsProd ps r1 rs)} {args args' : Spine Sg Γ ps}
-    {i : Fin (rs.length + 1)} (hc : Chain (SpineStep tbl) args args') :
-    (Term.callProd f args i) —↠[tbl] (Term.callProd f args' i) :=
-  Chain.congr (fun x => Term.callProd f x i) (fun hs => .callProdArgs hs) hc
-
-theorem jsOpArgs {Γ : Ctx} {σs : List Ty} {τ : Ty} {op : JsOp σs τ}
-    {args args' : Spine Sg Γ σs} (hc : Chain (SpineStep tbl) args args') :
-    (Term.jsOp op args) —↠[tbl] (Term.jsOp op args') :=
-  Chain.congr (fun x => Term.jsOp op x) (fun hs => .jsOpArgs hs) hc
-
-theorem ctorArgs {Γ : Ctx} {τ : Ty} {i : Nat} {fs : FieldLayout}
-    {h : τ.ctorFields? i = some fs} {args args' : Spine Sg Γ fs}
-    (hc : Chain (SpineStep tbl) args args') :
-    (Term.ctor i fs h args) —↠[tbl] (Term.ctor i fs h args') :=
-  Chain.congr (fun x => Term.ctor i fs h x) (fun hs => .ctorArgs hs) hc
-
-theorem caseScrut {Γ : Ctx} {σ τ : Ty} {tags : List Nat} {s s' : Term Sg Γ σ}
-    {alts : Alts Sg Γ τ tags} {h : σ.caseOk tags = true} (hc : s —↠[tbl] s') :
-    (Term.caseTag s alts h) —↠[tbl] (Term.caseTag s' alts h) :=
-  Chain.congr (fun x => Term.caseTag x alts h) (fun hs => .caseScrut hs) hc
-
-theorem caseAlts {Γ : Ctx} {σ τ : Ty} {tags : List Nat} {s : Term Sg Γ σ}
-    {alts alts' : Alts Sg Γ τ tags} {h : σ.caseOk tags = true}
-    (hc : Chain (AltsStep tbl) alts alts') :
-    (Term.caseTag s alts h) —↠[tbl] (Term.caseTag s alts' h) :=
-  Chain.congr (fun x => Term.caseTag s x h) (fun hs => .caseAlts hs) hc
-
-theorem loopInit {Γ : Ctx} {σs : List Ty} {τ : Ty} {init init' : Spine Sg Γ σs}
-    {body : Body Sg (σs.reverse ++ Γ) σs τ} (hc : Chain (SpineStep tbl) init init') :
-    (Term.loop init body) —↠[tbl] (Term.loop init' body) :=
-  Chain.congr (fun x => Term.loop x body) (fun hs => .loopInit hs) hc
-
-theorem loopBody {Γ : Ctx} {σs : List Ty} {τ : Ty} {init : Spine Sg Γ σs}
-    {body body' : Body Sg (σs.reverse ++ Γ) σs τ} (hc : Chain (BodyStep tbl) body body') :
-    (Term.loop init body) —↠[tbl] (Term.loop init body') :=
-  Chain.congr (fun x => Term.loop init x) (fun hs => .loopBody hs) hc
-
-theorem joinBody {Γ : Ctx} {ps : List Ty} {σ τ : Ty} {body body' : Term Sg (ps.reverse ++ Γ) σ}
-    {rest : Term Sg (.fn ps σ :: Γ) τ} (hc : body —↠[tbl] body') :
-    (Term.joinPoint body rest) —↠[tbl] (Term.joinPoint body' rest) :=
-  Chain.congr (fun x => Term.joinPoint x rest) (fun hs => .joinBody hs) hc
-
-theorem joinRest {Γ : Ctx} {ps : List Ty} {σ τ : Ty} {body : Term Sg (ps.reverse ++ Γ) σ}
-    {rest rest' : Term Sg (.fn ps σ :: Γ) τ} (hc : rest —↠[tbl] rest') :
-    (Term.joinPoint body rest) —↠[tbl] (Term.joinPoint body rest') :=
-  Chain.congr (fun x => Term.joinPoint body x) (fun hs => .joinRest hs) hc
-
-theorem jumpArgs {Γ : Ctx} {ps : List Ty} {σ : Ty} {v : Γ ∋ (.fn ps σ)}
-    {args args' : Spine Sg Γ ps} (hc : Chain (SpineStep tbl) args args') :
-    (Term.jump v args) —↠[tbl] (Term.jump v args') :=
-  Chain.congr (fun x => Term.jump v x) (fun hs => .jumpArgs hs) hc
-
-theorem spineHead {Γ : Ctx} {σ : Ty} {σs : List Ty} {t t' : Term Sg Γ σ}
-    {rest : Spine Sg Γ σs} (hc : t —↠[tbl] t') :
-    Chain (SpineStep tbl) (Spine.cons t rest) (Spine.cons t' rest) :=
-  Chain.congr (fun x => Spine.cons x rest) (fun hs => .head hs) hc
-
-theorem spineTail {Γ : Ctx} {σ : Ty} {σs : List Ty} {t : Term Sg Γ σ}
-    {rest rest' : Spine Sg Γ σs} (hc : Chain (SpineStep tbl) rest rest') :
-    Chain (SpineStep tbl) (Spine.cons t rest) (Spine.cons t rest') :=
-  Chain.congr (fun x => Spine.cons t x) (fun hs => .tail hs) hc
-
-theorem altsDeflt {Γ : Ctx} {τ : Ty} {t t' : Term Sg Γ τ} (hc : t —↠[tbl] t') :
-    Chain (AltsStep tbl) (Alts.deflt t) (Alts.deflt t') :=
-  Chain.congr (fun x => Alts.deflt x) (fun hs => .deflt hs) hc
-
-theorem altsHead {Γ : Ctx} {τ : Ty} {tags : List Nat} {tag : Nat} {t t' : Term Sg Γ τ}
-    {rest : Alts Sg Γ τ tags} (hc : t —↠[tbl] t') :
-    Chain (AltsStep tbl) (Alts.cons tag t rest) (Alts.cons tag t' rest) :=
-  Chain.congr (fun x => Alts.cons tag x rest) (fun hs => .head hs) hc
-
-theorem altsTail {Γ : Ctx} {τ : Ty} {tags : List Nat} {tag : Nat} {t : Term Sg Γ τ}
-    {rest rest' : Alts Sg Γ τ tags} (hc : Chain (AltsStep tbl) rest rest') :
-    Chain (AltsStep tbl) (Alts.cons tag t rest) (Alts.cons tag t rest') :=
-  Chain.congr (fun x => Alts.cons tag t x) (fun hs => .tail hs) hc
-
-theorem retTerm {Γ : Ctx} {σs : List Ty} {τ : Ty} {t t' : Term Sg Γ τ} (hc : t —↠[tbl] t') :
-    Chain (BodyStep tbl) (Body.ret (σs := σs) t) (Body.ret t') :=
-  Chain.congr (fun x => Body.ret (σs := σs) x) (fun hs => .retTerm hs) hc
-
-theorem contArgs {Γ : Ctx} {σs : List Ty} {τ : Ty} {args args' : Spine Sg Γ σs}
-    (hc : Chain (SpineStep tbl) args args') :
-    Chain (BodyStep tbl) (Body.cont (τ := τ) args) (Body.cont args') :=
-  Chain.congr (fun x => Body.cont (τ := τ) x) (fun hs => .contArgs hs) hc
-
-theorem letBVal {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty} {e e' : Term Sg Γ σ}
-    {b : Body Sg (σ :: Γ) σs τ} (hc : e —↠[tbl] e') :
-    Chain (BodyStep tbl) (Body.letB e b) (Body.letB e' b) :=
-  Chain.congr (fun x => Body.letB x b) (fun hs => .letBVal hs) hc
-
-theorem letBBody {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty} {e : Term Sg Γ σ}
-    {b b' : Body Sg (σ :: Γ) σs τ} (hc : Chain (BodyStep tbl) b b') :
-    Chain (BodyStep tbl) (Body.letB e b) (Body.letB e b') :=
-  Chain.congr (fun x => Body.letB e x) (fun hs => .letBBody hs) hc
-
-theorem joinBBody {Γ : Ctx} {ps : List Ty} {σ : Ty} {σs : List Ty} {τ : Ty}
-    {body body' : Term Sg (ps.reverse ++ Γ) σ} {rest : Body Sg (.fn ps σ :: Γ) σs τ}
-    (hc : body —↠[tbl] body') :
-    Chain (BodyStep tbl) (Body.joinPointB body rest) (Body.joinPointB body' rest) :=
-  Chain.congr (fun x => Body.joinPointB x rest) (fun hs => .joinBBody hs) hc
-
-theorem joinBRest {Γ : Ctx} {ps : List Ty} {σ : Ty} {σs : List Ty} {τ : Ty}
-    {body : Term Sg (ps.reverse ++ Γ) σ} {rest rest' : Body Sg (.fn ps σ :: Γ) σs τ}
-    (hc : Chain (BodyStep tbl) rest rest') :
-    Chain (BodyStep tbl) (Body.joinPointB body rest) (Body.joinPointB body rest') :=
-  Chain.congr (fun x => Body.joinPointB body x) (fun hs => .joinBRest hs) hc
-
-theorem iteBCond {Γ : Ctx} {σs : List Ty} {τ : Ty} {c c' : Term Sg Γ (.prim .bool)}
-    {t u : Body Sg Γ σs τ} (hc : c —↠[tbl] c') :
-    Chain (BodyStep tbl) (Body.iteB c t u) (Body.iteB c' t u) :=
-  Chain.congr (fun x => Body.iteB x t u) (fun hs => .iteBCond hs) hc
-
-theorem iteBThen {Γ : Ctx} {σs : List Ty} {τ : Ty} {c : Term Sg Γ (.prim .bool)}
-    {t t' u : Body Sg Γ σs τ} (hc : Chain (BodyStep tbl) t t') :
-    Chain (BodyStep tbl) (Body.iteB c t u) (Body.iteB c t' u) :=
-  Chain.congr (fun x => Body.iteB c x u) (fun hs => .iteBThen hs) hc
-
-theorem iteBElse {Γ : Ctx} {σs : List Ty} {τ : Ty} {c : Term Sg Γ (.prim .bool)}
-    {t u u' : Body Sg Γ σs τ} (hc : Chain (BodyStep tbl) u u') :
-    Chain (BodyStep tbl) (Body.iteB c t u) (Body.iteB c t u') :=
-  Chain.congr (fun x => Body.iteB c t x) (fun hs => .iteBElse hs) hc
-
-end Chain
-
-/-! ## The optimiser is a strategy for these rules
-
-The function `LakeJs.Simp.Term.simp` walks a term bottom up and applies each rule where
-it matches.  The theorems below say that everything it does is a reduction of the
-relation above: the function is one *strategy* for the rules, not a second optimiser that
-has to be kept in step with them by hand. -/
-
-/-! ### The rules of each binding form
-
-`LakeJs.Simp` collects the rules of each binding form into one function of the already
-simplified parts (`simpProj`, `simpIte`, `simpLetE`, `simpLamN`, `simpLetB`, `simpIteB`).
-Each of these lemmas says the same thing about one of them: whatever the function picks,
-it is reachable from the rebuilt term by the rules. -/
-
-theorem simpProj_chain {Sg : Sig} {tbl : Inline.Table Sg}
-    {Γ : Ctx} {σ τ : Ty} {e' : Term Sg Γ σ} {i j : Nat}
-    {h : σ.fieldTy? i j = some τ} {t0 : Term Sg Γ τ}
-    (base : t0 —↠[tbl] Term.proj e' i j h) : t0 —↠[tbl] simpProj e' i j h := by
-  unfold simpProj
-  split
-  · next heq => exact base.tail (.projOfCtor heq)
-  · exact base
-
-theorem simpIte_chain {Sg : Sig} {tbl : Inline.Table Sg}
-    {Γ : Ctx} {τ : Ty} {c' : Term Sg Γ (.prim .bool)}
-    {t' u' t0 : Term Sg Γ τ} (base : t0 —↠[tbl] Term.ite c' t' u') :
-    t0 —↠[tbl] simpIte c' t' u' := by
-  unfold simpIte
-  split
-  · next heq => exact base.tail (.iteGuard heq)
-  · exact base
-
-theorem simpLamN_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {ps : List Ty} {ret : Ty}
-    {b' : Term Sg (ps.reverse ++ Γ) ret} {t0 : Term Sg Γ (.fn ps ret)}
-    (base : t0 —↠[tbl] Term.lamN b') : t0 —↠[tbl] simpLamN b' := by
-  unfold simpLamN
-  split
-  · next heq => exact base.tail (.eta heq)
-  · exact base
-
-/-- The guard a bound value establishes is one rewrite. -/
-theorem guardedBody_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {σ τ : Ty} {e' : Term Sg Γ σ}
-    {b0 : Term Sg (σ :: Γ) τ} {t0 : Term Sg Γ τ} (base : t0 —↠[tbl] Term.letE e' b0) :
-    t0 —↠[tbl] Term.letE e' (guardedBody e' b0) := by
-  unfold guardedBody
-  split
-  · next heq => exact base.tail (.letGuard heq)
-  · exact base
-
-/-- The rules a `let` is rewritten by once its guard has been applied. -/
-theorem simpLetBody_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {σ τ : Ty} {e' : Term Sg Γ σ}
-    {b' : Term Sg (σ :: Γ) τ} {t0 : Term Sg Γ τ} (base : t0 —↠[tbl] Term.letE e' b') :
-    t0 —↠[tbl] simpLetBody e' b' := by
-  unfold simpLetBody
-  split
-  · exact base.tail .letId
-  · split
-    · next heq => exact base.tail (.letDead heq)
-    · split
-      · next heqc =>
-        split
-        · next heqr => exact base.tail (.letCopy heqc heqr)
-        · exact base
-      · exact base
-
-theorem simpLetE_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {σ τ : Ty} {e' : Term Sg Γ σ}
-    {b0 : Term Sg (σ :: Γ) τ} {t0 : Term Sg Γ τ} (base : t0 —↠[tbl] Term.letE e' b0) :
-    t0 —↠[tbl] simpLetE e' b0 := by
-  unfold simpLetE
-  split
-  · next heq => exact base.tail (.letCast heq)
-  · exact simpLetBody_chain (guardedBody_chain base)
-
-theorem simpIteB_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {σs : List Ty} {τ : Ty}
-    {c' : Term Sg Γ (.prim .bool)} {t' u' t0 : Body Sg Γ σs τ}
-    (base : Chain (BodyStep tbl) t0 (Body.iteB c' t' u')) :
-    Chain (BodyStep tbl) t0 (simpIteB c' t' u') := by
-  unfold simpIteB
-  split
-  · next heq => exact base.tail (.iteGuard heq)
-  · exact base
-
-/-- `guardedBody_chain`, for a loop block. -/
-theorem guardedBodyB_chain {Sg : Sig} {tbl : Inline.Table Sg}
-    {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty}
-    {e' : Term Sg Γ σ} {b0 : Body Sg (σ :: Γ) σs τ} {t0 : Body Sg Γ σs τ}
-    (base : Chain (BodyStep tbl) t0 (Body.letB e' b0)) :
-    Chain (BodyStep tbl) t0 (Body.letB e' (guardedBodyB e' b0)) := by
-  unfold guardedBodyB
-  split
-  · next heq => exact base.tail (.letGuard heq)
-  · exact base
-
-/-- The rules a block's `let` is rewritten by once its guard has been applied. -/
-theorem simpLetBBody_chain {Sg : Sig} {tbl : Inline.Table Sg}
-    {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty}
-    {e' : Term Sg Γ σ} {b' : Body Sg (σ :: Γ) σs τ} {t0 : Body Sg Γ σs τ}
-    (base : Chain (BodyStep tbl) t0 (Body.letB e' b')) :
-    Chain (BodyStep tbl) t0 (simpLetBBody e' b') := by
-  unfold simpLetBBody
-  split
-  · next heq => exact base.tail (.letDead heq)
-  · split
-    · next heqc =>
-      split
-      · next heqr => exact base.tail (.letCopy heqc heqr)
-      · exact base
-    · exact base
-
-theorem simpLetB_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {σ : Ty} {σs : List Ty} {τ : Ty}
-    {e' : Term Sg Γ σ} {b0 : Body Sg (σ :: Γ) σs τ} {t0 : Body Sg Γ σs τ}
-    (base : Chain (BodyStep tbl) t0 (Body.letB e' b0)) :
-    Chain (BodyStep tbl) t0 (simpLetB e' b0) :=
-  simpLetBBody_chain (guardedBodyB_chain base)
-
-/-! ### The bottom-up walk -/
-
-mutual
-
-/-- Every term the optimiser produces is reachable from the term it was given by the
-    rules of `Step`: the function is a *strategy* for the relation. -/
-theorem Term.simp_chain {Sg : Sig} {tbl : Inline.Table Sg} : ∀ {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ),
-    t —↠[tbl] Term.simp t
-  | _, _, .var _ => .refl
-  | _, _, .lit _ => .refl
-  | _, _, .global _ => .refl
-  | _, _, .extern _ => .refl
-  | _, _, .proj e _ _ _ => simpProj_chain (Chain.projArg (Term.simp_chain e))
-  | _, _, .tagOf e _ => Chain.tagOfArg (Term.simp_chain e)
-  | _, _, .lazyMk e => Chain.lazyMkBody (Term.simp_chain e)
-  | _, _, .lazyForce e => Chain.lazyForceArg (Term.simp_chain e)
-  | _, _, .ite c t u =>
-      simpIte_chain
-        (((Chain.iteCond (Term.simp_chain c)).trans
-          (Chain.iteThen (Term.simp_chain t))).trans (Chain.iteElse (Term.simp_chain u)))
-  | _, _, .letE e b =>
-      simpLetE_chain
-        ((Chain.letVal (Term.simp_chain e)).trans (Chain.letBody (Term.simp_chain b)))
-  | _, _, .lamN b => simpLamN_chain (Chain.lamBody (Term.simp_chain b))
-  | _, _, .apN f args =>
-      (Chain.apFun (Term.simp_chain f)).trans (Chain.apArgs (Spine.simp_chain args))
-  | _, _, .lamProd rets => Chain.lamProdRets (Spine.simp_chain rets)
-  | _, _, .callProd f args _ =>
-      (Chain.callProdFun (Term.simp_chain f)).trans
-        (Chain.callProdArgs (Spine.simp_chain args))
-  | _, _, .jsOp _ args => Chain.jsOpArgs (Spine.simp_chain args)
-  | _, _, .ctor _ _ _ args => Chain.ctorArgs (Spine.simp_chain args)
-  | _, _, .caseTag s alts _ =>
-      (Chain.caseScrut (Term.simp_chain s)).trans (Chain.caseAlts (Alts.simp_chain alts))
-  | _, _, .loop init body =>
-      (Chain.loopInit (Spine.simp_chain init)).trans (Chain.loopBody (Body.simp_chain body))
-  | _, _, .joinPoint body rest =>
-      (Chain.joinBody (Term.simp_chain body)).trans (Chain.joinRest (Term.simp_chain rest))
-  | _, _, .jump _ args => Chain.jumpArgs (Spine.simp_chain args)
-
-/-- `Term.simp_chain`, for the arguments of a spine. -/
-theorem Spine.simp_chain {Sg : Sig} {tbl : Inline.Table Sg}
-    : ∀ {Γ : Ctx} {σs : List Ty} (s : Spine Sg Γ σs),
-    Chain (SpineStep tbl) s (Spine.simp s)
-  | _, _, .nil => .refl
-  | _, _, .cons t rest =>
-      (Chain.spineHead (Term.simp_chain t)).trans (Chain.spineTail (Spine.simp_chain rest))
-
-/-- `Term.simp_chain`, for the branches of a case. -/
-theorem Alts.simp_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {τ : Ty} {tags : List Nat} (a : Alts Sg Γ τ tags),
-      Chain (AltsStep tbl) a (Alts.simp a)
-  | _, _, _, .deflt t => Chain.altsDeflt (Term.simp_chain t)
-  | _, _, _, .cons _ t rest =>
-      (Chain.altsHead (Term.simp_chain t)).trans (Chain.altsTail (Alts.simp_chain rest))
-
-/-- `Term.simp_chain`, for a loop block. -/
-theorem Body.simp_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {σs : List Ty} {τ : Ty} (b : Body Sg Γ σs τ),
-      Chain (BodyStep tbl) b (Body.simp b)
-  | _, _, _, .ret t => Chain.retTerm (Term.simp_chain t)
-  | _, _, _, .cont args => Chain.contArgs (Spine.simp_chain args)
-  | _, _, _, .letB e b =>
-      simpLetB_chain
-        ((Chain.letBVal (Term.simp_chain e)).trans (Chain.letBBody (Body.simp_chain b)))
-  | _, _, _, .iteB c t u =>
-      simpIteB_chain
-        (((Chain.iteBCond (Term.simp_chain c)).trans
-          (Chain.iteBThen (Body.simp_chain t))).trans (Chain.iteBElse (Body.simp_chain u)))
-  | _, _, _, .joinPointB body rest =>
-      (Chain.joinBBody (Term.simp_chain body)).trans
-        (Chain.joinBRest (Body.simp_chain rest))
+theorem Steps.trans {Γ : Ctx} {τ : Ty} {t u v : Term Sg Γ τ}
+    (h1 : Steps t u) (h2 : Steps u v) : Steps t v := by
+  induction h2 with
+  | refl => exact h1
+  | tail _ s ih => exact .tail ih s
+
+/-- **`lean_sharecommon_quick` is erased**: the application reduces to its argument. -/
+theorem quickAp_steps {Γ : Ctx} {τ : Ty} {t : Term Sg Γ τ} :
+    Steps (quickAp t) t :=
+  .tail .refl .quick
+
+/-- **Erasure is observationally sound**: whatever the argument reduces to, the
+    application reduces to as well — in particular to the same answer. -/
+theorem quickAp_steps_of_steps {Γ : Ctx} {τ : Ty} {t u : Term Sg Γ τ}
+    (h : Steps t u) : Steps (quickAp t) u :=
+  quickAp_steps.trans h
+
+/-- **The evaluator never stops in front of it**: an application of
+    `lean_sharecommon_quick` is not neutral, so it is an answer at no type. -/
+theorem not_neutral_quickAp {Γ : Ctx} {τ : Ty} {t : Term Sg Γ τ} :
+    ¬ Neutral (Sg := Sg) (quickAp t) := by
+  intro h
+  cases h with
+  | ap _ _ hnd => exact hnd .quick
+
+/-- **Nothing else can happen at that head**: a step of `lean_sharecommon_quick t` either
+    erases the application, or is a step of the argument under it.  With the previous
+    theorem this is the whole content of erasure: the application answers what the
+    argument answers, by whichever order the two rules are taken. -/
+theorem step_quickAp_inv {Γ : Ctx} {τ : Ty} {t s : Term Sg Γ τ}
+    (h : Step (quickAp t) s) :
+    s = t ∨ ∃ t' : Term Sg Γ τ, s = quickAp t' ∧ Step t t' := by
+  cases h with
+  | quick => exact Or.inl rfl
+  | apArg _ hs => exact Or.inr ⟨_, rfl, hs⟩
+  | apFun hs => cases hs
+
+/-! ## The evaluator really does run the functions of the runtime
+
+Three examples, each a proof rather than a test: the term on the left steps to the
+literal on the right, and `rfl` is what checks that the catalogue's meaning of the entry
+at those values is that literal. -/
+
+section Examples
+
+/-- The empty signature: these examples mention no top-level declaration. -/
+private def sigNone : Sig := ⟨[], rfl⟩
+
+/-- `lean_nat_add 1 2` runs to `3`. -/
+example :
+    Step (Sg := sigNone) (Γ := [])
+      (.ap (.ap (.extern (.prim2 .lean_nat_add)) (.lit (.nat 1))) (.lit (.nat 2)))
+      (.lit (.nat 3)) :=
+  .deltaPrim2 .lean_nat_add (.nat 1) (.nat 2)
+
+/-- `lean_float_sin 1.0` runs to the sine of `1.0`. -/
+example :
+    Step (Sg := sigNone) (Γ := [])
+      (.ap (.extern (.prim1 .sin)) (.lit (.float 1.0)))
+      (.lit (.float (Float.sin 1.0))) :=
+  .deltaPrim1 .sin (.float 1.0)
+
+/-- `lean_string_append "ab" "c"` runs to `"abc"`. -/
+example :
+    Step (Sg := sigNone) (Γ := [])
+      (.ap (.ap (.extern (.prim2 .lean_string_append)) (.lit (.string "ab")))
+        (.lit (.string "c")))
+      (.lit (.string ("ab" ++ "c"))) :=
+  .deltaPrim2 .lean_string_append (.string "ab") (.string "c")
+
+/-- `lean_sharecommon_quick 3` runs to `3`: sharing a value is the value. -/
+example :
+    Step (Sg := sigNone) (Γ := [])
+      (.ap (.extern (.poly1 (.lean_sharecommon_quick (.prim .nat)))) (.lit (.nat 3)))
+      (.lit (.nat 3)) :=
+  .quick
+
+/-! ### What a jump does with its arguments
+
+Two examples of the rule that keeps a control transfer call-by-value: **every** argument
+is bound by a `let` in front of the block, so it is run once, before the block, whatever
+it is. -/
+
+/-- `Term.sharedTail` jumps with literals, and inlining its label binds each of them in
+    front of the block it names, once per jump. -/
+example :
+    Step (Sg := sigNone) (Γ := [Ty.bool]) Term.sharedTail
+      (.block (.iteT (♯0)
+        (.letT (.lit (.nat 1)) (.ret (♯0)))
+        (.letT (.lit (.nat 2)) (.ret (♯0))))) :=
+  .blockStep .labelJoin
+
+/-- A jump whose argument is a computation: `lean_nat_add 1 2`. -/
+private def jumpComputed : Term sigNone [] Ty.nat :=
+  .block
+    (.label (ps := [Ty.nat]) false (.ret (♯0))
+      (.jmp .head (.cons (Term.callExtern (.prim2 .lean_nat_add)
+        (.cons (.lit (.nat 1)) (.cons (.lit (.nat 2)) .nil))) .nil)))
+
+/-- Inlining that label **binds** the argument rather than copying it into the block: the
+    computation is run once, where the jump stood. -/
+example :
+    Step (Sg := sigNone) (Γ := []) jumpComputed
+      (.block (.letT (Term.callExtern (.prim2 .lean_nat_add)
+        (.cons (.lit (.nat 1)) (.cons (.lit (.nat 2)) .nil))) (.ret (♯0)))) :=
+  .blockStep .labelJoin
+
+/-! ### A loop is a label jumped to from its own body
+
+`Term.tco01` is the `Tco01` snapshot by hand.  Its block is one self-label, entered by a
+jump; the step below is the one that substitutes the loop for the label, after which the
+jump that entered it has become the loop, run on the argument. -/
+
+/-- The loop of `Term.tco01`, entered: the block steps, and what it steps to is again a
+    block with the same label. -/
+example :
+    ∃ u : Term sigNone [Ty.nat] Ty.nat,
+      Step (Sg := sigNone) (Γ := [Ty.nat])
+        (.block (Tail.label (ps := [Ty.nat]) true
+          (.iteT (Term.callExtern (.prim2 .lean_nat_dec_eq)
+              (.cons (♯0) (.cons (.lit (.nat 0)) .nil)))
+            (.ret (♯0))
+            (.jmp .head (.cons (Term.callExtern (.prim2 .lean_nat_sub)
+              (.cons (♯0) (.cons (.lit (.nat 1)) .nil))) .nil)))
+          (.jmp .head (.cons (♯0) .nil)))) u :=
+  ⟨_, .blockStep .labelLoop⟩
+
+/-- **A shared tail that continues an enclosing loop runs too.**  `Term.sharedTailInLoop`
+    is the program the two-construct grammar could not express: a label bound inside a
+    loop's body whose block jumps back to the loop.  Its block steps, by substituting the
+    loop for its own label. -/
+example :
+    ∃ u : Term sigNone [Ty.nat] Ty.nat,
+      Step (Sg := sigNone) (Γ := [Ty.nat]) Term.sharedTailInLoop u :=
+  ⟨_, .blockStep .labelLoop⟩
+
+/-- A function of the runtime that is still waiting for an argument is an answer: only a
+    *saturated* application is a δ-redex. -/
+example : ¬ DeltaRedex (Sg := sigNone) (Γ := [])
+    (.extern (.prim2 .lean_nat_add)) := by
+  intro h; cases h
+
+end Examples
+
+end LakeJs.Expr
 
 end
-
-/-- The optimiser as the backend runs it — two passes — is a reduction as well. -/
-theorem Term.simpAll_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ) :
-    t —↠[tbl] Term.simpAll t :=
-  (Term.simp_chain t).trans (Term.simp_chain (Term.simp t))
-
-/-! ## The inliner is a strategy for these rules too
-
-`LakeJs.Inline` walks a term bottom up and rewrites a call of a declaration of `tbl` into
-that declaration's body.  The theorems below say the same thing of it as `simp_chain` says
-of the simplifier: everything it does is a reduction of `Step tbl`. -/
-
-/-- The rule of a reference to a declaration. -/
-theorem inlineGlobal_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {τ : Ty}
-    {r : GlobalRef Sg τ} {t0 : Term Sg Γ τ} (base : t0 —↠[tbl] Term.global r) :
-    t0 —↠[tbl] LakeJs.Inline.inlineGlobal tbl r := by
-  unfold LakeJs.Inline.inlineGlobal
-  split
-  · next heq => exact base.tail (.deltaLit heq)
-  · exact base
-
-/-- The rule of an application. -/
-theorem inlineApN_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx}
-    {ps : List Ty} {ret : Ty} {f' : Term Sg Γ (.fn ps ret)} {args' : Spine Sg Γ ps}
-    {t0 : Term Sg Γ ret} (base : t0 —↠[tbl] Term.apN f' args') :
-    t0 —↠[tbl] LakeJs.Inline.inlineApN tbl f' args' := by
-  unfold LakeJs.Inline.inlineApN
-  split
-  · split
-    · next heq => exact base.tail (.delta heq)
-    · exact base
-  · exact base
-
-mutual
-
-/-- Every term the inliner produces is reachable from the term it was given by the rules
-    of `Step tbl`, `delta` and `deltaLit` among them. -/
-theorem Term.inlineCalls_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ),
-      t —↠[tbl] LakeJs.Inline.Term.inlineCalls tbl t
-  | _, _, .var _ => .refl
-  | _, _, .lit _ => .refl
-  | _, _, .global _ => inlineGlobal_chain .refl
-  | _, _, .extern _ => .refl
-  | _, _, .proj e _ _ _ => Chain.projArg (Term.inlineCalls_chain e)
-  | _, _, .tagOf e _ => Chain.tagOfArg (Term.inlineCalls_chain e)
-  | _, _, .lazyMk e => Chain.lazyMkBody (Term.inlineCalls_chain e)
-  | _, _, .lazyForce e => Chain.lazyForceArg (Term.inlineCalls_chain e)
-  | _, _, .ite c t u =>
-      ((Chain.iteCond (Term.inlineCalls_chain c)).trans
-        (Chain.iteThen (Term.inlineCalls_chain t))).trans
-          (Chain.iteElse (Term.inlineCalls_chain u))
-  | _, _, .letE e b =>
-      (Chain.letVal (Term.inlineCalls_chain e)).trans
-        (Chain.letBody (Term.inlineCalls_chain b))
-  | _, _, .lamN b => Chain.lamBody (Term.inlineCalls_chain b)
-  | _, _, .apN f args =>
-      inlineApN_chain
-        ((Chain.apFun (Term.inlineCalls_chain f)).trans
-          (Chain.apArgs (Spine.inlineCalls_chain args)))
-  | _, _, .lamProd rets => Chain.lamProdRets (Spine.inlineCalls_chain rets)
-  | _, _, .callProd f args _ =>
-      (Chain.callProdFun (Term.inlineCalls_chain f)).trans
-        (Chain.callProdArgs (Spine.inlineCalls_chain args))
-  | _, _, .jsOp _ args => Chain.jsOpArgs (Spine.inlineCalls_chain args)
-  | _, _, .ctor _ _ _ args => Chain.ctorArgs (Spine.inlineCalls_chain args)
-  | _, _, .caseTag s alts _ =>
-      (Chain.caseScrut (Term.inlineCalls_chain s)).trans
-        (Chain.caseAlts (Alts.inlineCalls_chain alts))
-  | _, _, .loop init body =>
-      (Chain.loopInit (Spine.inlineCalls_chain init)).trans
-        (Chain.loopBody (Body.inlineCalls_chain body))
-  | _, _, .joinPoint body rest =>
-      (Chain.joinBody (Term.inlineCalls_chain body)).trans
-        (Chain.joinRest (Term.inlineCalls_chain rest))
-  | _, _, .jump _ args => Chain.jumpArgs (Spine.inlineCalls_chain args)
-
-/-- `Term.inlineCalls_chain`, for the arguments of a spine. -/
-theorem Spine.inlineCalls_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {σs : List Ty} (s : Spine Sg Γ σs),
-      Chain (SpineStep tbl) s (LakeJs.Inline.Spine.inlineCalls tbl s)
-  | _, _, .nil => .refl
-  | _, _, .cons t rest =>
-      (Chain.spineHead (Term.inlineCalls_chain t)).trans
-        (Chain.spineTail (Spine.inlineCalls_chain rest))
-
-/-- `Term.inlineCalls_chain`, for the branches of a case. -/
-theorem Alts.inlineCalls_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {τ : Ty} {tags : List Nat} (a : Alts Sg Γ τ tags),
-      Chain (AltsStep tbl) a (LakeJs.Inline.Alts.inlineCalls tbl a)
-  | _, _, _, .deflt t => Chain.altsDeflt (Term.inlineCalls_chain t)
-  | _, _, _, .cons _ t rest =>
-      (Chain.altsHead (Term.inlineCalls_chain t)).trans
-        (Chain.altsTail (Alts.inlineCalls_chain rest))
-
-/-- `Term.inlineCalls_chain`, for a loop block. -/
-theorem Body.inlineCalls_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {σs : List Ty} {τ : Ty} (b : Body Sg Γ σs τ),
-      Chain (BodyStep tbl) b (LakeJs.Inline.Body.inlineCalls tbl b)
-  | _, _, _, .ret t => Chain.retTerm (Term.inlineCalls_chain t)
-  | _, _, _, .cont args => Chain.contArgs (Spine.inlineCalls_chain args)
-  | _, _, _, .letB e b =>
-      (Chain.letBVal (Term.inlineCalls_chain e)).trans
-        (Chain.letBBody (Body.inlineCalls_chain b))
-  | _, _, _, .iteB c t u =>
-      ((Chain.iteBCond (Term.inlineCalls_chain c)).trans
-        (Chain.iteBThen (Body.inlineCalls_chain t))).trans
-          (Chain.iteBElse (Body.inlineCalls_chain u))
-  | _, _, _, .joinPointB body rest =>
-      (Chain.joinBBody (Term.inlineCalls_chain body)).trans
-        (Chain.joinBRest (Body.inlineCalls_chain rest))
-
-end
-
-/-! ## The scalariser is a strategy for these rules too
-
-`LakeJs.Scalarise` does two things: it moves a constructor application nothing needs
-whole to the places that read its fields, and it gives a loop one slot per field of a
-slot the body only takes apart and builds again.  Both are rules of `Step`, so the whole
-pass is again a reduction — which is what the two theorems below say. -/
-
-/-- The rule of a `let` the constructor inliner rewrites. -/
-theorem inlineLet_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {σ τ : Ty}
-    {v' : Term Sg Γ σ} {b' : Term Sg (σ :: Γ) τ} {t0 : Term Sg Γ τ}
-    (base : t0 —↠[tbl] Term.letE v' b') :
-    t0 —↠[tbl] Scalarise.inlineLet v' b' := by
-  unfold Scalarise.inlineLet
-  split
-  · split
-    · exact base
-    · split
-      · next heq => exact base.tail (.letCtorInline heq)
-      · exact base
-  · exact base
-
-/-- The rule of a block’s `let` the constructor inliner rewrites. -/
-theorem inlineLetB_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {σ : Ty}
-    {σs : List Ty} {τ : Ty} {v' : Term Sg Γ σ} {b' : Body Sg (σ :: Γ) σs τ}
-    {t0 : Body Sg Γ σs τ} (base : Chain (BodyStep tbl) t0 (Body.letB v' b')) :
-    Chain (BodyStep tbl) t0 (Scalarise.inlineLetB v' b') := by
-  unfold Scalarise.inlineLetB
-  split
-  · split
-    · exact base
-    · split
-      · next heq => exact base.tail (.letCtorInline heq)
-      · exact base
-  · exact base
-
-mutual
-
-/-- Every term the constructor inliner produces is reachable from the term it was given
-    by the rules of `Step tbl`. -/
-theorem Term.inlineCtors_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ), t —↠[tbl] Scalarise.inlineTerm t
-  | _, _, .var _ => .refl
-  | _, _, .lit _ => .refl
-  | _, _, .global _ => .refl
-  | _, _, .extern _ => .refl
-  | _, _, .proj e _ _ _ => Chain.projArg (Term.inlineCtors_chain e)
-  | _, _, .tagOf e _ => Chain.tagOfArg (Term.inlineCtors_chain e)
-  | _, _, .lazyMk e => Chain.lazyMkBody (Term.inlineCtors_chain e)
-  | _, _, .lazyForce e => Chain.lazyForceArg (Term.inlineCtors_chain e)
-  | _, _, .ite c t u =>
-      ((Chain.iteCond (Term.inlineCtors_chain c)).trans
-        (Chain.iteThen (Term.inlineCtors_chain t))).trans
-          (Chain.iteElse (Term.inlineCtors_chain u))
-  | _, _, .letE e b =>
-      inlineLet_chain
-        ((Chain.letVal (Term.inlineCtors_chain e)).trans
-          (Chain.letBody (Term.inlineCtors_chain b)))
-  | _, _, .lamN b => Chain.lamBody (Term.inlineCtors_chain b)
-  | _, _, .apN f args =>
-      (Chain.apFun (Term.inlineCtors_chain f)).trans
-        (Chain.apArgs (Spine.inlineCtors_chain args))
-  | _, _, .lamProd rets => Chain.lamProdRets (Spine.inlineCtors_chain rets)
-  | _, _, .callProd f args _ =>
-      (Chain.callProdFun (Term.inlineCtors_chain f)).trans
-        (Chain.callProdArgs (Spine.inlineCtors_chain args))
-  | _, _, .jsOp _ args => Chain.jsOpArgs (Spine.inlineCtors_chain args)
-  | _, _, .ctor _ _ _ args => Chain.ctorArgs (Spine.inlineCtors_chain args)
-  | _, _, .caseTag s alts _ =>
-      (Chain.caseScrut (Term.inlineCtors_chain s)).trans
-        (Chain.caseAlts (Alts.inlineCtors_chain alts))
-  | _, _, .loop init body =>
-      (Chain.loopInit (Spine.inlineCtors_chain init)).trans
-        (Chain.loopBody (Body.inlineCtors_chain body))
-  | _, _, .joinPoint body rest =>
-      (Chain.joinBody (Term.inlineCtors_chain body)).trans
-        (Chain.joinRest (Term.inlineCtors_chain rest))
-  | _, _, .jump _ args => Chain.jumpArgs (Spine.inlineCtors_chain args)
-
-/-- `Term.inlineCtors_chain`, for the arguments of a spine. -/
-theorem Spine.inlineCtors_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {σs : List Ty} (s : Spine Sg Γ σs),
-      Chain (SpineStep tbl) s (Scalarise.inlineSpine s)
-  | _, _, .nil => .refl
-  | _, _, .cons t rest =>
-      (Chain.spineHead (Term.inlineCtors_chain t)).trans
-        (Chain.spineTail (Spine.inlineCtors_chain rest))
-
-/-- `Term.inlineCtors_chain`, for the branches of a case. -/
-theorem Alts.inlineCtors_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {τ : Ty} {tags : List Nat} (a : Alts Sg Γ τ tags),
-      Chain (AltsStep tbl) a (Scalarise.inlineAlts a)
-  | _, _, _, .deflt t => Chain.altsDeflt (Term.inlineCtors_chain t)
-  | _, _, _, .cons _ t rest =>
-      (Chain.altsHead (Term.inlineCtors_chain t)).trans
-        (Chain.altsTail (Alts.inlineCtors_chain rest))
-
-/-- `Term.inlineCtors_chain`, for a loop block. -/
-theorem Body.inlineCtors_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {σs : List Ty} {τ : Ty} (b : Body Sg Γ σs τ),
-      Chain (BodyStep tbl) b (Scalarise.inlineBody b)
-  | _, _, _, .ret t => Chain.retTerm (Term.inlineCtors_chain t)
-  | _, _, _, .cont args => Chain.contArgs (Spine.inlineCtors_chain args)
-  | _, _, _, .letB e b =>
-      inlineLetB_chain
-        ((Chain.letBVal (Term.inlineCtors_chain e)).trans
-          (Chain.letBBody (Body.inlineCtors_chain b)))
-  | _, _, _, .iteB c t u =>
-      ((Chain.iteBCond (Term.inlineCtors_chain c)).trans
-        (Chain.iteBThen (Body.inlineCtors_chain t))).trans
-          (Chain.iteBElse (Body.inlineCtors_chain u))
-  | _, _, _, .joinPointB body rest =>
-      (Chain.joinBBody (Term.inlineCtors_chain body)).trans
-        (Chain.joinBRest (Body.inlineCtors_chain rest))
-
-end
-
-/-- Scalarising one slot is one rewrite. -/
-theorem scalariseAt_step {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {τ : Ty}
-    {t t' : Term Sg Γ τ} {p : Nat} (h : Scalarise.scalariseAt? t p = some t') :
-    t —→[tbl] t' := by
-  unfold Scalarise.scalariseAt? at h
-  split at h
-  · exact .scalariseSlot h
-  · exact absurd h (by simp)
-
-/-- Scalarising the first slot that can be is one rewrite. -/
-theorem scalariseFrom_step {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {τ : Ty} :
-    ∀ (n p : Nat) {t t' : Term Sg Γ τ}, Scalarise.scalariseFrom? n p t = some t' →
-      t —→[tbl] t'
-  | 0, _, _, _, h => absurd h (by simp [Scalarise.scalariseFrom?])
-  | n + 1, p, t, t', h => by
-      rw [Scalarise.scalariseFrom?] at h
-      split at h
-      · next heq =>
-        rw [Option.some.injEq] at h
-        exact h ▸ scalariseAt_step heq
-      · exact scalariseFrom_step n (p + 1) h
-
-/-- Every loop the scalariser produces is reachable from the loop it was given. -/
-theorem scalariseLoopGo_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {τ : Ty} :
-    ∀ (f : Nat) (t : Term Sg Γ τ), t —↠[tbl] Scalarise.scalariseLoopGo f t
-  | 0, t => by rw [Scalarise.scalariseLoopGo]; exact .refl
-  | f + 1, t => by
-      rw [Scalarise.scalariseLoopGo]
-      split
-      · next heq =>
-        exact .head (scalariseFrom_step (tbl := tbl) _ _ heq) (scalariseLoopGo_chain f _)
-      · exact .refl
-
-/-- `scalariseLoopGo_chain`, with the budget the pass runs with. -/
-theorem scalariseLoop_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {τ : Ty}
-    (t : Term Sg Γ τ) : t —↠[tbl] Scalarise.scalariseLoop t :=
-  scalariseLoopGo_chain _ t
-
-/-- The loops of a compiled declaration, scalarised. -/
-theorem scalariseLoops_chain {Sg : Sig} {tbl : Inline.Table Sg} :
-    ∀ {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ), t —↠[tbl] Scalarise.scalariseLoops t
-  | _, _, .lamN b => Chain.lamBody (scalariseLoops_chain b)
-  | _, _, .loop init body => scalariseLoop_chain (.loop init body)
-  | _, _, .var _ => .refl
-  | _, _, .lit _ => .refl
-  | _, _, .global _ => .refl
-  | _, _, .extern _ => .refl
-  | _, _, .proj .. => .refl
-  | _, _, .tagOf .. => .refl
-  | _, _, .lazyMk .. => .refl
-  | _, _, .lazyForce .. => .refl
-  | _, _, .ite .. => .refl
-  | _, _, .letE .. => .refl
-  | _, _, .apN .. => .refl
-  | _, _, .lamProd .. => .refl
-  | _, _, .callProd .. => .refl
-  | _, _, .jsOp .. => .refl
-  | _, _, .ctor .. => .refl
-  | _, _, .caseTag .. => .refl
-  | _, _, .joinPoint .. => .refl
-  | _, _, .jump .. => .refl
-
-/-- The whole scalarising pass is a reduction of the rules. -/
-theorem Term.scalarise_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx} {τ : Ty}
-    (t : Term Sg Γ τ) : t —↠[tbl] Scalarise.scalarise t :=
-  (Term.inlineCtors_chain t).trans (scalariseLoops_chain (Scalarise.inlineTerm t))
-
-/-- Simplify, inline, simplify — the first three passes of the pipeline — is a reduction
-    of the rules.  `LakeJs/OptimiseChain.lean` says it of the whole of
-    `LakeJs.Compile.optimise`, the scalariser included. -/
-theorem Term.simp_inline_simp_chain {Sg : Sig} {tbl : Inline.Table Sg} {Γ : Ctx}
-    {τ : Ty} (t : Term Sg Γ τ) :
-    t —↠[tbl] Term.simpAll (LakeJs.Inline.Term.inlineCalls tbl (Term.simpAll t)) :=
-  ((Term.simpAll_chain t).trans
-    (Term.inlineCalls_chain (Term.simpAll t))).trans
-      (Term.simpAll_chain (LakeJs.Inline.Term.inlineCalls tbl (Term.simpAll t)))
-
-end LakeJs.Reduce

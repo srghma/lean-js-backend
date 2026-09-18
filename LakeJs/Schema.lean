@@ -57,8 +57,8 @@ cannot be fields of a schema — they mention the type language, which is a para
   equation `T = T`, which no value satisfies;
 * a mutual family is **strongly connected**.
 
-They are decidable predicates on the instantiated language, in `LakeJs.TySchema`
-(`Ty.Wf`, and the `WfTy` subtype that carries the proof).
+They are decidable predicates on the instantiated language, in `LakeJs.RTyWf`
+(`RTy.wf`), and each recursive constructor of `Ty` carries the one that is about it.
 
 ## Canonical encodings
 
@@ -487,36 +487,6 @@ def map (f : α → β) : LeanMutualRecFamily α → LeanMutualRecFamily β
       .selectedLast (first.map f) (before.map (·.map f)) (current.map f)
 
 end LeanMutualRecFamily
-
-/-- The **function** type formers, which are likewise invariant in the layer they sit
-    in: an uncurried JavaScript function, and one that answers with several values at
-    once. -/
-inductive TyFn (α : Type) where
-  /-- A JS function, taking 0 or more parameters and returning a value.  It compiles to
-      an **uncurried** JS function, so Lean's `def foo : Int → Int → Int` is
-      `.fn [.int] (.fn [.int] .int)`.  A function returning nothing is unrepresentable:
-      the only reason to have one is an effect, and the source language is pure. -/
-  | fn : List α → α → TyFn α
-  /-- A JS function answering with **several** values at once: it compiles to an
-      uncurried function whose `return` is an array literal, so
-      `def foo : Int × Float → Int × Float → Int × Float` is
-      `.fn [.int, .float] (.fn_returnsProd [.int, .float] .int [.float])` and prints as
-      `(v0, v1) => (v2, v3) => { return [1, 1.0]; }`.
-
-      The list of results is non-empty by construction, spelled as a first result and
-      the rest. -/
-  | fn_returnsProd : (params : List α) → (ret1 : α) → (retRest : List α) → TyFn α
-
-namespace TyFn
-
-variable {α β : Type}
-
-/-- Apply a function to every type mentioned. -/
-def map (f : α → β) : TyFn α → TyFn β
-  | .fn ps r => .fn (ps.map f) (f r)
-  | .fn_returnsProd ps r rs => .fn_returnsProd (ps.map f) (f r) (rs.map f)
-
-end TyFn
 
 end LakeJs
 

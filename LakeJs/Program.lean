@@ -1,3 +1,15 @@
+/-
+# `LakeJs.Program` — waiting for the front end
+
+This module printed the whole program one Lean declaration is: it read the declaration's
+LCNF, followed every call with a body, and printed the resulting `Term`s.  It is kept
+here verbatim, but **commented out**, because everything it is built on —
+`LakeJs.Compile`, `LakeJs.Config`, `LakeJs.FromLcnf`, `LakeJs.ExternTable` — is currently
+an empty file: the translation from `Lean.Compiler.LCNF` into `Term` has not been written
+against the present shape of `Term` (curried functions, one block/label grammar for loops
+and shared tails, no `JsOp`).  Nothing is deleted, so restoring it is a matter of restoring those
+modules and adjusting the names this file uses.
+
 import LakeJs.Compile
 
 /-!
@@ -237,12 +249,14 @@ elab "#lean_to_lean_term" cfg?:("(" &"config" ":=" ident ")")? f:ident : command
   let cfg ← cfgOf (cfg?.map fun s => s.raw[3])
   logInfo (← liftCoreM <| programOf n cfg)
 
-open Lean.Elab Lean.Elab.Command in
-/-- `#lean_to_lean_js f` prints the JavaScript of the program of `f`: the same closure
-    of declarations, optimised and emitted. -/
-elab "#lean_to_lean_js" cfg?:("(" &"config" ":=" ident ")")? f:ident : command => do
-  let n ← liftCoreM <| realizeGlobalConstNoOverloadWithInfo f
-  let cfg ← cfgOf (cfg?.map fun s => s.raw[3])
-  logInfo (← liftCoreM <| javascriptOf n cfg)
+-- open Lean.Elab Lean.Elab.Command in
+-- /-- `#lean_to_lean_js f` prints the JavaScript of the program of `f`: the same closure
+--     of declarations, optimised and emitted. -/
+-- elab "#lean_to_lean_js" cfg?:("(" &"config" ":=" ident ")")? f:ident : command => do
+--   let n ← liftCoreM <| realizeGlobalConstNoOverloadWithInfo f
+--   let cfg ← cfgOf (cfg?.map fun s => s.raw[3])
+--   logInfo (← liftCoreM <| javascriptOf n cfg)
 
 end LakeJs.Program
+
+-/

@@ -1,6 +1,7 @@
 module
 
 public import LakeJs.Ty
+public import LakeJs.RTyWf
 
 @[expose] public section
 
@@ -25,7 +26,7 @@ operations of `LakeJs.Expr` are checked against:
   the same one.
 
 A type with no layout has *no* data operation at all: a scalar, a function, an array,
-a value of a type parameter (`Ty.typeParam`) — and an **alias**, which is a newtype
+a function type — and an **alias**, which is a newtype
 whose wrapper is erased.  A value of `Ty.recAlias b`, or of an alias member of a mutual
 family, is a value of the type `b` unfolds to (`Ty.aliasUnfold?`), so there is nothing
 to read out of it and nothing to build: the wrapper does not exist at run time.
@@ -51,65 +52,6 @@ abbrev FieldLayout := List Ty
 /-- The constructors of an object type, in declaration order. -/
 abbrev ObjLayout := List FieldLayout
 
-mutual
-
-/-- Does this type mention the recursive declaration whose body it sits in?  A *nested*
-    recursive shape is not looked into: its `.self`s are its own. -/
-def RTy.hasSelf : RTy → Bool
-  | .self _ => true
-  | .fnTy s => RTy.hasSelfFn s
-  | .primCovariant s => RTy.hasSelfCov s
-  | .record fs => RTy.hasSelfA2 fs
-  | .taggedUnion l => RTy.hasSelfTU l
-  | _ => false
-
-/-- `RTy.hasSelf`, on a function type. -/
-def RTy.hasSelfFn : TyFn RTy → Bool
-  | .fn ps r => RTy.hasSelfList ps || RTy.hasSelf r
-  | .fn_returnsProd ps r rs => RTy.hasSelfList ps || RTy.hasSelf r || RTy.hasSelfList rs
-
-/-- `RTy.hasSelf`, on an invariant type former. -/
-def RTy.hasSelfCov : LeanPrimTyCovariant RTy → Bool
-  | .array a | .list a | .task a | .promise a | .thunk a | .lazy a => RTy.hasSelf a
-
-/-- `RTy.hasSelf`, on a list of types. -/
-def RTy.hasSelfList : List RTy → Bool
-  | [] => false
-  | t :: ts => RTy.hasSelf t || RTy.hasSelfList ts
-
-/-- `RTy.hasSelf`, on the constructors of a layout. -/
-def RTy.hasSelfCtors : List (List RTy) → Bool
-  | [] => false
-  | fs :: l => RTy.hasSelfList fs || RTy.hasSelfCtors l
-
-/-- `RTy.hasSelf`, on the fields of a record. -/
-def RTy.hasSelfA2 : LeanRecordSchema RTy → Bool
-  | ⟨a, b, rest⟩ => RTy.hasSelf a || RTy.hasSelf b || RTy.hasSelfList rest
-
-/-- `RTy.hasSelf`, on the fields of a constructor that has at least one. -/
-def RTy.hasSelfNE : NonEmptyList RTy → Bool
-  | ⟨a, as⟩ => RTy.hasSelf a || RTy.hasSelfList as
-
-/-- `RTy.hasSelf`, on the constructors of a tagged union. -/
-def RTy.hasSelfTU : LeanTaggedUnionSchema RTy → Bool
-  | .payloadFirst f n r => RTy.hasSelfNE f || RTy.hasSelfList n || RTy.hasSelfCtors r
-  | .skip rest => RTy.hasSelfCP rest
-
-/-- `RTy.hasSelf`, on the constructors that follow a field-less one. -/
-def RTy.hasSelfCP : CtorsWithPayload RTy → Bool
-  | .here f r => RTy.hasSelfNE f || RTy.hasSelfCtors r
-  | .skip rest => RTy.hasSelfCP rest
-
-end
-
-/-- `RTy.hasSelf`, on the constructors of a recursive tagged union. -/
-def RTy.hasSelfRecTU : LeanTaggedUnionSchema RTy → Bool
-  | ⟨l⟩ => RTy.hasSelfTU l
-
-/-- `RTy.hasSelf`, on the fields of a recursive record. -/
-def RTy.hasSelfRecObj : LeanRecordSchema RTy → Bool
-  | ⟨fs⟩ => RTy.hasSelfA2 fs
-
 
 mutual
 
@@ -122,22 +64,24 @@ mutual
 def instRTy (rep : Nat → Option Ty) : RTy → Option Ty
   | .self i => rep i
   | .prim p => some (.prim p)
-  | .typeParam => some .typeParam
-  | .fnTy s => (instFn rep s).map Ty.fnTy
+  | .fn a b => do return .fn (← instRTy rep a) (← instRTy rep b)
   | .primCovariant s => (instCov rep s).map Ty.primCovariant
   | .enum s => some (.enum s)
   | .record fs => (instA2 rep fs).map Ty.record
   | .taggedUnion l => (instTU rep l).map Ty.taggedUnion
-  | .recTaggedUnion l => some (.recTaggedUnion l)
-  | .recObject fs => some (.recObject fs)
-  | .recAlias b => some (.recAlias b)
-  | .mutualRecursiveFamily f => some (.mutualRecursiveFamily f)
-
-/-- `instRTy`, on a function type. -/
-def instFn (rep : Nat → Option Ty) : TyFn RTy → Option (TyFn Ty)
-  | .fn ps r => do return .fn (← instList rep ps) (← instRTy rep r)
-  | .fn_returnsProd ps r rs => do
-      return .fn_returnsProd (← instList rep ps) (← instRTy rep r) (← instList rep rs)
+  -- a nested recursive shape is copied unchanged; the copy is a `Ty`, so it has to
+  -- carry the proof that it describes a type that exists, and a payload that does not
+  -- has no `Ty` at all
+  | .recTaggedUnion l =>
+      if h : RTy.wf (.recTaggedUnion l) = true then some (.recTaggedUnion l h) else none
+  | .recObject fs =>
+      if h : RTy.wf (.recObject fs) = true then some (.recObject fs h) else none
+  | .recAlias b =>
+      if h : RTy.wf (.recAlias b) = true then some (.recAlias b h) else none
+  | .mutualRecursiveFamily f =>
+      if h : RTy.wf (.mutualRecursiveFamily f) = true then
+        some (.mutualRecursiveFamily f h)
+      else none
 
 /-- `instRTy`, on an invariant type former. -/
 def instCov (rep : Nat → Option Ty) : LeanPrimTyCovariant RTy → Option (LeanPrimTyCovariant Ty)
@@ -186,7 +130,12 @@ def selfRep (τ : Ty) : Nat → Option Ty := fun i => if i == 0 then some τ els
 
 /-- What `RTy.self i` stands for inside a mutual family: member `i` of that family. -/
 def famRep (ms : List FamMember) : Nat → Option Ty := fun i =>
-  (LeanMutualRecFamily.ofMembers? ms i).map Ty.mutualRecursiveFamily
+  match LeanMutualRecFamily.ofMembers? ms i with
+  | none => none
+  | some f =>
+    if h : RTy.wf (.mutualRecursiveFamily f) = true then
+      some (.mutualRecursiveFamily f h)
+    else none
 
 /-- The layout of a type: one entry per constructor, each holding the types of that
     constructor's fields, with the recursive occurrences resolved — or `none` for a
@@ -201,9 +150,9 @@ def Ty.layout? : Ty → Option ObjLayout
   | .enum s => some (List.replicate s.nOfConstructors [])
   | .record fs => some [fs.toList]
   | .taggedUnion l => some l.toList
-  | τ@(.recTaggedUnion ⟨l⟩) => instCtors (selfRep τ) l.toList
-  | τ@(.recObject ⟨fs⟩) => (instList (selfRep τ) fs.toList).map ([·])
-  | .mutualRecursiveFamily f =>
+  | τ@(.recTaggedUnion l _) => instCtors (selfRep τ) l.toList
+  | τ@(.recObject fs _) => (instList (selfRep τ) fs.toList).map ([·])
+  | .mutualRecursiveFamily f _ =>
       match f.current with
       | .ctors l => instCtors (famRep f.members) l.toList
       | .record fs => (instList (famRep f.members) fs.toList).map ([·])
@@ -215,8 +164,8 @@ def Ty.layout? : Ty → Option ObjLayout
     `b` with the recursive occurrences resolved.  `none` for every other type, which is
     how the translation tells an alias from a type with a layout. -/
 def Ty.aliasUnfold? : Ty → Option Ty
-  | τ@(.recAlias ⟨b⟩) => instRTy (selfRep τ) b
-  | .mutualRecursiveFamily f =>
+  | τ@(.recAlias b _) => instRTy (selfRep τ) b
+  | .mutualRecursiveFamily f _ =>
       match f.current with
       | .alias b => instRTy (famRep f.members) b
       | _ => none
@@ -262,17 +211,92 @@ def Ty.caseOk (σ : Ty) (tags : List Nat) : Bool :=
   | none => false
   | some n => tags.all (fun t => t < n) && decide tags.Nodup
 
+/-- May a case on a value of type `σ` have exactly these branch tags **and no default
+    branch**?  It may when `σ` is an object type, every tag is one of its constructors,
+    no tag is repeated, and *every* constructor is branched on.  Coverage is spelled out
+    as a check rather than deduced from `tags.length`, so `Alts.select` reads a branch
+    out of it directly. -/
+def Ty.caseOkFull (σ : Ty) (tags : List Nat) : Bool :=
+  match Ty.numCtors? σ with
+  | none => false
+  | some n =>
+      tags.all (fun t => t < n) && decide tags.Nodup &&
+        (List.range n).all (fun i => tags.contains i)
+
+/-- The condition a `Term.caseTag` carries: `Ty.caseOkFull` for a dispatch with no
+    default branch, `Ty.caseOk` for one with a default branch. -/
+def Ty.caseOkAlts (σ : Ty) (full : Bool) (tags : List Nat) : Bool :=
+  if full then Ty.caseOkFull σ tags else Ty.caseOk σ tags
+
+/-- **A dispatch with no default branch has a branch for every constructor.**  This is
+    what makes `Alts.select` total on an exhaustive list of branches. -/
+theorem Ty.mem_of_caseOkFull {σ : Ty} {tags : List Nat} {n i : Nat}
+    (h : Ty.caseOkFull σ tags = true) (hn : Ty.numCtors? σ = some n) (hi : i < n) :
+    i ∈ tags := by
+  rw [Ty.caseOkFull, hn] at h
+  simp only [Bool.and_eq_true] at h
+  have hcov := h.2
+  have : (tags.contains i) = true := by
+    have := List.all_eq_true.mp hcov i (by simpa using hi)
+    simpa using this
+  simpa using this
+
+/-- A constructor a type has is one of the constructors its layout counts. -/
+theorem Ty.numCtors?_of_ctorFields? {σ : Ty} {i : Nat} {fs : FieldLayout}
+    (h : Ty.ctorFields? σ i = some fs) : ∃ n, Ty.numCtors? σ = some n ∧ i < n := by
+  rw [Ty.ctorFields?] at h
+  cases hl : Ty.layout? σ with
+  | none => rw [hl] at h; exact absurd h (by simp)
+  | some l =>
+      rw [hl] at h
+      exact ⟨l.length, by simp [Ty.numCtors?, hl], (List.getElem?_eq_some_iff.mp h).1⟩
+
+/-- **A dispatch has a branch for the tag of the value it dispatches on** — either
+    because it has a default branch, or because it is exhaustive.  This is what
+    `Alts.select` is given. -/
+theorem Ty.mem_of_caseOkAlts {σ : Ty} {full : Bool} {tags : List Nat} {i : Nat}
+    {fs : FieldLayout} (h : Ty.caseOkAlts σ full tags = true)
+    (hc : Ty.ctorFields? σ i = some fs) : full = true → i ∈ tags := by
+  intro hf
+  subst hf
+  obtain ⟨n, hn, hi⟩ := Ty.numCtors?_of_ctorFields? hc
+  exact Ty.mem_of_caseOkFull (by simpa [Ty.caseOkAlts] using h) hn hi
+
+/-- A boolean is the two-constructor field-less sum: `false` is constructor `0` and
+    `true` is constructor `1`, and neither carries a field. -/
+theorem Ty.bool_ctorFields (b : Bool) :
+    Ty.ctorFields? Ty.bool (if b then 1 else 0) = some [] := by
+  cases b <;> rfl
+
+/-- **A type with one constructor has only constructor `0`.**  `Term.proj` reads a field
+    of such a type, so the constructor the value was built with is the constructor the
+    projection speaks about — there is no other one. -/
+theorem Ty.eq_zero_of_ctorFields?_of_numCtors?_one {σ : Ty} {i : Nat}
+    {fs : FieldLayout} (hone : Ty.numCtors? σ = some 1)
+    (h : Ty.ctorFields? σ i = some fs) : i = 0 := by
+  rw [Ty.numCtors?] at hone
+  rw [Ty.ctorFields?] at h
+  cases hl : Ty.layout? σ with
+  | none => rw [hl] at h; exact absurd h (by simp)
+  | some l =>
+      rw [hl] at h hone
+      simp only [Option.map_some, Option.some.injEq] at hone
+      have hlt : i < l.length := by
+        have := List.getElem?_eq_some_iff.mp h
+        exact this.1
+      omega
+
 /-- A function type has no constructors, so nothing can be built at one. -/
-theorem Ty.ctorFields?_fn (params : List Ty) (ret : Ty) (i : Nat) :
-    Ty.ctorFields? (Ty.fn params ret) i = none := rfl
+theorem Ty.ctorFields?_fn (σ τ : Ty) (i : Nat) :
+    Ty.ctorFields? (Ty.fn σ τ) i = none := rfl
 
 /-- A function type has no fields, so nothing can be read out of one. -/
-theorem Ty.fieldTy?_fn (params : List Ty) (ret : Ty) (i j : Nat) :
-    Ty.fieldTy? (Ty.fn params ret) i j = none := rfl
+theorem Ty.fieldTy?_fn (σ τ : Ty) (i j : Nat) :
+    Ty.fieldTy? (Ty.fn σ τ) i j = none := rfl
 
 /-- Nor can a case dispatch on a function. -/
-theorem Ty.caseOk_fn (params : List Ty) (ret : Ty) (tags : List Nat) :
-    Ty.caseOk (Ty.fn params ret) tags = false := rfl
+theorem Ty.caseOk_fn (σ τ : Ty) (tags : List Nat) :
+    Ty.caseOk (Ty.fn σ τ) tags = false := rfl
 
 /-- A scalar other than a boolean is not an object: `n._1` is not emitted for a `Nat`.
     A `Bool` *is* the two-constructor sum, so it has the layout `[[], []]`. -/
@@ -280,22 +304,11 @@ theorem Ty.ctorFields?_prim (p : LeanPrimTy) (i : Nat) (hp : p ≠ .bool) :
     Ty.ctorFields? (Ty.prim p) i = none := by
   cases p <;> simp_all [Ty.ctorFields?, Ty.layout?]
 
-/-- **A value of a type parameter cannot be taken apart.**  `Ty.typeParam` is the type
-    of a value whose Lean type is a type parameter of the enclosing declaration: the
-    compiled code may pass it on, but the checked data operations — which are the only
-    data operations there are, now that the unchecked ones are gone — are unavailable
-    at it, so a compiled module never reads a field of a value it knows nothing
-    about. -/
-theorem Ty.ctorFields?_typeParam (i : Nat) : Ty.ctorFields? Ty.typeParam i = none := rfl
-
-/-- Nor can a case dispatch on one. -/
-theorem Ty.caseOk_typeParam (tags : List Nat) : Ty.caseOk Ty.typeParam tags = false := rfl
-
 /-- An alias has no layout: its wrapper does not exist at run time, so there is no
     constructor to build and no field to read — a value of it *is* a value of the type
     it unfolds to. -/
-theorem Ty.ctorFields?_recAlias (b : RTy) (i : Nat) :
-    Ty.ctorFields? (Ty.recAlias ⟨b⟩) i = none := rfl
+theorem Ty.ctorFields?_recAlias (b : RTy) (h : RTy.wf (.recAlias b) = true) (i : Nat) :
+    Ty.ctorFields? (Ty.recAlias b h) i = none := rfl
 
 
 end LakeJs.Layout
@@ -305,14 +318,15 @@ end LakeJs.Layout
 namespace LakeJs.Ty
 export LakeJs.Layout.Ty
   (layout? aliasUnfold? isAlias isTagged numCtors? ctorFields? fieldTy? caseOk
-   ctorFields?_fn fieldTy?_fn caseOk_fn ctorFields?_prim ctorFields?_typeParam
-   caseOk_typeParam ctorFields?_recAlias numCtors?_enum_pos)
+   caseOkFull caseOkAlts mem_of_caseOkFull eq_zero_of_ctorFields?_of_numCtors?_one
+   numCtors?_of_ctorFields? mem_of_caseOkAlts bool_ctorFields
+   ctorFields?_fn fieldTy?_fn caseOk_fn ctorFields?_prim
+   ctorFields?_recAlias numCtors?_enum_pos)
 end LakeJs.Ty
 
 namespace LakeJs.Ty.RTy
-export LakeJs.Layout.RTy
-  (hasSelf hasSelfFn hasSelfCov hasSelfList hasSelfCtors hasSelfA2 hasSelfNE hasSelfTU
-   hasSelfCP hasSelfRecTU hasSelfRecObj hasSelfAlias)
+export LakeJs.Layout
+  (instRTy instCov instList instCtors instA2 instNE instTU instCP)
 end LakeJs.Ty.RTy
 
 /-! ## Worked examples
@@ -347,35 +361,35 @@ example : (Ty.list .nat).layout? = some [[], [.nat, .list .nat]] := rfl
 /-- `inductive T | leaf | node : T → T → T`: the recursive occurrences in the layout are
     resolved to the type itself, so reading a field of a `node` gives a `T` again. -/
 example :
-    (Ty.recTaggedUnion ⟨.skip (.here ⟨.self 0, [.self 0]⟩ [])⟩).layout?
-      = some [[], [Ty.recTaggedUnion ⟨.skip (.here ⟨.self 0, [.self 0]⟩ [])⟩,
-                   Ty.recTaggedUnion ⟨.skip (.here ⟨.self 0, [.self 0]⟩ [])⟩]] := rfl
+    (Ty.recTaggedUnion (.skip (.here ⟨.self 0, [.self 0]⟩ []))).layout?
+      = some [[], [Ty.recTaggedUnion (.skip (.here ⟨.self 0, [.self 0]⟩ [])),
+                   Ty.recTaggedUnion (.skip (.here ⟨.self 0, [.self 0]⟩ []))]] := rfl
 
 /-- `structure Tree where n : Nat; kids : Array Tree` — one constructor, two fields, the
     second holding an array of the type itself. -/
 example :
-    (Ty.recObject ⟨⟨.prim .nat, .array (.self 0), []⟩⟩).layout?
-      = some [[.nat, .array (Ty.recObject ⟨⟨.prim .nat, .array (RTy.self 0), []⟩⟩)]] := rfl
+    (Ty.recObject ⟨.prim .nat, .array (.self 0), []⟩).layout?
+      = some [[.nat, .array (Ty.recObject ⟨.prim .nat, .array (RTy.self 0), []⟩)]] := rfl
 
 /-- `structure Rose where kids : Array Rose` is a newtype: it has **no** layout, and a
     value of it is a value of what its single field unfolds to — an array of `Rose`s. -/
-example : (Ty.recAlias ⟨.array (.self 0)⟩).layout? = none := rfl
+example : (Ty.recAlias (.array (.self 0))).layout? = none := rfl
 
 example :
-    (Ty.recAlias ⟨.array (.self 0)⟩).aliasUnfold?
-      = some (.array (Ty.recAlias ⟨.array (RTy.self 0)⟩)) := rfl
+    (Ty.recAlias (.array (.self 0))).aliasUnfold?
+      = some (.array (Ty.recAlias (.array (RTy.self 0)))) := rfl
 
 /-- `.self` is available inside a recursive shape and nowhere else: an `Option Tree`
     *inside* `Tree` still points at `Tree`, because a non-recursive shape does not open
     a scope of its own. -/
 example :
-    (Ty.recObject ⟨⟨.taggedUnion (.skip (.here ⟨.self 0, []⟩ [])), .prim .nat, []⟩⟩).layout?
+    (Ty.recObject ⟨.taggedUnion (.skip (.here ⟨.self 0, []⟩ [])), .prim .nat, []⟩).layout?
       = some [[Ty.option (Ty.recObject
-                 ⟨⟨.taggedUnion (.skip (.here ⟨RTy.self 0, []⟩ [])), .prim .nat, []⟩⟩),
+                 ⟨.taggedUnion (.skip (.here ⟨RTy.self 0, []⟩ [])), .prim .nat, []⟩),
                Ty.nat]] := rfl
 
-/-- A value of a type parameter has no layout at all. -/
-example : Ty.typeParam.layout? = none := rfl
+/-- A function type has no layout at all. -/
+example : (Ty.nat ⇒ Ty.nat).layout? = none := rfl
 
 end LakeJs.Layout.Examples
 

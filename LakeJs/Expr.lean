@@ -2,43 +2,90 @@ module
 public import LakeJs.Ty
 public import LakeJs.Layout
 public import LakeJs.Externs
+public import LakeJs.LeanPrimTyLit
 @[expose] public section
 
 /-!
-# `Term`: the well-scoped, simply-typed core the backend compiles to
+# `Term`: the well-scoped, simply-typed core the front end compiles to
 
-`Term Sg Γ τ` is the intermediate language of the JavaScript backend.  It is
-*intrinsically* scoped (a variable is a de Bruijn index into `Γ`, so a free variable is
-unrepresentable), *intrinsically* typed (its function space is the simply-typed one of
-`LakeJs.Ty`), and *intrinsically* linked (a reference to a top-level declaration is an
-index into the module signature `Sg`, so a call to a name the module does not declare is
-unrepresentable).
+`Term Sg Γ τ` is the intermediate language the Lean front end produces.  It is a
+**Lean** language — the first step of the compilation, before anything about a target is
+decided — and it is:
 
-Four consequences matter for the backend, and they are the reason the language looks the
-way it does:
+* *intrinsically scoped*: a variable is a de Bruijn index into `Γ`, so a free variable is
+  unrepresentable;
+* *intrinsically typed*: its function space is the **curried** simply-typed one of
+  `LakeJs.Ty`, so `σ ⇒ τ` takes one argument and answers with one value;
+* *intrinsically linked*: a reference to a top-level declaration is an index into the
+  module signature `Sg`, whose names are unique by construction, so a call to a name the
+  module does not declare is unrepresentable;
+* *intrinsically separated*: a **label** lives in a grammar of its own, `Tail`, in a
+  context of its own, `Ω`, so the only thing that can be done with one is to jump to it
+  — a label cannot be mistaken for a value, and a value cannot be jumped to.
+
+## Blocks and labels: one mechanism, not two
+
+A loop and a join point used to be two constructs of `Term`: `Term.loop`, with a `Body`
+that either answered or went round again, and `Term.joinPoint`, a block the rest of the
+term could jump to but not jump *back* into.  They are now **one**: a `Tail.label`.
+
+* A `Term` has no jumps at all — there is no label context on `Term`, so a label cannot
+  leak into a closure, into an argument, or into what a `let` binds.
+* The one way a term uses labels is `Term.block`, which opens a **tail grammar**, `Tail`,
+  in the *empty* label context.  Every position of a `Tail` is a tail position of the
+  block, which is why a `Tail.jmp` is allowed there and nowhere else: a jump is the last
+  thing the block does, and it never comes back.  The old `LakeJs.TailPos` check — "is
+  every jump in tail position?" — is therefore not a check any more, it is the grammar.
+* `Tail.label self body rest` binds one label, taking the arguments `ps`.  With
+  `self = false` it is a **shared tail**: `body` cannot jump to it, so control passes
+  through it once per jump — `l: { … }` with `break l` in the target.  With `self = true`
+  it is a **loop**: `body` may jump to the label it is the body of — `l: while (true) { …
+  }` with `continue l`.  The old `Term.loop init body` is
+  `Tail.label true body (Tail.jmp .head init)`, and the old `Term.joinPoint body rest` is
+  `Tail.label false body rest`.
+* A label has **no result type**.  It answers with the type the whole block answers with,
+  because a jump never returns to its jump site.  A block of a *different* type is a
+  value, and a value is bound by a `Term.letE` of a `Term.block` — which is what a
+  value-producing join point always meant.
+* A jump to a non-innermost label is an index other than zero in `Ω`, so `break outer`
+  and `continue outer` need no third context.
+
+Four consequences matter, and they are the reason the language looks the way it does.
 
 * **An Omega-style self-application is not a `Term`.**  `Term.ap` asks for a function of
-  type `.fn [σ] τ` and an argument of type `σ`, so `x x` would need `σ = .fn [σ] τ`,
-  which `Ty.ne_arrow_self` (in `LakeJs.TermTotal`) shows is impossible.  There is no
-  fixed-point combinator and no recursive `Term` constructor either.
-* **Recursion is a loop.**  The only way a `Term` repeats work is `Term.loop`, whose body
-  is a `Body`: a block that either answers (`Body.ret`) or goes round again with new
-  values for the loop variables (`Body.cont`).  That is exactly a JavaScript `while`
-  loop with an accumulator per parameter, which is what `LakeJs.EmitJs` prints.
-* **Every name a term mentions is declared.**  `Term.global` takes a `GlobalRef Sg τ`,
-  a de Bruijn index into the signature of the module being emitted, and the type `τ` it
-  is used at is the type the signature gives it.  There is no way to build a call to an
-  undeclared name, or to call a declared one at the wrong type.
-* **Every operation is applied at its own type.**  `Externs` (the catalogue of the
+  type `σ ⇒ τ` and an argument of type `σ`, so `x x` would need `σ = σ ⇒ τ`, which no
+  finite type satisfies.  There is no fixed-point combinator and no recursive `Term`
+  constructor either.
+* **Recursion is a self-label.**  The only way a term repeats work is a `Tail.label`
+  whose `self` flag is `true`, jumped to from its own body.
+* **Every name a term mentions is declared.**  `Term.global` takes a `GlobalRef`, an
+  index into the signature of the module being compiled, and the type it is used at is
+  the type the signature gives it.
+* **Every operation is applied at its own type.**  `Extern` (the catalogue of the
   functions Lean implements with `@[extern]`, in `LakeJs.Externs`) is *indexed* by the
-  list of its argument types and by its result type, and `JsOp` — the few operations
-  that are not Lean functions at all — likewise, so neither `Term.extern` nor
-  `Term.jsOp` can be applied to the wrong number of arguments or to arguments of the
-  wrong type.
+  list of its argument types and by its result type, so `Term.extern` cannot be applied
+  to arguments of the wrong types.
 
-So a declaration only reaches this language if the backend has already turned its
-recursion into iteration, and a declaration Lean did not prove terminating never gets
-that far: `LakeJs.Totality` refuses it before the translation starts.
+There is **no function that answers with nothing**: the language is pure, the only
+reason to call such a function would be an effect, and a unit-like type is erased before
+a `Ty` is built.  There is likewise no function of *no* arguments: a delayed value is
+`Ty.lazy`, built by `Term.lazyMk` and run by `Term.lazyForce`.
+
+## What the language deliberately does *not* claim
+
+* **`Ty.lazy` is a delay, not a `Thunk`.**  `Term.lazyForce (Term.lazyMk e)` runs `e`,
+  and running it twice runs `e` twice: there is no memoisation, exactly as there is none
+  in the `() => …` of the target.  A Lean `Thunk`, which does memoise, is therefore
+  **not** representable as a `Ty.lazy`, and the front end may not translate one into one;
+  a memoising delay would be a second type former with a store in the evaluator.
+* **Non-recursiveness is a property of one `Term`, not of a program.**  `Sig` gives the
+  top-level declarations *types*, not bodies, so nothing here prevents two globals from
+  calling each other; that invariant belongs to the program level (`LakeJs.Totality` on
+  the LCNF side, `LakeJs.Program` when it returns).
+* **`GlobalDecl.name` is an unvalidated `String`.**  A signature cannot declare a name
+  twice (`Sig.h_names_unique`), but nothing says a name is a legal identifier of the
+  target or avoids its reserved words.  If the emitter mangles names, the uniqueness
+  proof has to be re-established for the mangled ones.
 -/
 
 namespace LakeJs.Expr
@@ -47,23 +94,26 @@ open LakeJs
 open LakeJs.Ty
 open LakeJs.Layout (FieldLayout ObjLayout)
 
+/-! ## Variables -/
+
+/-- The types of the values in scope, innermost first. -/
 abbrev Ctx := List Ty
 
--- Variable index in context
+/-- A variable: a de Bruijn index into the context, carrying the type it is bound at. -/
 inductive Var : Ctx → Ty → Type
   | head : ∀ {Γ τ}, Var (τ :: Γ) τ
   | tail : ∀ {Γ τ1 τ2}, Var Γ τ1 → Var (τ2 :: Γ) τ1
 
--- Membership notation: Γ ∋ τ
+/-- Membership notation: `Γ ∋ τ`. -/
 infix:40 " ∋ " => Var
 
--- Macro to expand a natural number literal into nested Var.tail / Var.head
+/-- Expand a natural number literal into nested `Var.tail` / `Var.head`. -/
 syntax "var_get_elem" (ppSpace term) : term
 macro_rules | `(term| var_get_elem $n) => match n.1.toNat with
 | 0     => `(term| Var.head)
 | n + 1 => `(term| Var.tail (var_get_elem $(Lean.quote n)))
 
--- Sugar: ♯0 expands to Var.head, ♯1 expands to Var.tail Var.head, etc.
+/-- Sugar: `v♯0` is `Var.head`, `v♯1` is `Var.tail Var.head`, … -/
 macro "v♯" n:term:90 : term => `(var_get_elem $n)
 
 /-- The de Bruijn index of a variable: how many binders out it is. -/
@@ -71,342 +121,420 @@ def Var.index : ∀ {Γ : Ctx} {τ : Ty}, Γ ∋ τ → Nat
   | _, _, .head => 0
   | _, _, .tail v => Var.index v + 1
 
+/-! ## Labels have a context of their own
+
+A label is not a value: it cannot be passed, stored or returned, and the only thing that
+may be done with one is to jump to it.  That is not a discipline checked after the fact
+— it is the shape of the language.  A label is bound in `Ω`, a context whose entries are
+the *argument types* a jump to it supplies, and the only constructor that reads `Ω` is
+`Tail.jmp`.  A `Term` has no `Ω` at all, so a value can never name a label.
+
+A label has **no result type**: jumping to it does not come back, so the block it is part
+of answers with the type the enclosing `Term.block` answers with.
+-/
+
+/-- The labels in scope, innermost first; an entry is what a jump to that label
+    supplies. -/
+abbrev LCtx := List (List Ty)
+
+/-- A label in scope: a de Bruijn index into `Ω`, separate from the index of a
+    variable. -/
+inductive LVar : LCtx → List Ty → Type
+  | head : ∀ {Ω ps}, LVar (ps :: Ω) ps
+  | tail : ∀ {Ω ps qs}, LVar Ω ps → LVar (qs :: Ω) ps
+
+/-- Membership notation for labels: `Ω ∋ₗ ps`. -/
+infix:40 " ∋ₗ " => LVar
+
+/-- The de Bruijn index of a label. -/
+def LVar.index : ∀ {Ω : LCtx} {ps : List Ty}, Ω ∋ₗ ps → Nat
+  | _, _, .head => 0
+  | _, _, .tail v => LVar.index v + 1
+
+/-- The label context the **body** of a label is written in: the label itself is in scope
+    there exactly when it is a loop (`self = true`), and then a jump to it is a
+    `continue`. -/
+abbrev LCtx.ext (self : Bool) (ps : List Ty) (Ω : LCtx) : LCtx :=
+  cond self (ps :: Ω) Ω
+
 /-! ## The signature of a module
 
 A `Term` is written against a fixed list of top-level declarations — the ones the
-emitted JavaScript module binds, plus the ones it imports from the runtime.  A reference
-to one of them is a `GlobalRef`, an index into that list, so the *name* and the *type* of
-a global are read off the signature rather than being written at the use site.
+compiled module binds, plus the ones it imports from the runtime.  A reference to one of
+them is a `GlobalRef`, an index into that list, so the *name* and the *type* of a global
+are read off the signature rather than written at the use site.
 -/
 
-/-- One top-level declaration a term may refer to: the JavaScript name it is bound to,
-    and its type. -/
+/-- One top-level declaration a term may refer to: the name it is bound to, and its
+    type.
+
+    There is deliberately **no** `isInlined` field: whether a declaration is inlined is a
+    property of the *translation* into this language, not of the language, and an
+    inlined declaration simply does not reach a signature.  See
+    `HOW_TO_SUPPORT_INLINABLE_FUNCTIONS.md`. -/
 structure GlobalDecl where
-  /-- The JavaScript identifier the declaration is bound to. -/
+  /-- The identifier the declaration is bound to. -/
   name : String
   /-- Its type. -/
   ty : Ty
-  isInlined : Bool
+  deriving DecidableEq
 
-/-- The signature of the module being emitted: every top-level name a `Term` of it may
-    mention. -/
+/-- Are all of these names different? -/
+def declNamesUnique : List GlobalDecl → Bool
+  | [] => true
+  | d :: ds => !ds.any (fun e => e.name == d.name) && declNamesUnique ds
+
+/-- The signature of the module being compiled: every top-level name a `Term` of it may
+    mention, **each of them declared once**.  The proof is a field, so a signature that
+    declares a name twice cannot be built; `by decide` discharges it for a signature
+    written out. -/
 structure Sig where
+  /-- The declarations, in order. -/
   decls : List GlobalDecl
-  h_names_unique : List.dedup (map name decls) -- TODO: how to correctly?
+  /-- No name is declared twice. -/
+  h_names_unique : declNamesUnique decls = true := by decide
 
-/-- A reference to a declaration of the signature — a de Bruijn index into `Sg`, whose
+/-- The names a signature declares. -/
+def Sig.names (Sg : Sig) : List String := Sg.decls.map GlobalDecl.name
+
+/-- A reference to a declaration of the signature — a de Bruijn index into it, whose
     type is the one the signature gives it.  There is no other way to name a global, so
     a `Term` cannot call a name that is not declared, nor call a declared one at a type
     it does not have. -/
-inductive GlobalRef : Sig → Ty → Type
-  | here  : ∀ {g : GlobalDecl} {Sg : Sig}, GlobalRef (g :: Sg) g.ty
-  | there : ∀ {g : GlobalDecl} {Sg : Sig} {τ : Ty}, GlobalRef Sg τ → GlobalRef (g :: Sg) τ
+inductive GlobalRef : List GlobalDecl → Ty → Type
+  | here  : ∀ {g : GlobalDecl} {ds : List GlobalDecl}, GlobalRef (g :: ds) g.ty
+  | there : ∀ {g : GlobalDecl} {ds : List GlobalDecl} {τ : Ty},
+      GlobalRef ds τ → GlobalRef (g :: ds) τ
 
-/-- The JavaScript name a reference resolves to. -/
-def GlobalRef.name : ∀ {Sg : Sig} {τ : Ty}, GlobalRef Sg τ → String
+/-- The name a reference resolves to. -/
+def GlobalRef.name : ∀ {ds : List GlobalDecl} {τ : Ty}, GlobalRef ds τ → String
   | _, _, .here (g := g) => g.name
   | _, _, .there r => r.name
 
 /-- The name of a reference is one of the names the signature declares. -/
 theorem GlobalRef.name_mem :
-    ∀ {Sg : Sig} {τ : Ty} (r : GlobalRef Sg τ), r.name ∈ Sig.names Sg
-  | _ :: _, _, .here => by simp [GlobalRef.name, Sig.names]
+    ∀ {ds : List GlobalDecl} {τ : Ty} (r : GlobalRef ds τ),
+      r.name ∈ ds.map GlobalDecl.name
+  | _ :: _, _, .here => by simp [GlobalRef.name]
   | _ :: _, _, .there r => by
       have := GlobalRef.name_mem r
-      simp [GlobalRef.name, Sig.names] at this ⊢
+      simp [GlobalRef.name] at this ⊢
       exact Or.inr this
 
-/-- In a signature whose names are unique, the name of a reference determines its type:
-    two references with the same name are references at the same type.  This is what the
-    side condition `Sig.namesUnique` is for. -/
+/-- **In a signature the name of a reference determines its type**: two references with
+    the same name are references at the same type.  This is what the uniqueness field of
+    `Sig` is for. -/
 theorem GlobalRef.ty_unique_of_namesUnique :
-    ∀ {Sg : Sig}, Sig.namesUnique Sg = true → ∀ {σ τ : Ty}
-      (r : GlobalRef Sg σ) (s : GlobalRef Sg τ), r.name = s.name → σ = τ
+    ∀ {ds : List GlobalDecl}, declNamesUnique ds = true → ∀ {σ τ : Ty}
+      (r : GlobalRef ds σ) (s : GlobalRef ds τ), r.name = s.name → σ = τ
   | _ :: _, _, _, _, .here, .here, _ => rfl
   | _ :: _, h, _, _, .here, .there s, hname => by
       exfalso
-      simp [Sig.namesUnique] at h
+      simp [declNamesUnique] at h
       have hmem := GlobalRef.name_mem s
-      simp [Sig.names, List.mem_map] at hmem
+      simp [List.mem_map] at hmem
       obtain ⟨d, hd, hdn⟩ := hmem
       simp [GlobalRef.name] at hname
       exact h.1 d hd (hdn.trans hname.symm)
   | _ :: _, h, _, _, .there r, .here, hname => by
       exfalso
-      simp [Sig.namesUnique] at h
+      simp [declNamesUnique] at h
       have hmem := GlobalRef.name_mem r
-      simp [Sig.names, List.mem_map] at hmem
+      simp [List.mem_map] at hmem
       obtain ⟨d, hd, hdn⟩ := hmem
       simp [GlobalRef.name] at hname
       exact h.1 d hd (hdn.trans hname)
-  | _ :: Sg, h, _, _, .there r, .there s, hname => by
-      have h' : Sig.namesUnique Sg = true := by simp [Sig.namesUnique] at h; exact h.2
-      exact GlobalRef.ty_unique_of_namesUnique h' r s (by simpa [GlobalRef.name] using hname)
+  | _ :: ds, h, _, _, .there r, .there s, hname => by
+      have h' : declNamesUnique ds = true := by
+        simp [declNamesUnique] at h; exact h.2
+      exact GlobalRef.ty_unique_of_namesUnique h' r s
+        (by simpa [GlobalRef.name] using hname)
 
 /-- Look a name up in a signature, whatever type it was declared at.  Looking one up
-    *at* a given type is this together with `decide (σ = τ)`: `Ty` has ordinary
-    decidable equality (`LakeJs.Ty`), so no partial equality of types is needed. -/
-def GlobalRef.findAny? : (Sg : Sig) → (name : String) → Option (Σ τ : Ty, GlobalRef Sg τ)
+    *at* a given type is this together with `decide (σ = τ)`. -/
+def GlobalRef.findAny? :
+    (ds : List GlobalDecl) → (name : String) → Option (Σ τ : Ty, GlobalRef ds τ)
   | [], _ => none
-  | g :: Sg, nm =>
+  | g :: ds, nm =>
     if g.name == nm then some ⟨g.ty, GlobalRef.here⟩
-    else (GlobalRef.findAny? Sg nm).map fun r => ⟨r.1, .there r.2⟩
+    else (GlobalRef.findAny? ds nm).map fun r => ⟨r.1, .there r.2⟩
+
 /-! ## Terms -/
 
 mutual
 
-/-- A well-scoped, simply-typed term of the module whose signature is `Sg`. -/
+/-- A well-scoped, simply-typed term of the module whose signature is `Sg`, in the
+    variable context `Γ`.  A term has **no** label context: a jump is a `Tail`, never a
+    `Term`, so no value position of the language can hold one. -/
 inductive Term (Sg : Sig) : Ctx → Ty → Type
+  /-- A variable of `Γ`. -/
   | var : ∀ {Γ τ}, Γ ∋ τ → Term Sg Γ τ
-  -- Lambda.  `Ty.fn` is uncurried, so a lambda binds *all* the parameters of its type at
-  -- once: `Term.lam`/`Term.ap` below are the one-parameter special case, which is what
-  -- `ƛ` and `⬝` still mean.
-  | lamN : ∀ {Γ params ret}, Term Sg (params.reverse ++ Γ) ret → Term Sg Γ (.fn params ret)
-  | apN  : ∀ {Γ params ret}, Term Sg Γ (.fn params ret) → Spine Sg Γ params → Term Sg Γ ret
-  /-- A lambda that answers with several values at once: its body is the list of them,
-      and it prints as `(v0, v1) => { return [e0, e1]; }`.  This is the only way to
-      build a `Ty.fn_returnsProd`, so such a function always does return a tuple. -/
-  | lamProd : ∀ {Γ params r1 rs},
-      Spine Sg (params.reverse ++ Γ) (r1 :: rs) → Term Sg Γ (.fn_returnsProd params r1 rs)
-  /-- Call a function that answers with several values at once and keep the `i`-th of
-      them: `f(a, b)[i]`.  The index is a `Fin`, so it is in range, and the type of the
-      term is the type that result has — a component of a tuple cannot be read at the
-      wrong type, and a tuple cannot be handled other than by reading its components. -/
-  | callProd : ∀ {Γ params r1 rs},
-      Term Sg Γ (.fn_returnsProd params r1 rs) → Spine Sg Γ params →
-      (i : Fin (rs.length + 1)) → Term Sg Γ ((r1 :: rs).get i)
+  /-- `fun x => body`: **one** parameter, since every function is curried. -/
+  | lam : ∀ {Γ σ τ}, Term Sg (σ :: Γ) τ → Term Sg Γ (σ ⇒ τ)
+  /-- `f a`: **one** argument. -/
+  | ap  : ∀ {Γ σ τ}, Term Sg Γ (σ ⇒ τ) → Term Sg Γ σ → Term Sg Γ τ
   /-- A constant of a terminal type. -/
-  | lit : ∀ {Γ} {p : LeanPrimTy}, Lit p → Term Sg Γ (.prim p)
+  | lit : ∀ {Γ} {p : LeanPrimTy}, LeanPrimLit p → Term Sg Γ (.prim p)
   /-- A reference to a top-level declaration of the module's signature. -/
-  | global : ∀ {Γ τ}, GlobalRef Sg τ → Term Sg Γ τ
+  | global : ∀ {Γ τ}, GlobalRef Sg.decls τ → Term Sg Γ τ
   /-- A function Lean implements with `@[extern]`, named by the catalogue
-      `LakeJs.Externs`, which indexes it by the list of its argument types and by its
-      result type.  The term is therefore a *function* of exactly that type, and
-      `Term.apN` is the only way to call it: an extern cannot be applied to the wrong
-      number of arguments, nor to arguments of the wrong types. -/
-  | extern : ∀ {Γ σs τ}, Externs σs τ → Term Sg Γ (.fn σs τ)
-  /-- One of the operations that are JavaScript's rather than Lean's (`JsOp`), applied
-      to exactly the arguments its type asks for. -/
-  | jsOp : ∀ {Γ σs τ}, JsOp σs τ → Spine Sg Γ σs → Term Sg Γ τ
-  /-- Delay a value: `() => { return e; }`.  This is what a Lean `fun (_ : Unit) => e`
-      becomes — the parameter is the one value of a unit type, which carries nothing at
-      run time and is erased, so what is left is a function of no arguments.  The type
-      language has no function type with an empty parameter list, and `Ty.lazy` is
-      exactly this one. -/
+      `LakeJs.Externs`, at the curried type its argument list gives it. -/
+  | extern : ∀ {Γ σs τ}, Externs σs τ → Term Sg Γ (Ty.arrows σs τ)
+  /-- Delay a value.  This is what a Lean `fun (_ : Unit) => e` becomes: the parameter is
+      the one value of a unit type, which carries nothing at run time and is erased, so
+      what is left is a delayed value — and `Ty.lazy` is exactly that.
+
+      **Unmemoised**: `Ty.lazy` is a delay, not a Lean `Thunk` (forcing it twice runs it
+      twice — see the header). -/
   | lazyMk : ∀ {Γ τ}, Term Sg Γ τ → Term Sg Γ (.lazy τ)
-  /-- Run a delayed value: `e()`.  This is what an application `f ()` becomes once the
-      unit argument is erased. -/
+  /-- Run a delayed value: what an application `f ()` becomes once the unit argument is
+      erased. -/
   | lazyForce : ∀ {Γ τ}, Term Sg Γ (.lazy τ) → Term Sg Γ τ
   /-- `let x = e; body` — `x` is de Bruijn index 0 of `body`. -/
   | letE : ∀ {Γ σ τ}, Term Sg Γ σ → Term Sg (σ :: Γ) τ → Term Sg Γ τ
-  /-- `c ? t : e`. -/
+  /-- `if c then t else e`. -/
   | ite : ∀ {Γ τ}, Term Sg Γ (.prim .bool) → Term Sg Γ τ → Term Sg Γ τ → Term Sg Γ τ
-  /-- A tagged value: `{ tag: 1, _1: …, _2: … }`, built **at a type whose layout says
-      so**.  `h` is the evidence that `τ` has a constructor number `i`, and which
-      fields it has; the arguments are then a spine of exactly those types.  So a
-      constructor cannot be built at a type that has no such constructor, with a field
-      missing, a field too many, the fields in the wrong order, or a field of the wrong
-      type — and no name is written anywhere: the tag is the constructor's position and
-      a field is its own position. -/
+  /-- A tagged value, built **at a type whose layout says so**.  `h` is the evidence that
+      `τ` has a constructor number `i`, and which fields it has; the arguments are then a
+      spine of exactly those types.  So a constructor cannot be built at a type that has
+      no such constructor, with a field missing, a field too many, the fields in the
+      wrong order, or a field of the wrong type. -/
   | ctor : ∀ {Γ τ}, (i : Nat) → (fields : FieldLayout) →
       (h : τ.ctorFields? i = some fields) → Spine Sg Γ fields → Term Sg Γ τ
-  /-- A field of a tagged value: `e._2`.  `h` is the evidence that constructor `i` of
-      `σ` has a field `j`, *of type `τ`* — so the type of a projection is the type the
-      layout gives that field, and a field the type does not have cannot be read. -/
+  /-- A field of a tagged value.  `h` is the evidence that constructor `i` of `σ` has a
+      field `j`, *of type `τ`*, so a field the type does not have cannot be read.
+
+      `hOne` is what makes the read **sound**: `σ` has exactly one constructor, so the
+      constructor the value was built with is the one this projection speaks about.
+      Without it, `(none).1` at `Option Nat` would be a closed, well-typed term that the
+      evaluator cannot run — reading a field the value does not carry.  A field of a
+      type with several constructors is reached through a `Term.caseTag` on the tag
+      instead.  See `PROJ_SOUNDNESS.md` (option C). -/
   | proj : ∀ {Γ σ τ}, Term Sg Γ σ → (i j : Nat) →
+      (hOne : σ.numCtors? = some 1) →
       (h : σ.fieldTy? i j = some τ) → Term Sg Γ τ
-  /-- The runtime tag of a value whose type has a layout: `e.tag`, a number.  It is how
-      a dispatch tests which constructor it has. -/
+  /-- The runtime tag of a value whose type has a layout: how a dispatch tests which
+      constructor it has. -/
   | tagOf : ∀ {Γ σ}, Term Sg Γ σ → (h : σ.isTagged = true) → Term Sg Γ (.prim .nat)
   /-- A dispatch on the tag of a value.  Every branch answers with the same type; the
       fields of the scrutinee are reached with `Term.proj`, so a branch binds nothing.
       `h` says that every tag branched on is a constructor of `σ` and that none is
-      repeated, and `Alts` always ends in a default branch, so a case can neither test
-      an impossible tag nor fall off the end. -/
-  | caseTag : ∀ {Γ σ τ tags}, Term Sg Γ σ → Alts Sg Γ τ tags →
-      (h : σ.caseOk tags = true) → Term Sg Γ τ
-  /-- The only repetition in the language: start the loop variables at `init` and run
-      `body` until it answers.  Inside `body`, de Bruijn index `i` counts from the *last*
-      loop variable, i.e. the context is `σs.reverse ++ Γ`. -/
-  | loop : ∀ {Γ σs τ},
-      (init : Spine Sg Γ σs) → (body : Body Sg (σs.reverse ++ Γ) σs τ) → Term Sg Γ τ
-  /-- A **join point**: bind a block to a name that the rest of the term may *jump* to,
-      and may do nothing else with.
+      repeated, so a case cannot test an impossible tag; and a case cannot fall off the
+      end of its branches either, because `Alts` ends *either* in a default branch
+      (`full = false`) *or* in nothing at all with a branch for every constructor
+      (`full = true`, `Ty.caseOkFull`). -/
+  | caseTag : ∀ {Γ σ τ tags full}, Term Sg Γ σ → Alts Sg Γ τ tags full →
+      (h : σ.caseOkAlts full tags = true) → Term Sg Γ τ
+  /-- **A block**: the one way a term uses labels.  Its tail is written in the *empty*
+      label context, so a block is closed for jumps — a `break` or a `continue` of the
+      target never crosses the boundary of the function it is in, and here it never
+      crosses the boundary of the block either. -/
+  | block : ∀ {Γ τ}, Tail Sg Γ [] τ → Term Sg Γ τ
 
-      `body` is the block.  It binds `params` the way a lambda does, so inside it de
-      Bruijn index `i` counts from the *last* parameter.  `rest` is the term the join
-      point is in scope in: there, de Bruijn index 0 is the join point itself, at type
-      `.fn params σ`.
-
-      What makes it a join point rather than a `let` of a lambda is the discipline in
-      `LakeJs.Usage`: the bound name may appear only as the target of a `Term.jump`,
-      never as a value, and it must be jumped to at least once.  A join point therefore
-      never escapes, so `LakeJs.EmitJs` prints it as a local function that is only ever
-      called — no closure is allocated for it, and every branch that shares a tail can
-      be compiled to a jump into the one copy of that tail instead of duplicating it. -/
-  | joinPoint : ∀ {Γ params σ τ},
-      (body : Term Sg (params.reverse ++ Γ) σ) →
-      (rest : Term Sg (.fn params σ :: Γ) τ) → Term Sg Γ τ
-  /-- Jump to a join point that is in scope, with one argument per parameter.  The
-      variable is an ordinary de Bruijn index — it is `LakeJs.Usage` that says it has to
-      be one a `Term.joinPoint` bound — and the spine is typed by the join point's
-      parameters, so a jump can neither be given the wrong number of arguments nor
-      arguments of the wrong types. -/
-  | jump : ∀ {Γ params σ},
-      (target : Γ ∋ (.fn params σ)) → (args : Spine Sg Γ params) → Term Sg Γ σ
-
-/-- A list of terms, typed by the list of their types: the arguments of a call, the
-    results of a `Term.lamProd`, the initial values of a loop. -/
+/-- A list of terms, typed by the list of their types: the arguments of a primitive
+    operation, the arguments of a jump, the fields of a constructor. -/
 inductive Spine (Sg : Sig) : Ctx → List Ty → Type
   | nil  : ∀ {Γ}, Spine Sg Γ []
   | cons : ∀ {Γ σ σs}, Term Sg Γ σ → Spine Sg Γ σs → Spine Sg Γ (σ :: σs)
 
-/-- The branches of a `Term.caseTag`, keyed by constructor tag and indexed by the list
-    of tags they test, in order.  A list always ends in `Alts.deflt`: a case has a
-    default branch whatever else it has, so no dispatch can fall off the end of its
-    branches.  (Where the branches are exhaustive the default is the last constructor's
-    own branch.) -/
-inductive Alts (Sg : Sig) : Ctx → Ty → List Nat → Type
-  | deflt : ∀ {Γ τ}, Term Sg Γ τ → Alts Sg Γ τ []
-  | cons  : ∀ {Γ τ tags}, (tag : Nat) → Term Sg Γ τ → Alts Sg Γ τ tags →
-      Alts Sg Γ τ (tag :: tags)
+/-- The branches of a `Term.caseTag`, keyed by constructor tag and indexed by the list of
+    tags they test, in order, and by whether the list is **exhaustive**.  A list ends
+    either in `Alts.deflt`, a default branch, or — when `full = true` — in
+    `Alts.nilFull`, which is only usable at a `Ty.caseOkFull`, i.e. when every
+    constructor has a branch of its own.  Either way no dispatch can fall off the end of
+    its branches. -/
+inductive Alts (Sg : Sig) : Ctx → Ty → List Nat → Bool → Type
+  /-- The default branch a dispatch ends with. -/
+  | deflt : ∀ {Γ τ}, Term Sg Γ τ → Alts Sg Γ τ [] false
+  /-- The end of an **exhaustive** dispatch: no default branch, because every
+      constructor has a branch of its own (`Ty.caseOkFull`). -/
+  | nilFull : ∀ {Γ τ}, Alts Sg Γ τ [] true
+  | cons  : ∀ {Γ τ tags full}, (tag : Nat) → Term Sg Γ τ → Alts Sg Γ τ tags full →
+      Alts Sg Γ τ (tag :: tags) full
 
-/-- The body of a `Term.loop`: a block in context `Γ` whose loop variables have types
-    `σs` and which answers with a `τ`. -/
-inductive Body (Sg : Sig) : Ctx → List Ty → Ty → Type
-  /-- Leave the loop with this value. -/
-  | ret  : ∀ {Γ σs τ}, Term Sg Γ τ → Body Sg Γ σs τ
-  /-- Go round again with these values for the loop variables — a tail call. -/
-  | cont : ∀ {Γ σs τ}, Spine Sg Γ σs → Body Sg Γ σs τ
+/-- A **tail**: a basic block of the block grammar, in the variable context `Γ` and the
+    label context `Ω`, answering with `τ`.  Every position of a `Tail` is a tail position
+    of the enclosing `Term.block`, which is why a jump is allowed here and nowhere
+    else. -/
+inductive Tail (Sg : Sig) : Ctx → LCtx → Ty → Type
+  /-- Answer with this value: the block is done. -/
+  | ret : ∀ {Γ Ω τ}, Term Sg Γ τ → Tail Sg Γ Ω τ
+  /-- Jump to a label in scope, with one argument per parameter.  A jump never comes
+      back, so it stands at **any** answer type: it is the whole of the rest of this
+      block. -/
+  | jmp : ∀ {Γ Ω ps τ}, Ω ∋ₗ ps → Spine Sg Γ ps → Tail Sg Γ Ω τ
   /-- `let x = e;` in front of the rest of the block. -/
-  | letB : ∀ {Γ σ σs τ}, Term Sg Γ σ → Body Sg (σ :: Γ) σs τ → Body Sg Γ σs τ
-  /-- `if (c) { … } else { … }`, both arms being blocks. -/
-  | iteB : ∀ {Γ σs τ},
-      Term Sg Γ (.prim .bool) → Body Sg Γ σs τ → Body Sg Γ σs τ → Body Sg Γ σs τ
-  /-- A **join point** bound inside a loop block: the counterpart of `Term.joinPoint`
-      for a `Body`.
+  | letT : ∀ {Γ Ω σ τ}, Term Sg Γ σ → Tail Sg (σ :: Γ) Ω τ → Tail Sg Γ Ω τ
+  /-- A two-way branch, both arms being blocks. -/
+  | iteT : ∀ {Γ Ω τ},
+      Term Sg Γ (.prim .bool) → Tail Sg Γ Ω τ → Tail Sg Γ Ω τ → Tail Sg Γ Ω τ
+  /-- A dispatch on the tag of a value, every arm being a block. -/
+  | caseT : ∀ {Γ Ω σ τ tags full}, Term Sg Γ σ → AltsT Sg Γ Ω τ tags full →
+      (h : σ.caseOkAlts full tags = true) → Tail Sg Γ Ω τ
+  /-- **One label**, taking the arguments `ps`, in scope in `rest` as label index `0`.
 
-      `body` is the block the join point is, a `Term` — so a jump to it cannot continue
-      the enclosing loop, exactly as a call of a local function cannot.  `rest` is the
-      rest of the block, in which de Bruijn index 0 is the join point itself, at type
-      `.fn params σ`; a jump to it is `Term.jump`, so in tail position of the block it
-      is `Body.ret (.jump …)`.
+      `self = false` is a *shared tail*: `body` does not have the label in scope, so
+      control passes through it once per jump — `l: { … }` with `break l`.
+      `self = true` is a *loop*: `body` may jump to the label it is the body of —
+      `l: while (true) { … }` with `continue l`, and this is the one construct of the
+      language that repeats work.
 
-      The discipline is the one `LakeJs.Usage` states of `Term.joinPoint`: the name may
-      appear only as the target of a jump, and it must be jumped to at least once.
-      Without this constructor a local function bound by `Body.letB` inside a loop could
-      never be read as the join point it is, which is why `LakeJs.Contify` fires here
-      too. -/
-  | joinPointB : ∀ {Γ params σ σs τ},
-      (body : Term Sg (params.reverse ++ Γ) σ) →
-      (rest : Body Sg (.fn params σ :: Γ) σs τ) → Body Sg Γ σs τ
+      Inside `body`, de Bruijn index `0` is the **first** argument of the label, i.e. the
+      variable context is `ps ++ Γ`. -/
+  | label : ∀ {Γ Ω ps τ}, (self : Bool) →
+      (body : Tail Sg (ps ++ Γ) (LCtx.ext self ps Ω) τ) →
+      (rest : Tail Sg Γ (ps :: Ω) τ) → Tail Sg Γ Ω τ
+
+/-- The branches of a `Tail.caseT`: `Alts`, with a block in place of each term, so that a
+    branch may answer *or* jump. -/
+inductive AltsT (Sg : Sig) : Ctx → LCtx → Ty → List Nat → Bool → Type
+  /-- The default branch a dispatch ends with. -/
+  | deflt : ∀ {Γ Ω τ}, Tail Sg Γ Ω τ → AltsT Sg Γ Ω τ [] false
+  /-- The end of an **exhaustive** dispatch: no default branch. -/
+  | nilFull : ∀ {Γ Ω τ}, AltsT Sg Γ Ω τ [] true
+  | cons : ∀ {Γ Ω τ tags full}, (tag : Nat) → Tail Sg Γ Ω τ →
+      AltsT Sg Γ Ω τ tags full → AltsT Sg Γ Ω τ (tag :: tags) full
 
 end
 
-/-- The one-parameter lambda: `Ty.arrow σ τ` is `Ty.fn [σ] τ`, so this is `Term.lamN`
-    with a single parameter. -/
-def Term.lam {Sg : Sig} {Γ : Ctx} {τ1 τ2 : Ty} (b : Term Sg (τ1 :: Γ) τ2) :
-    Term Sg Γ (τ1 ⇒ τ2) :=
-  .lamN (params := [τ1]) b
+/-- A **shared tail**: a label whose body cannot jump to it — `l: { … }` with `break l`
+    in the target, and what a join point of the old grammar was. -/
+abbrev Tail.joinLabel {Sg : Sig} {Γ : Ctx} {Ω : LCtx} {ps : List Ty} {τ : Ty}
+    (body : Tail Sg (ps ++ Γ) Ω τ) (rest : Tail Sg Γ (ps :: Ω) τ) : Tail Sg Γ Ω τ :=
+  .label false body rest
 
-/-- The one-argument application, the counterpart of `Term.lam`. -/
-def Term.ap {Sg : Sig} {Γ : Ctx} {τ1 τ2 : Ty}
-    (f : Term Sg Γ (τ1 ⇒ τ2)) (a : Term Sg Γ τ1) : Term Sg Γ τ2 :=
-  .apN f (.cons a .nil)
+/-- A **loop**: a label whose body may jump to it — `l: while (true) { … }` with
+    `continue l` in the target. -/
+abbrev Tail.loopLabel {Sg : Sig} {Γ : Ctx} {Ω : LCtx} {ps : List Ty} {τ : Ty}
+    (body : Tail Sg (ps ++ Γ) (ps :: Ω) τ) (rest : Tail Sg Γ (ps :: Ω) τ) :
+    Tail Sg Γ Ω τ :=
+  .label true body rest
+
+/-- Apply a curried term to a spine, one argument at a time: `f a₁ … aₙ`. -/
+def Term.appSpine {Sg : Sig} {Γ : Ctx} :
+    ∀ {σs : List Ty} {τ : Ty},
+      Term Sg Γ (Ty.arrows σs τ) → Spine Sg Γ σs → Term Sg Γ τ
+  | [], _, f, .nil => f
+  | _ :: _, _, f, .cons a rest => Term.appSpine (.ap f a) rest
 
 /-- A Lean function the runtime implements, applied to exactly the arguments it takes:
-    `Term.apN` of `Term.extern`.  This is how every Lean operation the backend knows
-    about — arithmetic, comparison, the string and array library — appears in a term, and
-    `LakeJs.EmitJs` prints the ones that have a JavaScript operator as that operator
-    rather than as a call of the runtime. -/
+    iterated `Term.ap` of `Term.extern`. -/
 def Term.callExtern {Sg : Sig} {Γ : Ctx} {σs : List Ty} {τ : Ty}
     (e : Externs σs τ) (args : Spine Sg Γ σs) : Term Sg Γ τ :=
-  .apN (.extern e) args
+  Term.appSpine (.extern e) args
 
 -- Notation
 prefix:100 "ƛ " => Term.lam
 infixl:70 " ⬝ " => Term.ap
 
+/-- Sugar: `♯0` is the innermost variable, `♯1` the one before it, … -/
 macro "♯" n:term:90 : term => `(Term.var (v♯ $n))
 
 namespace Term
 
--- Shortcut for Church Numeral Type: (α ⇒ α) ⇒ α ⇒ α
+/-- The Church numeral type over `α`: `(α ⇒ α) ⇒ α ⇒ α`. -/
 abbrev NatTy (α : Ty) : Ty := (α ⇒ α) ⇒ α ⇒ α
 
--- 1. Identity Function: ƛx. x
--- Type: τ ⇒ τ  (in empty context [])
-def id {Sg : Sig} {τ : Ty} : Term Sg [] (τ ⇒ τ) :=
+/-- The identity function, `fun x => x`. -/
+def idTerm {Sg : Sig} {τ : Ty} : Term Sg [] (τ ⇒ τ) :=
   ƛ ♯0
 
--- 2. Constant Function: ƛx. ƛy. x
--- Type: τ1 ⇒ τ2 ⇒ τ1  (in empty context [])
+/-- The constant function, `fun x y => x`. -/
 def const {Sg : Sig} {τ1 τ2 : Ty} : Term Sg [] (τ1 ⇒ τ2 ⇒ τ1) :=
   ƛ (ƛ ♯1)
 
--- 3. Church Numerals
--- Zero: ƛf. ƛx. x
+/-- The Church numeral zero, `fun f x => x`. -/
 def zero {Sg : Sig} {α : Ty} : Term Sg [] (NatTy α) :=
   ƛ (ƛ ♯0)
 
--- One: ƛf. ƛx. f x
+/-- The Church numeral one, `fun f x => f x`. -/
 def one {Sg : Sig} {α : Ty} : Term Sg [] (NatTy α) :=
   ƛ (ƛ (♯1 ⬝ ♯0))
 
--- Two: ƛf. ƛx. f (f x)
+/-- The Church numeral two, `fun f x => f (f x)`. -/
 def two {Sg : Sig} {α : Ty} : Term Sg [] (NatTy α) :=
   ƛ (ƛ (♯1 ⬝ (♯1 ⬝ ♯0)))
 
--- 4. Church Successor: ƛn. ƛf. ƛx. f (n f x)
+/-- The Church successor, `fun n f x => f (n f x)`. -/
 def succ {Sg : Sig} {α : Ty} : Term Sg [] (NatTy α ⇒ NatTy α) :=
-  ƛ (             -- n is ♯2 (NatTy α)
-    ƛ (           -- f is ♯1 (α ⇒ α)
-      ƛ (         -- x is ♯0 (α)
-        ♯1 ⬝ ((♯2 ⬝ ♯1) ⬝ ♯0)
-      )
-    )
-  )
+  ƛ (ƛ (ƛ (♯1 ⬝ ((♯2 ⬝ ♯1) ⬝ ♯0))))
 
--- 5. Terms with Free Variables
-
--- A term with 2 free variables: (♯1 ⬝ ♯0)
--- Context has 2 types: Γ = [α, α ⇒ β]
---   - ♯0 has type α       (free var 0)
---   - ♯1 has type α ⇒ β   (free var 1)
+/-- A term with two free variables, in the context `[α, α ⇒ β]`. -/
 def freeTerm {Sg : Sig} {α β : Ty} : Term Sg [α, α ⇒ β] β :=
   ♯1 ⬝ ♯0
 
--- A term with 1 free variable: ƛy. (y ⬝ ♯1)
--- Top context has 1 type: Γ = [α] (free var x0)
--- Inside ƛ, context becomes: (α ⇒ β) :: [α]
---   - ♯0 is bound variable y of type α ⇒ β
---   - ♯1 is free variable x0 of type α
+/-- A term with one free variable: `fun y => y x₀`, in the context `[α]`. -/
 def boundAndFree {Sg : Sig} {α β : Ty} : Term Sg [α] ((α ⇒ β) ⇒ β) :=
   ƛ (♯0 ⬝ ♯1)
 
 /-! ## A loop, for comparison with the recursion it replaces
 
 `SnapshotsPBOPure/Tco01.lean` is `def test (n : Nat) : Nat := match n with | 0 => n
-| n + 1 => test n`.  Lean proves it terminating, so the backend accepts it, and what it
-becomes here is the loop below: one loop variable, one exit, one tail call. -/
+| n + 1 => test n`.  Lean proves it terminating, so the front end accepts it, and what it
+becomes here is the block below: one label, taken with `self = true`, one argument, one
+exit and one jump back. -/
 
-/-- The user's example of a function answering with a tuple:
-    `def foo : Int × Float → Int × Float → Int × Float` prints as
-    `(v0, v1) => (v2, v3) => { return [1, 1.0]; }`. -/
-def fooReturnsProd {Sg : Sig} :
-    Term Sg [] (.fn [Ty.int, Ty.float] (.fn_returnsProd [Ty.int, Ty.float] Ty.int [Ty.float])) :=
-  .lamN (params := [Ty.int, Ty.float])
-    (.lamProd (params := [Ty.int, Ty.float])
-      (.cons (.lit (.int 1)) (.cons (.lit (.float 1.0)) .nil)))
+/-- `test` of `Tco01`, by hand: a block whose one label is a loop. -/
+def tco01 {Sg : Sig} : Term Sg [] (.nat ⇒ .nat) :=
+  ƛ (.block
+      (.label (ps := [Ty.nat]) true
+        (.iteT (callExtern (.prim2 .lean_nat_dec_eq)
+            (.cons (♯0) (.cons (.lit (.nat 0)) .nil)))
+          (.ret (♯0))
+          (.jmp .head (.cons (callExtern (.prim2 .lean_nat_sub)
+            (.cons (♯0) (.cons (.lit (.nat 1)) .nil))) .nil)))
+        (.jmp .head (.cons (♯0) .nil))))
 
-/-- `test` of `Tco01`, by hand: `loop n { if (n === 0) return n; continue with n - 1 }`. -/
-def tco01 {Sg : Sig} : Term Sg [] (.fn [.nat] .nat) :=
-  .lamN (params := [Ty.nat])
-    (.loop (σs := [Ty.nat]) (.cons (♯0) .nil)
-      (.iteB (.apN (.extern .lean_nat_dec_eq) (.cons (♯0) (.cons (.lit (.nat 0)) .nil)))
-        (.ret (♯0))
-        (.cont (.cons (.apN (.extern .lean_nat_sub)
-          (.cons (♯0) (.cons (.lit (.nat 1)) .nil))) .nil))))
+/-- The same loop, written with a **dispatch** instead of a two-way branch: the branch
+    for each constructor of the scrutinee is a block of its own (`Tail.caseT`), and the
+    list of branches is **exhaustive** — there is no default branch, because every
+    constructor has one (`AltsT.nilFull`, `Ty.caseOkFull`). -/
+def tco01Case {Sg : Sig} : Term Sg [] (.nat ⇒ .nat) :=
+  ƛ (.block
+      (.label (ps := [Ty.nat]) true
+        (.caseT
+          (callExtern (.prim2 .lean_nat_dec_eq)
+            (.cons (♯0) (.cons (.lit (.nat 0)) .nil)))
+          (.cons 1 (.ret (♯0))
+            (.cons 0
+              (.jmp .head (.cons (callExtern (.prim2 .lean_nat_sub)
+                (.cons (♯0) (.cons (.lit (.nat 1)) .nil))) .nil))
+              .nilFull))
+          (by decide))
+        (.jmp .head (.cons (♯0) .nil))))
+
+/-- An **exhaustive** dispatch of terms: `Bool` has two constructors and both have a
+    branch, so the case needs no default branch at all. -/
+def notTerm {Sg : Sig} : Term Sg [Ty.bool] Ty.bool :=
+  .caseTag (♯0)
+    (.cons 0 (.lit (.bool true)) (.cons 1 (.lit (.bool false)) .nilFull))
+    (by decide)
+
+/-- A shared tail, by hand: bind a label of one `Nat` argument and jump to it from both
+    arms of a branch — the block a dispatch would otherwise duplicate.  This is what a
+    join point of the old grammar was, and it is now a `Tail.label` with `self = false`
+    inside a `Term.block`. -/
+def sharedTail {Sg : Sig} : Term Sg [Ty.bool] Ty.nat :=
+  .block
+    (.label (ps := [Ty.nat]) false (.ret (♯0))
+      (.iteT (♯0)
+        (.jmp .head (.cons (.lit (.nat 1)) .nil))
+        (.jmp .head (.cons (.lit (.nat 2)) .nil))))
+
+/-- **A shared tail that continues an enclosing loop**, which the two-construct grammar
+    could not express: the label bound inside the loop's body jumps back to the loop.
+    Both are `Tail.label`, so a jump to either is the same thing. -/
+def sharedTailInLoop {Sg : Sig} : Term Sg [Ty.nat] Ty.nat :=
+  .block
+    (.label (ps := [Ty.nat]) true
+      (.label (ps := [Ty.nat]) false
+        (.jmp .head (.cons (♯0) .nil))
+        (.iteT (callExtern (.prim2 .lean_nat_dec_eq)
+            (.cons (♯0) (.cons (.lit (.nat 0)) .nil)))
+          (.ret (♯0))
+          (.jmp .head (.cons (callExtern (.prim2 .lean_nat_sub)
+            (.cons (♯0) (.cons (.lit (.nat 1)) .nil))) .nil))))
+      (.jmp .head (.cons (♯0) .nil)))
 
 end Term
 
@@ -417,10 +545,21 @@ def Spine.length {Sg : Sig} {Γ : Ctx} {σs : List Ty} (s : Spine Sg Γ σs) : N
   | .cons _ rest => rest.length + 1
 
 /-- The number of branches of a case, the default branch included. -/
-def Alts.length {Sg : Sig} {Γ : Ctx} {τ : Ty} {tags : List Nat} (a : Alts Sg Γ τ tags) :
-    Nat :=
+def Alts.length {Sg : Sig} {Γ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool}
+    (a : Alts Sg Γ τ tags full) : Nat :=
   match a with
   | .deflt _ => 1
+  | .nilFull => 0
+  | .cons _ _ rest => rest.length + 1
+
+/-- The number of branches of a dispatch inside a block. -/
+def AltsT.length {Sg : Sig} {Γ : Ctx} {Ω : LCtx} {τ : Ty} {tags : List Nat} {full : Bool}
+    (a : AltsT Sg Γ Ω τ tags full) : Nat :=
+  match a with
+  | .deflt _ => 1
+  | .nilFull => 0
   | .cons _ _ rest => rest.length + 1
 
 end LakeJs.Expr
+
+end
