@@ -407,7 +407,7 @@ inductive LeanInitPureExtern2OnlyPrim : LeanPrimTy → LeanPrimTy → LeanPrimTy
   | lean_int_mod                  : LeanInitPureExtern2OnlyPrim int int int
   | lean_int_ediv                 : LeanInitPureExtern2OnlyPrim int int int
   | lean_int_div                  : LeanInitPureExtern2OnlyPrim int int int
-  | lean_nat_gcd                  : LeanInitPureExtern2OnlyPrim nat nat nat
+  -- | lean_nat_gcd                  : LeanInitPureExtern2OnlyPrim nat nat nat -- TODO: fromLean should ignore the `@[extern "lean_nat_gcd"]` attribute for `Nat.gcd` function and treat it as ordinary well-foundedly recursive function
   | lean_uint64_shift_left        : LeanInitPureExtern2OnlyPrim uint64 uint64 uint64
   | lean_uint32_mod               : LeanInitPureExtern2OnlyPrim uint32 uint32 uint32
   | lean_usize_land               : LeanInitPureExtern2OnlyPrim usize usize usize
