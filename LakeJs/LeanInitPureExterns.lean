@@ -3,37 +3,81 @@ prelude
 -- public import LakeJs.Ty
 public import LakeJs.LeanPrimTy
 public import LakeJs.LeanPrimTyCovariant
+set_option autoImplicit false
 @[expose] public section
 namespace LakeJs
 
 open LeanPrimTy
 open LeanPrimTyCovariant
 
+/-!
+# The catalogue of the pure `@[extern]` functions of Lean's `Init`
+
+Every entry of the *terminal* families (`LeanInitPureExternLazy`,
+`LeanInitPureExtern1OnlyPrim`, `LeanInitPureExtern2OnlyPrim`,
+`LeanInitPureExtern3OnlyPrim`, `LeanInitPureExtern5`) that is listed here has a
+meaning as a **total** Lean function of the values of its arguments
+(`LakeJs.ExternEval1`, `LakeJs.ExternEval2`, `LakeJs.ExternEvalMisc`), so the
+evaluator of `LakeJs.Reduce` can always run it.  The entries that had no such meaning
+are commented out rather than deleted, each marked with the reason:
+
+* `(†)` — **the entry's type is not the type its name says.**  `byteArray`,
+  `floatArray`, `ordering` and `name` are not constructors of `LeanPrimTy` (a byte
+  array is `Array UInt8` at this layer, an `Ordering` is an enum, a `Name` is an
+  inductive), so with `autoImplicit` on they were silently read as *type variables*:
+  `lean_byte_array_size` had type `LeanInitPureExtern1OnlyPrim ?α .nat` for every
+  terminal `?α`, i.e. "the size of a `Nat`, of a `Float`, of anything at all".  Such an
+  entry denotes no function of its argument's value.  `set_option autoImplicit false`
+  above is what keeps them from coming back.  They belong in the polymorphic families,
+  where `byteArray` and `floatArray` are genuine parameters (`Extern3At`, `Extern6At`);
+  moving them there is a change to the catalogue *and* to every instantiation of it.
+* `(‡)` — **the answer is a fact about the machine the compiled program runs on**, not a
+  function of any value: the version of the toolchain, the platform, the width of a
+  word, the number of cores.  Reading it off the machine that runs the *compiler* would
+  bake the wrong answer into the semantics.  They come back as soon as the backend has a
+  target description to read them from; until then `LeanInitPureExternLazy` is empty, and
+  `LeanInitPureExternLazy.eval` is total for the vacuous reason.
+
+* `(§)` — **a second name for an entry that is already here.**  `Float.toModel` and
+  `Float.toBits` are compiled to the *same* C function (`lean_float_to_bits`), and so
+  are `Float.ofModel`/`Float.ofBits` and their `Float32` counterparts; what `toModel`
+  answers with is `Float.Model`, the abstract model of a float, which is not a terminal
+  type of this language (and is not a type of the current toolchain at all).  At the
+  type written here they were a duplicate of `lean_float_to_bits`, so the language would
+  have had two names for one function, only one of which was the function its name says.
+  Use `lean_float_to_bits`, `lean_float_of_bits`, `lean_float32_to_bits` and
+  `lean_float32_of_bits`, which are entries of this family and do run.
+
+See `EXTERN_EVALUATION.md`.
+-/
+
+/-- The constants of the runtime.  **Empty**: every entry is a fact about the target
+    machine, see `(‡)` above. -/
 inductive LeanInitPureExternLazy : LeanPrimTy → Type where
-  | lean_system_platform_nbits             : LeanInitPureExternLazy .nat
-  | lean_version_get_special_desc          : LeanInitPureExternLazy .string
-  | lean_version_get_is_release            : LeanInitPureExternLazy .bool
-  | lean_version_get_major                 : LeanInitPureExternLazy .nat
-  | lean_version_get_patch                 : LeanInitPureExternLazy .nat
-  | lean_internal_is_stage0                : LeanInitPureExternLazy .bool
-  | lean_version_get_minor                 : LeanInitPureExternLazy .nat
-  | lean_get_githash                       : LeanInitPureExternLazy .string
-  | lean_internal_has_llvm_backend         : LeanInitPureExternLazy .bool
-  | lean_system_platform_emscripten        : LeanInitPureExternLazy .bool
-  | lean_system_platform_target            : LeanInitPureExternLazy .string
-  | lean_system_platform_windows           : LeanInitPureExternLazy .bool
-  | lean_system_platform_osx               : LeanInitPureExternLazy .bool
-  | lean_internal_get_hardware_concurrency : LeanInitPureExternLazy .uint32
-  | lean_system_platform_linux             : LeanInitPureExternLazy .bool
+  -- (‡) | lean_system_platform_nbits             : LeanInitPureExternLazy .nat
+  -- (‡) | lean_version_get_special_desc          : LeanInitPureExternLazy .string
+  -- (‡) | lean_version_get_is_release            : LeanInitPureExternLazy .bool
+  -- (‡) | lean_version_get_major                 : LeanInitPureExternLazy .nat
+  -- (‡) | lean_version_get_patch                 : LeanInitPureExternLazy .nat
+  -- (‡) | lean_internal_is_stage0                : LeanInitPureExternLazy .bool
+  -- (‡) | lean_version_get_minor                 : LeanInitPureExternLazy .nat
+  -- (‡) | lean_get_githash                       : LeanInitPureExternLazy .string
+  -- (‡) | lean_internal_has_llvm_backend         : LeanInitPureExternLazy .bool
+  -- (‡) | lean_system_platform_emscripten        : LeanInitPureExternLazy .bool
+  -- (‡) | lean_system_platform_target            : LeanInitPureExternLazy .string
+  -- (‡) | lean_system_platform_windows           : LeanInitPureExternLazy .bool
+  -- (‡) | lean_system_platform_osx               : LeanInitPureExternLazy .bool
+  -- (‡) | lean_internal_get_hardware_concurrency : LeanInitPureExternLazy .uint32
+  -- (‡) | lean_system_platform_linux             : LeanInitPureExternLazy .bool
 
 inductive LeanInitPureExtern1OnlyPrim : LeanPrimTy → LeanPrimTy → Type where
   | lean_uint32_of_nat_mk           : LeanInitPureExtern1OnlyPrim (bitvec 32) uint32
-  | lean_byte_array_size            : LeanInitPureExtern1OnlyPrim byteArray nat
-  | lean_string_to_utf8             : LeanInitPureExtern1OnlyPrim string byteArray
+  -- (†) | lean_byte_array_size            : LeanInitPureExtern1OnlyPrim byteArray nat
+  -- (†) | lean_string_to_utf8             : LeanInitPureExtern1OnlyPrim string byteArray
   | lean_uint32_of_nat_lt           : LeanInitPureExtern1OnlyPrim nat uint32
   | lean_char_of_nat_aux            : LeanInitPureExtern1OnlyPrim nat char
   | lean_uint8_to_bitvec            : LeanInitPureExtern1OnlyPrim uint8 (bitvec 8)
-  | lean_string_from_utf8_unchecked : LeanInitPureExtern1OnlyPrim byteArray string
+  -- (†) | lean_string_from_utf8_unchecked : LeanInitPureExtern1OnlyPrim byteArray string
   | lean_uint8_of_nat               : LeanInitPureExtern1OnlyPrim nat uint8
   | lean_uint8_of_nat_lt            : LeanInitPureExtern1OnlyPrim nat uint8
   | lean_uint16_to_bitvec           : LeanInitPureExtern1OnlyPrim uint16 (bitvec 16)
@@ -47,7 +91,7 @@ inductive LeanInitPureExtern1OnlyPrim : LeanPrimTy → LeanPrimTy → Type where
   | lean_uint32_to_bitvec           : LeanInitPureExtern1OnlyPrim uint32 (bitvec 32)
   | lean_uint16_of_nat_lt           : LeanInitPureExtern1OnlyPrim nat uint16
   | lean_uint8_of_nat_mk            : LeanInitPureExtern1OnlyPrim (bitvec 8) uint8
-  | lean_mk_empty_byte_array        : LeanInitPureExtern1OnlyPrim nat byteArray
+  -- (†) | lean_mk_empty_byte_array        : LeanInitPureExtern1OnlyPrim nat byteArray
   | lean_usize_of_nat_mk            : LeanInitPureExtern1OnlyPrim (bitvec 64) usize
   | lean_usize_to_bitvec            : LeanInitPureExtern1OnlyPrim usize (bitvec 64)
   | lean_string_utf8_byte_size      : LeanInitPureExtern1OnlyPrim string nat
@@ -112,10 +156,10 @@ inductive LeanInitPureExtern1OnlyPrim : LeanPrimTy → LeanPrimTy → Type where
   | lean_uint64_to_usize            : LeanInitPureExtern1OnlyPrim uint64 usize
   | lean_usize_to_uint32            : LeanInitPureExtern1OnlyPrim usize uint32
   | lean_usize_complement           : LeanInitPureExtern1OnlyPrim usize usize
-  | lean_byte_array_hash            : LeanInitPureExtern1OnlyPrim byteArray uint64
-  | lean_sarray_size                : LeanInitPureExtern1OnlyPrim byteArray usize
-  | lean_string_to_utf8_defs        : LeanInitPureExtern1OnlyPrim string byteArray
-  | lean_string_validate_utf8       : LeanInitPureExtern1OnlyPrim byteArray bool
+  -- (†) | lean_byte_array_hash            : LeanInitPureExtern1OnlyPrim byteArray uint64
+  -- (†) | lean_sarray_size                : LeanInitPureExtern1OnlyPrim byteArray usize
+  -- (†) | lean_string_to_utf8_defs        : LeanInitPureExtern1OnlyPrim string byteArray
+  -- (†) | lean_string_validate_utf8       : LeanInitPureExtern1OnlyPrim byteArray bool
   | lean_string_length_def          : LeanInitPureExtern1OnlyPrim string nat
   | lean_isize_complement           : LeanInitPureExtern1OnlyPrim isize isize
   | lean_int16_of_nat               : LeanInitPureExtern1OnlyPrim nat int16
@@ -213,9 +257,9 @@ inductive LeanInitPureExtern1OnlyPrim : LeanPrimTy → LeanPrimTy → Type where
   | asin                            : LeanInitPureExtern1OnlyPrim float float
   | lean_float_negate               : LeanInitPureExtern1OnlyPrim float float
   | lean_float_isinf                : LeanInitPureExtern1OnlyPrim float bool
-  | lean_mk_empty_float_array       : LeanInitPureExtern1OnlyPrim nat floatArray
-  | lean_float_array_usize          : LeanInitPureExtern1OnlyPrim floatArray usize
-  | lean_float_array_size           : LeanInitPureExtern1OnlyPrim floatArray nat
+  -- (†) | lean_mk_empty_float_array       : LeanInitPureExtern1OnlyPrim nat floatArray
+  -- (†) | lean_float_array_usize          : LeanInitPureExtern1OnlyPrim floatArray usize
+  -- (†) | lean_float_array_size           : LeanInitPureExtern1OnlyPrim floatArray nat
   | lean_usize_log2                 : LeanInitPureExtern1OnlyPrim usize usize
   | lean_uint16_log2                : LeanInitPureExtern1OnlyPrim uint16 uint16
   | lean_uint64_log2                : LeanInitPureExtern1OnlyPrim uint64 uint64
@@ -283,12 +327,16 @@ inductive LeanInitPureExtern1OnlyPrim : LeanPrimTy → LeanPrimTy → Type where
   | lean_float32_to_int32           : LeanInitPureExtern1OnlyPrim float32 int32
   | lean_int16_to_float32           : LeanInitPureExtern1OnlyPrim int16 float32
   | lean_int64_to_float32           : LeanInitPureExtern1OnlyPrim int64 float32
-  | lean_io_process_child_pid       : LeanInitPureExtern1OnlyPrim childProcess uint32
-  | lean_sharecommon_hash           : LeanInitPureExtern1OnlyPrim shareCommonObject uint64
-  | lean_float_to_model             : LeanInitPureExtern1OnlyPrim float uint64
-  | lean_float_of_model             : LeanInitPureExtern1OnlyPrim uint64 float
-  | lean_float32_to_model           : LeanInitPureExtern1OnlyPrim float32 uint32
-  | lean_float32_of_model           : LeanInitPureExtern1OnlyPrim uint32 float32
+  -- | lean_io_process_child_pid       : LeanInitPureExtern1OnlyPrim childProcess uint32
+  -- Commented out with the `childProcess` handle it reads: see `SHARECOMMON_EMULATION.md`.
+  -- | lean_sharecommon_hash           : LeanInitPureExtern1OnlyPrim shareCommonObject uint64
+  -- Commented out with the `shareCommonObject` handle it reads: it hashes the *address*
+  -- of an object, not its value, so it is not a function of its argument.  See
+  -- `SHARECOMMON_EMULATION.md`.
+  -- (§) | lean_float_to_model             : LeanInitPureExtern1OnlyPrim float uint64
+  -- (§) | lean_float_of_model             : LeanInitPureExtern1OnlyPrim uint64 float
+  -- (§) | lean_float32_to_model           : LeanInitPureExtern1OnlyPrim float32 uint32
+  -- (§) | lean_float32_of_model           : LeanInitPureExtern1OnlyPrim uint32 float32
 
 inductive LeanInitPureExtern2OnlyPrim : LeanPrimTy → LeanPrimTy → LeanPrimTy → Type where
   | lean_uint32_dec_eq            : LeanInitPureExtern2OnlyPrim uint32 uint32 bool
@@ -309,12 +357,12 @@ inductive LeanInitPureExtern2OnlyPrim : LeanPrimTy → LeanPrimTy → LeanPrimTy
   | lean_uint16_dec_eq            : LeanInitPureExtern2OnlyPrim uint16 uint16 bool
   | lean_string_dec_eq            : LeanInitPureExtern2OnlyPrim string string bool
   | lean_uint64_dec_eq            : LeanInitPureExtern2OnlyPrim uint64 uint64 bool
-  | lean_name_eq                  : LeanInitPureExtern2OnlyPrim name name bool
+  -- (†) | lean_name_eq                  : LeanInitPureExtern2OnlyPrim name name bool
   | lean_uint8_dec_eq             : LeanInitPureExtern2OnlyPrim uint8 uint8 bool
   | lean_nat_pow                  : LeanInitPureExtern2OnlyPrim nat nat nat
   | lean_usize_dec_eq             : LeanInitPureExtern2OnlyPrim usize usize bool
   | lean_nat_mul                  : LeanInitPureExtern2OnlyPrim nat nat nat
-  | lean_byte_array_push          : LeanInitPureExtern2OnlyPrim byteArray uint8 byteArray
+  -- (†) | lean_byte_array_push          : LeanInitPureExtern2OnlyPrim byteArray uint8 byteArray
   | lean_uint64_mix_hash          : LeanInitPureExtern2OnlyPrim uint64 uint64 uint64
   | lean_int_dec_le               : LeanInitPureExtern2OnlyPrim int int bool
   | lean_int_dec_lt               : LeanInitPureExtern2OnlyPrim int int bool
@@ -410,9 +458,9 @@ inductive LeanInitPureExtern2OnlyPrim : LeanPrimTy → LeanPrimTy → LeanPrimTy
   | lean_uint8_xor                : LeanInitPureExtern2OnlyPrim uint8 uint8 uint8
   | lean_uint16_shift_right       : LeanInitPureExtern2OnlyPrim uint16 uint16 uint16
   | lean_uint64_xor               : LeanInitPureExtern2OnlyPrim uint64 uint64 uint64
-  | lean_byte_array_fget          : LeanInitPureExtern2OnlyPrim byteArray nat uint8
-  | lean_byte_array_uget          : LeanInitPureExtern2OnlyPrim byteArray usize uint8
-  | lean_byte_array_get           : LeanInitPureExtern2OnlyPrim byteArray nat uint8
+  -- (†) | lean_byte_array_fget          : LeanInitPureExtern2OnlyPrim byteArray nat uint8
+  -- (†) | lean_byte_array_uget          : LeanInitPureExtern2OnlyPrim byteArray usize uint8
+  -- (†) | lean_byte_array_get           : LeanInitPureExtern2OnlyPrim byteArray nat uint8
   | lean_string_get_utf8_byte     : LeanInitPureExtern2OnlyPrim string stringPos uint8
   | lean_string_get_byte_fast_raw : LeanInitPureExtern2OnlyPrim string stringPos uint8
   | lean_string_append_defs       : LeanInitPureExtern2OnlyPrim string string string
@@ -512,10 +560,10 @@ inductive LeanInitPureExtern2OnlyPrim : LeanPrimTy → LeanPrimTy → LeanPrimTy
   | lean_float_scaleb             : LeanInitPureExtern2OnlyPrim float int64 float
   | lean_float_add                : LeanInitPureExtern2OnlyPrim float float float
   | lean_float_sub                : LeanInitPureExtern2OnlyPrim float float float
-  | lean_float_array_get          : LeanInitPureExtern2OnlyPrim floatArray nat float
-  | lean_float_array_uget         : LeanInitPureExtern2OnlyPrim floatArray usize float
-  | lean_float_array_fget         : LeanInitPureExtern2OnlyPrim floatArray nat float
-  | lean_float_array_push         : LeanInitPureExtern2OnlyPrim floatArray float floatArray
+  -- (†) | lean_float_array_get          : LeanInitPureExtern2OnlyPrim floatArray nat float
+  -- (†) | lean_float_array_uget         : LeanInitPureExtern2OnlyPrim floatArray usize float
+  -- (†) | lean_float_array_fget         : LeanInitPureExtern2OnlyPrim floatArray nat float
+  -- (†) | lean_float_array_push         : LeanInitPureExtern2OnlyPrim floatArray float floatArray
   | lean_float32_div              : LeanInitPureExtern2OnlyPrim float32 float32 float32
   | lean_float32_le               : LeanInitPureExtern2OnlyPrim float32 float32 bool
   | lean_float32_decLe            : LeanInitPureExtern2OnlyPrim float32 float32 bool
@@ -528,11 +576,13 @@ inductive LeanInitPureExtern2OnlyPrim : LeanPrimTy → LeanPrimTy → LeanPrimTy
   | lean_float32_mul              : LeanInitPureExtern2OnlyPrim float32 float32 float32
   | lean_float32_lt               : LeanInitPureExtern2OnlyPrim float32 float32 bool
   | lean_float32_decLt            : LeanInitPureExtern2OnlyPrim float32 float32 bool
-  | lean_sharecommon_eq           : LeanInitPureExtern2OnlyPrim shareCommonObject shareCommonObject bool
+  -- | lean_sharecommon_eq           : LeanInitPureExtern2OnlyPrim shareCommonObject shareCommonObject bool
+  -- Commented out with the `shareCommonObject` handle it reads: it is pointer equality,
+  -- not a function of the values.  See `SHARECOMMON_EMULATION.md`.
   | lean_string_uget_byte_fast    : LeanInitPureExtern2OnlyPrim string usize uint8
-  | lean_sarray_beq               : LeanInitPureExtern2OnlyPrim byteArray byteArray bool
-  | lean_sarray_dec_eq            : LeanInitPureExtern2OnlyPrim byteArray byteArray bool
-  | lean_string_compare           : LeanInitPureExtern2OnlyPrim string string ordering
+  -- (†) | lean_sarray_beq               : LeanInitPureExtern2OnlyPrim byteArray byteArray bool
+  -- (†) | lean_sarray_dec_eq            : LeanInitPureExtern2OnlyPrim byteArray byteArray bool
+  -- (†) | lean_string_compare           : LeanInitPureExtern2OnlyPrim string string ordering
 
 inductive LeanInitPureExtern3OnlyPrim : LeanPrimTy → LeanPrimTy → LeanPrimTy → LeanPrimTy → Type where
   | lean_substring_extract         : LeanInitPureExtern3OnlyPrim substring stringPos stringPos substring
@@ -580,15 +630,15 @@ inductive LeanInitPureExtern1 : X → X → Type where
   | lean_io_promise_result_opt     : (α : X) → LeanInitPureExtern1 (promise α) (task (option α))
   | lean_option_get_or_block       : (α : X) → LeanInitPureExtern1 (option α) α
   | lean_sharecommon_quick         : (α : X) → LeanInitPureExtern1 α α
-  | lean_byte_array_mk             : LeanInitPureExtern1 (array uint8) byteArray
-  | lean_byte_array_data           : LeanInitPureExtern1 byteArray (array uint8)
+  -- (†) | lean_byte_array_mk             : LeanInitPureExtern1 (array uint8) byteArray
+  -- (†) | lean_byte_array_data           : LeanInitPureExtern1 byteArray (array uint8)
   | lean_string_mk                 : LeanInitPureExtern1 (list char) string
   | lean_string_mk_def             : LeanInitPureExtern1 (list char) string
   | lean_string_data               : LeanInitPureExtern1 string (list char)
   | lean_string_to_list            : LeanInitPureExtern1 string (list char)
   | lean_float_frexp               : LeanInitPureExtern1 float (prod float int64)
-  | lean_float_array_data          : LeanInitPureExtern1 floatArray (array float)
-  | lean_float_array_mk            : LeanInitPureExtern1 (array float) floatArray
+  -- (†) | lean_float_array_data          : LeanInitPureExtern1 floatArray (array float)
+  -- (†) | lean_float_array_mk            : LeanInitPureExtern1 (array float) floatArray
   | lean_float32_frexp             : LeanInitPureExtern1 float32 (prod float32 int64)
   | lean_is_scalar                 : (α : X) → LeanInitPureExtern1 α bool
 
@@ -616,7 +666,10 @@ inductive LeanInitPureExtern2 : X → X → X → Type where
   | lean_dbg_trace_if_shared    : (α : X) → LeanInitPureExtern2 string α α
   | lean_array_uget             : (α : X) → LeanInitPureExtern2 (array α) usize α
   | lean_mk_array               : (α : X) → LeanInitPureExtern2 nat α (array α)
-  | lean_state_sharecommon      : (α : X) → LeanInitPureExtern2 shareCommonState α (prodX α shareCommonState)
+  -- | lean_state_sharecommon      : (α : X) → LeanInitPureExtern2 shareCommonState α (prodX α shareCommonState)
+  -- Commented out with the `shareCommonState` handle it threads: with the interning
+  -- table erased it is `fun s a => (a, s)`, so it has nothing left to do.  See
+  -- `SHARECOMMON_EMULATION.md`.
   | lean_substring_takewhile    : LeanInitPureExtern2 substring (fn1 char bool) substring
   | lean_substring_all          : LeanInitPureExtern2 substring (fn1 char bool) bool
   | lean_string_intercalate     : LeanInitPureExtern2 string (list string) string

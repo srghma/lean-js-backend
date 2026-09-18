@@ -53,7 +53,6 @@ for `Ty.prim`. -/
 def bv32 : Ty := .bitvec 32
 
 example : Ty.bitvec 32 = Ty.prim (.bitvec 32) := rfl
-example : Ty.wf bv32 = true := by decide
 example : LeanPrimTy.isNumberConfigurable (.bitvec 16) = false := by decide
 example : LeanPrimTy.isNumberConfigurable .nat = true := by decide
 
@@ -68,7 +67,6 @@ types.  `LeanEnumSchema` holds the number of constructors *beyond* those three, 
 def direction : Ty := .enum ⟨1, 0⟩
 
 example : direction.enumSchema?.map LeanEnumSchema.nOfConstructors = some 4 := rfl
-example : Ty.wf direction = true := by decide
 example : direction.layout? = some [[], [], [], []] := rfl
 
 /-- `Ordering` is the enum whose numbering starts at `-1`, so it prints as `-1 | 0 | 1`
@@ -105,8 +103,6 @@ def point : Ty := .record ⟨.float, .float, []⟩
 /-- Nesting works: `structure Point3 where p : Point; z : Float`. -/
 def point3 : Ty := .record ⟨point, .float, []⟩
 
-example : Ty.wf point = true := by decide
-example : Ty.wf point3 = true := by decide
 example : point3.layout? = some [[point, .float]] := rfl
 
 /-! A one-field declaration is a *newtype*: its wrapper has no runtime representation,
@@ -137,8 +133,6 @@ def pair : Ty := .prod .float .int64
 example : optChar = .taggedUnion (.skip (.here ⟨.char, []⟩ [])) := rfl
 example : optChar.layout? = some [[], [.char]] := rfl
 example : pair = .record ⟨.float, .int64, []⟩ := rfl
-example : Ty.wf optChar = true := by decide
-example : Ty.wf pair = true := by decide
 
 /-! A sum none of whose constructors carries a field is an enum or a boolean, and a
 one-constructor sum is a record, a newtype or a unit type; neither is writable as a
@@ -153,60 +147,55 @@ example : (LeanTaggedUnionSchema.ofList? ([[], [.char]] : List (List Ty))).map
 `RTy.self 0` is an occurrence of the declaration being defined. -/
 
 /-- `inductive MyList | nil | cons (hd : Int) (tl : MyList)`. -/
-def myList : Ty := .recTaggedUnion ⟨.skip (.here ⟨.prim .int, [.self 0]⟩ [])⟩
+def myList : Ty := .recTaggedUnion (.skip (.here ⟨.prim .int, [.self 0]⟩ []))
 
 /-- `inductive Tree | leaf (kids : Array Tree) | node (v : Int) (kid : Tree)`: `leaf` is
     a base constructor even though it mentions the type, because an array may be
     empty. -/
 def tree : Ty :=
-  .recTaggedUnion ⟨.payloadFirst ⟨.array (.self 0), []⟩ [.prim .int, .self 0] []⟩
+  .recTaggedUnion (.payloadFirst ⟨.array (.self 0), []⟩ [.prim .int, .self 0] [])
 
 /-- `inductive Chain | stop | link (next : Option Chain)`: an `Option` guards a self
     occurrence just as an array does — and it is an ordinary `taggedUnion` inside the
     recursive shape, not a scope of its own, so its `.self 0` is still `Chain`. -/
 def chain : Ty :=
-  .recTaggedUnion ⟨.skip (.here ⟨.taggedUnion (.skip (.here ⟨.self 0, []⟩ [])), []⟩ [])⟩
+  .recTaggedUnion (.skip (.here ⟨.taggedUnion (.skip (.here ⟨.self 0, []⟩ [])), []⟩ []))
 
 /-- A function *returning* the declared type is fine: `inductive Stream | done | step
     (head : Int) (tail : Nat → Stream)`. -/
 def lazyStream : Ty :=
-  .recTaggedUnion ⟨.skip (.here ⟨.prim .int, [.fn [.prim .nat] (.self 0)]⟩ [])⟩
+  .recTaggedUnion (.skip (.here ⟨.prim .int, [RTy.fn (.prim .nat) (.self 0)]⟩ []))
 
-example : Ty.wf myList = true := by decide
-example : Ty.wf tree = true := by decide
-example : Ty.wf chain = true := by decide
-example : Ty.wf lazyStream = true := by decide
 
 /-! Rejected: not actually recursive — that is a `Ty.taggedUnion`. -/
 example :
-    LeanTaggedUnionSchema.wf ⟨.skip (.here ⟨.prim .int, []⟩ [])⟩ = false := by decide
+    recTUWf (.skip (.here ⟨.prim .int, []⟩ [])) = false := by decide
 
 /-! Rejected: not well founded.  Every constructor of
 `inductive Bad | l : Bad → Bad | r : Bad → Bad` needs a value of the type, so the type
 has none — Lean accepts the declaration, and the backend reads it, which is why this is
 a check rather than a condition of the shape. -/
 example :
-    LeanTaggedUnionSchema.wf ⟨.payloadFirst ⟨.self 0, []⟩ [.self 0] []⟩ = false := by
+    recTUWf (.payloadFirst ⟨.self 0, []⟩ [.self 0] []) = false := by
   decide
 
 /-! A `Thunk` is no guard either: forcing it has to produce a value of the type. -/
 example :
-    LeanTaggedUnionSchema.wf ⟨.payloadFirst ⟨.thunk (.self 0), []⟩ [.self 0] []⟩
+    recTUWf (.payloadFirst ⟨.thunk (.self 0), []⟩ [.self 0] [])
       = false := by decide
 
 /-! ## Recursive record -/
 
 /-- `structure Tree where v : Int; kids : Array Tree`. -/
-def treeRecord : Ty := .recObject ⟨⟨.prim .int, .array (.self 0), []⟩⟩
+def treeRecord : Ty := .recObject ⟨.prim .int, .array (.self 0), []⟩
 
-example : Ty.wf treeRecord = true := by decide
 
 /-! Rejected: `structure S where s : S; n : Nat` is uninhabited — the self occurrence is
 unguarded. -/
-example : LeanRecordSchema.wf ⟨⟨.self 0, .prim .nat, []⟩⟩ = false := by decide
+example : recObjWf ⟨.self 0, .prim .nat, []⟩ = false := by decide
 
 /-! Rejected: a "recursive" record that never mentions itself is a `Ty.record`. -/
-example : LeanRecordSchema.wf ⟨⟨.prim .int, .prim .nat, []⟩⟩ = false := by decide
+example : recObjWf ⟨.prim .int, .prim .nat, []⟩ = false := by decide
 
 /-! A one-field recursive record is a newtype, i.e. a `Ty.recAlias`, and is not writable
 as a `recObject` at all: its payload would be a one-element `LeanRecordSchema`. -/
@@ -218,9 +207,8 @@ One constructor with exactly one field is a wrapper, and wrappers are erased: a 
 is *not* `{ _kids: […] }` but simply `[…]`, an array of arrays of … -/
 
 /-- `structure Rose where kids : Array Rose`. -/
-def rose : Ty := .recAlias ⟨.array (.self 0)⟩
+def rose : Ty := .recAlias (.array (.self 0))
 
-example : Ty.wf rose = true := by decide
 
 /-- An alias has no layout of its own; a value of it is a value of what its body
     unfolds to. -/
@@ -232,13 +220,12 @@ satisfies; and `structure S where s : Thunk S` is `S = Thunk S`, which is no bet
 This is the `inductive Bad | mk : Bad → Bad` of the user's question, and the type
 language *does* let it be written — nothing about its shape is wrong — so `Ty.wf` is
 what refuses it. -/
-example : RTy.wf ⟨.self 0⟩ = false := by decide
-example : RTy.wf ⟨.thunk (.self 0)⟩ = false := by decide
-example : Ty.wf (.recAlias ⟨.self 0⟩) = false := by decide
+example : recAliasWf (.self 0) = false := by decide
+example : recAliasWf (.thunk (.self 0)) = false := by decide
 
 /-! Rejected: a wrapper that does *not* mention itself is erased completely
 (`structure Wrapper where x : Nat` is `Ty.nat`), so there is no `recAlias` for it. -/
-example : RTy.wf ⟨.prim .nat⟩ = false := by decide
+example : recAliasWf (.prim .nat) = false := by decide
 
 /-! ## Mutual families
 
@@ -266,7 +253,7 @@ def colorShapeMembers : List Ty.FamMember :=
 
 example : famStronglyConnected colorShapeMembers = false := by decide
 example :
-    (LeanMutualRecFamily.ofMembers? colorShapeMembers 0).map LeanMutualRecFamily.wf
+    (LeanMutualRecFamily.ofMembers? colorShapeMembers 0).map famWf
       = some false := by decide
 
 /-- A genuinely mutual block:
@@ -291,8 +278,6 @@ def expTy : Ty := .mutualRecursiveFamily (.selectedThenMore [] expMember stmMemb
 /-- Member `1` (`Stm`) of the same block: the same members, a different index. -/
 def stmTy : Ty := .mutualRecursiveFamily (.selectedLast expMember [] stmMember)
 
-example : Ty.wf expTy = true := by decide
-example : Ty.wf stmTy = true := by decide
 example : expTy.mutualRecFamily?.map LeanMutualRecFamily.memberIdx = some 0 := rfl
 example : stmTy.mutualRecFamily?.map LeanMutualRecFamily.memberIdx = some 1 := rfl
 
@@ -306,7 +291,7 @@ def expStmAliasMembers : List Ty.FamMember :=
   [.ctors (.payloadFirst ⟨.prim .int, []⟩ [.self 1] []), .alias (.self 0)]
 
 example :
-    (LeanMutualRecFamily.ofMembers? expStmAliasMembers 0).map LeanMutualRecFamily.wf
+    (LeanMutualRecFamily.ofMembers? expStmAliasMembers 0).map famWf
       = some true := by decide
 
 /-! An alias member must still be buildable: a cycle of unguarded aliases has no values
@@ -315,7 +300,7 @@ def aliasCycleMembers : List Ty.FamMember := [.alias (.self 1), .alias (.self 0)
 
 example : famAllInhabited aliasCycleMembers = false := by decide
 example :
-    (LeanMutualRecFamily.ofMembers? aliasCycleMembers 0).map LeanMutualRecFamily.wf
+    (LeanMutualRecFamily.ofMembers? aliasCycleMembers 0).map famWf
       = some false := by decide
 
 /-! Guarded, the same cycle is fine: `A = Array B`, `B = Array A`, i.e. nested JS
@@ -325,7 +310,7 @@ def aliasCycleGuardedMembers : List Ty.FamMember :=
 
 example :
     (LeanMutualRecFamily.ofMembers? aliasCycleGuardedMembers 0).map
-        LeanMutualRecFamily.wf = some true := by decide
+        famWf = some true := by decide
 
 /-! One direction only (`Wrap` mentions `Inner`, never the other way round) is two
 independent declarations, not a family. -/
@@ -344,7 +329,7 @@ def uninhabitedMembers : List Ty.FamMember :=
 example : famStronglyConnected uninhabitedMembers = true := by decide
 example : famAllInhabited uninhabitedMembers = false := by decide
 example :
-    (LeanMutualRecFamily.ofMembers? uninhabitedMembers 0).map LeanMutualRecFamily.wf
+    (LeanMutualRecFamily.ofMembers? uninhabitedMembers 0).map famWf
       = some false := by decide
 
 /-! Guarding makes the same block well founded: a field holding an `Array B` may hold
@@ -355,7 +340,7 @@ def guardedMembers : List Ty.FamMember :=
 
 example : famAllInhabited guardedMembers = true := by decide
 example :
-    (LeanMutualRecFamily.ofMembers? guardedMembers 0).map LeanMutualRecFamily.wf
+    (LeanMutualRecFamily.ofMembers? guardedMembers 0).map famWf
       = some true := by decide
 
 /-! A single declaration is not a family: it is `recTaggedUnion`, `recObject` or
@@ -369,10 +354,9 @@ example :
 
 `def foo : Unit → Int → Int` — the `Unit` parameter carries nothing, so the outer
 function takes no parameters at all. -/
-def unitToIntToInt : Ty := .nullary (.fn [.int] .int)
+def unitToIntToInt : Ty := .lazy (Ty.int ⇒ Ty.int)
 
-example : unitToIntToInt = .fn [] (.fn [.int] .int) := rfl
-example : Ty.wf unitToIntToInt = true := by decide
+example : unitToIntToInt = Ty.lazy (.fn Ty.int Ty.int) := rfl
 
 /-! ## A closed type, read inside a recursive declaration
 

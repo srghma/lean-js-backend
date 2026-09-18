@@ -1,8 +1,12 @@
 module
 prelude
+public import Init
 public import LakeJs.LeanPrimTy
 public import Init.Data.String.Slice
 @[expose] public section
+
+set_option autoImplicit false
+
 namespace LakeJs
 
 /-- A constant of a terminal type: one constructor per constructor of `LeanPrimTy`,
@@ -10,9 +14,13 @@ namespace LakeJs
     terminal type it is a constant *of*.  So a literal is a constant of the Lean type
     model, and turning it into JavaScript source is the printer's business alone
     (`LakeJs.EmitJs.litExpr`).
-    Three constructors of `LeanPrimTy` are missing here, on purpose: `.childProcess`,
-    `.shareCommonObject` and `.shareCommonState` are run-time handles, and a handle has
-    no constant — `Lit .childProcess` is an empty type, which is the right statement.
+    Every constructor of `LeanPrimTy` has a literal here: there are no terminal types
+    left without one.  There used to be three — the run-time handles `.childProcess`,
+    `.shareCommonObject` and `.shareCommonState`, each of which denotes a piece of the
+    run-time representation rather than a value — and all three are now commented out of
+    `LeanPrimTy` itself (see `SHARECOMMON_EMULATION.md`), so `LeanPrimTy.denote` is
+    inhabited everywhere and every terminal type a `Term` can mention is one the
+    evaluator can produce an answer at.
     `Float` and `Float32` are held as the Lean floats they are.  That is why
     `LakeJs.FloatDecide` exists: a fact about them is settled by `float_decide`, a
     `native_decide` that first checks the goal really is about floating point. -/
@@ -34,7 +42,7 @@ inductive LeanPrimLit : LeanPrimTy → Type
   | char   : Char → LeanPrimLit .char
   | string : String → LeanPrimLit .string
   | stringPos : Nat → LeanPrimLit .stringPos
-  | substring : Substring → LeanPrimLit .substring
+  | substring : Substring.Raw → LeanPrimLit .substring
   | stringSlice : String.Slice → LeanPrimLit .stringSlice
   | float  : Float → LeanPrimLit .float
   | float32 : Float32 → LeanPrimLit .float32

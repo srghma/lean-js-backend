@@ -5,6 +5,7 @@ public import Init.Prelude
 public import Init.Data.Format.Basic
 public import Init.Data.Format.Instances
 public import Init.Data.ToString.Basic
+public import Init.Data.String.Basic
 
 @[expose] public section
 
@@ -108,12 +109,22 @@ inductive LeanPrimTy where
   | float32   : LeanPrimTy
   -- /-- In JS: `Float64Array`. -/
   -- | floatArray : LeanPrimTy -- in this `LeanPrimTy` mapped to `Array Float`. Then in `MoreJsTy` as `Float64Array`
-  /-- In JS (node only): a `ChildProcess` handle. -/
-  | childProcess : LeanPrimTy
-  /-- In JS: `object`? / `any`?. -/
-  | shareCommonObject : LeanPrimTy
-  /-- In JS: a `Map`? / cache object?. -/
-  | shareCommonState  : LeanPrimTy
+  -- /-- In JS (node only): a `ChildProcess` handle. -/
+  -- | childProcess : LeanPrimTy
+  -- Commented out: a `ChildProcess` is a live operating-system process, so it has no
+  -- pure meaning and no literal, and a `Term` mentioning it could never be evaluated.
+  -- At this stage `Term` is meant to be completely evaluatable.  See
+  -- `SHARECOMMON_EMULATION.md`.
+  -- /-- In JS: `object`? / `any`?. -/
+  -- | shareCommonObject : LeanPrimTy
+  -- /-- In JS: a `Map`? / cache object?. -/
+  -- | shareCommonState  : LeanPrimTy
+  -- Commented out: the two `ShareCommon` handles denote a *memory layout*, not a value,
+  -- so they have no literal and a `Term` mentioning one could never be evaluated.  Of
+  -- the four externs that speak about them, `lean_sharecommon_quick` is kept — it is the
+  -- identity on values, which is what `Expr.Step.quick` runs — and the three that read a
+  -- handle are commented out with the handles.  This is option A (erasure) of
+  -- `SHARECOMMON_EMULATION.md`.
   deriving Repr, DecidableEq, Inhabited
 
 namespace LeanPrimTy
@@ -131,8 +142,17 @@ def format : LeanPrimTy → Format
   | .char => "char" | .string => "string"
   | .stringPos => "stringPos" | .substring => "substring" | .stringSlice => "stringSlice"
   | .float => "float" | .float32 => "float32"
-  | .childProcess => "childProcess"
-  | .shareCommonObject => "shareCommonObject" | .shareCommonState => "shareCommonState"
+
+/-- The same rendering, as a plain `String`: a `Format` does not reduce in the kernel,
+    so an `example` settled by `decide` needs this one. -/
+def pretty : LeanPrimTy → String
+  | .bitvec n _ => "(bitvec " ++ toString n ++ ")"
+  | .bool => "bool" | .nat => "nat" | .int => "int"
+  | .uint8 => "uint8" | .uint16 => "uint16" | .uint32 => "uint32" | .uint64 => "uint64"
+  | .int8 => "int8" | .int16 => "int16" | .int32 => "int32" | .int64 => "int64"
+  | .char => "char" | .string => "string"
+  | .stringPos => "stringPos" | .substring => "substring" | .stringSlice => "stringSlice"
+  | .float => "float" | .float32 => "float32"
 
 instance : ToFormat LeanPrimTy where
   format := format

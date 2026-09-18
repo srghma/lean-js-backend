@@ -1,307 +1,128 @@
 module
-public import LakeJs.Expr
+
+public import LakeJs.Fundamental
+
 @[expose] public section
 
 /-!
-# Why a `Term` cannot diverge
+# The evaluator is total on the fragment: no fuel, and always an answer
 
-The backend only ever emits `while`/`for` loops, never a self-applying closure.  Two
-facts, proved here, are what make that possible.
+This is the conclusion of `LakeJs.SN`, `LakeJs.Fragment`, `LakeJs.Reducibility` and
+`LakeJs.Fundamental`.
 
-1. `Ty.ne_arrow_self`: no type is its own argument type, `σ ≠ .fn [σ] τ`.  Applying a
-   variable to itself therefore does not typecheck, so `ω = λx. x x` — and with it the
-   `Y` combinator and every other fixed point built from self-application — is not a
-   `Term`.  This is the standard reason the simply-typed λ-calculus has no Omega, stated
-   for `LakeJs.Ty`'s uncurried function space.
-2. `Term.noFix`: the grammar of `Term` has no recursive-definition node.  The only
-   constructor that repeats work is `Term.loop`, whose body is a `Body`; a `Body` either
-   answers or continues, which is exactly the shape of a `while` loop.  `Term.loopCount`
-   counts those loops, and `Term.isLoopFree` says a term has none — a loop-free term
-   prints to straight-line JavaScript.
+* `Term.simple_sn` — **a closed term of the fragment runs out of steps**.
+* `Term.simple_halts` — and therefore **reaches an answer**: there is a `v` with
+  `Steps t v` and `Value v`.
+* `Term.evalSN` — the evaluator itself, as a **function**: it recurses on the proof that
+  the term runs out of steps, so it takes **no fuel** and has no failure case, and it
+  answers with a `v` *together with* the reduction that reaches it and the proof that it
+  is an answer.
+* `Term.eval`, `Term.eval_steps`, `Term.eval_value`, `Term.eval_total` — the same, for a
+  closed term of the fragment, with the side condition discharged once and for all.
 
-Termination of the loops themselves is *not* established here, and it is not the
-backend's job to establish it: a declaration only becomes a `Term` if Lean already
-proved it terminating, which is what `LakeJs.Totality` checks before the translation
-starts.
+## What the fragment leaves out, and why
+
+No evaluator of the *whole* language can be total: `LakeJs.Diverge` exhibits a closed
+term, `loopForever`, that steps only to itself and so reaches no answer at all
+(`loopForever_no_answer`).  A `Tail.label` with `self = true` is the one construct of the
+language that repeats work, and the whole block grammar is excluded here — along with a
+field read at a function or delayed result type, which the argument of
+`LakeJs.Reducibility` does not cover.  `LakeJs.Fragment` is the precise statement of the restriction, and
+`EVALUATOR_TOTALITY.md` discusses it.
+
+## Why the evaluator is noncomputable
+
+`Step` is a *relation*, and not a deterministic one: `Step.quick` lets
+`lean_sharecommon_quick v` answer straight away while `Step.apArg` would run its argument
+first.  So "the" next term is a choice, and `Term.evalSN` makes it with `Classical.choose`
+— which costs nothing in the statement being proved, since every choice leads to an
+answer.  What is *not* a choice is that the recursion stops: that is the content of
+`Term.simple_sn`.
 -/
 
-namespace LakeJs.TermTotal
+namespace LakeJs.Expr
 
 open LakeJs
-open LakeJs.Expr
 open LakeJs.Ty
-open LakeJs.Layout (FieldLayout ObjLayout)
 
-/-! ## No type is its own argument type -/
+open scoped Classical
 
-mutual
+variable {Sg : Sig}
 
-/-- How deeply function arrows nest in a type.  Only `Ty.fn` is counted; every other
-    shape is a leaf for this purpose, which is all `Ty.ne_arrow_self` needs. -/
-def Ty.arrowDepth : Ty → Nat
-  | .fn params ret => 1 + Nat.max (Ty.arrowDepthList params) (Ty.arrowDepth ret)
-  | _ => 0
+/-! ## A closed term of the fragment runs out of steps -/
 
-/-- `Ty.arrowDepth` of the deepest member of a list of types. -/
-def Ty.arrowDepthList : List Ty → Nat
-  | [] => 0
-  | t :: ts => Nat.max (Ty.arrowDepth t) (Ty.arrowDepthList ts)
+/-- **A closed term of the fragment runs out of steps.**  The fundamental theorem under
+    the empty substitution, which changes nothing. -/
+theorem Term.simple_sn {τ : Ty} (t : Term Sg [] τ) (hs : t.simple = true) : t.SN := by
+  have h := Term.fundamental t VSub.id RedSub.nil hs
+  rw [Term.subst_id] at h
+  exact h.sn
 
-end
+/-- **A closed term of the fragment reaches an answer.** -/
+theorem Term.simple_halts {τ : Ty} (t : Term Sg [] τ) (hs : t.simple = true) :
+    ∃ v : Term Sg [] τ, Steps t v ∧ Value v :=
+  (t.simple_sn hs).halts
 
-theorem Ty.arrowDepth_fn (params : List Ty) (ret : Ty) :
-    Ty.arrowDepth (.fn params ret)
-      = 1 + Nat.max (Ty.arrowDepthList params) (Ty.arrowDepth ret) := by
-  simp [Ty.arrowDepth]
+/-! ## The evaluator -/
 
-theorem Ty.arrowDepthList_single (t : Ty) :
-    Ty.arrowDepthList [t] = Ty.arrowDepth t := by
-  simp [Ty.arrowDepthList]
+/-- **The evaluator, as a total function.**  It recurses on the proof that `t` runs out
+    of steps — not on a fuel — and it has no failure case: progress says a closed term is
+    either an answer, and then it is the answer, or takes a step, and then the same
+    function runs on what it steps to, which runs out of steps in turn.
 
-/-- **No Omega.**  A type is never the argument type of itself, so a self-application
-    `x x` has no type: it would need `σ = .fn [σ] τ`.  `Term.apN` asks for exactly that
-    agreement between the parameter list of the function and the types of the arguments,
-    so `ƛ ♯0 ⬝ ♯0` is not a `Term`, and neither is any fixed-point combinator built from
-    it. -/
-theorem Ty.ne_arrow_self (σ τ : Ty) : σ ≠ Ty.fn [σ] τ := by
-  intro h
-  have hd : Ty.arrowDepth σ = Ty.arrowDepth (Ty.fn [σ] τ) := congrArg Ty.arrowDepth h
-  rw [Ty.arrowDepth_fn, Ty.arrowDepthList_single] at hd
-  have : Ty.arrowDepth σ ≤ Nat.max (Ty.arrowDepth σ) (Ty.arrowDepth τ) :=
-    Nat.le_max_left _ _
-  omega
+    It answers with the term *together with* the reduction that reaches it and the proof
+    that it is an answer, so the specification is the type. -/
+noncomputable def Term.evalSN {τ : Ty} {t : Term Sg [] τ} (h : t.SN) :
+    { v : Term Sg [] τ // Steps t v ∧ Value v } :=
+  Acc.rec (motive := fun t _ => { v : Term Sg [] τ // Steps t v ∧ Value v })
+    (fun t _ ih =>
+      if hv : Value t then ⟨t, .refl, hv⟩
+      else
+        let hex : ∃ t' : Term Sg [] τ, Step t t' := (Term.progress t).resolve_left hv
+        let hst : Step t (Classical.choose hex) := Classical.choose_spec hex
+        let r := ih _ hst
+        ⟨r.1, Steps.head hst r.2.1, r.2.2⟩)
+    h
 
-/-- The same fact for the one-parameter arrow notation. -/
-theorem Ty.ne_self_arrow (σ τ : Ty) : σ ≠ (σ ⇒ τ) := Ty.ne_arrow_self σ τ
+/-- **The answer a closed term of the fragment evaluates to.**  Total: every closed term
+    of the fragment has one, and no fuel is asked for. -/
+noncomputable def Term.eval {τ : Ty} (t : Term Sg [] τ) (hs : t.simple = true) :
+    Term Sg [] τ :=
+  (Term.evalSN (t.simple_sn hs)).1
 
-/-- A variable cannot be applied to itself: there is no context in which the same
-    de Bruijn index is both a function and its own argument. -/
-theorem Term.no_self_application {Γ : Ctx} {σ τ : Ty}
-    (_x : Γ ∋ σ) (h : σ = Ty.fn [σ] τ) : False :=
-  Ty.ne_arrow_self σ τ h
+/-- The evaluator's answer is reached from the term. -/
+theorem Term.eval_steps {τ : Ty} (t : Term Sg [] τ) (hs : t.simple = true) :
+    Steps t (t.eval hs) :=
+  (Term.evalSN (t.simple_sn hs)).2.1
 
-/-! ## Data is built and read according to a schema -/
+/-- **The evaluator's answer is an answer.** -/
+theorem Term.eval_value {τ : Ty} (t : Term Sg [] τ) (hs : t.simple = true) :
+    Value (t.eval hs) :=
+  (Term.evalSN (t.simple_sn hs)).2.2
 
-/-- **No record at a function type.**  `Term.ctor` asks for the evidence that the type
-    it builds has a constructor of that name, and a function type has none, so
-    `{ tag: …, _1: … }` is never a term of a function type. -/
-theorem Term.no_ctor_at_function {params : List Ty} {ret : Ty} {fields : FieldLayout}
-    (i : Nat) (h : (Ty.fn params ret).ctorFields? i = some fields) : False := by
-  rw [Ty.ctorFields?_fn] at h
-  cases h
+/-- **Totality, in one statement**: running a closed term of the fragment answers with a
+    value, reached by the reduction relation, with no fuel anywhere in sight. -/
+theorem Term.eval_total {τ : Ty} (t : Term Sg [] τ) (hs : t.simple = true) :
+    Steps t (t.eval hs) ∧ Value (t.eval hs) :=
+  ⟨t.eval_steps hs, t.eval_value hs⟩
 
-/-- **No field of a function.**  `Term.proj` asks for the evidence that the value it
-    reads from has such a field, so `f._1` is never emitted for an `f` of a function
-    type. -/
-theorem Term.no_proj_of_function {Sg : Sig} {Γ : Ctx} {params : List Ty} {ret τ : Ty}
-    (_e : Term Sg Γ (Ty.fn params ret)) (i j : Nat)
-    (h : (Ty.fn params ret).fieldTy? i j = some τ) : False := by
-  rw [Ty.fieldTy?_fn] at h
-  cases h
+/-! ## The fragment is not empty
 
-/-- **No scalar is a record either.**  A `Nat` has no constructor to build and no field
-    to read: only a type carrying a schema does.  A `Bool` is the exception, and it is
-    not really one: a boolean *is* the two-constructor field-less sum — that is how the
-    type language models one — so it has the layout `[[], []]`, and `false` and `true`
-    are its constructors. -/
-theorem Term.no_ctor_at_scalar {p : LeanPrimTy} {fields : FieldLayout} (i : Nat)
-    (hp : p ≠ .bool) (h : (Ty.prim p).ctorFields? i = some fields) : False := by
-  rw [Ty.ctorFields?_prim p i hp] at h
-  cases h
+A sanity check that the side condition `t.simple = true` is satisfiable, and that the
+evaluator really does reduce: `(fun x => x) 1` is a closed term of the fragment, and it
+reaches the literal `1`. -/
 
-/-- **A value of a type parameter cannot be taken apart.**  `Ty.typeParam` is the type
-    of a value whose Lean type is a type parameter of the enclosing declaration.  There
-    is no longer any *unchecked* data operation to reach for — `Term.dynCtor`,
-    `Term.dynProj` and `Term.dynCase` are gone, and with them the `Ty.dynamic` they
-    lived at — and the checked ones are unavailable here, so a compiled module never
-    reads a field of a value whose shape it does not know. -/
-theorem Term.no_ctor_at_typeParam {fields : FieldLayout} (i : Nat)
-    (h : Ty.typeParam.ctorFields? i = some fields) : False := by
-  rw [Ty.ctorFields?_typeParam] at h
-  cases h
+/-- `(fun x => x) 1`, a closed term of the fragment. -/
+def idAp : Term Sg [] (.prim .nat) :=
+  .ap (.lam (.var .head)) (.lit (.nat 1))
 
-/-- **An alias has no constructor of its own.**  A newtype's wrapper is erased, so a
-    value of `Ty.recAlias b` is a value of what `b` unfolds to: there is nothing to
-    build and nothing to read. -/
-theorem Term.no_ctor_at_alias {b : RTy} {fields : FieldLayout} (i : Nat)
-    (h : (Ty.recAlias ⟨b⟩).ctorFields? i = some fields) : False := by
-  rw [Ty.ctorFields?_recAlias] at h
-  cases h
+/-- It is in the fragment. -/
+theorem idAp_simple : (idAp (Sg := Sg)).simple = true := rfl
 
-/-! ## The only repetition is a loop -/
+/-- And it reduces to `1`, in one β step. -/
+theorem idAp_steps : Steps (idAp (Sg := Sg)) (.lit (.nat 1)) :=
+  Steps.single (Step.beta (Value.lit _))
 
-mutual
-
-/-- How many `Term.loop` nodes a term contains. -/
-def Term.loopCount {Sg : Sig} : ∀ {Γ τ}, Term Sg Γ τ → Nat
-  | _, _, .var _ => 0
-  | _, _, .lit _ => 0
-  | _, _, .global _ => 0
-  | _, _, .extern _ => 0
-  | _, _, .proj e _ _ _ => Term.loopCount e
-  | _, _, .tagOf e _ => Term.loopCount e
-  | _, _, .ite c t e => Term.loopCount c + Term.loopCount t + Term.loopCount e
-  | _, _, .letE e b => Term.loopCount e + Term.loopCount b
-  | _, _, .jsOp _ args => Spine.loopCount args
-  | _, _, .lazyMk e | _, _, .lazyForce e => Term.loopCount e
-  | _, _, .lamProd rets => Spine.loopCount rets
-  | _, _, .callProd f args _ => Term.loopCount f + Spine.loopCount args
-  | _, _, .lamN b => Term.loopCount b
-  | _, _, .apN f args => Term.loopCount f + Spine.loopCount args
-  | _, _, .ctor _ _ _ args => Spine.loopCount args
-  | _, _, .caseTag s alts _ => Term.loopCount s + Alts.loopCount alts
-  | _, _, .loop init body => 1 + Spine.loopCount init + Body.loopCount body
-  | _, _, .joinPoint body rest => Term.loopCount body + Term.loopCount rest
-  | _, _, .jump _ args => Spine.loopCount args
-
-/-- `Term.loopCount`, summed over a spine. -/
-def Spine.loopCount {Sg : Sig} : ∀ {Γ σs}, Spine Sg Γ σs → Nat
-  | _, _, .nil => 0
-  | _, _, .cons t rest => Term.loopCount t + Spine.loopCount rest
-
-/-- `Term.loopCount`, summed over the branches of a case. -/
-def Alts.loopCount {Sg : Sig} : ∀ {Γ τ} {tags : List Nat}, Alts Sg Γ τ tags → Nat
-  | _, _, _, .deflt t => Term.loopCount t
-  | _, _, _, .cons _ t rest => Term.loopCount t + Alts.loopCount rest
-
-/-- `Term.loopCount`, summed over a loop body. -/
-def Body.loopCount {Sg : Sig} : ∀ {Γ σs τ}, Body Sg Γ σs τ → Nat
-  | _, _, _, .ret t => Term.loopCount t
-  | _, _, _, .cont args => Spine.loopCount args
-  | _, _, _, .letB e b => Term.loopCount e + Body.loopCount b
-  | _, _, _, .iteB c t e => Term.loopCount c + Body.loopCount t + Body.loopCount e
-  | _, _, _, .joinPointB body rest => Term.loopCount body + Body.loopCount rest
+end LakeJs.Expr
 
 end
-
-/-- A term with no loop in it: it prints to straight-line JavaScript. -/
-def Term.isLoopFree {Sg : Sig} {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ) : Bool :=
-  Term.loopCount t == 0
-
-/-- **No recursive definitions.**  Every constructor of `Term` other than `Term.loop`
-    builds a term whose loop count is the sum of its children's, so repetition can only
-    enter a term through `Term.loop` — there is no fixed-point node to enter it through.
-    Stated for the constructors a translated declaration is built from. -/
-theorem Term.loopCount_lam {Sg : Sig} {Γ : Ctx} {params : List Ty} {ret : Ty}
-    (b : Term Sg (params.reverse ++ Γ) ret) :
-    Term.loopCount (Term.lamN b) = Term.loopCount b := by
-  simp [Term.loopCount]
-
-theorem Term.loopCount_ap {Sg : Sig} {Γ : Ctx} {params : List Ty} {ret : Ty}
-    (f : Term Sg Γ (.fn params ret)) (args : Spine Sg Γ params) :
-    Term.loopCount (Term.apN f args) = Term.loopCount f + Spine.loopCount args := by
-  simp [Term.loopCount]
-
-theorem Term.loopCount_let {Sg : Sig} {Γ : Ctx} {σ τ : Ty} (e : Term Sg Γ σ)
-    (b : Term Sg (σ :: Γ) τ) :
-    Term.loopCount (Term.letE e b) = Term.loopCount e + Term.loopCount b := by
-  simp [Term.loopCount]
-
-theorem Term.loopCount_loop {Sg : Sig} {Γ : Ctx} {σs : List Ty} {τ : Ty}
-    (init : Spine Sg Γ σs) (body : Body Sg (σs.reverse ++ Γ) σs τ) :
-    Term.loopCount (Term.loop init body)
-      = 1 + Spine.loopCount init + Body.loopCount body := by
-  simp [Term.loopCount]
-
-/-- The λ-fragment — variables, lambdas, applications, literals, `let` — is loop-free,
-    so a term of it prints without a single `while`.  The Church numerals of
-    `LakeJs.Expr` are instances of this. -/
-theorem Term.isLoopFree_two {Sg : Sig} {α : Ty} :
-    Term.isLoopFree (Term.two (Sg := Sg) (α := α)) = true := by
-  simp [Term.isLoopFree, Term.two, Term.lam, Term.ap, Term.loopCount, Spine.loopCount]
-
-/-- The hand-written translation of `Tco01`'s `test` has exactly one loop and no other
-    repetition.  It mentions no global, so it is stated of the empty signature. -/
-theorem Term.loopCount_tco01 : Term.loopCount (Term.tco01 (Sg := [])) = 1 := by
-  decide +kernel
-
-/-! ## A dispatch answers for every tag
-
-What used to need an `unreachable` branch — a tag no constructor of the scrutinee's type
-has, or one Lean proved impossible — needs nothing at all: `Alts` ends in a default
-branch, so *which* branch a runtime tag takes is a total function of that tag, and it is
-always one of the branches the case actually has.  That is the fact that lets the
-backend print a dispatch as a chain of tests with no `throw` at the end of it. -/
-
-/-- The branch a runtime tag takes: the first branch that tests it, and the default
-    branch if none does.  It is a function, not a partial one: every tag answers. -/
-def Alts.select {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat}, Alts Sg Γ τ tags → Nat → Term Sg Γ τ
-  | _, .deflt t, _ => t
-  | _, .cons tag t rest, n => if n = tag then t else Alts.select rest n
-
-/-- The default branch: the one a tag no branch tests takes. -/
-def Alts.deflt? {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat}, Alts Sg Γ τ tags → Term Sg Γ τ
-  | _, .deflt t => t
-  | _, .cons _ _ rest => Alts.deflt? rest
-
-/-- The branches of a case, the default one included. -/
-def Alts.branches {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat}, Alts Sg Γ τ tags → List (Term Sg Γ τ)
-  | _, .deflt t => [t]
-  | _, .cons _ t rest => t :: Alts.branches rest
-
-/-- **No dispatch falls off the end.**  Whatever the runtime tag is — a constructor the
-    case tests, a constructor it does not, or a number no constructor has — the branch
-    taken is one of the branches the case has.  There is nothing left for a `throw` to
-    do. -/
-theorem Alts.select_mem_branches {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat} (a : Alts Sg Γ τ tags) (n : Nat),
-      Alts.select a n ∈ Alts.branches a
-  | _, .deflt t, n => by simp [Alts.select, Alts.branches]
-  | _, .cons tag t rest, n => by
-      by_cases h : n = tag
-      · simp [Alts.select, Alts.branches, h]
-      · simp only [Alts.select, Alts.branches, if_neg h]
-        exact List.mem_cons_of_mem _ (Alts.select_mem_branches rest n)
-
-/-- A tag no branch tests takes the default branch. -/
-theorem Alts.select_of_not_mem {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat} (a : Alts Sg Γ τ tags) (n : Nat),
-      n ∉ tags → Alts.select a n = Alts.deflt? a
-  | _, .deflt t, n, _ => by simp [Alts.select, Alts.deflt?]
-  | _, .cons (tags := ts) tag _ rest, n, h => by
-      have hne : n ≠ tag := fun hEq => h (by simp [hEq])
-      have hrest : n ∉ ts := fun hMem => h (List.mem_cons_of_mem _ hMem)
-      simp only [Alts.select, Alts.deflt?, if_neg hne]
-      exact Alts.select_of_not_mem rest n hrest
-
-/-- The number of branches a case answers with is the number it has. -/
-theorem Alts.length_branches {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat} (a : Alts Sg Γ τ tags),
-      (Alts.branches a).length = Alts.length a
-  | _, .deflt _ => by simp [Alts.branches, Alts.length]
-  | _, .cons _ _ rest => by
-      simp [Alts.branches, Alts.length, Alts.length_branches rest]
-
-end LakeJs.TermTotal
-
-/-! The totality API, under the namespaces of the types it is about. -/
-
-namespace LakeJs.Ty
-export LakeJs.TermTotal.Ty
-  (arrowDepth arrowDepthList arrowDepth_fn arrowDepthList_single ne_arrow_self
-   ne_self_arrow)
-end LakeJs.Ty
-
-namespace LakeJs.Expr.Term
-export LakeJs.TermTotal.Term
-  (loopCount isLoopFree loopCount_lam loopCount_ap loopCount_let loopCount_loop
-   isLoopFree_two loopCount_tco01 no_ctor_at_alias no_ctor_at_function
-   no_ctor_at_scalar no_ctor_at_typeParam no_proj_of_function no_self_application)
-end LakeJs.Expr.Term
-
-namespace LakeJs.Expr.Spine
-export LakeJs.TermTotal.Spine (loopCount)
-end LakeJs.Expr.Spine
-
-namespace LakeJs.Expr.Body
-export LakeJs.TermTotal.Body (loopCount)
-end LakeJs.Expr.Body
-
-namespace LakeJs.Expr.Alts
-export LakeJs.TermTotal.Alts
-  (loopCount branches deflt? select select_mem_branches select_of_not_mem
-   length_branches)
-end LakeJs.Expr.Alts
