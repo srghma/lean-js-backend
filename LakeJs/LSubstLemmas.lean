@@ -4,30 +4,38 @@ public import LakeJs.SubstLemmas
 
 @[expose] public section
 
-/-!
-# Label substitution commutes with value substitution
+set_option autoImplicit false
 
-`LakeJs.SubstLemmas` is the algebra of the **variable** context: renaming, substitution,
-and the four ways of composing them.  This module is the missing half — the algebra of
-the **label** context — and its one purpose is the equation
+/-!
+# Inlining a join point does not change what a block means
+
+`LakeJs.SubstLemmas` is the algebra of the **variable** context, against the evaluator:
+renaming a term is reading it in a renamed environment.  This module is the other half —
+the algebra of the **label** context — and its purpose is the correctness of the one
+transformation the label context admits:
 
 ```lean
-(rest.lsubst0 jb).subst γ = (rest.subst γ).lsubst0 (jb.subst (VSub.liftList ps γ))
+Tail.eval_lsubst0 :
+  (rest.lsubst0 jb).eval δ γ lenv ρ = (Tail.join ps jb rest).eval δ γ lenv ρ
 ```
 
-(`Tail.lsubst0_subst`): *inlining a shared tail and then closing the block is closing the
-block and then inlining the shared tail.*  That is exactly the step the join-point
-certificate generator of `LakeJs.CertGen` has to take — `StepT.labelJoin` fires on the
-*closed* block, while the induction hypothesis speaks about the open one — and it is the
-reason `Tail.letSpine` binds every argument of a jump with a `let` instead of copying the
-ones that are a variable or a literal: a variable argument is atomic before the block is
-closed and an arbitrary value after it, so a copying rule does not commute with `γ`.
+**Inlining a join point is meaning-preserving.**  A block that binds a join point and the
+block in which every jump to it has been replaced by the join point's body — with the
+jump's arguments bound in front of it by `Tail.letSpine` — have the same value, in every
+environment.  That is what licenses an emitter to duplicate a small join point rather
+than emit a label for it, and (with `Tail.inlineSize_lsubst0_lt`, which says the measure
+goes down) to keep doing so until none is left.
 
-The work is organised around one notion, `VSub.Square`: a substitution `θ`, two renamings
-`ρ`, `ρ'` and a second substitution `θ'` *commute* when `θ' ∘ ρ = rename ρ' ∘ θ` holds on
-variables.  Two squares generate everything needed — weakening by one variable, and
-weakening by a whole list — and a square stays a square under `VSub.lift` and
-`VSub.liftList`, which is what carries it under the binders of the grammar.
+Three small facts do the work, and each is worth having on its own:
+
+* `Term.eval_weakenList` — a term does not read the variables a list-weakening adds;
+* `Spine.eval_vars` — the spine of a binder's own parameters evaluates to the arguments
+  themselves;
+* `Tail.eval_letSpine` — binding the arguments of a jump with `let`s is the same as
+  evaluating the block in the environment those arguments extend.
+
+The general statement is `Tail.eval_lsubst`, whose hypothesis is that every label of the
+source context means what the substitution puts there.
 -/
 
 namespace LakeJs.Expr
@@ -37,346 +45,216 @@ open LakeJs.Ty
 
 variable {Sg : Sig}
 
-/-! ## A commuting square of two renamings and two substitutions -/
+/-! ## Weakening by a list of variables -/
 
-/-- **A commuting square.**  Substituting by `θ` and then renaming by `ρ'` is renaming by
-    `ρ` and then substituting by `θ'`, as far as the variables are concerned; the syntax
-    lemmas below lift that to terms, spines and tails. -/
-structure VSub.Square {Γ₁ Γ₂ Γ₁' Γ₂' : Ctx} (θ : VSub Sg Γ₁ Γ₂) (ρ : VRen Γ₁ Γ₁')
-    (ρ' : VRen Γ₂ Γ₂') (θ' : VSub Sg Γ₁' Γ₂') : Prop where
-  /-- The square, on one variable. -/
-  app : ∀ {ν : Ty} (v : Γ₁ ∋ ν), θ' (ρ v) = (θ v).rename ρ'
+/-- A list-weakening is an agreement: the variables it adds are the ones the renamed term
+    does not read. -/
+theorem Env.Agree.weakenList {Γ : Ctx} (γ : Env Γ) :
+    ∀ {σs : List Ty} (as : Env σs), Env.Agree (VRen.weakenList σs) γ (as.append γ)
+  | [], .nil => fun _ => rfl
+  | _ :: _, .cons _ as => fun v => Env.Agree.weakenList γ as v
 
-/-- A square stays a square under one binder. -/
-theorem VSub.Square.lift {Γ₁ Γ₂ Γ₁' Γ₂' : Ctx} {σ : Ty} {θ : VSub Sg Γ₁ Γ₂}
-    {ρ : VRen Γ₁ Γ₁'} {ρ' : VRen Γ₂ Γ₂'} {θ' : VSub Sg Γ₁' Γ₂'}
-    (h : VSub.Square θ ρ ρ' θ') :
-    VSub.Square (VSub.lift (σ := σ) θ) (VRen.lift ρ) (VRen.lift ρ') (VSub.lift θ') where
-  app := by
-    intro ν v
-    match v with
-    | .head => rfl
-    | .tail w =>
-        have hw : θ' (ρ w) = (θ w).rename ρ' := h.app w
-        have e1 : ((θ w).rename ρ').rename (VRen.weaken (σ := σ))
-            = (θ w).rename (fun x => Var.tail (ρ' x)) :=
-          Term.rename_rename (θ w) (fun _ => rfl)
-        have e2 : ((θ w).rename (VRen.weaken (σ := σ))).rename (VRen.lift ρ')
-            = (θ w).rename (fun x => Var.tail (ρ' x)) :=
-          Term.rename_rename (θ w) (fun _ => rfl)
-        show (θ' (ρ w)).rename (VRen.weaken (σ := σ))
-            = ((θ w).rename (VRen.weaken (σ := σ))).rename (VRen.lift ρ')
-        rw [hw, e1, e2]
+/-- **A term does not read the variables a list-weakening adds.** -/
+theorem Term.eval_weakenList {Γ : Ctx} {Ρ : RCtx} {σs : List Ty} {τ : Ty}
+    (t : Term Sg Γ Ρ τ) (δ : GEnv Sg.decls) (as : Env σs) (γ : Env Γ) (ρ : REnv Ρ) :
+    (t.rename (VRen.weakenList σs) RRen.id).eval δ (as.append γ) ρ = t.eval δ γ ρ :=
+  Term.eval_rename t (VRen.weakenList σs) RRen.id δ γ (as.append γ) ρ ρ
+    (Env.Agree.weakenList γ as) (fun _ => rfl)
 
-/-- A square stays a square under a binder that binds a whole list. -/
-theorem VSub.Square.liftList {Γ₁ Γ₂ Γ₁' Γ₂' : Ctx} {θ : VSub Sg Γ₁ Γ₂}
-    {ρ : VRen Γ₁ Γ₁'} {ρ' : VRen Γ₂ Γ₂'} {θ' : VSub Sg Γ₁' Γ₂'}
-    (h : VSub.Square θ ρ ρ' θ') :
-    ∀ (σs : List Ty),
-      VSub.Square (VSub.liftList σs θ) (VRen.liftList σs ρ) (VRen.liftList σs ρ')
-        (VSub.liftList σs θ')
-  | [] => h
-  | _ :: σs => VSub.Square.lift (VSub.Square.liftList h σs)
+/-- **The parameters of a binder, read back.**  `Spine.vars ps` is the spine of the
+    binder's own parameters, and in an environment that binds them it evaluates to
+    exactly those arguments. -/
+theorem Spine.eval_vars {Γ : Ctx} {Ρ : RCtx} :
+    ∀ {ps : List Ty} (as : Env ps) (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ),
+      (Spine.vars (Sg := Sg) (Γ := Γ) (Ρ := Ρ) ps).eval δ (as.append γ) ρ = as
+  | [], .nil, _, _, _ => rfl
+  | _ :: ps, .cons a as, δ, γ, ρ => by
+      show Env.cons a
+          ((Spine.vars (Γ := Γ) (Ρ := Ρ) ps |>.rename VRen.weaken RRen.id).eval δ
+            (.cons a (as.append γ)) ρ) = Env.cons a as
+      have h : ((Spine.vars (Sg := Sg) (Γ := Γ) (Ρ := Ρ) ps).rename VRen.weaken
+            RRen.id).eval δ (.cons a (as.append γ)) ρ
+          = (Spine.vars (Sg := Sg) (Γ := Γ) (Ρ := Ρ) ps).eval δ (as.append γ) ρ :=
+        Spine.eval_rename (Spine.vars ps) VRen.weaken RRen.id δ (as.append γ)
+          (.cons a (as.append γ)) ρ ρ (fun _ => rfl) (fun _ => rfl)
+      rw [h, Spine.eval_vars as δ γ ρ]
 
-/-- **Weakening by one variable is a square**: going under a binder on both sides of a
-    substitution is the same as weakening before or after it. -/
-theorem VSub.square_weaken {Γ₁ Γ₂ : Ctx} {σ : Ty} (θ : VSub Sg Γ₁ Γ₂) :
-    VSub.Square θ (VRen.weaken (σ := σ)) (VRen.weaken (σ := σ)) (VSub.lift θ) where
-  app := fun _ => rfl
+/-- **Binding the arguments of a jump is passing them.**  The `let`s `Tail.letSpine` puts
+    in front of a block bind exactly the environment the block is read in. -/
+theorem Tail.eval_letSpine {Γ : Ctx} {Ω : LCtx} {Ρ : RCtx} {τ : Ty} :
+    ∀ {σs : List Ty} (args : Spine Sg Γ Ρ σs) (jb : Tail Sg (σs ++ Γ) Ω Ρ τ)
+      (δ : GEnv Sg.decls) (γ : Env Γ) (lenv : LEnv τ Ω) (ρ : REnv Ρ),
+      (Tail.letSpine args jb).eval δ γ lenv ρ
+        = jb.eval δ ((args.eval δ γ ρ).append γ) lenv ρ
+  | [], .nil, _, _, _, _, _ => rfl
+  | _ :: σs, .cons a rest, jb, δ, γ, lenv, ρ => by
+      show (Tail.letSpine rest
+          (.letT (a.rename (VRen.weakenList σs) RRen.id) jb)).eval δ γ lenv ρ = _
+      rw [Tail.eval_letSpine rest (.letT (a.rename (VRen.weakenList σs) RRen.id) jb)
+        δ γ lenv ρ]
+      show jb.eval δ (.cons ((a.rename (VRen.weakenList σs) RRen.id).eval δ
+            ((rest.eval δ γ ρ).append γ) ρ) ((rest.eval δ γ ρ).append γ)) lenv ρ
+          = jb.eval δ (.cons (a.eval δ γ ρ) ((rest.eval δ γ ρ).append γ)) lenv ρ
+      rw [Term.eval_weakenList a δ (rest.eval δ γ ρ) γ ρ]
 
-/-- **Weakening by a whole list of variables is a square.** -/
-theorem VSub.square_weakenList {Γ₁ Γ₂ : Ctx} (θ : VSub Sg Γ₁ Γ₂) :
-    ∀ (ps : List Ty),
-      VSub.Square θ (VRen.weakenList ps) (VRen.weakenList ps) (VSub.liftList ps θ)
-  | [] => ⟨fun v => (Term.rename_eq_self (θ v) (fun _ => rfl)).symm⟩
-  | p :: ps => by
-      refine ⟨fun {ν} v => ?_⟩
-      have ih : (VSub.liftList ps θ) (VRen.weakenList ps v)
-          = (θ v).rename (VRen.weakenList ps) := (VSub.square_weakenList θ ps).app v
-      have e : ((θ v).rename (VRen.weakenList ps)).rename (VRen.weaken (σ := p))
-          = (θ v).rename (VRen.weakenList (p :: ps)) :=
-        Term.rename_rename (θ v) (fun _ => rfl)
-      show ((VSub.liftList ps θ) (VRen.weakenList ps v)).rename (VRen.weaken (σ := p))
-          = (θ v).rename (VRen.weakenList (p :: ps))
-      rw [ih, e]
+/-! ## What a label substitution has to satisfy -/
 
-/-! ## A square commutes on the syntax -/
+/-- A label environment agrees with a label substitution when every label means the block
+    the substitution puts there. -/
+def LSub.Agree {Γ : Ctx} {Ω₁ Ω₂ : LCtx} {Ρ : RCtx} {τ : Ty} (θ : LSub Sg Γ Ω₁ Ω₂ Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (l₁ : LEnv τ Ω₁) (l₂ : LEnv τ Ω₂) (ρ : REnv Ρ) :
+    Prop :=
+  ∀ {ps : List Ty} (l : Ω₁ ∋ₗ ps) (as : Env ps),
+    l₁.get l as = (θ l).eval δ (as.append γ) l₂ ρ
 
-/-- **A square commutes on a term.** -/
-theorem Term.subst_rename_comm {Γ₁ Γ₂ Γ₁' Γ₂' : Ctx} {τ : Ty} (t : Term Sg Γ₁ τ)
-    {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₁ Γ₁'} {ρ' : VRen Γ₂ Γ₂'} {θ' : VSub Sg Γ₁' Γ₂'}
-    (h : VSub.Square θ ρ ρ' θ') : (t.subst θ).rename ρ' = (t.rename ρ).subst θ' := by
-  have h1 : (t.subst θ).rename ρ' = t.subst (fun v => (θ v).rename ρ') :=
-    Term.rename_subst t (fun _ => rfl)
-  have h2 : (t.rename ρ).subst θ' = (t.subst (fun v => θ' (ρ v))).rename VRen.id :=
-    Term.subst_rename t (fun _ => rfl) (fun _ => rfl)
-  have h3 : (t.subst (fun v => θ' (ρ v))).rename VRen.id = t.subst (fun v => θ' (ρ v)) :=
-    Term.rename_eq_self _ (fun _ => rfl)
-  have h4 : t.subst (fun v => (θ v).rename ρ') = t.subst (fun v => θ' (ρ v)) :=
-    Term.subst_congr t (fun v => (h.app v).symm)
-  rw [h1, h2, h3, h4]
+/-- Agreement survives one variable binder. -/
+theorem LSub.Agree.vlift {Γ : Ctx} {Ω₁ Ω₂ : LCtx} {Ρ : RCtx} {σ τ : Ty}
+    {θ : LSub Sg Γ Ω₁ Ω₂ Ρ τ} {δ : GEnv Sg.decls} {γ : Env Γ} {l₁ : LEnv τ Ω₁}
+    {l₂ : LEnv τ Ω₂} {ρ : REnv Ρ} (h : LSub.Agree θ δ γ l₁ l₂ ρ) (v : σ.den) :
+    LSub.Agree θ.vlift δ (.cons v γ) l₁ l₂ ρ := by
+  intro ps l as
+  show l₁.get l as
+      = ((θ l).rename (VRen.liftList _ VRen.weaken) LRen.id RRen.id).eval δ
+        (as.append (.cons v γ)) l₂ ρ
+  have hbase : Env.Agree (VRen.weaken (σ := σ)) γ (Env.cons v γ) := fun _ => rfl
+  rw [Tail.eval_rename (θ l) (VRen.liftList _ VRen.weaken) LRen.id RRen.id δ
+    (as.append γ) (as.append (.cons v γ)) l₂ l₂ ρ ρ
+    (Env.Agree.liftList hbase as) (fun _ => rfl) (fun _ => rfl)]
+  exact h l as
 
-/-- **A square commutes on a spine.** -/
-theorem Spine.subst_rename_comm {Γ₁ Γ₂ Γ₁' Γ₂' : Ctx} {σs : List Ty} (s : Spine Sg Γ₁ σs)
-    {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₁ Γ₁'} {ρ' : VRen Γ₂ Γ₂'} {θ' : VSub Sg Γ₁' Γ₂'}
-    (h : VSub.Square θ ρ ρ' θ') : (s.subst θ).rename ρ' = (s.rename ρ).subst θ' := by
-  have h1 : (s.subst θ).rename ρ' = s.subst (fun v => (θ v).rename ρ') :=
-    Spine.rename_subst s (fun _ => rfl)
-  have h2 : (s.rename ρ).subst θ' = (s.subst (fun v => θ' (ρ v))).rename VRen.id :=
-    Spine.subst_rename s (fun _ => rfl) (fun _ => rfl)
-  have h3 : (s.subst (fun v => θ' (ρ v))).rename VRen.id = s.subst (fun v => θ' (ρ v)) :=
-    Spine.rename_eq_self _ (fun _ => rfl)
-  have h4 : s.subst (fun v => (θ v).rename ρ') = s.subst (fun v => θ' (ρ v)) :=
-    Spine.subst_congr s (fun v => (h.app v).symm)
-  rw [h1, h2, h3, h4]
+/-- Agreement survives a binder that binds a whole list of variables. -/
+theorem LSub.Agree.vliftList {Γ : Ctx} {Ω₁ Ω₂ : LCtx} {Ρ : RCtx} {τ : Ty}
+    {θ : LSub Sg Γ Ω₁ Ω₂ Ρ τ} {δ : GEnv Sg.decls} {γ : Env Γ} {l₁ : LEnv τ Ω₁}
+    {l₂ : LEnv τ Ω₂} {ρ : REnv Ρ} (h : LSub.Agree θ δ γ l₁ l₂ ρ) {qs : List Ty}
+    (bs : Env qs) : LSub.Agree (LSub.vliftList qs θ) δ (bs.append γ) l₁ l₂ ρ := by
+  intro ps l as
+  show l₁.get l as
+      = ((θ l).rename (VRen.liftList _ (VRen.weakenList qs)) LRen.id RRen.id).eval δ
+        (as.append (bs.append γ)) l₂ ρ
+  rw [Tail.eval_rename (θ l) (VRen.liftList _ (VRen.weakenList qs)) LRen.id RRen.id δ
+    (as.append γ) (as.append (bs.append γ)) l₂ l₂ ρ ρ
+    (Env.Agree.liftList (Env.Agree.weakenList γ bs) as) (fun _ => rfl) (fun _ => rfl)]
+  exact h l as
 
-/-- **A square commutes on a tail**, whose labels nothing here touches. -/
-theorem Tail.subst_rename_comm {Γ₁ Γ₂ Γ₁' Γ₂' : Ctx} {Ω : LCtx} {τ : Ty}
-    (b : Tail Sg Γ₁ Ω τ) {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₁ Γ₁'} {ρ' : VRen Γ₂ Γ₂'}
-    {θ' : VSub Sg Γ₁' Γ₂'} (h : VSub.Square θ ρ ρ' θ') :
-    (b.subst θ).rename ρ' LRen.id = (b.rename ρ LRen.id).subst θ' := by
-  have h1 : (b.subst θ).rename ρ' LRen.id = b.subst (fun v => (θ v).rename ρ') :=
-    Tail.rename_subst b (fun _ => rfl) (fun _ => rfl)
-  have h2 : (b.rename ρ LRen.id).subst θ'
-      = (b.subst (fun v => θ' (ρ v))).rename VRen.id LRen.id :=
-    Tail.subst_rename b (fun _ => rfl) (fun _ => rfl)
-  have h3 : (b.subst (fun v => θ' (ρ v))).rename VRen.id LRen.id
-      = b.subst (fun v => θ' (ρ v)) :=
-    Tail.rename_eq_self _ (fun _ => rfl) (fun _ => rfl)
-  have h4 : b.subst (fun v => (θ v).rename ρ') = b.subst (fun v => θ' (ρ v)) :=
-    Tail.subst_congr b (fun v => (h.app v).symm)
-  rw [h1, h2, h3, h4]
-
-/-! ## Two facts a jump needs -/
-
-/-- **The parameters of a label are untouched by a substitution carried under them.**
-    `Spine.vars` is the spine of the variables the binder itself binds, and a lifted
-    substitution is the identity on those. -/
-theorem Spine.vars_subst {Γ₁ Γ₂ : Ctx} (θ : VSub Sg Γ₁ Γ₂) :
-    ∀ (σs : List Ty),
-      (Spine.vars (Sg := Sg) (Γ := Γ₁) σs).subst (VSub.liftList σs θ)
-        = Spine.vars (Γ := Γ₂) σs
-  | [] => rfl
-  | σ :: σs => by
-      have ih : (Spine.vars (Sg := Sg) (Γ := Γ₁) σs).subst (VSub.liftList σs θ)
-          = Spine.vars (Γ := Γ₂) σs := Spine.vars_subst θ σs
-      have hsq :
-          ((Spine.vars (Sg := Sg) (Γ := Γ₁) σs).subst (VSub.liftList σs θ)).rename
-              (VRen.weaken (σ := σ))
-            = ((Spine.vars (Sg := Sg) (Γ := Γ₁) σs).rename VRen.weaken).subst
-                (VSub.lift (VSub.liftList σs θ)) :=
-        Spine.subst_rename_comm _ (VSub.square_weaken _)
-      show Spine.cons ((Term.var (Sg := Sg) Var.head).subst (VSub.lift (VSub.liftList σs θ)))
-          (((Spine.vars (Sg := Sg) (Γ := Γ₁) σs).rename VRen.weaken).subst
-            (VSub.lift (VSub.liftList σs θ)))
-        = Spine.cons (Term.var Var.head)
-            ((Spine.vars (Sg := Sg) (Γ := Γ₂) σs).rename VRen.weaken)
-      rw [← hsq, ih]
-      rfl
-
-/-- **Weakening a tail by one label commutes with substituting its variables.** -/
-theorem Tail.lweaken_subst {Γ₁ Γ₂ : Ctx} {Ω : LCtx} {ps : List Ty} {τ : Ty}
-    (b : Tail Sg Γ₁ Ω τ) (θ : VSub Sg Γ₁ Γ₂) :
-    (Tail.lweaken (ps := ps) b).subst θ = Tail.lweaken (b.subst θ) :=
-  Tail.subst_rename b (θ'' := θ) (ρ₀ := VRen.id) (fun _ => rfl) (fun _ => rfl)
-
-/-- **Binding the arguments of a jump commutes with substituting the variables.**  Every
-    argument is bound by a `let`, so the operation recurses on the spine alone and
-    nothing in it inspects the shape of an argument. -/
-theorem Tail.letSpine_subst {Γ₁ Γ₂ : Ctx} {Ω : LCtx} {τ : Ty} :
-    ∀ {σs : List Ty} (args : Spine Sg Γ₁ σs) (jb : Tail Sg (σs ++ Γ₁) Ω τ)
-      (γ : VSub Sg Γ₁ Γ₂),
-      (Tail.letSpine args jb).subst γ
-        = Tail.letSpine (args.subst γ) (jb.subst (VSub.liftList σs γ))
-  | [], .nil, _, _ => rfl
-  | σ :: σs, .cons a rest, jb, γ => by
-      have ha : (a.rename (VRen.weakenList σs)).subst (VSub.liftList σs γ)
-          = (a.subst γ).rename (VRen.weakenList σs) :=
-        (Term.subst_rename_comm a (VSub.square_weakenList γ σs)).symm
-      have ih : (Tail.letSpine rest
-            (Tail.letT (a.rename (VRen.weakenList σs)) jb)).subst γ
-          = Tail.letSpine (rest.subst γ)
-              ((Tail.letT (a.rename (VRen.weakenList σs)) jb).subst
-                (VSub.liftList σs γ)) :=
-        Tail.letSpine_subst rest _ γ
-      show (Tail.letSpine rest (Tail.letT (a.rename (VRen.weakenList σs)) jb)).subst γ
-          = Tail.letSpine (rest.subst γ)
-              (Tail.letT ((a.subst γ).rename (VRen.weakenList σs))
-                (jb.subst (VSub.lift (VSub.liftList σs γ))))
-      rw [ih]
-      show Tail.letSpine (rest.subst γ)
-          (Tail.letT ((a.rename (VRen.weakenList σs)).subst (VSub.liftList σs γ))
-            (jb.subst (VSub.lift (VSub.liftList σs γ)))) = _
-      rw [ha]
-
-/-! ## A label substitution transported through a value substitution -/
-
-/-- **`θ'` is `θ` closed by `γ`**: every block `θ` names, read under the parameters of
-    its label and with the variables of the enclosing context substituted by `γ`. -/
-structure LSub.Comm {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {τ : Ty} (θ : LSub Sg Γ₁ Ω₁ Ω₂ τ)
-    (γ : VSub Sg Γ₁ Γ₂) (θ' : LSub Sg Γ₂ Ω₁ Ω₂ τ) : Prop where
-  /-- The relation, at one label. -/
-  app : ∀ {ps : List Ty} (l : Ω₁ ∋ₗ ps), θ' l = (θ l).subst (VSub.liftList ps γ)
-
-/-- Carrying both under one variable binder preserves the relation. -/
-theorem LSub.Comm.vlift {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {σ τ : Ty} {θ : LSub Sg Γ₁ Ω₁ Ω₂ τ}
-    {γ : VSub Sg Γ₁ Γ₂} {θ' : LSub Sg Γ₂ Ω₁ Ω₂ τ} (h : LSub.Comm θ γ θ') :
-    LSub.Comm (LSub.vlift (σ := σ) θ) (VSub.lift γ) (LSub.vlift θ') where
-  app := by
-    intro ps l
-    have hl : θ' l = (θ l).subst (VSub.liftList ps γ) := h.app l
-    have hsq : ((θ l).subst (VSub.liftList ps γ)).rename
-          (VRen.liftList ps (VRen.weaken (σ := σ))) LRen.id
-        = ((θ l).rename (VRen.liftList ps VRen.weaken) LRen.id).subst
-            (VSub.liftList ps (VSub.lift γ)) :=
-      Tail.subst_rename_comm (θ l) ((VSub.square_weaken γ).liftList ps)
-    show (θ' l).rename (VRen.liftList ps (VRen.weaken (σ := σ))) LRen.id
-        = ((θ l).rename (VRen.liftList ps VRen.weaken) LRen.id).subst
-            (VSub.liftList ps (VSub.lift γ))
-    rw [hl, hsq]
-
-/-- Carrying both under a binder that binds a whole list preserves the relation. -/
-theorem LSub.Comm.vliftList {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {τ : Ty}
-    {θ : LSub Sg Γ₁ Ω₁ Ω₂ τ} {γ : VSub Sg Γ₁ Γ₂} {θ' : LSub Sg Γ₂ Ω₁ Ω₂ τ}
-    (h : LSub.Comm θ γ θ') (σs : List Ty) :
-    LSub.Comm (LSub.vliftList σs θ) (VSub.liftList σs γ) (LSub.vliftList σs θ') where
-  app := by
-    intro ps l
-    have hl : θ' l = (θ l).subst (VSub.liftList ps γ) := h.app l
-    have hsq : ((θ l).subst (VSub.liftList ps γ)).rename
-          (VRen.liftList ps (VRen.weakenList σs)) LRen.id
-        = ((θ l).rename (VRen.liftList ps (VRen.weakenList σs)) LRen.id).subst
-            (VSub.liftList ps (VSub.liftList σs γ)) :=
-      Tail.subst_rename_comm (θ l) ((VSub.square_weakenList γ σs).liftList ps)
-    show (θ' l).rename (VRen.liftList ps (VRen.weakenList σs)) LRen.id
-        = ((θ l).rename (VRen.liftList ps (VRen.weakenList σs)) LRen.id).subst
-            (VSub.liftList ps (VSub.liftList σs γ))
-    rw [hl, hsq]
-
-/-- Carrying both under one label binder preserves the relation. -/
-theorem LSub.Comm.liftL {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {qs : List Ty} {τ : Ty}
-    {θ : LSub Sg Γ₁ Ω₁ Ω₂ τ} {γ : VSub Sg Γ₁ Γ₂} {θ' : LSub Sg Γ₂ Ω₁ Ω₂ τ}
-    (h : LSub.Comm θ γ θ') : LSub.Comm (LSub.lift (qs := qs) θ) γ (LSub.lift θ') where
-  app := by
-    intro ps l
-    match l with
-    | .head =>
-        have hv : (Spine.vars (Sg := Sg) (Γ := Γ₁) qs).subst (VSub.liftList qs γ)
-            = Spine.vars (Γ := Γ₂) qs := Spine.vars_subst γ qs
-        show Tail.jmp (Ω := qs :: Ω₂) LVar.head (Spine.vars qs)
-            = Tail.jmp LVar.head ((Spine.vars (Γ := Γ₁) qs).subst (VSub.liftList qs γ))
-        rw [hv]
-    | .tail l =>
-        have hl : θ' l = (θ l).subst (VSub.liftList ps γ) := h.app l
-        have hw : (Tail.lweaken (ps := qs) (θ l)).subst (VSub.liftList ps γ)
-            = Tail.lweaken ((θ l).subst (VSub.liftList ps γ)) :=
-          Tail.lweaken_subst _ _
-        show Tail.lweaken (ps := qs) (θ' l)
-            = (Tail.lweaken (ps := qs) (θ l)).subst (VSub.liftList ps γ)
-        rw [hl, hw]
-
-/-- Carrying both into the body of a label preserves the relation. -/
-theorem LSub.Comm.ext {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {τ : Ty} {θ : LSub Sg Γ₁ Ω₁ Ω₂ τ}
-    {γ : VSub Sg Γ₁ Γ₂} {θ' : LSub Sg Γ₂ Ω₁ Ω₂ τ} (h : LSub.Comm θ γ θ') (self : Bool)
-    (ps : List Ty) :
-    LSub.Comm (LSub.ext self ps θ) (VSub.liftList ps γ) (LSub.ext self ps θ') := by
-  cases self with
-  | false => exact h.vliftList ps
-  | true => exact (h.vliftList ps).liftL
-
-/-- **The substitution that inlines one block** is transported by closing that block. -/
-theorem LSub.Comm.zero {Γ₁ Γ₂ : Ctx} {Ω : LCtx} {ps : List Ty} {τ : Ty}
-    (jb : Tail Sg (ps ++ Γ₁) Ω τ) (γ : VSub Sg Γ₁ Γ₂) :
-    LSub.Comm (LSub.zero jb) γ (LSub.zero (jb.subst (VSub.liftList ps γ))) where
-  app := by
-    intro qs l
-    match l with
-    | .head => rfl
-    | .tail l =>
-        have hv : (Spine.vars (Sg := Sg) (Γ := Γ₁) qs).subst (VSub.liftList qs γ)
-            = Spine.vars (Γ := Γ₂) qs := Spine.vars_subst γ qs
-        show Tail.jmp (Ω := Ω) l (Spine.vars qs)
-            = Tail.jmp l ((Spine.vars (Γ := Γ₁) qs).subst (VSub.liftList qs γ))
-        rw [hv]
-
-/-! ## The commutation -/
+/-! ## The substitution theorem -/
 
 mutual
 
-/-- **Inlining blocks for labels commutes with substituting the variables.** -/
-theorem Tail.lsubst_subst {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {τ : Ty} :
-    ∀ (b : Tail Sg Γ₁ Ω₁ τ) {θ : LSub Sg Γ₁ Ω₁ Ω₂ τ} {γ : VSub Sg Γ₁ Γ₂}
-      {θ' : LSub Sg Γ₂ Ω₁ Ω₂ τ},
-      LSub.Comm θ γ θ' → (b.lsubst θ).subst γ = (b.subst γ).lsubst θ'
-  | .ret _, _, _, _, _ => rfl
-  | .jmp (ps := ps) l args, θ, γ, θ', h => by
-      have e1 : (Tail.letSpine args (θ l)).subst γ
-          = Tail.letSpine (args.subst γ) ((θ l).subst (VSub.liftList ps γ)) :=
-        Tail.letSpine_subst args (θ l) γ
-      have e2 : θ' l = (θ l).subst (VSub.liftList ps γ) := h.app l
-      show (Tail.letSpine args (θ l)).subst γ = Tail.letSpine (args.subst γ) (θ' l)
-      rw [e1, e2]
-  | .letT e b, θ, γ, θ', h => by
-      have ih : (b.lsubst θ.vlift).subst γ.lift = (b.subst γ.lift).lsubst θ'.vlift :=
-        Tail.lsubst_subst b h.vlift
-      show Tail.letT (e.subst γ) ((b.lsubst θ.vlift).subst γ.lift)
-          = Tail.letT (e.subst γ) ((b.subst γ.lift).lsubst θ'.vlift)
-      rw [ih]
-  | .iteT c t e, θ, γ, θ', h => by
-      have iht : (t.lsubst θ).subst γ = (t.subst γ).lsubst θ' := Tail.lsubst_subst t h
-      have ihe : (e.lsubst θ).subst γ = (e.subst γ).lsubst θ' := Tail.lsubst_subst e h
-      show Tail.iteT (c.subst γ) ((t.lsubst θ).subst γ) ((e.lsubst θ).subst γ)
-          = Tail.iteT (c.subst γ) ((t.subst γ).lsubst θ') ((e.subst γ).lsubst θ')
-      rw [iht, ihe]
-  | .caseT e alts hc, θ, γ, θ', h => by
-      have ih : (alts.lsubst θ).subst γ = (alts.subst γ).lsubst θ' :=
-        AltsT.lsubst_subst alts h
-      show Tail.caseT (e.subst γ) ((alts.lsubst θ).subst γ) hc
-          = Tail.caseT (e.subst γ) ((alts.subst γ).lsubst θ') hc
-      rw [ih]
-  | .label (ps := ps) self body rest, θ, γ, θ', h => by
-      have ihb : (body.lsubst (θ.ext self ps)).subst (VSub.liftList ps γ)
-          = (body.subst (VSub.liftList ps γ)).lsubst (θ'.ext self ps) :=
-        Tail.lsubst_subst body (h.ext self ps)
-      have ihr : (rest.lsubst θ.lift).subst γ = (rest.subst γ).lsubst θ'.lift :=
-        Tail.lsubst_subst rest h.liftL
-      show Tail.label self ((body.lsubst (θ.ext self ps)).subst (VSub.liftList ps γ))
-            ((rest.lsubst θ.lift).subst γ)
-          = Tail.label self ((body.subst (VSub.liftList ps γ)).lsubst (θ'.ext self ps))
-            ((rest.subst γ).lsubst θ'.lift)
-      rw [ihb, ihr]
-  termination_by b => sizeOf b
+/-- **A label substitution means what it says.**  Replacing every jump by the block its
+    label names does not change the value of the block, as long as the label environment
+    it is read in gives each label that block's meaning. -/
+theorem Tail.eval_lsubst {Γ : Ctx} {Ω₁ Ω₂ : LCtx} {Ρ : RCtx} {τ : Ty} :
+    ∀ (b : Tail Sg Γ Ω₁ Ρ τ) (θ : LSub Sg Γ Ω₁ Ω₂ Ρ τ) (δ : GEnv Sg.decls) (γ : Env Γ)
+      (l₁ : LEnv τ Ω₁) (l₂ : LEnv τ Ω₂) (ρ : REnv Ρ),
+      LSub.Agree θ δ γ l₁ l₂ ρ →
+      (b.lsubst θ).eval δ γ l₂ ρ = b.eval δ γ l₁ ρ
+  | .ret _, _, _, _, _, _, _, _ => rfl
+  | .jmp l args, θ, δ, γ, l₁, l₂, ρ, hθ => by
+      show (Tail.letSpine args (θ l)).eval δ γ l₂ ρ = l₁.get l (args.eval δ γ ρ)
+      rw [Tail.eval_letSpine args (θ l) δ γ l₂ ρ, hθ l (args.eval δ γ ρ)]
+  | .letT e b, θ, δ, γ, l₁, l₂, ρ, hθ => by
+      show (b.lsubst θ.vlift).eval δ (.cons (e.eval δ γ ρ) γ) l₂ ρ
+          = b.eval δ (.cons (e.eval δ γ ρ) γ) l₁ ρ
+      exact Tail.eval_lsubst b θ.vlift δ _ l₁ l₂ ρ (hθ.vlift (e.eval δ γ ρ))
+  | .iteT c t e, θ, δ, γ, l₁, l₂, ρ, hθ => by
+      show (if cond (c.eval δ γ ρ) true false then (t.lsubst θ).eval δ γ l₂ ρ
+            else (e.lsubst θ).eval δ γ l₂ ρ)
+          = if cond (c.eval δ γ ρ) true false then t.eval δ γ l₁ ρ else e.eval δ γ l₁ ρ
+      rw [Tail.eval_lsubst t θ δ γ l₁ l₂ ρ hθ, Tail.eval_lsubst e θ δ γ l₁ l₂ ρ hθ]
+  | .caseT (σ := σ) scrut alts h, θ, δ, γ, l₁, l₂, ρ, hθ => by
+      have ha := AltsT.eval_lsubst alts θ δ γ l₁ l₂ ρ hθ
+      show (match (alts.lsubst θ).eval (σ.tagOfVal (scrut.eval δ γ ρ))
+              (σ.fieldsOfVal (scrut.eval δ γ ρ)) δ γ l₂ ρ with
+            | some r => r | none => _)
+          = match alts.eval (σ.tagOfVal (scrut.eval δ γ ρ))
+              (σ.fieldsOfVal (scrut.eval δ γ ρ)) δ γ l₁ ρ with
+            | some r => r | none => _
+      rw [ha]
+  | .join ps body rest, θ, δ, γ, l₁, l₂, ρ, hθ => by
+      have hbody : ∀ as : Env ps,
+          (body.lsubst (LSub.vliftList ps θ)).eval δ (as.append γ) l₂ ρ
+            = body.eval δ (as.append γ) l₁ ρ := fun as =>
+        Tail.eval_lsubst body (LSub.vliftList ps θ) δ _ l₁ l₂ ρ (hθ.vliftList as)
+      have hfun : (fun as => (body.lsubst (LSub.vliftList ps θ)).eval δ
+            (Env.append as γ) l₂ ρ)
+          = fun as => body.eval δ (Env.append as γ) l₁ ρ := funext hbody
+      show (rest.lsubst θ.lift).eval δ γ
+            (.cons (fun as => (body.lsubst (LSub.vliftList ps θ)).eval δ
+              (Env.append as γ) l₂ ρ) l₂) ρ
+          = rest.eval δ γ (.cons (fun as => body.eval δ (Env.append as γ) l₁ ρ) l₁) ρ
+      rw [hfun]
+      refine Tail.eval_lsubst rest θ.lift δ γ _ _ ρ ?_
+      intro qs l as
+      cases l with
+      | head =>
+          show (fun bs => body.eval δ (Env.append bs γ) l₁ ρ) as
+              = (Tail.jmp (Ω := ps :: Ω₂) LVar.head (Spine.vars ps)).eval δ
+                (as.append γ) (.cons (fun bs => body.eval δ (Env.append bs γ) l₁ ρ) l₂) ρ
+          show body.eval δ (Env.append as γ) l₁ ρ
+              = body.eval δ (Env.append
+                  ((Spine.vars (Sg := Sg) (Γ := Γ) (Ρ := Ρ) ps).eval δ (as.append γ) ρ)
+                  γ) l₁ ρ
+          rw [Spine.eval_vars (ps := ps) as δ γ ρ]
+      | tail l =>
+          have hw : ((θ l).lweaken).eval δ (as.append γ)
+                (.cons (fun bs => body.eval δ (Env.append bs γ) l₁ ρ) l₂) ρ
+              = (θ l).eval δ (as.append γ) l₂ ρ :=
+            Tail.eval_rename (θ l) VRen.id LRen.weaken RRen.id δ (as.append γ)
+              (as.append γ) l₂
+              (.cons (fun bs => body.eval δ (Env.append bs γ) l₁ ρ) l₂) ρ ρ
+              (fun _ => rfl) (fun _ => rfl) (fun _ => rfl)
+          show l₁.get l as
+              = ((θ l).lweaken).eval δ (as.append γ)
+                (.cons (fun bs => body.eval δ (Env.append bs γ) l₁ ρ) l₂) ρ
+          rw [hw]
+          exact hθ l as
 
 /-- The same, for the branches of a dispatch inside a block. -/
-theorem AltsT.lsubst_subst {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {τ : Ty} {tags : List Nat}
-    {full : Bool} :
-    ∀ (alts : AltsT Sg Γ₁ Ω₁ τ tags full) {θ : LSub Sg Γ₁ Ω₁ Ω₂ τ} {γ : VSub Sg Γ₁ Γ₂}
-      {θ' : LSub Sg Γ₂ Ω₁ Ω₂ τ},
-      LSub.Comm θ γ θ' → (alts.lsubst θ).subst γ = (alts.subst γ).lsubst θ'
-  | .deflt b, θ, γ, θ', h => by
-      have ih : (b.lsubst θ).subst γ = (b.subst γ).lsubst θ' := Tail.lsubst_subst b h
-      show AltsT.deflt ((b.lsubst θ).subst γ) = AltsT.deflt ((b.subst γ).lsubst θ')
-      rw [ih]
-  | .nilFull, _, _, _, _ => rfl
-  | .cons tag b rest, θ, γ, θ', h => by
-      have ih : (b.lsubst θ).subst γ = (b.subst γ).lsubst θ' := Tail.lsubst_subst b h
-      have ihr : (rest.lsubst θ).subst γ = (rest.subst γ).lsubst θ' :=
-        AltsT.lsubst_subst rest h
-      show AltsT.cons tag ((b.lsubst θ).subst γ) ((rest.lsubst θ).subst γ)
-          = AltsT.cons tag ((b.subst γ).lsubst θ') ((rest.subst γ).lsubst θ')
-      rw [ih, ihr]
-  termination_by alts => sizeOf alts
+theorem AltsT.eval_lsubst {Γ : Ctx} {Ω₁ Ω₂ : LCtx} {Ρ : RCtx} {σ τ : Ty}
+    {tags : List Nat} {full : Bool} :
+    ∀ (alts : AltsT Sg Γ Ω₁ Ρ σ τ tags full) (θ : LSub Sg Γ Ω₁ Ω₂ Ρ τ)
+      (δ : GEnv Sg.decls) (γ : Env Γ) (l₁ : LEnv τ Ω₁) (l₂ : LEnv τ Ω₂) (ρ : REnv Ρ),
+      LSub.Agree θ δ γ l₁ l₂ ρ →
+      ∀ (tag : Nat) (fs : List Data),
+        (alts.lsubst θ).eval tag fs δ γ l₂ ρ = alts.eval tag fs δ γ l₁ ρ
+  | .deflt b, θ, δ, γ, l₁, l₂, ρ, hθ, _, _ => by
+      show some ((b.lsubst θ).eval δ γ l₂ ρ) = some (b.eval δ γ l₁ ρ)
+      rw [Tail.eval_lsubst b θ δ γ l₁ l₂ ρ hθ]
+  | .nilFull, _, _, _, _, _, _, _, _, _ => rfl
+  | .cons t fields h body rest, θ, δ, γ, l₁, l₂, ρ, hθ, tag, fs => by
+      show (if t = tag then
+              some ((body.lsubst (LSub.vliftList fields θ)).eval δ
+                ((Env.ofData fields fs).append γ) l₂ ρ)
+            else (rest.lsubst θ).eval tag fs δ γ l₂ ρ)
+          = if t = tag then some (body.eval δ ((Env.ofData fields fs).append γ) l₁ ρ)
+            else rest.eval tag fs δ γ l₁ ρ
+      by_cases hc : t = tag
+      · simp only [hc, if_pos]
+        exact congrArg some (Tail.eval_lsubst body (LSub.vliftList fields θ) δ _ l₁ l₂ ρ
+          (hθ.vliftList (Env.ofData fields fs)))
+      · simp only [if_neg hc]
+        exact AltsT.eval_lsubst rest θ δ γ l₁ l₂ ρ hθ tag fs
 
 end
 
-/-- **Inlining a shared tail commutes with closing the block.**  This is the equation the
-    join-point certificate generator needs: the block that `StepT.labelJoin` produces
-    from the *closed* label is the closure of the block it produces from the open one. -/
-theorem Tail.lsubst0_subst {Γ₁ Γ₂ : Ctx} {Ω : LCtx} {ps : List Ty} {τ : Ty}
-    (rest : Tail Sg Γ₁ (ps :: Ω) τ) (jb : Tail Sg (ps ++ Γ₁) Ω τ) (γ : VSub Sg Γ₁ Γ₂) :
-    (rest.lsubst0 jb).subst γ
-      = (rest.subst γ).lsubst0 (jb.subst (VSub.liftList ps γ)) :=
-  Tail.lsubst_subst rest (LSub.Comm.zero jb γ)
+/-- **Inlining a join point is meaning-preserving.**  The block in which the label has
+    been replaced by the block it names — with each jump's arguments bound in front of it
+    — has the same value as the block that binds the join point. -/
+theorem Tail.eval_lsubst0 {Γ : Ctx} {Ω : LCtx} {Ρ : RCtx} {ps : List Ty} {τ : Ty}
+    (rest : Tail Sg Γ (ps :: Ω) Ρ τ) (jb : Tail Sg (ps ++ Γ) Ω Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (lenv : LEnv τ Ω) (ρ : REnv Ρ) :
+    (rest.lsubst0 jb).eval δ γ lenv ρ = (Tail.join ps jb rest).eval δ γ lenv ρ := by
+  refine Tail.eval_lsubst rest (LSub.zero jb) δ γ _ lenv ρ ?_
+  intro qs l as
+  cases l with
+  | head => rfl
+  | tail l =>
+      show lenv.get l as
+          = (Tail.jmp (Ω := Ω) l (Spine.vars qs)).eval δ (as.append γ) lenv ρ
+      show lenv.get l as
+          = lenv.get l ((Spine.vars (Sg := Sg) (Γ := Γ) (Ρ := Ρ) qs).eval δ
+            (as.append γ) ρ)
+      rw [Spine.eval_vars as δ γ ρ]
 
 end LakeJs.Expr
 

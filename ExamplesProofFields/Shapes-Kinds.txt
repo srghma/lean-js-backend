@@ -1,0 +1,40 @@
+ExamplesProofFields.NTree.erase: structural recursion
+  clique     : [ExamplesProofFields.NTree.erase]
+  recArgPos  : 0
+  recursed-on argument type : ExamplesProofFields.NTree
+  erased (a proof)          : false
+  safety     : safe
+  compiled   : true
+
+ExamplesProofFields.Tag.erase: well-founded recursion
+  clique     : [ExamplesProofFields.Tag.erase]
+  packed     : ExamplesProofFields.Tag.erase
+  measure, via invImage:
+    fun x => x
+  safety     : safe
+  compiled   : true
+
+ExamplesProofFields.Rose.erase: well-founded recursion
+  clique     : [ExamplesProofFields.Rose.erase]
+  packed     : ExamplesProofFields.Rose.erase
+  measure, via invImage:
+    fun x => x
+  safety     : safe
+  compiled   : true
+
+ExamplesProofFields.PNode.erase: structural recursion
+  clique     : [ExamplesProofFields.PNode.erase, ExamplesProofFields.PForest.erase]
+  recArgPos  : 1
+  recursed-on argument type : ExamplesProofFields.PNode _fvar.2
+  erased (a proof)          : false
+  safety     : safe
+  compiled   : true
+
+ExamplesProofFields.PForest.erase: structural recursion
+  clique     : [ExamplesProofFields.PNode.erase, ExamplesProofFields.PForest.erase]
+  recArgPos  : 1
+  recursed-on argument type : ExamplesProofFields.PForest _fvar.4
+  erased (a proof)          : false
+  safety     : safe
+  compiled   : true
+

@@ -4,38 +4,40 @@ public import LakeJs.SN
 
 @[expose] public section
 
+set_option autoImplicit false
+
 /-!
-# The fragment the evaluator is total on
+# The fragment the evaluator is total on — which is now the whole language
 
-`LakeJs.Diverge` shows that no evaluator of the *whole* language is total: a `Tail.label`
-with `self = true` is the one construct that repeats work, and a loop whose body jumps
-back at once never answers.  `Term.simple` is the decidable check that a term stays out
-of that, and of the rest of the block grammar, which the totality proof does not cover:
+This module used to carve out `Term.simple`, a decidable check that a term stays out of
+the two places the totality proof of the time did not reach: the block grammar (because a
+label could be a loop, and a loop can diverge) and a field read whose result is a
+function (because the logical relation was not hereditary).  Only inside that fragment was
+the evaluator known to answer.
 
-* **no `Term.block`** — a loop is a label of a block, and that is the essential reason;
-  a label of either kind is also inlined at its jumps (`StepT.labelJoin`,
-  `StepT.labelLoop`), which duplicates the block, and the reducibility argument of
-  `LakeJs.Reducibility` is not carried through that duplication here;
-* **a field read answers with a value type**, i.e. a `Term.proj` whose result type is
-  neither a function type nor a delayed one (`Ty.ground`).  Reading a field takes a term
-  out from under a constructor, and the logical relation would have to hold of the
-  fields of every constructor to say anything about a function read out of a record;
-  that is what `USAGE_INDEX_ASSESSMENT.md`-style hereditary reducibility would buy and
-  what is left out here.  Reading a `Nat`, a `String`, an array or another record out of
-  a record is inside the fragment; reading a *function* out of one is not.
+Both restrictions are gone.
 
-Everything else — variables, functions, applications, literals, globals, the whole
-catalogue of runtime functions, delayed values, `let`, `if`, constructors, tag tests and
-dispatches — is inside it.
+* **The block grammar is safe.**  The one label is `Tail.join`, whose body is typed in
+  the outer label context, so a block is a finite nest of join points and repeats no work.
+  Repeating work is `Term.fix`, which carries its rank.
+* **There is no logical relation to be hereditary.**  `Term.eval` is a Lean function into
+  `Ty.den τ`, so a field read is `Ty.ofData` and nothing has to be proved about what it
+  answers.
+
+So the fragment is the whole language, and `Term.simple` is the constant `true` — which
+is why it is not defined here any more.  What is kept is the notion of a **value type**,
+`Ty.ground`, which the emitter still uses to tell a type whose values are data from one
+whose values are code, together with the fact that every type with a constructor is one.
 -/
 
 namespace LakeJs
 
 open LakeJs.Ty
 
-/-- A **value type**: one that is not a function type and not a delayed one.  An answer
-    at such a type is a literal or a constructor, and the evaluator needs nothing more of
-    it than that it runs out of steps. -/
+/-- A **value type**: one that is not a function type and not a delayed one.  A value of
+    such a type is data — a scalar, a constructor value, a sequence — and can be written
+    into a runtime tree; `Ty.storable` is the sharper form of the same idea, and this is
+    the shallow test the emitter uses. -/
 def Ty.ground : Ty → Bool
   | .fn _ _ => false
   | .primCovariant (.lazy _) => false
@@ -61,41 +63,11 @@ namespace Expr
 open LakeJs
 open LakeJs.Ty
 
-variable {Sg : Sig}
-
-mutual
-
-/-- **Is this term inside the fragment the evaluator is total on?**  See the header. -/
-def Term.simple {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty}, Term Sg Γ τ → Bool
-  | _, _, .var _ => true
-  | _, _, .lam b => b.simple
-  | _, _, .ap f a => f.simple && a.simple
-  | _, _, .lit _ => true
-  | _, _, .global _ => true
-  | _, _, .extern _ => true
-  | _, _, .lazyMk e => e.simple
-  | _, _, .lazyForce e => e.simple
-  | _, _, .letE e b => e.simple && b.simple
-  | _, _, .ite c t e => c.simple && t.simple && e.simple
-  | _, _, .ctor _ _ _ args => args.simple
-  | _, _, .proj (τ := τ) e _ _ _ _ => τ.ground && e.simple
-  | _, _, .tagOf e _ => e.simple
-  | _, _, .caseTag e alts _ => e.simple && alts.simple
-  | _, _, .block _ => false
-
-/-- Is every term of this spine inside the fragment? -/
-def Spine.simple {Sg : Sig} : ∀ {Γ : Ctx} {σs : List Ty}, Spine Sg Γ σs → Bool
-  | _, _, .nil => true
-  | _, _, .cons t rest => t.simple && rest.simple
-
-/-- Is every branch of this dispatch inside the fragment? -/
-def Alts.simple {Sg : Sig} : ∀ {Γ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool},
-    Alts Sg Γ τ tags full → Bool
-  | _, _, _, _, .deflt t => t.simple
-  | _, _, _, _, .nilFull => true
-  | _, _, _, _, .cons _ t rest => t.simple && rest.simple
-
-end
+/-- **Every term is inside the fragment**: the evaluator answers for all of them, blocks
+    and recursions included.  This is the statement `Term.simple` used to approximate. -/
+theorem Term.eval_defined {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {τ : Ty} (t : Term Sg Γ Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) : ∃ v : τ.den, t.eval δ γ ρ = v :=
+  ⟨t.eval δ γ ρ, rfl⟩
 
 end Expr
 

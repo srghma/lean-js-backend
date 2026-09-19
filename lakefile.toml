@@ -1,7 +1,8 @@
 name = "LakeJs"
 version = "0.1.0"
-defaultTargets = ["LakeJs", "lean-to-js-backend"]
-testDriver = "LakeJsTest"
+defaultTargets = ["LakeJs", "lakejs-expr-dump"]
+# testDriver = "LakeJsTest"   # the test run drives the JavaScript emitter, which is not
+#                               in this tree; the checks live in `LakeJs/Examples/`
 
 # [[require]]
 # name = "NonEmpty"
@@ -32,7 +33,10 @@ globs = ["LanguageJavascriptMini.+"]
 
 [[lean_lib]]
 name = "LakeJs"
-globs = ["LakeJs", "LakeJs.*"]
+# the root lists the modules of the library, so that `LakeJs/FromLcnf.lean` — the previous
+# front end, written against the old grammar and against emitter modules that are not in
+# this tree — is not built
+roots = ["LakeJs"]
 
 [[lean_lib]]
 name = "NonEmpty"
@@ -41,6 +45,10 @@ globs = ["NonEmpty.*"]
 [[lean_lib]]
 name = "SnapshotsPBOPure"
 globs = ["SnapshotsPBOPure.+"]
+
+[[lean_lib]]
+name = "SnapshotsPBOIO"
+globs = ["SnapshotsPBOIO.+"]
 
 [[lean_lib]]
 name = "SnapshotsPBOPartial"
@@ -54,14 +62,39 @@ globs = ["SnapshotsMy.+"]
 name = "LakeJsTestLib"
 globs = ["LakeJsTest.+"]
 
-[[lean_exe]]
-name = "LakeJsTest"
-root = "LakeJsTest.Main"
-supportInterpreter = true
-# the test run compiles the snapshots out of their `.olean`s, so they have to be built
-extraDepTargets = ["SnapshotsPBOPure", "SnapshotsPBOPartial", "SnapshotsMy"]
+[[lean_lib]]
+name = "ExamplesValidData"
+globs = ["ExamplesValidData.+"]
 
+[[lean_lib]]
+name = "ExamplesProofFields"
+globs = ["ExamplesProofFields.+"]
+
+# The test runner of the JavaScript emitter is left in place but not built: its root
+# (`LakeJsTest/Main.lean`) imports `LakeJs.Compile`, `LakeJs.EmitJs` and the other emitter
+# modules, which are not in this tree.  `Main.lean` is the Term-only driver and is built.
+#
+# [[lean_exe]]
+# name = "LakeJsTest"
+# root = "LakeJsTest.Main"
+# supportInterpreter = true
+# # the test run compiles the snapshots out of their `.olean`s, so they have to be built
+# extraDepTargets = ["SnapshotsPBOPure", "SnapshotsPBOPartial", "SnapshotsMy"]
+#
 [[lean_exe]]
 name = "lean-to-js-backend"
 root = "Main"
 supportInterpreter = true
+
+[[lean_exe]]
+name = "lakejs-expr-dump"
+root = "LakeJs.Examples.Dump"
+supportInterpreter = true
+
+[[lean_lib]]
+name = "RankFlakiness"
+globs = ["RankFlakiness.+"]
+
+[[lean_lib]]
+name = "ExamplesStackProfile"
+globs = ["ExamplesStackProfile.+"]

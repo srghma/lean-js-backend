@@ -82,7 +82,6 @@ def LeanInitPureExtern2OnlyPrim.eval : ∀ {a b c : LeanPrimTy},
   | _, _, _, .lean_int_mod, v, w => (Int.tmod v w)
   | _, _, _, .lean_int_ediv, v, w => (Int.ediv v w)
   | _, _, _, .lean_int_div, v, w => (Int.tdiv v w)
-  | _, _, _, .lean_nat_gcd, v, w => (Nat.gcd v w)
   | _, _, _, .lean_uint64_shift_left, v, w => (v <<< w)
   | _, _, _, .lean_uint32_mod, v, w => (v % w)
   | _, _, _, .lean_usize_land, v, w => (v &&& w)

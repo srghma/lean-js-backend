@@ -1,0 +1,63 @@
+════ 🎯 ExamplesProofFields.accDown
+def ExamplesProofFields.accDown n h : Nat :=
+  let _x.1 := 0;
+  let _x.2 := Nat.decLt _x.1 n;
+  cases _x.2 : Nat
+  | Decidable.isFalse hn =>
+    return _x.1
+  | Decidable.isTrue hn =>
+    let _x.3 := 1;
+    let _x.4 := Nat.sub n _x.3;
+    let _x.5 := ExamplesProofFields.accDown _x.4 ◾;
+    return _x.5
+
+════ 🎯 ExamplesProofFields.accDownRanked
+def ExamplesProofFields.accDownRanked n : Nat :=
+  let _x.1 := 0;
+  let _x.2 := Nat.decLt _x.1 n;
+  cases _x.2 : Nat
+  | Decidable.isFalse x.3 =>
+    return _x.1
+  | Decidable.isTrue x.4 =>
+    let _x.5 := 1;
+    let _x.6 := Nat.sub n _x.5;
+    let _x.7 := ExamplesProofFields.accDownRanked _x.6;
+    return _x.7
+
+════ 🎯 ExamplesProofFields.accDownRec
+def ExamplesProofFields.accDownRec n h : Nat :=
+  let _x.1 := Acc.recC._at_.ExamplesProofFields.accDownRec.spec_0 ◾ n ◾;
+  return _x.1
+
+════ 🎯 ExamplesProofFields.alwaysSeven
+def ExamplesProofFields.alwaysSeven n _h : Nat :=
+  let _x.1 := 7;
+  return _x.1
+
+════ 🎯 _private.ExamplesProofFields.Rejected.0.ExamplesProofFields.accDown.match_1.splitter
+def _private.ExamplesProofFields.Rejected.0.ExamplesProofFields.accDown.match_1.splitter n motive h.1 h_1 : motive
+  lcAny :=
+  let _x.2 := h_1 ◾;
+  return _x.2
+
+════ 📦 Nat.decLt
+def Nat.decLt @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.sub
+def Nat.sub @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Acc.recC._at_.ExamplesProofFields.accDownRec.spec_0
+def Acc.recC._at_.ExamplesProofFields.accDownRec.spec_0 r a t : Nat :=
+  let _x.1 := 0;
+  let _x.2 := Nat.decLt _x.1 a;
+  cases _x.2 : Nat
+  | Decidable.isFalse hx =>
+    return _x.1
+  | Decidable.isTrue hx =>
+    let _x.3 := 1;
+    let _x.4 := Nat.sub a _x.3;
+    let _x.5 := Acc.recC._at_.ExamplesProofFields.accDownRec.spec_0 ◾ _x.4 ◾;
+    return _x.5
+

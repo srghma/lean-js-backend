@@ -1,0 +1,115 @@
+════ 🎯 sumTo : (fn nat nat)
+fix (nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then 0# else ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ self0⟨↓⟩(((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ 1#)))
+} exhausted { 0# }
+
+════ 🎯 testEven : (fn nat bool)
+ƛ ((@parityMerged ⬝ 0#) ⬝ ♯0)
+
+════ 🎯 testOdd : (fn nat bool)
+ƛ ((@parityMerged ⬝ 1#) ⬝ ♯0)
+
+════ 📦 parity._mutual : (fn nat (fn nat bool))
+fix (nat nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 0#) then if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then true else false else self0⟨↓⟩(((extern⟨nat nat ⇒ nat⟩ ⬝ 1#) ⬝ ♯0), ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#))
+} exhausted { false }
+
+════ 🎯 sumList : (fn (list nat) nat)
+fix ((list nat)) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ size(♯0)) ⬝ 1#) } body {
+  case ♯0 of
+    | 0() => 0#
+    | 1(nat (list nat)) => ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ self0⟨↓⟩(♯1))
+
+} exhausted { 0# }
+
+════ 🎯 sharedTail : (fn nat nat)
+ƛ block {
+  join(nat) {
+    ret ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ ♯0)
+  } in {
+    if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then jmp ℓ0(1#) else jmp ℓ0(♯0)
+  }
+}
+
+════ 🎯 Nat.gcd : (fn nat (fn nat nat))
+fix (nat nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then ♯1 else self0⟨↓⟩(((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ ♯0), ♯0)
+} exhausted { 0# }
+
+════ 🎯 go : (fn nat nat)
+ƛ ((fix (nat nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 0#) then ♯1 else if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 100#) then self0⟨↓⟩(0#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else self0⟨↓⟩(1#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 100#) then self0⟨↓⟩(0#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 900#) then 42# else self0⟨↓⟩(1#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#))
+} exhausted { 0# } ⬝ 0#) ⬝ ♯0)
+
+════ 🎯 k : (fn nat nat)
+ƛ ((fix (nat nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 0#) then ♯1 else if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 100#) then self0⟨↓⟩(0#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else self0⟨↓⟩(1#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 100#) then self0⟨↓⟩(0#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 900#) then 42# else self0⟨↓⟩(1#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#))
+} exhausted { 0# } ⬝ 1#) ⬝ ♯0)
+
+════ 📦 go_k._mutual : (fn nat (fn nat nat))
+fix (nat nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 0#) then ♯1 else if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 100#) then self0⟨↓⟩(0#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else self0⟨↓⟩(1#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 100#) then self0⟨↓⟩(0#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 900#) then 42# else self0⟨↓⟩(1#, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#))
+} exhausted { 0# }
+
+════ 🎯 test1 : (fn int int)
+ƛ ((@test1._mutual ⬝ 0#) ⬝ ♯0)
+
+════ 🎯 test2 : (fn int int)
+ƛ ((@test1._mutual ⬝ 1#) ⬝ ♯0)
+
+════ 📦 test1._mutual : (fn nat (fn int int))
+fix (nat int) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ (extern⟨int ⇒ nat⟩ ⬝ ♯1)) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then if ((extern⟨int int ⇒ bool⟩ ⬝ ♯1) ⬝ 1i) then ♯1 else self0⟨↓⟩(1#, ((extern⟨int int ⇒ int⟩ ⬝ ♯1) ⬝ 1i)) else if ((extern⟨int int ⇒ bool⟩ ⬝ ♯1) ⬝ 2i) then ♯1 else self0⟨↓⟩(0#, ((extern⟨int int ⇒ int⟩ ⬝ ♯1) ⬝ 2i))
+} exhausted { 0i }
+
+════ 🎯 boom : (fn nat nat)
+fix (nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 1#) then 0# else self0⟨↓⟩(((extern⟨nat nat ⇒ nat⟩ ⬝ 3#) ⬝ ♯0))
+} exhausted { 0# }
+
+════ 🎯 Forest.len : (fn (list nat) nat)
+fix ((list nat)) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ size(♯0)) ⬝ 1#) } body {
+  case ♯0 of
+    | 0() => 0#
+    | 1(nat (list nat)) => ((extern⟨nat nat ⇒ nat⟩ ⬝ 1#) ⬝ self0⟨↓⟩(♯1))
+
+} exhausted { 0# }
+
+════ 📦 sumEven._mutual : (fn nat (fn (list nat) nat))
+fix (nat (list nat)) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ (@Forest.len ⬝ ♯1)) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then case ♯1 of
+    | 0() => 0#
+    | 1(nat (list nat)) => ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ self0⟨↓⟩(1#, ♯1))
+ else case ♯1 of
+    | 0() => 0#
+    | 1(nat (list nat)) => self0⟨↓⟩(0#, ♯1)
+
+} exhausted { 0# }
+
+════ 🎯 sumEven : (fn (list nat) nat)
+ƛ ((@sumEven._mutual ⬝ 0#) ⬝ ♯0)
+
+════ 🎯 sumOdd : (fn (list nat) nat)
+ƛ ((@sumEven._mutual ⬝ 1#) ⬝ ♯0)
+
+════ 🎯 span.go : (fn (array int) (fn nat (taggedUnion ()|(nat))))
+fix ((array int) nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ((extern⟨nat nat ⇒ nat⟩ ⬝ (extern⟨(array int) ⇒ nat⟩ ⬝ ♯0)) ⬝ ♯1)) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ (extern⟨(array int) ⇒ nat⟩ ⬝ ♯0)) then if ((extern⟨int int ⇒ bool⟩ ⬝ 0i) ⬝ ((extern⟨(array int) nat ⇒ int⟩ ⬝ ♯0) ⬝ ♯1)) then self0⟨↓⟩(♯0, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) else ctor1(nat)(♯1) else ctor0()()
+} exhausted { ctor0()() }
+
+════ 🎯 stringWalk.go : (fn string (fn nat (fn nat nat)))
+fix (string nat nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ((extern⟨nat nat ⇒ nat⟩ ⬝ (extern⟨string ⇒ nat⟩ ⬝ ♯0)) ⬝ ♯1)) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ (extern⟨string ⇒ nat⟩ ⬝ ♯0)) then self0⟨↓⟩(♯0, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#), ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯2) ⬝ ♯1)) else ♯2
+} exhausted { 0# }
+
+════ 🎯 double.go : (fn (array int) (fn nat (fn (array int) (array int))))
+fix ((array int) nat (array int)) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ((extern⟨nat nat ⇒ nat⟩ ⬝ (extern⟨(array int) ⇒ nat⟩ ⬝ ♯0)) ⬝ ♯1)) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ (extern⟨(array int) ⇒ nat⟩ ⬝ ♯0)) then self0⟨↓⟩(♯0, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#), ((extern⟨(array int) int ⇒ (array int)⟩ ⬝ ♯2) ⬝ ((extern⟨int int ⇒ int⟩ ⬝ 2i) ⬝ ((extern⟨(array int) nat ⇒ int⟩ ⬝ ♯0) ⬝ ♯1)))) else ♯2
+} exhausted { ♯2 }
+
+════ 🎯 ack : (fn nat (fn nat nat))
+fix (nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ 1#) } body {
+  if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then ƛ ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ 1#) else fix (nat) rank { ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ 1#) } body {
+    if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ 0#) then (self1⟨↓⟩(((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) ⬝ 1#) else (self1⟨↓⟩(((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ 1#)) ⬝ self0⟨↓⟩(((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ 1#)))
+  } exhausted { 0# }
+} exhausted { ƛ 0# }

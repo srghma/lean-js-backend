@@ -400,6 +400,10 @@ makes `.nat`, `.uint32`, `.bitvec 32`, … keep working in a position expecting 
 abbrev bool : Ty := .prim .bool
 /-- In JS: `number` or `bigint`. -/
 abbrev nat : Ty := .prim .nat
+/-- The argument types of a `k`-component lexicographic termination measure: `k` copies of
+    `nat`, most significant first.  This is the type at which `Term.fix` carries its
+    measure. -/
+abbrev nats (k : Nat) : List Ty := List.replicate k Ty.nat
 /-- In JS: `number` or `bigint`. -/
 abbrev int : Ty := .prim .int
 /-- In JS: `number` or `bigint`, by width. -/

@@ -1,0 +1,547 @@
+════ 🎯 ExamplesProofFields.NTree.ctorElim
+def ExamplesProofFields.NTree.ctorElim motive ctorIdx t h k : motive lcAny :=
+  cases t : lcAny
+  | ExamplesProofFields.NTree.leaf =>
+    let _x.1 := k # 0;
+    return _x.1
+  | ExamplesProofFields.NTree.node n h l r =>
+    let _x.2 := k # 0;
+    let _x.3 := _x.2 n ◾ l r;
+    return _x.3
+
+════ 🎯 ExamplesProofFields.NTree.ctorIdx
+def ExamplesProofFields.NTree.ctorIdx x : Nat :=
+  cases x : Nat
+  | ExamplesProofFields.NTree.leaf =>
+    let _x.1 := 0;
+    return _x.1
+  | ExamplesProofFields.NTree.node n h l r =>
+    let _x.2 := 1;
+    return _x.2
+
+════ 🎯 ExamplesProofFields.NTree.erase
+def ExamplesProofFields.NTree.erase x.1 : ExamplesProofFields.NTreeE :=
+  cases x.1 : ExamplesProofFields.NTreeE
+  | ExamplesProofFields.NTree.leaf =>
+    let _x.2 := ExamplesProofFields.NTreeE.leaf;
+    return _x.2
+  | ExamplesProofFields.NTree.node n.3 h.4 l.5 r.6 =>
+    let _x.7 := ExamplesProofFields.NTree.erase l.5;
+    let _x.8 := ExamplesProofFields.NTree.erase r.6;
+    let _x.9 := ExamplesProofFields.NTreeE.node n.3 _x.7 _x.8;
+    return _x.9
+
+════ 🎯 ExamplesProofFields.NTree.size
+def ExamplesProofFields.NTree.size x.1 : Nat :=
+  cases x.1 : Nat
+  | ExamplesProofFields.NTree.leaf =>
+    let _x.2 := 1;
+    return _x.2
+  | ExamplesProofFields.NTree.node n.3 h.4 l.5 r.6 =>
+    let _x.7 := 1;
+    let _x.8 := ExamplesProofFields.NTree.size l.5;
+    let _x.9 := Nat.add _x.7 _x.8;
+    let _x.10 := ExamplesProofFields.NTree.size r.6;
+    let _x.11 := Nat.add _x.9 _x.10;
+    return _x.11
+
+════ 🎯 ExamplesProofFields.NTreeE.ctorElim
+def ExamplesProofFields.NTreeE.ctorElim motive ctorIdx t h k : motive lcAny :=
+  cases t : lcAny
+  | ExamplesProofFields.NTreeE.leaf =>
+    let _x.1 := k # 0;
+    return _x.1
+  | ExamplesProofFields.NTreeE.node n l r =>
+    let _x.2 := k # 0;
+    let _x.3 := _x.2 n l r;
+    return _x.3
+
+════ 🎯 ExamplesProofFields.NTreeE.ctorIdx
+def ExamplesProofFields.NTreeE.ctorIdx x : Nat :=
+  cases x : Nat
+  | ExamplesProofFields.NTreeE.leaf =>
+    let _x.1 := 0;
+    return _x.1
+  | ExamplesProofFields.NTreeE.node n l r =>
+    let _x.2 := 1;
+    return _x.2
+
+════ 🎯 ExamplesProofFields.NTreeE.size
+def ExamplesProofFields.NTreeE.size x.1 : Nat :=
+  cases x.1 : Nat
+  | ExamplesProofFields.NTreeE.leaf =>
+    let _x.2 := 1;
+    return _x.2
+  | ExamplesProofFields.NTreeE.node n.3 l.4 r.5 =>
+    let _x.6 := 1;
+    let _x.7 := ExamplesProofFields.NTreeE.size l.4;
+    let _x.8 := Nat.add _x.6 _x.7;
+    let _x.9 := ExamplesProofFields.NTreeE.size r.5;
+    let _x.10 := Nat.add _x.8 _x.9;
+    return _x.10
+
+════ 🎯 ExamplesProofFields.PForest.ctorElim
+def ExamplesProofFields.PForest.ctorElim cap motive_2 ctorIdx t h k : motive_2 lcAny :=
+  cases t : lcAny
+  | ExamplesProofFields.PForest.nil h =>
+    let _x.1 := k # 0;
+    let _x.2 := _x.1 ◾;
+    return _x.2
+  | ExamplesProofFields.PForest.cons hd tl =>
+    let _x.3 := k # 0;
+    let _x.4 := _x.3 hd tl;
+    return _x.4
+
+════ 🎯 ExamplesProofFields.PForest.ctorIdx
+def ExamplesProofFields.PForest.ctorIdx cap x : Nat :=
+  cases x : Nat
+  | ExamplesProofFields.PForest.nil h =>
+    let _x.1 := 0;
+    return _x.1
+  | ExamplesProofFields.PForest.cons hd tl =>
+    let _x.2 := 1;
+    return _x.2
+
+════ 🎯 ExamplesProofFields.PForest.erase
+def ExamplesProofFields.PForest.erase cap x.1 : ExamplesProofFields.PForestE :=
+  cases x.1 : ExamplesProofFields.PForestE
+  | ExamplesProofFields.PForest.nil h.2 =>
+    let _x.3 := ExamplesProofFields.PForestE.nil;
+    return _x.3
+  | ExamplesProofFields.PForest.cons hd.4 tl.5 =>
+    let _x.6 := @ExamplesProofFields.PNode.erase cap hd.4;
+    let _x.7 := @ExamplesProofFields.PForest.erase cap tl.5;
+    let _x.8 := ExamplesProofFields.PForestE.cons _x.6 _x.7;
+    return _x.8
+
+════ 🎯 ExamplesProofFields.PForestE.ctorElim
+def ExamplesProofFields.PForestE.ctorElim motive_2 ctorIdx t h k : motive_2 lcAny :=
+  cases t : lcAny
+  | ExamplesProofFields.PForestE.nil =>
+    let _x.1 := k # 0;
+    return _x.1
+  | ExamplesProofFields.PForestE.cons hd tl =>
+    let _x.2 := k # 0;
+    let _x.3 := _x.2 hd tl;
+    return _x.3
+
+════ 🎯 ExamplesProofFields.PForestE.ctorIdx
+def ExamplesProofFields.PForestE.ctorIdx x : Nat :=
+  cases x : Nat
+  | ExamplesProofFields.PForestE.nil =>
+    let _x.1 := 0;
+    return _x.1
+  | ExamplesProofFields.PForestE.cons hd tl =>
+    let _x.2 := 1;
+    return _x.2
+
+════ 🎯 ExamplesProofFields.PNode.erase
+def ExamplesProofFields.PNode.erase cap x.1 : ExamplesProofFields.PNodeE :=
+  cases x.1 : ExamplesProofFields.PNodeE
+  | ExamplesProofFields.PNode.node label.2 h.3 kids.4 =>
+    let _x.5 := @ExamplesProofFields.PForest.erase cap kids.4;
+    let _x.6 := ExamplesProofFields.PNodeE.node label.2 _x.5;
+    return _x.6
+
+════ 🎯 ExamplesProofFields.Reading.ctorElim
+def ExamplesProofFields.Reading.ctorElim cap motive ctorIdx t h k : motive lcAny :=
+  cases t : lcAny
+  | ExamplesProofFields.Reading.missing h =>
+    let _x.1 := k # 0;
+    let _x.2 := _x.1 ◾;
+    return _x.2
+  | ExamplesProofFields.Reading.value v h =>
+    let _x.3 := k # 0;
+    let _x.4 := _x.3 v ◾;
+    return _x.4
+
+════ 🎯 ExamplesProofFields.Reading.ctorIdx
+def ExamplesProofFields.Reading.ctorIdx cap x : Nat :=
+  cases x : Nat
+  | ExamplesProofFields.Reading.missing h =>
+    let _x.1 := 0;
+    return _x.1
+  | ExamplesProofFields.Reading.value v h =>
+    let _x.2 := 1;
+    return _x.2
+
+════ 🎯 ExamplesProofFields.Reading.erase
+def ExamplesProofFields.Reading.erase cap x.1 : ExamplesProofFields.ReadingE :=
+  cases x.1 : ExamplesProofFields.ReadingE
+  | ExamplesProofFields.Reading.missing h.2 =>
+    let _x.3 := ExamplesProofFields.ReadingE.missing;
+    return _x.3
+  | ExamplesProofFields.Reading.value v.4 h.5 =>
+    let _x.6 := ExamplesProofFields.ReadingE.value v.4;
+    return _x.6
+
+════ 🎯 ExamplesProofFields.ReadingE.ctorElim
+def ExamplesProofFields.ReadingE.ctorElim motive ctorIdx t h k : motive lcAny :=
+  cases t : lcAny
+  | ExamplesProofFields.ReadingE.missing =>
+    let _x.1 := k # 0;
+    return _x.1
+  | ExamplesProofFields.ReadingE.value v =>
+    let _x.2 := k # 0;
+    let _x.3 := _x.2 v;
+    return _x.3
+
+════ 🎯 ExamplesProofFields.ReadingE.ctorIdx
+def ExamplesProofFields.ReadingE.ctorIdx x : Nat :=
+  cases x : Nat
+  | ExamplesProofFields.ReadingE.missing =>
+    let _x.1 := 0;
+    return _x.1
+  | ExamplesProofFields.ReadingE.value v =>
+    let _x.2 := 1;
+    return _x.2
+
+════ 🎯 ExamplesProofFields.Rose.erase
+def ExamplesProofFields.Rose.erase cap r : ExamplesProofFields.RoseE :=
+  let _x.1 := r # 0;
+  let sz := @Array.usize _ _x.1;
+  let _x.2 := 0;
+  let _x.3 := Array.mapMUnsafe.map._at_.ExamplesProofFields.Rose.erase.spec_0.2 cap sz _x.2 _x.1;
+  let _x.4 := ExamplesProofFields.RoseE.mk _x.3;
+  return _x.4
+
+════ 🎯 ExamplesProofFields.Status.ctorElim
+def ExamplesProofFields.Status.ctorElim n motive ctorIdx t h k : motive lcAny :=
+  cases t : lcAny
+  | ExamplesProofFields.Status.ok =>
+    let _x.1 := k # 0;
+    return _x.1
+  | ExamplesProofFields.Status.warn h =>
+    let _x.2 := k # 0;
+    let _x.3 := _x.2 ◾;
+    return _x.3
+  | ExamplesProofFields.Status.error h1 h2 =>
+    let _x.4 := k # 0;
+    let _x.5 := _x.4 ◾ ◾;
+    return _x.5
+
+════ 🎯 ExamplesProofFields.Status.ctorIdx
+def ExamplesProofFields.Status.ctorIdx n x : Nat :=
+  cases x : Nat
+  | ExamplesProofFields.Status.ok =>
+    let _x.1 := 0;
+    return _x.1
+  | ExamplesProofFields.Status.warn h =>
+    let _x.2 := 1;
+    return _x.2
+  | ExamplesProofFields.Status.error h1 h2 =>
+    let _x.3 := 2;
+    return _x.3
+
+════ 🎯 ExamplesProofFields.Status.erase
+def ExamplesProofFields.Status.erase n x.1 : ExamplesProofFields.StatusE :=
+  cases x.1 : ExamplesProofFields.StatusE
+  | ExamplesProofFields.Status.ok =>
+    let _x.2 := ExamplesProofFields.StatusE.ok;
+    return _x.2
+  | ExamplesProofFields.Status.warn h.3 =>
+    let _x.4 := ExamplesProofFields.StatusE.warn;
+    return _x.4
+  | ExamplesProofFields.Status.error h1.5 h2.6 =>
+    let _x.7 := ExamplesProofFields.StatusE.error;
+    return _x.7
+
+════ 🎯 ExamplesProofFields.StatusE.ctorElim
+def ExamplesProofFields.StatusE.ctorElim motive ctorIdx t h k : motive lcAny :=
+  let _x.1 := k # 0;
+  return _x.1
+
+════ 🎯 ExamplesProofFields.StatusE.ctorIdx
+def ExamplesProofFields.StatusE.ctorIdx x : Nat :=
+  cases x : Nat
+  | ExamplesProofFields.StatusE.ok =>
+    let _x.1 := 0;
+    return _x.1
+  | ExamplesProofFields.StatusE.warn =>
+    let _x.2 := 1;
+    return _x.2
+  | ExamplesProofFields.StatusE.error =>
+    let _x.3 := 2;
+    return _x.3
+
+════ 🎯 ExamplesProofFields.StatusE.toCtorIdx
+def ExamplesProofFields.StatusE.toCtorIdx x.1 : Nat :=
+  let _x.2 := ExamplesProofFields.StatusE.ctorIdx x.1;
+  return _x.2
+
+════ 🎯 ExamplesProofFields.Tag.erase
+def ExamplesProofFields.Tag.erase t : ExamplesProofFields.TagE :=
+  let _x.1 := t # 0;
+  let _x.2 := t # 2;
+  let sz := @Array.usize _ _x.2;
+  let _x.3 := 0;
+  let _x.4 := Array.mapMUnsafe.map._at_.ExamplesProofFields.Tag.erase.spec_0.2 sz _x.3 _x.2;
+  let _x.5 := ExamplesProofFields.TagE.mk _x.1 _x.4;
+  return _x.5
+
+════ 🎯 ExamplesProofFields.Window.erase
+def ExamplesProofFields.Window.erase cap w : ExamplesProofFields.WindowE :=
+  let _x.1 := w # 0;
+  let _x.2 := w # 1;
+  let _x.3 := ExamplesProofFields.WindowE.mk _x.1 _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.NTree.leaf.elim
+def ExamplesProofFields.NTree.leaf.elim motive t h leaf : motive lcAny :=
+  let _x.1 := 0;
+  let _x.2 := @PULift.up _ leaf;
+  let _x.3 := @ExamplesProofFields.NTree.ctorElim _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.NTree.node.elim
+def ExamplesProofFields.NTree.node.elim motive t h node : motive lcAny :=
+  let _x.1 := 1;
+  let _x.2 := @PULift.up _ node;
+  let _x.3 := @ExamplesProofFields.NTree.ctorElim _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.NTreeE.leaf.elim
+def ExamplesProofFields.NTreeE.leaf.elim motive t h leaf : motive lcAny :=
+  let _x.1 := 0;
+  let _x.2 := @PULift.up _ leaf;
+  let _x.3 := @ExamplesProofFields.NTreeE.ctorElim _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.NTreeE.node.elim
+def ExamplesProofFields.NTreeE.node.elim motive t h node : motive lcAny :=
+  let _x.1 := 1;
+  let _x.2 := @PULift.up _ node;
+  let _x.3 := @ExamplesProofFields.NTreeE.ctorElim _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.PForest.cons.elim
+def ExamplesProofFields.PForest.cons.elim cap motive_2 t h cons : motive_2 lcAny :=
+  let _x.1 := 1;
+  let _x.2 := @PULift.up _ cons;
+  let _x.3 := @ExamplesProofFields.PForest.ctorElim cap _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.PForest.nil.elim
+def ExamplesProofFields.PForest.nil.elim cap motive_2 t h nil : motive_2 lcAny :=
+  let _x.1 := 0;
+  let _x.2 := @PULift.up _ nil;
+  let _x.3 := @ExamplesProofFields.PForest.ctorElim cap _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.PForestE.cons.elim
+def ExamplesProofFields.PForestE.cons.elim motive_2 t h cons : motive_2 lcAny :=
+  let _x.1 := 1;
+  let _x.2 := @PULift.up _ cons;
+  let _x.3 := @ExamplesProofFields.PForestE.ctorElim _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.PForestE.nil.elim
+def ExamplesProofFields.PForestE.nil.elim motive_2 t h nil : motive_2 lcAny :=
+  let _x.1 := 0;
+  let _x.2 := @PULift.up _ nil;
+  let _x.3 := @ExamplesProofFields.PForestE.ctorElim _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.Reading.missing.elim
+def ExamplesProofFields.Reading.missing.elim cap motive t h missing : motive lcAny :=
+  let _x.1 := 0;
+  let _x.2 := @PULift.up _ missing;
+  let _x.3 := @ExamplesProofFields.Reading.ctorElim cap _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.Reading.value.elim
+def ExamplesProofFields.Reading.value.elim cap motive t h value : motive lcAny :=
+  let _x.1 := 1;
+  let _x.2 := @PULift.up _ value;
+  let _x.3 := @ExamplesProofFields.Reading.ctorElim cap _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.ReadingE.missing.elim
+def ExamplesProofFields.ReadingE.missing.elim motive t h missing : motive lcAny :=
+  let _x.1 := 0;
+  let _x.2 := @PULift.up _ missing;
+  let _x.3 := @ExamplesProofFields.ReadingE.ctorElim _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.ReadingE.value.elim
+def ExamplesProofFields.ReadingE.value.elim motive t h value : motive lcAny :=
+  let _x.1 := 1;
+  let _x.2 := @PULift.up _ value;
+  let _x.3 := @ExamplesProofFields.ReadingE.ctorElim _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.Status.error.elim
+def ExamplesProofFields.Status.error.elim n motive t h error : motive lcAny :=
+  let _x.1 := 2;
+  let _x.2 := @PULift.up _ error;
+  let _x.3 := @ExamplesProofFields.Status.ctorElim n _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.Status.ok.elim
+def ExamplesProofFields.Status.ok.elim n motive t h ok : motive lcAny :=
+  let _x.1 := 0;
+  let _x.2 := @PULift.up _ ok;
+  let _x.3 := @ExamplesProofFields.Status.ctorElim n _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.Status.warn.elim
+def ExamplesProofFields.Status.warn.elim n motive t h warn : motive lcAny :=
+  let _x.1 := 1;
+  let _x.2 := @PULift.up _ warn;
+  let _x.3 := @ExamplesProofFields.Status.ctorElim n _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.StatusE.error.elim
+def ExamplesProofFields.StatusE.error.elim motive t h error : motive lcAny :=
+  return error
+
+════ 🎯 ExamplesProofFields.StatusE.ok.elim
+def ExamplesProofFields.StatusE.ok.elim motive t h ok : motive lcAny :=
+  return ok
+
+════ 🎯 ExamplesProofFields.StatusE.warn.elim
+def ExamplesProofFields.StatusE.warn.elim motive t h warn : motive lcAny :=
+  return warn
+
+════ 🎯 _private.ExamplesProofFields.Shapes.0.Array.map_unattach.match_1.splitter
+def _private.ExamplesProofFields.Shapes.0.Array.map_unattach.match_1.splitter α P motive x.1 h_1 : motive lcAny :=
+  cases x.1 : motive lcAny
+  | Subtype.mk val.2 property.3 =>
+    let _x.4 := h_1 val.2 ◾;
+    return _x.4
+
+════ 🎯 _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.NTree.erase.match_1.splitter
+def _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.NTree.erase.match_1.splitter motive x.1 h_1 h_2 : motive
+  lcAny :=
+  cases x.1 : motive lcAny
+  | ExamplesProofFields.NTree.leaf =>
+    let _x.2 := PUnit.unit;
+    let _x.3 := h_1 _x.2;
+    return _x.3
+  | ExamplesProofFields.NTree.node n.4 h.5 l.6 r.7 =>
+    let _x.8 := h_2 n.4 ◾ l.6 r.7;
+    return _x.8
+
+════ 🎯 _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.NTreeE.size.match_1.splitter
+def _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.NTreeE.size.match_1.splitter motive x.1 h_1 h_2 : motive
+  lcAny :=
+  cases x.1 : motive lcAny
+  | ExamplesProofFields.NTreeE.leaf =>
+    let _x.2 := PUnit.unit;
+    let _x.3 := h_1 _x.2;
+    return _x.3
+  | ExamplesProofFields.NTreeE.node n.4 l.5 r.6 =>
+    let _x.7 := h_2 n.4 l.5 r.6;
+    return _x.7
+
+════ 🎯 _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.PForest.erase.match_1.splitter
+def _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.PForest.erase.match_1.splitter cap motive x.1 h_1 h_2 : motive
+  lcAny :=
+  cases x.1 : motive lcAny
+  | ExamplesProofFields.PForest.nil h.2 =>
+    let _x.3 := h_1 ◾;
+    return _x.3
+  | ExamplesProofFields.PForest.cons hd.4 tl.5 =>
+    let _x.6 := h_2 hd.4 tl.5;
+    return _x.6
+
+════ 🎯 _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.PNode.erase.match_1.splitter
+def _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.PNode.erase.match_1.splitter cap motive x.1 h_1 : motive
+  lcAny :=
+  cases x.1 : motive lcAny
+  | ExamplesProofFields.PNode.node label.2 h.3 kids.4 =>
+    let _x.5 := h_1 label.2 ◾ kids.4;
+    return _x.5
+
+════ 🎯 _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.Reading.erase.match_1.splitter
+def _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.Reading.erase.match_1.splitter cap motive x.1 h_1 h_2 : motive
+  lcAny :=
+  cases x.1 : motive lcAny
+  | ExamplesProofFields.Reading.missing h.2 =>
+    let _x.3 := h_1 ◾;
+    return _x.3
+  | ExamplesProofFields.Reading.value v.4 h.5 =>
+    let _x.6 := h_2 v.4 ◾;
+    return _x.6
+
+════ 🎯 _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.Status.erase.match_1.splitter
+def _private.ExamplesProofFields.Shapes.0.ExamplesProofFields.Status.erase.match_1.splitter n motive x.1 h_1 h_2 h_3 : motive
+  lcAny :=
+  cases x.1 : motive lcAny
+  | ExamplesProofFields.Status.ok =>
+    let _x.2 := PUnit.unit;
+    let _x.3 := h_1 _x.2;
+    return _x.3
+  | ExamplesProofFields.Status.warn h.4 =>
+    let _x.5 := h_2 ◾;
+    return _x.5
+  | ExamplesProofFields.Status.error h1.6 h2.7 =>
+    let _x.8 := h_3 ◾ ◾;
+    return _x.8
+
+════ 📦 Array.uget
+def Array.uget α @&xs i h : α :=
+  extern
+
+════ 📦 Array.uset
+def Array.uset α xs i v h : Array α :=
+  extern
+
+════ 📦 Array.usize
+def Array.usize α @&xs : USize :=
+  extern
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 USize.add
+def USize.add a b : USize :=
+  extern
+
+════ 📦 USize.decLt
+def USize.decLt a b : Decidable lcErased :=
+  extern
+
+════ 📦 instInhabitedNonScalar.default
+def instInhabitedNonScalar.default : NonScalar :=
+  let _x.1 := Nat.zero;
+  let _x.2 := NonScalar.mk _x.1;
+  return _x.2
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.ExamplesProofFields.Rose.erase.spec_0
+def _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.ExamplesProofFields.Rose.erase.spec_0 cap sz i bs : Array
+  PNonScalar :=
+  let _x.1 := USize.decLt i sz;
+  cases _x.1 : Array PNonScalar
+  | Decidable.isFalse x.2 =>
+    return bs
+  | Decidable.isTrue x.3 =>
+    let v := @Array.uget _ bs i ◾;
+    let _x.4 := instInhabitedNonScalar.default;
+    let bs' := @Array.uset _ bs i _x.4 ◾;
+    let _x.5 := @ExamplesProofFields.Rose.erase cap v;
+    let _x.6 := 1;
+    let _x.7 := USize.add i _x.6;
+    let _x.8 := @Array.uset _ bs' i _x.5 ◾;
+    let _x.9 := Array.mapMUnsafe.map._at_.ExamplesProofFields.Rose.erase.spec_0.2 cap sz _x.7 _x.8;
+    return _x.9
+
+════ 📦 _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.ExamplesProofFields.Tag.erase.spec_0
+def _private.Init.Data.Array.Basic.0.Array.mapMUnsafe.map._at_.ExamplesProofFields.Tag.erase.spec_0 sz i bs : Array
+  PNonScalar :=
+  let _x.1 := USize.decLt i sz;
+  cases _x.1 : Array PNonScalar
+  | Decidable.isFalse x.2 =>
+    return bs
+  | Decidable.isTrue x.3 =>
+    let v := @Array.uget _ bs i ◾;
+    let _x.4 := instInhabitedNonScalar.default;
+    let bs' := @Array.uset _ bs i _x.4 ◾;
+    let _x.5 := ExamplesProofFields.Tag.erase v;
+    let _x.6 := 1;
+    let _x.7 := USize.add i _x.6;
+    let _x.8 := @Array.uset _ bs' i _x.5 ◾;
+    let _x.9 := Array.mapMUnsafe.map._at_.ExamplesProofFields.Tag.erase.spec_0.2 sz _x.7 _x.8;
+    return _x.9
+

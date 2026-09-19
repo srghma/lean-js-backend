@@ -1,0 +1,79 @@
+ExamplesProofFields.NTree: recTaggedUnion
+  surviving fields per constructor : [0, 3]
+  members of the block             : [ExamplesProofFields.NTree]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.NTreeE: recTaggedUnion
+  surviving fields per constructor : [0, 3]
+  members of the block             : [ExamplesProofFields.NTreeE]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.PForest: mutualRecursiveFamily
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.PNode, ExamplesProofFields.PForest]
+  recursive (through a surviving field) : true, in a mutual cycle : true
+
+ExamplesProofFields.PForestE: mutualRecursiveFamily
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.PNodeE, ExamplesProofFields.PForestE]
+  recursive (through a surviving field) : true, in a mutual cycle : true
+
+ExamplesProofFields.PNode: mutualRecursiveFamily
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.PNode, ExamplesProofFields.PForest]
+  recursive (through a surviving field) : false, in a mutual cycle : true
+
+ExamplesProofFields.PNodeE: mutualRecursiveFamily
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.PNodeE, ExamplesProofFields.PForestE]
+  recursive (through a surviving field) : false, in a mutual cycle : true
+
+ExamplesProofFields.Reading: taggedUnion
+  surviving fields per constructor : [0, 1]
+  members of the block             : [ExamplesProofFields.Reading]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.ReadingE: taggedUnion
+  surviving fields per constructor : [0, 1]
+  members of the block             : [ExamplesProofFields.ReadingE]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Rose: recAlias (newtype)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Rose]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.RoseE: recAlias (newtype)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.RoseE]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Status: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [ExamplesProofFields.Status]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.StatusE: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [ExamplesProofFields.StatusE]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Tag: recObject
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Tag]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.TagE: recObject
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.TagE]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Window: record
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Window]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.WindowE: record
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.WindowE]
+  recursive (through a surviving field) : false, in a mutual cycle : false

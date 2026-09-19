@@ -1,5 +1,11 @@
 # `Term` terminating by construction: what was built, and why it looks like this
 
+> **Superseded.**  `LakeJs/TermC.lean`, the second grammar this document describes, has been
+> **removed**: the decision is now one grammar, with the recursion discipline intrinsic to it.
+> The file is still in git history.  For the current assessment and plan — why a loop construct
+> is not enough, what replaces `CTerm`, and which parts of the development below are reused —
+> see `TERM_ONE_GRAMMAR_ASSESSMENT.md`.
+
 The request was: **a term of the language should terminate by construction.**  It is now
 implemented, in `LakeJs/TermC.lean`, as the grammar `CTerm`, and the guarantee is a
 theorem with no side condition:

@@ -1,711 +1,380 @@
 module
 
-public import LakeJs.Subst
-public import LakeJs.ExternEval1
-public import LakeJs.ExternEval2
-public import LakeJs.ExternEvalMisc
+public import LakeJs.Expr
+public import LakeJs.ExternDen
+public import LakeJs.Lex
 
 @[expose] public section
 
+set_option autoImplicit false
+
 /-!
-# The evaluator: what a `Term` *means*
+# The evaluator: what a `Term` *means*, and why running one stops
 
-This module is the operational semantics of `LakeJs.Expr`, and nothing else.  There is no
-optimiser here: a `Term` is the language the front end produces, and what this file says
-is how one **runs**.
+This module is the semantics of `LakeJs.Expr`, and nothing else.  There is no optimiser
+here: a `Term` is the language the front end produces, and what this file says is how one
+**runs**.
 
-The semantics is a call-by-value small step relation, `Step` on terms and `StepT` on the
-tails of a block, whose central rule is **β**:
+The semantics is **denotational**: a term of type `τ` evaluates to an inhabitant of the
+Lean type `Ty.den τ` (`LakeJs.Den`).
 
 ```
-Step (.ap (.lam b) a) (b.subst0 a)      -- when `a` is a value
+Term.eval : Term Sg Γ Ρ τ → GEnv Sg.decls → Env Γ → REnv Ρ → τ.den
 ```
 
-with the other rules doing the same thing for the other binders and eliminators:
+and, for a closed term,
 
-| term                                        | steps to                                 |
-| :------------------------------------------ | :--------------------------------------- |
-| `(fun x => b) v`                             | `b[x := v]`                               |
-| `let x = v; b`                               | `b[x := v]`                               |
-| `if true then t else e`                      | `t`                                       |
-| `force (delay e)`                            | `e`                                       |
-| `(ctor 0 args).j`                            | `args[j]`                                 |
-| `tag (ctor i args)`                          | `i`                                       |
-| `case (ctor i args) of …`                    | the branch for `i`                        |
-| `block (ret t)`                              | `t`                                       |
-| `label l(ps) = body; rest` (shared tail)     | `rest` with every jump to `l` replaced    |
-| `label l(ps) = body; rest` (loop)            | the same, a jump re-entering the loop     |
+```
+Term.evalClosed (t : Term Sg [] [] τ) : τ.den
+```
 
-## One rule for both kinds of label
+* it takes **no fuel**;
+* it answers in `τ.den`, not in `Option` or an error monad — it never gets stuck, so
+  there is no progress theorem to prove and no neutral term to characterise;
+* it is neither `partial` nor `unsafe`, and it uses no `sorry` and no extra axiom.
 
-A label is bound by `Tail.label`, and it reduces by **substituting the label away**
-(`Tail.lsubst0`): every jump to it in the rest of the block becomes the block it names,
-with the arguments of the jump bound in front of it.  The two kinds of label differ only
-in *what* is substituted.
+That is the totality obligation of the plan, discharged **by construction**: the Lean
+kernel accepts `Term.eval` only because the definition is a structural recursion on the
+term, so the fact that running a term stops is the fact that the definition elaborates.
+A pleasant consequence is that terms also reduce *in the kernel*, so a check of what a
+term computes is `by rfl`.
 
-* A **shared tail** (`self = false`) is replaced by its body, which cannot jump to it.
-* A **loop** (`self = true`) is replaced by `Tail.loopEntry body`: the loop again, entered
-  with the arguments of the jump.  So a loop needs no unrolling rule of its own —
-  re-entering it *is* jumping to it — and a loop that never answers shows up as an
-  infinite reduction sequence, which is the honest statement: a self-label is the one
-  construct of this language that can fail to terminate, and no termination theorem is
-  claimed for it.
+## How the object language's recursion is run, and why it stops
 
-## Where the relation lives
+`Term.fix ps k measure body stuck` evaluates to the curried function that
 
-`Step` relates terms, and a term holds no labels at all, so nothing has to be said about
-free jumps.  `StepT` relates the tails of a block in the **empty** label context: a tail
-that jumps out of the block being run is a part of a program, not a program, and in the
-empty label context `Tail.jmp` has no target to name.
+1. evaluates `measure` in the environment of its own arguments, giving a `Lex.NatVec k` —
+   the **bound** this activation runs under;
+2. runs `body` with a self-reference which, at a call with arguments `bs`, evaluates the
+   measure again and
+   * recurses with the new value as the bound, if it is lexicographically **strictly
+     smaller** than the current one,
+   * and answers `stuck` if it is not.
 
-## Call by value, and the price of a control transfer
+That is `LakeJs.Lex.guardedFix`, and it terminates because the bound only ever descends in
+a well-founded order.  It is *not* run by `WellFounded.fix`: `LakeJs.Lex.LexRun` is built
+from `Nat.rec` and structural recursion on the number of components, so the kernel
+computes it and a check of what a term evaluates to is still `by rfl`.
 
-Every rule that substitutes asks first that what it substitutes is an answer: `Step.beta`
-asks `Value a` and `StepT.letV` asks `Value e`.  A jump does not substitute its arguments
-at all: `Tail.lsubst` binds every argument with a `let` in front of the block
-(`Tail.letSpine`), so a control transfer can neither duplicate a computation nor delay
-one.
+A `Term.selfCall` inside `body` can invoke nothing but that self-reference: the recursion
+environment holds a plain Lean function `Env ps → τ.den`, so the bound is not a value the
+term can see, name, replace or raise.  This is the sealed measure of the plan — and,
+unlike a counted rank, a *wrong* measure cannot make the term compute a wrong function: it
+can only make a call answer `stuck`, which is observable.
 
-## What is proved
+A tail recursion and a non-tail recursion are the same construct here: `body` may call
+`selfCall` in any position, because the self entry is an ordinary Lean function.
 
-* The answers are described by `Value`, and the ones the language cannot run any further
-  because they reach out of it — a reference to a top-level declaration, a variable, a
-  constant of the host platform — are `Neutral`.  A closed term over the empty
-  signature whose externs all have a meaning has no neutral subterm, and then `Value`
-  means what it should: a literal, a delayed value, a lambda, or a **constructor of one
-  of the schemas applied to values**.
-* `canonical_prim`, `canonical_fn`, `canonical_lazy`, `canonical_bool` and
-  `canonical_oneCtor` are the canonical-forms lemmas that say so: what an answer of each
-  shape of type can be.
-* `DeltaRedex.steps`: **a δ-redex takes a step** — a function of the runtime applied to
-  as many literals as it takes is never stuck.
-* `quickAp_steps`, `quickAp_steps_of_steps`, `not_neutral_quickAp`, `step_quickAp_inv`:
-  **hash-consing is erasure** — `lean_sharecommon_quick` answers its argument, at every
-  type, and an application of it is never an answer
-  (`SHARECOMMON_EMULATION.md`, option A).
-* The examples at the end of the file are proofs that `lean_nat_add 1 2` runs to `3`,
-  that `lean_float_sin 1.0` runs to the sine of `1.0`, and that a function of the runtime
-  waiting for a further argument is an answer.
+## Where the old small-step semantics went
 
-The progress theorem — *every* closed term is an answer or takes a step, with no shape
-left out — is `Term.progress`, in `LakeJs.Progress`.
+The previous version of this module was a call-by-value small-step relation (`Step`,
+`StepT`) whose central rule was β, together with a `Value`/`Neutral` characterisation, a
+progress theorem, a logical relation and a strong-normalisation proof for a *certified*
+fragment of the grammar — because the grammar of the time had a loop, and a loop can
+diverge.  The grammar has no loop any more (`Tail.join` cannot jump back to itself, and
+`Term.fix` carries its measure), so none of that machinery is needed: an ordinary Lean
+function is the evaluator, and its existence is the normalisation theorem.  See
+`LakeJs.Totality` for the statements, and `LakeJs.CertGen` for what became of the
+certificates.
 -/
 
 namespace LakeJs.Expr
 
 open LakeJs
 open LakeJs.Ty
+open LakeJs.Layout (FieldLayout)
 
-variable {Sg : Sig}
+/-! ## Environments -/
 
-/-! ## Reading a spine, and choosing a branch -/
+/-- A runtime environment: one value per entry of the variable context. -/
+inductive Env : Ctx → Type where
+  /-- The empty environment. -/
+  | nil : Env []
+  /-- One more value. -/
+  | cons : ∀ {τ Γ}, τ.den → Env Γ → Env (τ :: Γ)
 
-/-- The `j`-th term of a spine, at the type the list of types gives it. -/
-def Spine.get? {Γ : Ctx} :
-    ∀ {σs : List Ty} {τ : Ty}, Spine Sg Γ σs → (j : Nat) → σs[j]? = some τ →
-      Term Sg Γ τ
-  | _ :: _, _, .cons t _, 0, h => by
-      simp only [List.getElem?_cons_zero, Option.some.injEq] at h
-      exact h ▸ t
-  | _ :: _, _, .cons _ rest, j + 1, h => rest.get? j (by simpa using h)
+/-- Look a variable up in an environment. -/
+def Env.get : ∀ {Γ : Ctx} {τ : Ty}, Env Γ → Γ ∋ τ → τ.den
+  | _, _, .cons v _, .head => v
+  | _, _, .cons _ e, .tail x => e.get x
 
-/-- The branch a dispatch takes for tag `i`: the branch that tests it, the default branch
-    if none does — and, when the dispatch is exhaustive and so has no default branch, the
-    branch the coverage proof `hcov` says is there. -/
-def Alts.select {Γ : Ctx} {τ : Ty} :
-    ∀ {tags : List Nat} {full : Bool}, Alts Sg Γ τ tags full → (i : Nat) →
-      (hcov : full = true → i ∈ tags) → Term Sg Γ τ
-  | _, _, .deflt t, _, _ => t
-  | _, _, .nilFull, _, hcov => absurd (hcov rfl) (by simp)
-  | _, _, .cons tag t rest, i, hcov =>
-      if h : tag = i then t
-      else
-        rest.select i (fun hf => by
-          have hmem := hcov hf
-          rcases List.mem_cons.mp hmem with heq | hrest
-          · exact absurd heq.symm h
-          · exact hrest)
+/-- Concatenate environments, matching `List.append` on their contexts. -/
+def Env.append : ∀ {Γ Δ : Ctx}, Env Γ → Env Δ → Env (Γ ++ Δ)
+  | [], _, .nil, e => e
+  | _ :: _, _, .cons v vs, e => .cons v (vs.append e)
 
-/-- The same, for the branches of a dispatch inside a block. -/
-def AltsT.select {Γ : Ctx} {Ω : LCtx} {τ : Ty} :
-    ∀ {tags : List Nat} {full : Bool}, AltsT Sg Γ Ω τ tags full → (i : Nat) →
-      (hcov : full = true → i ∈ tags) → Tail Sg Γ Ω τ
-  | _, _, .deflt b, _, _ => b
-  | _, _, .nilFull, _, hcov => absurd (hcov rfl) (by simp)
-  | _, _, .cons tag b rest, i, hcov =>
-      if h : tag = i then b
-      else
-        rest.select i (fun hf => by
-          have hmem := hcov hf
-          rcases List.mem_cons.mp hmem with heq | hrest
-          · exact absurd heq.symm h
-          · exact hrest)
+/-- The environment that gives every entry of `Γ` its canonical inhabitant. -/
+def Env.dflt : (Γ : Ctx) → Env Γ
+  | [] => .nil
+  | τ :: Γ => .cons τ.dflt (Env.dflt Γ)
 
-/-! ## δ: running a function of the runtime
+/-- Read an environment out of a list of runtime trees, using the canonical inhabitant
+    where the list is too short.  This is how an alternative of a `case` binds the fields
+    of the constructor it matched. -/
+def Env.ofData : (Γ : Ctx) → List Data → Env Γ
+  | [], _ => .nil
+  | τ :: Γ, [] => .cons τ.dflt (Env.ofData Γ [])
+  | τ :: Γ, d :: ds => .cons (τ.ofData d) (Env.ofData Γ ds)
 
-`Term.extern` is a *curried* term, so a function of the runtime applied to all of its
-arguments is a tower of `Term.ap`s over it.  When every one of those arguments is a
-literal, the whole tower is a **δ-redex** and steps in one go to the literal of
-`e.eval …` — the catalogue's meaning of the entry at those values, which is a **total**
-function, so there is no side condition and no way for the evaluator to stop in front of
-a saturated call.  Nothing partial is a redex: `lean_nat_add 1` is a function still
-waiting for its second argument, and it is an answer. -/
+/-- Write an environment out as a list of runtime trees: the fields of a constructor. -/
+def Env.toData : ∀ {Γ : Ctx}, Env Γ → List Data
+  | [], _ => []
+  | _ :: _, .cons v vs => Ty.toData _ v :: vs.toData
 
-/-- A term the evaluator can run because it is a function of the runtime applied to as
-    many literals as it takes — or because it is `lean_sharecommon_quick` applied to
-    anything, which is the identity. -/
-inductive DeltaRedex {Γ : Ctx} : ∀ {τ : Ty}, Term Sg Γ τ → Prop
-  /-- A constant of the runtime.  (`LeanInitPureExternLazy` is empty today, so this
-      constructor has no instance; see `(‡)` in `LakeJs.LeanInitPureExterns`.) -/
-  | const {p : LeanPrimTy} (e : LeanInitPureExternLazy p) :
-      DeltaRedex (Term.extern (Sg := Sg) (Γ := Γ) (.const e))
-  /-- A one-argument function of the runtime, applied to a literal. -/
-  | prim1 {a b : LeanPrimTy} (e : LeanInitPureExtern1OnlyPrim a b) (l : LeanPrimLit a) :
-      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ) (.extern (.prim1 e)) (.lit l))
-  /-- A two-argument function of the runtime, applied to two literals. -/
-  | prim2 {a b c : LeanPrimTy} (e : LeanInitPureExtern2OnlyPrim a b c) (l1 : LeanPrimLit a)
-      (l2 : LeanPrimLit b) :
-      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ)
-        (.ap (.extern (.prim2 e)) (.lit l1)) (.lit l2))
-  /-- A three-argument function of the runtime, applied to three literals. -/
-  | prim3 {a b c d : LeanPrimTy} (e : LeanInitPureExtern3OnlyPrim a b c d)
-      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) (l3 : LeanPrimLit c) :
-      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ)
-        (.ap (.ap (.extern (.prim3 e)) (.lit l1)) (.lit l2)) (.lit l3))
-  /-- A five-argument function of the runtime, applied to five literals. -/
-  | prim5 {a b c d e' f : LeanPrimTy} (e : LeanInitPureExtern5 a b c d e' f)
-      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) (l3 : LeanPrimLit c) (l4 : LeanPrimLit d)
-      (l5 : LeanPrimLit e') :
-      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ)
-        (.ap (.ap (.ap (.ap (.extern (.prim5 e)) (.lit l1)) (.lit l2)) (.lit l3)) (.lit l4))
-        (.lit l5))
-  /-- **Hash-consing is the identity on values.**  `lean_sharecommon_quick` answers a
-      value equal to its argument — it only replaces subterms by copies already in the
-      runtime's table, which is invisible to this language — so it is a redex at *every*
-      type, not only at the terminal ones the `eval` tables speak about.  See
-      `SHARECOMMON_EMULATION.md`.
+/-- Turn a function of an environment into a curried function of its values. -/
+def Env.curry {τ : Ty} : (ps : Ctx) → (Env ps → τ.den) → (Ty.arrows ps τ).den
+  | [], f => f .nil
+  | _ :: ps, f => fun a => Env.curry ps (fun args => f (.cons a args))
 
-      Unlike the other five, this one does not ask that its argument is an answer.  It
-      cannot: `Neutral` asks that a term is *not* a δ-redex, so `DeltaRedex` occurs
-      negatively in it and cannot be defined together with `Value`.  Nothing is lost by
-      firing early, because the rule keeps the argument exactly as it is — the argument
-      is then evaluated where it stands, rather than under the identity. -/
-  | quick {τ : Ty} {t : Term Sg Γ τ} :
-      DeltaRedex (Term.ap (Sg := Sg) (Γ := Γ)
-        (.extern (.poly1 (.lean_sharecommon_quick τ))) t)
+/-- Apply a curried function to an environment of arguments. -/
+def Env.apply {τ : Ty} : ∀ {ps : Ctx}, (Ty.arrows ps τ).den → Env ps → τ.den
+  | [], f, .nil => f
+  | _ :: _, f, .cons a args => Env.apply (f a) args
 
-/-! ## Values, and where the language stops -/
+/-- `Env.curry` and `Env.apply` are inverse: currying loses nothing. -/
+theorem Env.apply_curry {τ : Ty} : ∀ {ps : Ctx} (f : Env ps → τ.den) (args : Env ps),
+    Env.apply (Env.curry ps f) args = f args
+  | [], _, .nil => rfl
+  | _ :: _, f, .cons a args => Env.apply_curry (fun rest => f (.cons a rest)) args
 
-mutual
+/-- The values of the module's top-level declarations. -/
+inductive GEnv : List GlobalDecl → Type where
+  /-- No declarations. -/
+  | nil : GEnv []
+  /-- One more declaration, with its value. -/
+  | cons : ∀ {g : GlobalDecl} {ds : List GlobalDecl}, g.ty.den → GEnv ds → GEnv (g :: ds)
 
-/-- A **neutral** term: one the language cannot run, because what it is waiting for is
-    outside the language.  A variable, a reference to a top-level declaration, a function
-    the runtime implements, and every eliminator applied to one of those. -/
-inductive Neutral {Γ : Ctx} : ∀ {τ : Ty}, Term Sg Γ τ → Prop
-  | var {τ : Ty} (v : Γ ∋ τ) : Neutral (.var v)
-  | global {τ : Ty} (r : GlobalRef Sg.decls τ) : Neutral (.global r)
-  | extern {σs : List Ty} {τ : Ty} (e : Externs σs τ)
-      (h : ¬ DeltaRedex (Term.extern (Sg := Sg) (Γ := Γ) e)) :
-      Neutral (.extern e)
-  | ap {σ τ : Ty} {f : Term Sg Γ (σ ⇒ τ)} {a : Term Sg Γ σ} :
-      Neutral f → Value a → ¬ DeltaRedex (.ap f a) → Neutral (.ap f a)
-  | proj {σ τ : Ty} {e : Term Sg Γ σ} (i j : Nat) (hOne : σ.numCtors? = some 1)
-      (h : σ.fieldTy? i j = some τ) : Neutral e → Neutral (.proj e i j hOne h)
-  | tagOf {σ : Ty} {e : Term Sg Γ σ} (h : σ.isTagged = true) :
-      Neutral e → Neutral (.tagOf e h)
-  | caseTag {σ τ : Ty} {tags : List Nat} {full : Bool} {e : Term Sg Γ σ}
-      {alts : Alts Sg Γ τ tags full} (h : σ.caseOkAlts full tags = true) :
-      Neutral e → Neutral (.caseTag e alts h)
-  | ite {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t e : Term Sg Γ τ} :
-      Neutral c → Neutral (.ite c t e)
-  | lazyForce {τ : Ty} {e : Term Sg Γ (.lazy τ)} : Neutral e → Neutral (.lazyForce e)
-  /-- A block whose tail waits for something outside the language.  A block that
-      *answers* is not neutral: `Step.blockRet` runs it. -/
-  | block {τ : Ty} {b : Tail Sg Γ [] τ} : TailNeutral b → Neutral (.block b)
+/-- Look a global up. -/
+def GEnv.get : ∀ {ds : List GlobalDecl} {τ : Ty}, GEnv ds → GlobalRef ds τ → τ.den
+  | _, _, .cons v _, .here => v
+  | _, _, .cons _ e, .there x => e.get x
 
-/-- A tail the evaluator cannot run: its head — the condition of a branch, the scrutinee
-    of a dispatch — is waiting for something outside the language.  Every other shape of
-    tail either answers (`Tail.ret`, which the enclosing block returns) or steps. -/
-inductive TailNeutral {Γ : Ctx} : ∀ {τ : Ty}, Tail Sg Γ [] τ → Prop
-  | iteT {τ : Ty} {c : Term Sg Γ (.prim .bool)} {t e : Tail Sg Γ [] τ} :
-      Neutral c → TailNeutral (.iteT c t e)
-  | caseT {σ τ : Ty} {tags : List Nat} {full : Bool} {e : Term Sg Γ σ}
-      {alts : AltsT Sg Γ [] τ tags full} (h : σ.caseOkAlts full tags = true) :
-      Neutral e → TailNeutral (.caseT e alts h)
+/-- The meanings of the join points in scope: each is a function of its arguments
+    answering the type the block answers with. -/
+inductive LEnv (τ : Ty) : LCtx → Type where
+  /-- No join points. -/
+  | nil : LEnv τ []
+  /-- One more join point. -/
+  | cons : ∀ {ps Ω}, (Env ps → τ.den) → LEnv τ Ω → LEnv τ (ps :: Ω)
 
-/-- An **answer**: a term the evaluator is done with. -/
-inductive Value {Γ : Ctx} : ∀ {τ : Ty}, Term Sg Γ τ → Prop
-  /-- A function. -/
-  | lam {σ τ : Ty} (b : Term Sg (σ :: Γ) τ) : Value (.lam b)
-  /-- A constant of a terminal type. -/
-  | lit {p : LeanPrimTy} (l : LeanPrimLit p) : Value (.lit l)
-  /-- A delayed value: what is inside is *not* run. -/
-  | lazyMk {τ : Ty} (e : Term Sg Γ τ) : Value (.lazyMk e)
-  /-- A constructor of one of the schemas, applied to answers.  A **boolean** is the
-      one type that has a layout and a literal both, and the literal is the answer:
-      `Step.ctorBool` turns a constructor of `Ty.bool` into `true` or `false`, so a
-      constructor at that type is not an answer. -/
-  | ctor {τ : Ty} (i : Nat) (fs : Layout.FieldLayout) (h : τ.ctorFields? i = some fs)
-      (hb : τ ≠ Ty.bool) {args : Spine Sg Γ fs} :
-      SpineValue args → Value (.ctor i fs h args)
-  /-- A term the language cannot run any further. -/
-  | neutral {τ : Ty} {t : Term Sg Γ τ} : Neutral t → Value t
+/-- Look up a join point. -/
+def LEnv.get : ∀ {τ : Ty} {Ω : LCtx} {ps : List Ty}, LEnv τ Ω → Ω ∋ₗ ps →
+    (Env ps → τ.den)
+  | _, _, _, .cons f _, .head => f
+  | _, _, _, .cons _ e, .tail x => e.get x
 
-/-- Every term of a spine is an answer. -/
-inductive SpineValue {Γ : Ctx} : ∀ {σs : List Ty}, Spine Sg Γ σs → Prop
-  | nil : SpineValue .nil
-  | cons {σ : Ty} {σs : List Ty} {t : Term Sg Γ σ} {rest : Spine Sg Γ σs} :
-      Value t → SpineValue rest → SpineValue (.cons t rest)
+/-- The meanings of the recursions in scope.  An entry is a plain Lean function,
+    so a term can call it and can do nothing else with it — in particular it cannot
+    inspect the measure that produced it, or ask for another one. -/
+inductive REnv : RCtx → Type where
+  /-- No recursions. -/
+  | nil : REnv []
+  /-- One more recursion. -/
+  | cons : ∀ {r : RSig} {Ρ}, (Env r.ps → r.ret.den) → REnv Ρ → REnv (r :: Ρ)
 
-end
+/-- Look up a recursion. -/
+def REnv.get : ∀ {Ρ : RCtx} {r : RSig}, REnv Ρ → Ρ ∋ᵣ r → (Env r.ps → r.ret.den)
+  | _, _, .cons f _, .head => f
+  | _, _, .cons _ e, .tail x => e.get x
 
-/-! ## The step relation -/
+/-- Read the value of a `k`-component measure out of the environment its spine evaluates
+    to: a `LakeJs.Lex.NatVec`, which is what the guard compares. -/
+def Env.toNatVec : (k : Nat) → Env (Ty.nats k) → Lex.NatVec k
+  | 0, _ => .nil
+  | k + 1, .cons a as => .cons (show Nat from a) (Env.toNatVec k as)
+
+/-! ## The evaluator -/
 
 mutual
 
-/-- One step of call-by-value evaluation. -/
-inductive Step {Γ : Ctx} : ∀ {τ : Ty}, Term Sg Γ τ → Term Sg Γ τ → Prop
-  /-- **β**. -/
-  | beta {σ τ : Ty} {b : Term Sg (σ :: Γ) τ} {a : Term Sg Γ σ} :
-      Value a → Step (.ap (.lam b) a) (b.subst0 a)
-  /-- **δ**: a constant of the runtime is its value, delayed.  (No instance today:
-      `LeanInitPureExternLazy` is empty, see `(‡)` in `LakeJs.LeanInitPureExterns`.) -/
-  | deltaConst {p : LeanPrimTy} (e : LeanInitPureExternLazy p) :
-      Step (Term.extern (.const e)) (.lazyMk (.lit (LeanPrimLit.ofVal p e.eval)))
-  /-- **δ**: a one-argument function of the runtime, run on a literal. -/
-  | deltaPrim1 {a b : LeanPrimTy} (e : LeanInitPureExtern1OnlyPrim a b) (l : LeanPrimLit a) :
-      Step (Term.ap (.extern (.prim1 e)) (.lit l)) (.lit (LeanPrimLit.ofVal b (e.eval l.val)))
-  /-- **δ**: a two-argument function of the runtime, run on two literals. -/
-  | deltaPrim2 {a b c : LeanPrimTy} (e : LeanInitPureExtern2OnlyPrim a b c)
-      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) :
-      Step (Term.ap (.ap (.extern (.prim2 e)) (.lit l1)) (.lit l2))
-        (.lit (LeanPrimLit.ofVal c (e.eval l1.val l2.val)))
-  /-- **δ**: a three-argument function of the runtime, run on three literals. -/
-  | deltaPrim3 {a b c d : LeanPrimTy} (e : LeanInitPureExtern3OnlyPrim a b c d)
-      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) (l3 : LeanPrimLit c) :
-      Step (Term.ap (.ap (.ap (.extern (.prim3 e)) (.lit l1)) (.lit l2)) (.lit l3))
-        (.lit (LeanPrimLit.ofVal d (e.eval l1.val l2.val l3.val)))
-  /-- **δ**: a five-argument function of the runtime, run on five literals. -/
-  | deltaPrim5 {a b c d e' f : LeanPrimTy} (e : LeanInitPureExtern5 a b c d e' f)
-      (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) (l3 : LeanPrimLit c) (l4 : LeanPrimLit d)
-      (l5 : LeanPrimLit e') :
-      Step (Term.ap (.ap (.ap (.ap (.ap (.extern (.prim5 e)) (.lit l1)) (.lit l2))
-        (.lit l3)) (.lit l4)) (.lit l5))
-        (.lit (LeanPrimLit.ofVal f (e.eval l1.val l2.val l3.val l4.val l5.val)))
-  /-- **δ at every type**: `lean_sharecommon_quick` is the identity on values.  Sharing
-      is a property of the runtime's representation, not of the value, so the term it
-      answers with is the term it was given.  See `SHARECOMMON_EMULATION.md`. -/
-  | quick {τ : Ty} {t : Term Sg Γ τ} :
-      Step (Term.ap (.extern (.poly1 (.lean_sharecommon_quick τ))) t) t
-  /-- Run the function of an application first. -/
-  | apFun {σ τ : Ty} {f f' : Term Sg Γ (σ ⇒ τ)} {a : Term Sg Γ σ} :
-      Step f f' → Step (.ap f a) (.ap f' a)
-  /-- Then its argument. -/
-  | apArg {σ τ : Ty} {f : Term Sg Γ (σ ⇒ τ)} {a a' : Term Sg Γ σ} :
-      Value f → Step a a' → Step (.ap f a) (.ap f a')
-  /-- A `let` of an answer is a substitution. -/
-  | letV {σ τ : Ty} {e : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ} :
-      Value e → Step (.letE e b) (b.subst0 e)
-  /-- Run what a `let` binds first. -/
-  | letStep {σ τ : Ty} {e e' : Term Sg Γ σ} {b : Term Sg (σ :: Γ) τ} :
-      Step e e' → Step (.letE e b) (.letE e' b)
-  /-- `if true`. -/
-  | iteTrue {τ : Ty} {t e : Term Sg Γ τ} :
-      Step (.ite (.lit (.bool true)) t e) t
-  /-- `if false`. -/
-  | iteFalse {τ : Ty} {t e : Term Sg Γ τ} :
-      Step (.ite (.lit (.bool false)) t e) e
-  /-- Run the condition first. -/
-  | iteCond {τ : Ty} {c c' : Term Sg Γ (.prim .bool)} {t e : Term Sg Γ τ} :
-      Step c c' → Step (.ite c t e) (.ite c' t e)
-  /-- Running a delayed value gives what was delayed.  **Unmemoised**: forcing the same
-      delay twice runs what it delays twice, exactly as `() => …` does in the target. -/
-  | force {τ : Ty} {e : Term Sg Γ τ} : Step (.lazyForce (.lazyMk e)) e
-  /-- Run what is being forced first. -/
-  | forceStep {τ : Ty} {e e' : Term Sg Γ (.lazy τ)} :
-      Step e e' → Step (.lazyForce e) (.lazyForce e')
-  /-- Reading a field of a constructor gives the field.  The type has one constructor
-      (`hOne`), so the constructor the value carries is the one the projection reads. -/
-  | projCtor {σ τ : Ty} {fs : Layout.FieldLayout} {args : Spine Sg Γ fs} {i j : Nat}
-      {hc : σ.ctorFields? i = some fs} {hOne : σ.numCtors? = some 1}
-      {h : σ.fieldTy? i j = some τ} (hg : fs[j]? = some τ) :
-      Step (.proj (.ctor i fs hc args) i j hOne h) (args.get? j hg)
-  /-- Run the value a field is read of first. -/
-  | projStep {σ τ : Ty} {e e' : Term Sg Γ σ} {i j : Nat}
-      {hOne : σ.numCtors? = some 1} {h : σ.fieldTy? i j = some τ} :
-      Step e e' → Step (.proj e i j hOne h) (.proj e' i j hOne h)
-  /-- The tag of a constructor is its number. -/
-  | tagOfCtor {σ : Ty} {fs : Layout.FieldLayout} {args : Spine Sg Γ fs} {i : Nat}
-      {hc : σ.ctorFields? i = some fs} {h : σ.isTagged = true} :
-      Step (.tagOf (.ctor i fs hc args) h) (.lit (.nat i))
-  /-- A boolean *is* the two-constructor sum, so it has a tag: `false` is `0`. -/
-  | tagOfBool {b : Bool} {h : Ty.bool.isTagged = true} :
-      Step (.tagOf (.lit (.bool b)) h) (.lit (.nat (if b then 1 else 0)))
-  /-- Run the value whose tag is read first. -/
-  | tagOfStep {σ : Ty} {e e' : Term Sg Γ σ} {h : σ.isTagged = true} :
-      Step e e' → Step (.tagOf e h) (.tagOf e' h)
-  /-- A dispatch on a constructor takes the branch for its tag. -/
-  | caseCtor {σ τ : Ty} {tags : List Nat} {full : Bool} {fs : Layout.FieldLayout}
-      {args : Spine Sg Γ fs} {i : Nat} {hc : σ.ctorFields? i = some fs}
-      {alts : Alts Sg Γ τ tags full} {h : σ.caseOkAlts full tags = true} :
-      Step (.caseTag (.ctor i fs hc args) alts h)
-        (alts.select i (Ty.mem_of_caseOkAlts h hc))
-  /-- A dispatch on a boolean takes the branch for `0` or for `1`. -/
-  | caseBool {τ : Ty} {tags : List Nat} {full : Bool} {b : Bool}
-      {alts : Alts Sg Γ τ tags full} {h : Ty.bool.caseOkAlts full tags = true} :
-      Step (.caseTag (.lit (.bool b)) alts h)
-        (alts.select (if b then 1 else 0)
-          (Ty.mem_of_caseOkAlts h (Ty.bool_ctorFields b)))
-  /-- Run the scrutinee first. -/
-  | caseStep {σ τ : Ty} {tags : List Nat} {full : Bool} {e e' : Term Sg Γ σ}
-      {alts : Alts Sg Γ τ tags full} {h : σ.caseOkAlts full tags = true} :
-      Step e e' → Step (.caseTag e alts h) (.caseTag e' alts h)
-  /-- A constructor of `Ty.bool` is a boolean literal: the two-constructor field-less
-      sum *is* the boolean, and `false`/`true` are its constructors `0`/`1`. -/
-  | ctorBool {i : Nat} {fs : Layout.FieldLayout} {h : Ty.bool.ctorFields? i = some fs}
-      {args : Spine Sg Γ fs} :
-      Step (.ctor i fs h args) (.lit (.bool (decide (i = 1))))
-  /-- Run the fields of a constructor. -/
-  | ctorStep {τ : Ty} {i : Nat} {fs : Layout.FieldLayout} {h : τ.ctorFields? i = some fs}
-      {args args' : Spine Sg Γ fs} :
-      SpineStep args args' → Step (.ctor i fs h args) (.ctor i fs h args')
-  /-- **Answer with the answer of the block.**  A block whose tail is `ret` is the term
-      that tail answers with; this is the one rule that leaves the block grammar. -/
-  | blockRet {τ : Ty} {t : Term Sg Γ τ} : Step (.block (.ret t)) t
-  /-- Run the tail of a block. -/
-  | blockStep {τ : Ty} {b b' : Tail Sg Γ [] τ} : StepT b b' → Step (.block b) (.block b')
+/-- Evaluate a term in an environment of globals, locals and recursions. -/
+def Term.eval {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {τ : Ty} (t : Term Sg Γ Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) : τ.den :=
+  match t with
+  | .var x => γ.get x
+  | .lam b => fun a => b.eval δ (.cons a γ) ρ
+  | .ap f a => (f.eval δ γ ρ) (a.eval δ γ ρ)
+  | .lit l => l.val
+  | .global r => δ.get r
+  | .extern e => e.den
+  | .lazyMk e => fun _ => e.eval δ γ ρ
+  | .lazyForce e => (e.eval δ γ ρ) ()
+  | .letE e b => b.eval δ (.cons (e.eval δ γ ρ) γ) ρ
+  | .ite c a b => if cond (c.eval δ γ ρ) true false then a.eval δ γ ρ else b.eval δ γ ρ
+  | .ctor (τ := σ) i _ _ s => σ.buildVal i (s.eval δ γ ρ).toData
+  | .proj (σ := σ) (τ := τ') e _ j _ _ =>
+      τ'.ofData ((σ.fieldsOfVal (e.eval δ γ ρ)).getD j .opaque)
+  | .tagOf (σ := σ) e _ => σ.tagOfVal (e.eval δ γ ρ)
+  | .structSize (σ := σ) e => Data.size (σ.toData (e.eval δ γ ρ))
+  | .caseTag (σ := σ) (τ := τ') scrut alts _ =>
+      let v := scrut.eval δ γ ρ
+      match alts.eval (σ.tagOfVal v) (σ.fieldsOfVal v) δ γ ρ with
+      | some r => r
+      | none => τ'.dflt
+  | .block b => b.eval δ γ .nil ρ
+  | .fix ps k measure body stuck =>
+      Env.curry ps fun args =>
+        Lex.guardedFix
+          (fun as => Env.toNatVec k (measure.eval δ (as.append γ) ρ))
+          (fun as => stuck.eval δ (as.append γ) ρ)
+          (fun g as => body.eval δ (as.append γ) (.cons g ρ))
+          args
+  | .selfCall r s => ρ.get r (s.eval δ γ ρ)
 
-/-- One step of the tail of a block, in the **empty** label context: there is nothing to
-    jump out to, so a `Tail.jmp` has no target here and every other shape either answers
-    or steps. -/
-inductive StepT {Γ : Ctx} : ∀ {τ : Ty}, Tail Sg Γ [] τ → Tail Sg Γ [] τ → Prop
-  /-- Run the term a block answers with. -/
-  | retStep {τ : Ty} {t t' : Term Sg Γ τ} : Step t t' → StepT (.ret t) (.ret t')
-  /-- A `let` of an answer is a substitution. -/
-  | letV {σ τ : Ty} {e : Term Sg Γ σ} {b : Tail Sg (σ :: Γ) [] τ} :
-      Value e → StepT (.letT e b) (b.subst0 e)
-  /-- Run what a `let` binds first. -/
-  | letStep {σ τ : Ty} {e e' : Term Sg Γ σ} {b : Tail Sg (σ :: Γ) [] τ} :
-      Step e e' → StepT (.letT e b) (.letT e' b)
-  /-- `if true`. -/
-  | iteTrue {τ : Ty} {t e : Tail Sg Γ [] τ} :
-      StepT (.iteT (.lit (.bool true)) t e) t
-  /-- `if false`. -/
-  | iteFalse {τ : Ty} {t e : Tail Sg Γ [] τ} :
-      StepT (.iteT (.lit (.bool false)) t e) e
-  /-- Run the condition first. -/
-  | iteCond {τ : Ty} {c c' : Term Sg Γ (.prim .bool)} {t e : Tail Sg Γ [] τ} :
-      Step c c' → StepT (.iteT c t e) (.iteT c' t e)
-  /-- A dispatch on a constructor takes the branch for its tag. -/
-  | caseCtor {σ τ : Ty} {tags : List Nat} {full : Bool} {fs : Layout.FieldLayout}
-      {args : Spine Sg Γ fs} {i : Nat} {hc : σ.ctorFields? i = some fs}
-      {alts : AltsT Sg Γ [] τ tags full} {h : σ.caseOkAlts full tags = true} :
-      StepT (.caseT (.ctor i fs hc args) alts h)
-        (alts.select i (Ty.mem_of_caseOkAlts h hc))
-  /-- A dispatch on a boolean takes the branch for `0` or for `1`. -/
-  | caseBool {τ : Ty} {tags : List Nat} {full : Bool} {b : Bool}
-      {alts : AltsT Sg Γ [] τ tags full} {h : Ty.bool.caseOkAlts full tags = true} :
-      StepT (.caseT (.lit (.bool b)) alts h)
-        (alts.select (if b then 1 else 0)
-          (Ty.mem_of_caseOkAlts h (Ty.bool_ctorFields b)))
-  /-- Run the scrutinee first. -/
-  | caseStep {σ τ : Ty} {tags : List Nat} {full : Bool} {e e' : Term Sg Γ σ}
-      {alts : AltsT Sg Γ [] τ tags full} {h : σ.caseOkAlts full tags = true} :
-      Step e e' → StepT (.caseT e alts h) (.caseT e' alts h)
-  /-- **A shared tail is inlined at its jumps.**  This is the β rule of the label
-      context: the rest of the block, with every jump to the label just bound replaced by
-      the block it names, the arguments of the jump bound in front of it by
-      `Tail.letSpine` rather than substituted into it. -/
-  | labelJoin {ps : List Ty} {τ : Ty} {body : Tail Sg (ps ++ Γ) [] τ}
-      {rest : Tail Sg Γ [ps] τ} :
-      StepT (.label false body rest) (rest.lsubst0 body)
-  /-- **A loop is re-entered at its jumps.**  The same rule, with the loop itself
-      substituted for the label (`Tail.loopEntry`): a jump to a self-label runs the loop
-      again with the arguments of the jump.  This is the one rule of the language that
-      can repeat work. -/
-  | labelLoop {ps : List Ty} {τ : Ty} {body : Tail Sg (ps ++ Γ) [ps] τ}
-      {rest : Tail Sg Γ [ps] τ} :
-      StepT (.label true body rest) (rest.lsubst0 (Tail.loopEntry body))
+/-- Evaluate a spine of arguments into an environment. -/
+def Spine.eval {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {σs : List Ty} (s : Spine Sg Γ Ρ σs)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) : Env σs :=
+  match s with
+  | .nil => .nil
+  | .cons a rest => .cons (a.eval δ γ ρ) (rest.eval δ γ ρ)
 
-/-- One step inside a spine, from the left. -/
-inductive SpineStep {Γ : Ctx} :
-    ∀ {σs : List Ty}, Spine Sg Γ σs → Spine Sg Γ σs → Prop
-  | head {σ : Ty} {σs : List Ty} {t t' : Term Sg Γ σ} {rest : Spine Sg Γ σs} :
-      Step t t' → SpineStep (.cons t rest) (.cons t' rest)
-  | tail {σ : Ty} {σs : List Ty} {t : Term Sg Γ σ} {rest rest' : Spine Sg Γ σs} :
-      Value t → SpineStep rest rest' → SpineStep (.cons t rest) (.cons t rest')
+/-- Find the branch for a tag and run it with the constructor's fields bound.  `none`
+    means the dispatch has no branch for that tag, which the grammar rules out: a
+    dispatch either has a default branch or is exhaustive. -/
+def Alts.eval {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {σ τ : Ty} {tags : List Nat} {full : Bool}
+    (alts : Alts Sg Γ Ρ σ τ tags full) (tag : Nat) (fs : List Data)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) : Option τ.den :=
+  match alts with
+  | .deflt e => some (e.eval δ γ ρ)
+  | .nilFull => none
+  | .cons t fields _ body rest =>
+      if t = tag then some (body.eval δ ((Env.ofData fields fs).append γ) ρ)
+      else rest.eval tag fs δ γ ρ
+
+/-- Evaluate a block. -/
+def Tail.eval {Sg : Sig} {Γ : Ctx} {Ω : LCtx} {Ρ : RCtx} {τ : Ty} (b : Tail Sg Γ Ω Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (lenv : LEnv τ Ω) (ρ : REnv Ρ) : τ.den :=
+  match b with
+  | .ret e => e.eval δ γ ρ
+  | .jmp l s => lenv.get l (s.eval δ γ ρ)
+  | .letT e rest => rest.eval δ (.cons (e.eval δ γ ρ) γ) lenv ρ
+  | .iteT c t e =>
+      if cond (c.eval δ γ ρ) true false then t.eval δ γ lenv ρ else e.eval δ γ lenv ρ
+  | .caseT (σ := σ) scrut alts _ =>
+      let v := scrut.eval δ γ ρ
+      match alts.eval (σ.tagOfVal v) (σ.fieldsOfVal v) δ γ lenv ρ with
+      | some r => r
+      | none => τ.dflt
+  | .join ps body rest =>
+      rest.eval δ γ
+        (.cons (fun (args : Env ps) => body.eval δ (args.append γ) lenv ρ) lenv) ρ
+
+/-- Find the branch for a tag in tail position. -/
+def AltsT.eval {Sg : Sig} {Γ : Ctx} {Ω : LCtx} {Ρ : RCtx} {σ τ : Ty} {tags : List Nat}
+    {full : Bool} (alts : AltsT Sg Γ Ω Ρ σ τ tags full) (tag : Nat) (fs : List Data)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (lenv : LEnv τ Ω) (ρ : REnv Ρ) : Option τ.den :=
+  match alts with
+  | .deflt b => some (b.eval δ γ lenv ρ)
+  | .nilFull => none
+  | .cons t fields _ body rest =>
+      if t = tag then
+        some (body.eval δ ((Env.ofData fields fs).append γ) lenv ρ)
+      else rest.eval tag fs δ γ lenv ρ
 
 end
 
-/-- Zero or more steps. -/
-inductive Steps {Γ : Ctx} {τ : Ty} : Term Sg Γ τ → Term Sg Γ τ → Prop
-  | refl {t} : Steps t t
-  | tail {t u v} : Steps t u → Step u v → Steps t v
+/-- **The value of a measure** at an argument list: the spine evaluated, read as a
+    lexicographic vector.  This is the only thing the guard compares. -/
+def Term.measureVal {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {ps : List Ty} {k : Nat}
+    (measure : Spine Sg (ps ++ Γ) Ρ (Ty.nats k))
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) (as : Env ps) : Lex.NatVec k :=
+  Env.toNatVec k (measure.eval δ (as.append γ) ρ)
 
-/-! ## Canonical forms
+/-- **The meaning of a recursion**, as a function of its arguments: the body run with a
+    self-reference that answers the recursion at `bs` when the measure of `bs` is
+    lexicographically smaller than the measure of the arguments of the activation the call
+    is made from, and `stuck` when it is not.  This is exactly what `Term.eval` does in the
+    `fix` case (`Term.eval_fix` below is `rfl`). -/
+def Term.fixFun {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {ps : List Ty} {τ : Ty} {k : Nat}
+    (measure : Spine Sg (ps ++ Γ) Ρ (Ty.nats k))
+    (body : Term Sg (ps ++ Γ) (⟨ps, τ⟩ :: Ρ) τ)
+    (stuck : Term Sg (ps ++ Γ) Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) : Env ps → τ.den :=
+  Lex.guardedFix (Term.measureVal measure δ γ ρ)
+    (fun as => stuck.eval δ (as.append γ) ρ)
+    (fun g as => body.eval δ (as.append γ) (.cons g ρ))
 
-What an answer of each shape of type can be.  These are what the progress proof runs
-on, and together they are the statement that an answer is a literal, a lambda, a delayed
-value or a constructor of one of the schemas — unless it is neutral, i.e. unless it is
-waiting for something outside the language. -/
+/-- Run a closed term.  No fuel, no `Option`: the answer is a Lean value. -/
+def Term.evalClosed {Sg : Sig} {τ : Ty} (t : Term Sg [] [] τ) (δ : GEnv Sg.decls) : τ.den :=
+  t.eval δ .nil .nil
 
-/-- A function type has no layout, so nothing can be built at one. -/
-theorem isTagged_fn (σ τ : Ty) : (σ ⇒ τ).isTagged = false := rfl
+/-- Run a term of a module with no declarations. -/
+def Term.run {τ : Ty} (t : Term ⟨[], by decide⟩ [] [] τ) : τ.den :=
+  t.eval .nil .nil .nil
 
-/-- An answer of function type is a lambda or neutral. -/
-theorem canonical_fn {Γ : Ctx} {σ τ : Ty} {t : Term Sg Γ (σ ⇒ τ)} :
-    Value t → (∃ b : Term Sg (σ :: Γ) τ, t = .lam b) ∨ Neutral t := by
-  intro hv
-  cases hv with
-  | lam b => exact Or.inl ⟨b, rfl⟩
-  | ctor i fs h _ _ => exact absurd h (by simp [Ty.ctorFields?, Ty.layout?])
-  | neutral hn => exact Or.inr hn
+/-! ### Running a closed term at a concrete type
 
-/-- An answer of a delayed type is a delay or neutral. -/
-theorem canonical_lazy {Γ : Ctx} {τ : Ty} {t : Term Sg Γ (.lazy τ)} :
-    Value t → (∃ e : Term Sg Γ τ, t = .lazyMk e) ∨ Neutral t := by
-  intro hv
-  cases hv with
-  | lazyMk e => exact Or.inl ⟨e, rfl⟩
-  | ctor i fs h _ _ => exact absurd h (by simp [Ty.ctorFields?, Ty.layout?])
-  | neutral hn => exact Or.inr hn
+`Ty.den` is a function, so Lean's elaborator will not look through it when it searches
+for a numeral's `OfNat` instance.  These wrappers do the looking: each is the identity,
+and each states the concrete Lean type of the answer. -/
 
-/-- An answer of a terminal type is a literal or neutral. -/
-theorem canonical_prim {Γ : Ctx} {p : LeanPrimTy} {t : Term Sg Γ (.prim p)} :
-    Value t → (∃ l : LeanPrimLit p, t = .lit l) ∨ Neutral t := by
-  intro hv
-  cases hv with
-  | lit l => exact Or.inl ⟨l, rfl⟩
-  | ctor i fs h hb _ =>
-      exact absurd h (by cases p <;> first
-        | exact absurd rfl hb
-        | simp [Ty.ctorFields?, Ty.layout?])
-  | neutral hn => exact Or.inr hn
+/-- Run a closed unary function on `Nat`s. -/
+def Term.runNat1 (t : Term ⟨[], by decide⟩ [] [] (.nat ⇒ .nat)) (n : Nat) : Nat :=
+  t.run n
 
-/-- An answer of a **boolean** type is `true`, `false`, or neutral: a boolean is the
-    two-constructor field-less sum, and `Term.ctor` can build one. -/
-theorem canonical_bool {Γ : Ctx} {t : Term Sg Γ Ty.bool} :
-    Value t → (∃ b : Bool, t = .lit (.bool b)) ∨ Neutral t := by
-  intro hv
-  rcases canonical_prim hv with ⟨l, rfl⟩ | hn
-  · cases l with
-    | bool b => exact Or.inl ⟨b, rfl⟩
-  · exact Or.inr hn
+/-- Run a closed binary function on `Nat`s. -/
+def Term.runNat2 (t : Term ⟨[], by decide⟩ [] [] (.nat ⇒ .nat ⇒ .nat)) (m n : Nat) :
+    Nat := t.run m n
 
-/-- **An answer of a type with exactly one constructor is that constructor, or neutral.**
-    This is the canonical-forms lemma `Term.proj` rests on: a record is built one way, so
-    reading a field of one is never stuck. -/
-theorem canonical_oneCtor {Γ : Ctx} {σ : Ty} {t : Term Sg Γ σ}
-    (hOne : σ.numCtors? = some 1) (hv : Value t) :
-    (∃ (fs : Layout.FieldLayout) (h : σ.ctorFields? 0 = some fs)
-      (args : Spine Sg Γ fs), t = .ctor 0 fs h args ∧ SpineValue args) ∨ Neutral t := by
-  cases hv with
-  | lam b => exact absurd hOne (by simp [Ty.numCtors?, Ty.layout?])
-  | lazyMk e => exact absurd hOne (by simp [Ty.numCtors?, Ty.layout?])
-  | lit l =>
-      exact absurd hOne (by
-        cases l <;> simp [Ty.numCtors?, Ty.layout?])
-  | ctor i fs h hb hsv =>
-      have hi : i = 0 := Ty.eq_zero_of_ctorFields?_of_numCtors?_one hOne h
-      subst hi
-      exact Or.inl ⟨fs, h, _, rfl, hsv⟩
-  | neutral hn => exact Or.inr hn
+/-- Run a closed predicate on `Nat`s. -/
+def Term.runNatBool (t : Term ⟨[], by decide⟩ [] [] (.nat ⇒ .bool)) (n : Nat) : Bool :=
+  t.run n
 
-/-- **A δ-redex takes a step**: a function of the runtime applied to as many literals as
-    it takes is never stuck. -/
-theorem DeltaRedex.steps {Γ : Ctx} {τ : Ty} {t : Term Sg Γ τ}
-    (h : DeltaRedex t) : ∃ t' : Term Sg Γ τ, Step t t' := by
-  cases h with
-  | const e => exact ⟨_, .deltaConst e⟩
-  | prim1 e l => exact ⟨_, .deltaPrim1 e l⟩
-  | prim2 e l1 l2 => exact ⟨_, .deltaPrim2 e l1 l2⟩
-  | prim3 e l1 l2 l3 => exact ⟨_, .deltaPrim3 e l1 l2 l3⟩
-  | prim5 e l1 l2 l3 l4 l5 => exact ⟨_, .deltaPrim5 e l1 l2 l3 l4 l5⟩
-  | quick => exact ⟨_, .quick⟩
+/-- Run a closed unary function on `Int`s. -/
+def Term.runInt1 (t : Term ⟨[], by decide⟩ [] [] (.int ⇒ .int)) (i : Int) : Int :=
+  t.run i
 
-/-! ## A saturated call of the runtime always runs
+/-! ## The equations of the recursion, as propositions -/
 
-Since every entry of the terminal families denotes a **total** function of the values of
-its arguments (`LakeJs.ExternEval1`, `LakeJs.ExternEval2`, `LakeJs.ExternEvalMisc`), the
-δ-rules carry no side condition, and a function of the runtime applied to as many
-literals as it takes is never an answer: it runs. -/
+section Equations
 
-/-- A one-argument function of the runtime, on a literal, runs. -/
-theorem steps_prim1 {Γ : Ctx} {a b : LeanPrimTy}
-    (e : LeanInitPureExtern1OnlyPrim a b) (l : LeanPrimLit a) :
-    ∃ t' : Term Sg Γ (.prim b), Step (Term.ap (.extern (.prim1 e)) (.lit l)) t' :=
-  (DeltaRedex.prim1 e l).steps
+variable {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {ps : List Ty} {τ : Ty}
 
-/-- A two-argument one, on two literals, runs. -/
-theorem steps_prim2 {Γ : Ctx} {a b c : LeanPrimTy}
-    (e : LeanInitPureExtern2OnlyPrim a b c) (l1 : LeanPrimLit a) (l2 : LeanPrimLit b) :
-    ∃ t' : Term Sg Γ (.prim c),
-      Step (Term.ap (.ap (.extern (.prim2 e)) (.lit l1)) (.lit l2)) t' :=
-  (DeltaRedex.prim2 e l1 l2).steps
+variable {k : Nat}
 
-/-- A three-argument one, on three literals, runs. -/
-theorem steps_prim3 {Γ : Ctx} {a b c d : LeanPrimTy}
-    (e : LeanInitPureExtern3OnlyPrim a b c d) (l1 : LeanPrimLit a) (l2 : LeanPrimLit b)
-    (l3 : LeanPrimLit c) :
-    ∃ t' : Term Sg Γ (.prim d),
-      Step (Term.ap (.ap (.ap (.extern (.prim3 e)) (.lit l1)) (.lit l2)) (.lit l3)) t' :=
-  (DeltaRedex.prim3 e l1 l2 l3).steps
+@[simp] theorem Term.eval_fix (measure : Spine Sg (ps ++ Γ) Ρ (Ty.nats k))
+    (body : Term Sg (ps ++ Γ) (⟨ps, τ⟩ :: Ρ) τ) (stuck : Term Sg (ps ++ Γ) Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) :
+    (Term.fix ps k measure body stuck).eval δ γ ρ =
+      Env.curry ps (Term.fixFun measure body stuck δ γ ρ) := rfl
 
-/-! ## Hash-consing is erasure
+/-- Applying a recursion to a full argument list. -/
+theorem Term.apply_eval_fix (measure : Spine Sg (ps ++ Γ) Ρ (Ty.nats k))
+    (body : Term Sg (ps ++ Γ) (⟨ps, τ⟩ :: Ρ) τ) (stuck : Term Sg (ps ++ Γ) Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) (args : Env ps) :
+    Env.apply ((Term.fix ps k measure body stuck).eval δ γ ρ) args =
+      Term.fixFun measure body stuck δ γ ρ args := by
+  rw [Term.eval_fix, Env.apply_curry]
 
-The one `ShareCommon` entry the catalogue keeps, `lean_sharecommon_quick`, is the
-identity on values (`SHARECOMMON_EMULATION.md`, option A).  Three facts say that the
-evaluator treats it as one: an application of it is never stuck, it answers exactly its
-argument, and it cannot delay or change what its argument answers. -/
+/-- **One unrolling.**  The recursion runs its body once, with a self-reference that is
+    the recursion itself at every *strictly smaller* measure and `stuck` everywhere else.
+    This is the equation every faithfulness proof uses, and the only one there is: no fuel
+    and no iteration count occurs in it. -/
+theorem Term.fixFun_unfold (measure : Spine Sg (ps ++ Γ) Ρ (Ty.nats k))
+    (body : Term Sg (ps ++ Γ) (⟨ps, τ⟩ :: Ρ) τ) (stuck : Term Sg (ps ++ Γ) Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) (args : Env ps) :
+    Term.fixFun measure body stuck δ γ ρ args =
+      body.eval δ (args.append γ)
+        (.cons (fun bs =>
+            if (Term.measureVal measure δ γ ρ bs).lt (Term.measureVal measure δ γ ρ args)
+            then Term.fixFun measure body stuck δ γ ρ bs
+            else stuck.eval δ (bs.append γ) ρ) ρ) :=
+  Lex.guardedFix_unfold _ _ _ args
 
-/-- The term `lean_sharecommon_quick t`. -/
-abbrev quickAp {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ) : Term Sg Γ τ :=
-  .ap (.extern (.poly1 (.lean_sharecommon_quick τ))) t
+/-- **A self call that does not descend answers `stuck`.**  This is the failure mode of a
+    mistranslated measure: an observable value, not a wrong one and not a hang. -/
+theorem Term.fixFun_stuck_of_not_lt (measure : Spine Sg (ps ++ Γ) Ρ (Ty.nats k))
+    (body : Term Sg (ps ++ Γ) (⟨ps, τ⟩ :: Ρ) τ) (stuck : Term Sg (ps ++ Γ) Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) (args bs : Env ps)
+    (h : ¬ Lex.NatVec.Lt (Term.measureVal measure δ γ ρ bs)
+            (Term.measureVal measure δ γ ρ args)) :
+    (if (Term.measureVal measure δ γ ρ bs).lt (Term.measureVal measure δ γ ρ args)
+     then Term.fixFun measure body stuck δ γ ρ bs
+     else stuck.eval δ (bs.append γ) ρ) = stuck.eval δ (bs.append γ) ρ := by
+  rw [(Lex.NatVec.lt_eq_false_iff _ _).mpr h]
+  rfl
 
-/-- Reductions compose. -/
-theorem Steps.trans {Γ : Ctx} {τ : Ty} {t u v : Term Sg Γ τ}
-    (h1 : Steps t u) (h2 : Steps u v) : Steps t v := by
-  induction h2 with
-  | refl => exact h1
-  | tail _ s ih => exact .tail ih s
-
-/-- **`lean_sharecommon_quick` is erased**: the application reduces to its argument. -/
-theorem quickAp_steps {Γ : Ctx} {τ : Ty} {t : Term Sg Γ τ} :
-    Steps (quickAp t) t :=
-  .tail .refl .quick
-
-/-- **Erasure is observationally sound**: whatever the argument reduces to, the
-    application reduces to as well — in particular to the same answer. -/
-theorem quickAp_steps_of_steps {Γ : Ctx} {τ : Ty} {t u : Term Sg Γ τ}
-    (h : Steps t u) : Steps (quickAp t) u :=
-  quickAp_steps.trans h
-
-/-- **The evaluator never stops in front of it**: an application of
-    `lean_sharecommon_quick` is not neutral, so it is an answer at no type. -/
-theorem not_neutral_quickAp {Γ : Ctx} {τ : Ty} {t : Term Sg Γ τ} :
-    ¬ Neutral (Sg := Sg) (quickAp t) := by
-  intro h
-  cases h with
-  | ap _ _ hnd => exact hnd .quick
-
-/-- **Nothing else can happen at that head**: a step of `lean_sharecommon_quick t` either
-    erases the application, or is a step of the argument under it.  With the previous
-    theorem this is the whole content of erasure: the application answers what the
-    argument answers, by whichever order the two rules are taken. -/
-theorem step_quickAp_inv {Γ : Ctx} {τ : Ty} {t s : Term Sg Γ τ}
-    (h : Step (quickAp t) s) :
-    s = t ∨ ∃ t' : Term Sg Γ τ, s = quickAp t' ∧ Step t t' := by
-  cases h with
-  | quick => exact Or.inl rfl
-  | apArg _ hs => exact Or.inr ⟨_, rfl, hs⟩
-  | apFun hs => cases hs
-
-/-! ## The evaluator really does run the functions of the runtime
-
-Three examples, each a proof rather than a test: the term on the left steps to the
-literal on the right, and `rfl` is what checks that the catalogue's meaning of the entry
-at those values is that literal. -/
-
-section Examples
-
-/-- The empty signature: these examples mention no top-level declaration. -/
-private def sigNone : Sig := ⟨[], rfl⟩
-
-/-- `lean_nat_add 1 2` runs to `3`. -/
-example :
-    Step (Sg := sigNone) (Γ := [])
-      (.ap (.ap (.extern (.prim2 .lean_nat_add)) (.lit (.nat 1))) (.lit (.nat 2)))
-      (.lit (.nat 3)) :=
-  .deltaPrim2 .lean_nat_add (.nat 1) (.nat 2)
-
-/-- `lean_float_sin 1.0` runs to the sine of `1.0`. -/
-example :
-    Step (Sg := sigNone) (Γ := [])
-      (.ap (.extern (.prim1 .sin)) (.lit (.float 1.0)))
-      (.lit (.float (Float.sin 1.0))) :=
-  .deltaPrim1 .sin (.float 1.0)
-
-/-- `lean_string_append "ab" "c"` runs to `"abc"`. -/
-example :
-    Step (Sg := sigNone) (Γ := [])
-      (.ap (.ap (.extern (.prim2 .lean_string_append)) (.lit (.string "ab")))
-        (.lit (.string "c")))
-      (.lit (.string ("ab" ++ "c"))) :=
-  .deltaPrim2 .lean_string_append (.string "ab") (.string "c")
-
-/-- `lean_sharecommon_quick 3` runs to `3`: sharing a value is the value. -/
-example :
-    Step (Sg := sigNone) (Γ := [])
-      (.ap (.extern (.poly1 (.lean_sharecommon_quick (.prim .nat)))) (.lit (.nat 3)))
-      (.lit (.nat 3)) :=
-  .quick
-
-/-! ### What a jump does with its arguments
-
-Two examples of the rule that keeps a control transfer call-by-value: **every** argument
-is bound by a `let` in front of the block, so it is run once, before the block, whatever
-it is. -/
-
-/-- `Term.sharedTail` jumps with literals, and inlining its label binds each of them in
-    front of the block it names, once per jump. -/
-example :
-    Step (Sg := sigNone) (Γ := [Ty.bool]) Term.sharedTail
-      (.block (.iteT (♯0)
-        (.letT (.lit (.nat 1)) (.ret (♯0)))
-        (.letT (.lit (.nat 2)) (.ret (♯0))))) :=
-  .blockStep .labelJoin
-
-/-- A jump whose argument is a computation: `lean_nat_add 1 2`. -/
-private def jumpComputed : Term sigNone [] Ty.nat :=
-  .block
-    (.label (ps := [Ty.nat]) false (.ret (♯0))
-      (.jmp .head (.cons (Term.callExtern (.prim2 .lean_nat_add)
-        (.cons (.lit (.nat 1)) (.cons (.lit (.nat 2)) .nil))) .nil)))
-
-/-- Inlining that label **binds** the argument rather than copying it into the block: the
-    computation is run once, where the jump stood. -/
-example :
-    Step (Sg := sigNone) (Γ := []) jumpComputed
-      (.block (.letT (Term.callExtern (.prim2 .lean_nat_add)
-        (.cons (.lit (.nat 1)) (.cons (.lit (.nat 2)) .nil))) (.ret (♯0)))) :=
-  .blockStep .labelJoin
-
-/-! ### A loop is a label jumped to from its own body
-
-`Term.tco01` is the `Tco01` snapshot by hand.  Its block is one self-label, entered by a
-jump; the step below is the one that substitutes the loop for the label, after which the
-jump that entered it has become the loop, run on the argument. -/
-
-/-- The loop of `Term.tco01`, entered: the block steps, and what it steps to is again a
-    block with the same label. -/
-example :
-    ∃ u : Term sigNone [Ty.nat] Ty.nat,
-      Step (Sg := sigNone) (Γ := [Ty.nat])
-        (.block (Tail.label (ps := [Ty.nat]) true
-          (.iteT (Term.callExtern (.prim2 .lean_nat_dec_eq)
-              (.cons (♯0) (.cons (.lit (.nat 0)) .nil)))
-            (.ret (♯0))
-            (.jmp .head (.cons (Term.callExtern (.prim2 .lean_nat_sub)
-              (.cons (♯0) (.cons (.lit (.nat 1)) .nil))) .nil)))
-          (.jmp .head (.cons (♯0) .nil)))) u :=
-  ⟨_, .blockStep .labelLoop⟩
-
-/-- **A shared tail that continues an enclosing loop runs too.**  `Term.sharedTailInLoop`
-    is the program the two-construct grammar could not express: a label bound inside a
-    loop's body whose block jumps back to the loop.  Its block steps, by substituting the
-    loop for its own label. -/
-example :
-    ∃ u : Term sigNone [Ty.nat] Ty.nat,
-      Step (Sg := sigNone) (Γ := [Ty.nat]) Term.sharedTailInLoop u :=
-  ⟨_, .blockStep .labelLoop⟩
-
-/-- A function of the runtime that is still waiting for an argument is an answer: only a
-    *saturated* application is a δ-redex. -/
-example : ¬ DeltaRedex (Sg := sigNone) (Γ := [])
-    (.extern (.prim2 .lean_nat_add)) := by
-  intro h; cases h
-
-end Examples
+end Equations
 
 end LakeJs.Expr
 

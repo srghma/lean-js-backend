@@ -1,0 +1,284 @@
+ExamplesProofFields.Variants.Enum.V1: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [ExamplesProofFields.Variants.Enum.V1]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Enum.V2: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [ExamplesProofFields.Variants.Enum.V2]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Enum.V3: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [ExamplesProofFields.Variants.Enum.V3]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Enum.V4: enum
+  surviving fields per constructor : [0, 0, 0, 0]
+  members of the block             : [ExamplesProofFields.Variants.Enum.V4]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Enum.V5: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [ExamplesProofFields.Variants.Enum.V5]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Enum.V6: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [ExamplesProofFields.Variants.Enum.V6]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Enum.V7: bool
+  surviving fields per constructor : [0, 0]
+  members of the block             : [ExamplesProofFields.Variants.Enum.V7]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Family.F1: mutualRecursiveFamily
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N1, ExamplesProofFields.Variants.Family.F1]
+  recursive (through a surviving field) : true, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.F2: mutualRecursiveFamily
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N2, ExamplesProofFields.Variants.Family.F2]
+  recursive (through a surviving field) : true, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.F3: mutualRecursiveFamily
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N3, ExamplesProofFields.Variants.Family.F3]
+  recursive (through a surviving field) : true, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.F4: mutualRecursiveFamily
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N4, ExamplesProofFields.Variants.Family.F4]
+  recursive (through a surviving field) : true, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.F5: mutualRecursiveFamily
+  surviving fields per constructor : [0, 2, 2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N5, ExamplesProofFields.Variants.Family.F5, ExamplesProofFields.Variants.Family.T5]
+  recursive (through a surviving field) : true, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.F6: mutualRecursiveFamily
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N6, ExamplesProofFields.Variants.Family.F6]
+  recursive (through a surviving field) : true, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.F7: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [ExamplesProofFields.Variants.Family.N7, ExamplesProofFields.Variants.Family.F7]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Family.N1: mutualRecursiveFamily
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N1, ExamplesProofFields.Variants.Family.F1]
+  recursive (through a surviving field) : false, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.N2: mutualRecursiveFamily
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N2, ExamplesProofFields.Variants.Family.F2]
+  recursive (through a surviving field) : false, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.N3: mutualRecursiveFamily
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N3, ExamplesProofFields.Variants.Family.F3]
+  recursive (through a surviving field) : false, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.N4: mutualRecursiveFamily
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N4, ExamplesProofFields.Variants.Family.F4]
+  recursive (through a surviving field) : false, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.N5: mutualRecursiveFamily
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N5, ExamplesProofFields.Variants.Family.F5, ExamplesProofFields.Variants.Family.T5]
+  recursive (through a surviving field) : false, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.N6: mutualRecursiveFamily
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Family.N6, ExamplesProofFields.Variants.Family.F6]
+  recursive (through a surviving field) : false, in a mutual cycle : true
+
+ExamplesProofFields.Variants.Family.N7: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Variants.Family.N7, ExamplesProofFields.Variants.Family.F7]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Family.T5: mutualRecursiveFamily
+  surviving fields per constructor : [1, 1]
+  members of the block             : [ExamplesProofFields.Variants.Family.N5, ExamplesProofFields.Variants.Family.F5, ExamplesProofFields.Variants.Family.T5]
+  recursive (through a surviving field) : false, in a mutual cycle : true
+
+ExamplesProofFields.Variants.RecAlias.V1: recAlias (newtype)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Variants.RecAlias.V1]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecAlias.V2: recAlias (newtype)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Variants.RecAlias.V2]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecAlias.V3: recAlias (newtype)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Variants.RecAlias.V3]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecAlias.V4: recAlias (newtype)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Variants.RecAlias.V4]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecAlias.V5: recAlias (newtype)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Variants.RecAlias.V5]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecAlias.V6: recAlias (newtype)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Variants.RecAlias.V6]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecAlias.V7: recObject
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.RecAlias.V7]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecObject.V1: recObject
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.RecObject.V1]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecObject.V2: recObject
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.RecObject.V2]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecObject.V3: recObject
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.RecObject.V3]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecObject.V4: recObject
+  surviving fields per constructor : [3]
+  members of the block             : [ExamplesProofFields.Variants.RecObject.V4]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecObject.V5: recObject
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.RecObject.V5]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecObject.V6: recObject
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.RecObject.V6]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecObject.V7: recAlias (newtype)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Variants.RecObject.V7]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecUnion.V1: recTaggedUnion
+  surviving fields per constructor : [0, 3]
+  members of the block             : [ExamplesProofFields.Variants.RecUnion.V1]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecUnion.V2: recTaggedUnion
+  surviving fields per constructor : [0, 3]
+  members of the block             : [ExamplesProofFields.Variants.RecUnion.V2]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecUnion.V3: recTaggedUnion
+  surviving fields per constructor : [0, 3]
+  members of the block             : [ExamplesProofFields.Variants.RecUnion.V3]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecUnion.V4: recTaggedUnion
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.Variants.RecUnion.V4]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecUnion.V5: recTaggedUnion
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.Variants.RecUnion.V5]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecUnion.V6: recTaggedUnion
+  surviving fields per constructor : [0, 1, 2]
+  members of the block             : [ExamplesProofFields.Variants.RecUnion.V6]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.RecUnion.V7: recTaggedUnion
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.Variants.RecUnion.V7]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Record.V1: record
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Record.V1]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Record.V2: record
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Record.V2]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Record.V3: record
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Record.V3]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Record.V4: record
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Record.V4]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Record.V5: record
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Variants.Record.V5]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Record.V6: record
+  surviving fields per constructor : [3]
+  members of the block             : [ExamplesProofFields.Variants.Record.V6]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Record.V7: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Variants.Record.V7]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Union.V1: taggedUnion
+  surviving fields per constructor : [0, 1]
+  members of the block             : [ExamplesProofFields.Variants.Union.V1]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Union.V2: taggedUnion
+  surviving fields per constructor : [0, 1]
+  members of the block             : [ExamplesProofFields.Variants.Union.V2]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Union.V3: taggedUnion
+  surviving fields per constructor : [1, 1]
+  members of the block             : [ExamplesProofFields.Variants.Union.V3]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Union.V4: taggedUnion
+  surviving fields per constructor : [1, 1, 0]
+  members of the block             : [ExamplesProofFields.Variants.Union.V4]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Union.V5: taggedUnion
+  surviving fields per constructor : [0, 2]
+  members of the block             : [ExamplesProofFields.Variants.Union.V5]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Union.V6: taggedUnion
+  surviving fields per constructor : [1, 0]
+  members of the block             : [ExamplesProofFields.Variants.Union.V6]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Variants.Union.V7: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [ExamplesProofFields.Variants.Union.V7]
+  recursive (through a surviving field) : false, in a mutual cycle : false

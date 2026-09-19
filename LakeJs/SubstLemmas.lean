@@ -1,986 +1,330 @@
 module
 
 public import LakeJs.Subst
+public import LakeJs.Reduce
 
 @[expose] public section
 
+set_option autoImplicit false
+
 /-!
-# The laws of renaming and substitution
+# The laws of renaming and substitution, against the evaluator
 
-`LakeJs.Subst` defines renaming and substitution; this module proves the equations they
-satisfy.  They are the usual four of a de Bruijn presentation — a renaming after a
-renaming, a substitution after a renaming, a renaming after a substitution and a
-substitution after a substitution are each a single traversal — together with the two
-congruences (a traversal only reads its function pointwise) and the two identity laws.
+`LakeJs.Subst` defines renaming and substitution.  What has to be known about them is that
+they **mean** what they are meant to mean: renaming a term is reading it in a renamed
+environment, and substituting into a term is reading it in an environment that holds the
+values of the substituted terms.
 
-Everything here is proved once for each of the five families of the language (`Term`,
-`Spine`, `Alts`, `Tail`, `AltsT`), by the mutual structural recursion they are defined
-by.  A `Term` has no labels, so only the two families of the block grammar carry a label
-renaming; the lemma for a `Term` carries the renaming `ρ₀` of the statement it shares
-with them, which its uses discharge with the identity.
+That is what this module proves.  It replaces the older, purely syntactic algebra — a
+renaming after a renaming is a renaming, and the three other composition laws, together
+with the congruences and the identity laws — which the small-step semantics of the time
+needed in order to push substitutions through a reduction sequence.  With a denotational
+evaluator those laws are no longer the point: a pass that transforms a term is correct
+when it does not change the term's *value*, and the two theorems below are what a proof
+of that rests on.
 
-The one consequence the rest of the development uses is `Term.subst0_subst_lift`:
-substituting under a binder and then substituting the bound variable is one
-substitution — which is what the β rule of `LakeJs.Reduce` needs in order to be read as
-an extension of the environment.
+* `Term.eval_rename` — renaming a term evaluates it in the renamed environment, and the
+  same for a spine, a case, a block and its branches;
+* `Term.eval_weaken` and `Term.eval_rweaken` — the two corollaries a pass uses most: the
+  variable, or the recursion, that a weakening adds is not read.
+
+They are stated with the environments related **pointwise** (`Env.Agree`, `REnv.Agree`,
+`LEnv.Agree`), which is what makes them usable under a binder: going under one extends
+both environments with the same values, and agreement is preserved.
 -/
 
 namespace LakeJs.Expr
 
 open LakeJs
+open LakeJs.Ty
 
 variable {Sg : Sig}
 
-/-! ## Composing and extending -/
+/-! ## Agreement of environments -/
 
-/-- A substitution that gives the variable just bound the term `a`, and every other
-    variable what `θ` gives it: the environment `θ` extended by `a`. -/
-def VSub.cons {Γ₁ Γ₂ : Ctx} {σ : Ty} (a : Term Sg Γ₂ σ) (θ : VSub Sg Γ₁ Γ₂) :
-    VSub Sg (σ :: Γ₁) Γ₂ :=
-  fun {_} v =>
-    match v with
-    | .head => a
-    | .tail v => θ v
+/-- Two variable environments agree along a renaming when every variable has the same
+    value on both sides. -/
+def Env.Agree {Γ₁ Γ₂ : Ctx} (ρv : VRen Γ₁ Γ₂) (γ₁ : Env Γ₁) (γ₂ : Env Γ₂) : Prop :=
+  ∀ {τ : Ty} (v : Γ₁ ∋ τ), γ₁.get v = γ₂.get (ρv v)
 
-/-! ## Lifting reads its function pointwise -/
+/-- The same for recursion environments. -/
+def REnv.Agree {Ρ₁ Ρ₂ : RCtx} (ξ : RRen Ρ₁ Ρ₂) (ρ₁ : REnv Ρ₁) (ρ₂ : REnv Ρ₂) : Prop :=
+  ∀ {r : RSig} (x : Ρ₁ ∋ᵣ r), ρ₁.get x = ρ₂.get (ξ x)
 
-/-- Carrying two pointwise-equal renamings under a binder gives pointwise-equal
-    renamings. -/
-theorem VRen.lift_congr {Γ₁ Γ₂ : Ctx} {σ : Ty} {ρ ρ' : VRen Γ₁ Γ₂}
-    (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), ρ v = ρ' v) :
-    ∀ {τ : Ty} (v : (σ :: Γ₁) ∋ τ), VRen.lift ρ v = VRen.lift ρ' v
-  | _, .head => rfl
-  | _, .tail v => by simp [VRen.lift, h v]
+/-- The same for label environments. -/
+def LEnv.Agree {τ : Ty} {Ω₁ Ω₂ : LCtx} (κ : LRen Ω₁ Ω₂) (l₁ : LEnv τ Ω₁)
+    (l₂ : LEnv τ Ω₂) : Prop :=
+  ∀ {ps : List Ty} (l : Ω₁ ∋ₗ ps), l₁.get l = l₂.get (κ l)
 
-/-- The same, under a binder that binds a whole list. -/
-theorem VRen.liftList_congr {Γ₁ Γ₂ : Ctx} {ρ ρ' : VRen Γ₁ Γ₂}
-    (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), ρ v = ρ' v) :
-    ∀ (σs : List Ty) {τ : Ty} (v : (σs ++ Γ₁) ∋ τ),
-      VRen.liftList σs ρ v = VRen.liftList σs ρ' v
-  | [], _, v => h v
-  | _ :: σs, _, v => VRen.lift_congr (VRen.liftList_congr h σs) v
+/-- Agreement survives one variable binder. -/
+theorem Env.Agree.lift {Γ₁ Γ₂ : Ctx} {ρv : VRen Γ₁ Γ₂} {γ₁ : Env Γ₁} {γ₂ : Env Γ₂}
+    (h : Env.Agree ρv γ₁ γ₂) {σ : Ty} (a : σ.den) :
+    Env.Agree ρv.lift (.cons a γ₁) (.cons a γ₂) := by
+  intro τ v
+  match v with
+  | .head => rfl
+  | .tail v => exact h v
 
-/-- The same, for renamings of labels. -/
-theorem LRen.lift_congr {Ω₁ Ω₂ : LCtx} {ps : List Ty} {κ κ' : LRen Ω₁ Ω₂}
-    (h : ∀ {qs : List Ty} (v : Ω₁ ∋ₗ qs), κ v = κ' v) :
-    ∀ {qs : List Ty} (v : (ps :: Ω₁) ∋ₗ qs), LRen.lift κ v = LRen.lift κ' v
-  | _, .head => rfl
-  | _, .tail v => by simp [LRen.lift, h v]
+/-- Agreement survives a binder that binds a whole list at once. -/
+theorem Env.Agree.liftList {Γ₁ Γ₂ : Ctx} {ρv : VRen Γ₁ Γ₂} {γ₁ : Env Γ₁} {γ₂ : Env Γ₂}
+    (h : Env.Agree ρv γ₁ γ₂) :
+    ∀ {ps : List Ty} (as : Env ps),
+      Env.Agree (VRen.liftList ps ρv) (as.append γ₁) (as.append γ₂)
+  | [], .nil => h
+  | _ :: _, .cons a as => Env.Agree.lift (Env.Agree.liftList h as) a
 
-/-- The same, into the body of a label. -/
-theorem LRen.ext_congr {Ω₁ Ω₂ : LCtx} {κ κ' : LRen Ω₁ Ω₂}
-    (h : ∀ {qs : List Ty} (v : Ω₁ ∋ₗ qs), κ v = κ' v) (self : Bool) (ps : List Ty) :
-    ∀ {qs : List Ty} (v : (LCtx.ext self ps Ω₁) ∋ₗ qs),
-      LRen.ext self ps κ v = LRen.ext self ps κ' v := by
-  cases self
-  · intro _ v; exact h v
-  · intro _ v; exact LRen.lift_congr h v
+/-- Agreement survives one recursion binder. -/
+theorem REnv.Agree.lift {Ρ₁ Ρ₂ : RCtx} {ξ : RRen Ρ₁ Ρ₂} {ρ₁ : REnv Ρ₁} {ρ₂ : REnv Ρ₂}
+    (h : REnv.Agree ξ ρ₁ ρ₂) {r : RSig} (f : Env r.ps → r.ret.den) :
+    REnv.Agree ξ.lift (.cons f ρ₁) (.cons f ρ₂) := by
+  intro s x
+  match x with
+  | .head => rfl
+  | .tail x => exact h x
 
-/-! ## Renaming by the identity -/
+/-- Agreement survives one label binder. -/
+theorem LEnv.Agree.lift {τ : Ty} {Ω₁ Ω₂ : LCtx} {κ : LRen Ω₁ Ω₂} {l₁ : LEnv τ Ω₁}
+    {l₂ : LEnv τ Ω₂} (h : LEnv.Agree κ l₁ l₂) {ps : List Ty} (f : Env ps → τ.den) :
+    LEnv.Agree κ.lift (.cons f l₁) (.cons f l₂) := by
+  intro qs l
+  match l with
+  | .head => rfl
+  | .tail l => exact h l
 
-/-- A renaming that moves nothing still moves nothing under a binder. -/
-theorem VRen.lift_self {Γ : Ctx} {σ : Ty} {ρ : VRen Γ Γ}
-    (h : ∀ {τ : Ty} (v : Γ ∋ τ), ρ v = v) :
-    ∀ {τ : Ty} (v : (σ :: Γ) ∋ τ), VRen.lift ρ v = v
-  | _, .head => rfl
-  | _, .tail v => by simp [VRen.lift, h v]
-
-/-- The same, under a binder that binds a whole list. -/
-theorem VRen.liftList_self {Γ : Ctx} {ρ : VRen Γ Γ}
-    (h : ∀ {τ : Ty} (v : Γ ∋ τ), ρ v = v) :
-    ∀ (σs : List Ty) {τ : Ty} (v : (σs ++ Γ) ∋ τ), VRen.liftList σs ρ v = v
-  | [], _, v => h v
-  | _ :: σs, _, v => VRen.lift_self (VRen.liftList_self h σs) v
-
-/-- The same, for renamings of labels. -/
-theorem LRen.lift_self {Ω : LCtx} {ps : List Ty} {κ : LRen Ω Ω}
-    (h : ∀ {qs : List Ty} (v : Ω ∋ₗ qs), κ v = v) :
-    ∀ {qs : List Ty} (v : (ps :: Ω) ∋ₗ qs), LRen.lift κ v = v
-  | _, .head => rfl
-  | _, .tail v => by simp [LRen.lift, h v]
-
-/-- The same, into the body of a label. -/
-theorem LRen.ext_self {Ω : LCtx} {κ : LRen Ω Ω}
-    (h : ∀ {qs : List Ty} (v : Ω ∋ₗ qs), κ v = v) (self : Bool) (ps : List Ty) :
-    ∀ {qs : List Ty} (v : (LCtx.ext self ps Ω) ∋ₗ qs), LRen.ext self ps κ v = v := by
-  cases self
-  · intro _ v; exact h v
-  · intro _ v; exact LRen.lift_self h v
-
-/-! ## The congruences: a traversal reads its function pointwise -/
+/-! ## Renaming is reading in a renamed environment -/
 
 mutual
 
-/-- Renaming a term reads the renaming pointwise. -/
-theorem Term.rename_congr {Γ₁ Γ₂ : Ctx} {τ : Ty} :
-    ∀ (t : Term Sg Γ₁ τ) {ρ ρ' : VRen Γ₁ Γ₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ v = ρ' v) → t.rename ρ = t.rename ρ'
-  | .var v, _, _, hρ => by simp [Term.rename, hρ v]
-  | .lam b, _, _, hρ => by simp only [Term.rename, b.rename_congr (VRen.lift_congr hρ)]
-  | .ap f a, _, _, hρ => by
-      simp only [Term.rename, f.rename_congr hρ, a.rename_congr hρ]
-  | .lit _, _, _, _ => rfl
-  | .global _, _, _, _ => rfl
-  | .extern _, _, _, _ => rfl
-  | .lazyMk e, _, _, hρ => by simp only [Term.rename, e.rename_congr hρ]
-  | .lazyForce e, _, _, hρ => by simp only [Term.rename, e.rename_congr hρ]
-  | .letE e b, _, _, hρ => by
-      simp only [Term.rename, e.rename_congr hρ, b.rename_congr (VRen.lift_congr hρ)]
-  | .ite c t e, _, _, hρ => by
-      simp only [Term.rename, c.rename_congr hρ, t.rename_congr hρ, e.rename_congr hρ]
-  | .ctor _ _ _ args, _, _, hρ => by simp only [Term.rename, args.rename_congr hρ]
-  | .proj e _ _ _ _, _, _, hρ => by simp only [Term.rename, e.rename_congr hρ]
-  | .tagOf e _, _, _, hρ => by simp only [Term.rename, e.rename_congr hρ]
-  | .caseTag e alts _, _, _, hρ => by
-      simp only [Term.rename, e.rename_congr hρ, alts.rename_congr hρ]
-  | .block b, _, _, hρ => by
-      simp only [Term.rename,
-        b.rename_congr (κ := LRen.id) (κ' := LRen.id) hρ (fun _ => rfl)]
-
-/-- Renaming a spine reads the renaming pointwise. -/
-theorem Spine.rename_congr {Γ₁ Γ₂ : Ctx} {σs : List Ty} :
-    ∀ (s : Spine Sg Γ₁ σs) {ρ ρ' : VRen Γ₁ Γ₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ v = ρ' v) → s.rename ρ = s.rename ρ'
-  | .nil, _, _, _ => rfl
-  | .cons t rest, _, _, hρ => by
-      simp only [Spine.rename, t.rename_congr hρ, rest.rename_congr hρ]
-
-/-- Renaming the branches of a case reads the renaming pointwise. -/
-theorem Alts.rename_congr {Γ₁ Γ₂ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool} :
-    ∀ (as : Alts Sg Γ₁ τ tags full) {ρ ρ' : VRen Γ₁ Γ₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ v = ρ' v) → as.rename ρ = as.rename ρ'
-  | .deflt t, _, _, hρ => by simp only [Alts.rename, t.rename_congr hρ]
-  | .nilFull, _, _, _ => rfl
-  | .cons _ t rest, _, _, hρ => by
-      simp only [Alts.rename, t.rename_congr hρ, rest.rename_congr hρ]
-
-/-- Renaming a tail reads the renamings pointwise. -/
-theorem Tail.rename_congr {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {τ : Ty} :
-    ∀ (b : Tail Sg Γ₁ Ω₁ τ) {ρ ρ' : VRen Γ₁ Γ₂} {κ κ' : LRen Ω₁ Ω₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ v = ρ' v) →
-      (∀ {ps : List Ty} (v : Ω₁ ∋ₗ ps), κ v = κ' v) →
-      b.rename ρ κ = b.rename ρ' κ'
-  | .ret t, _, _, _, _, hρ, _ => by simp only [Tail.rename, t.rename_congr hρ]
-  | .jmp l args, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename, hκ l, args.rename_congr hρ]
-  | .letT e b, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename, e.rename_congr hρ,
-        b.rename_congr (VRen.lift_congr hρ) hκ]
-  | .iteT c t e, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename, c.rename_congr hρ, t.rename_congr hρ hκ,
-        e.rename_congr hρ hκ]
-  | .caseT e alts _, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename, e.rename_congr hρ, alts.rename_congr hρ hκ]
-  | .label self body rest, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename,
-        body.rename_congr (VRen.liftList_congr hρ _) (LRen.ext_congr hκ self _),
-        rest.rename_congr hρ (LRen.lift_congr hκ)]
-
-/-- Renaming the branches of a dispatch inside a block reads the renamings pointwise. -/
-theorem AltsT.rename_congr {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {τ : Ty} {tags : List Nat}
-    {full : Bool} :
-    ∀ (as : AltsT Sg Γ₁ Ω₁ τ tags full) {ρ ρ' : VRen Γ₁ Γ₂} {κ κ' : LRen Ω₁ Ω₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ v = ρ' v) →
-      (∀ {ps : List Ty} (v : Ω₁ ∋ₗ ps), κ v = κ' v) →
-      as.rename ρ κ = as.rename ρ' κ'
-  | .deflt b, _, _, _, _, hρ, hκ => by
-      simp only [AltsT.rename, b.rename_congr hρ hκ]
-  | .nilFull, _, _, _, _, _, _ => rfl
-  | .cons _ b rest, _, _, _, _, hρ, hκ => by
-      simp only [AltsT.rename, b.rename_congr hρ hκ, rest.rename_congr hρ hκ]
-
-end
-
-/-! ## Renaming by something that moves nothing -/
-
-mutual
-
-/-- A renaming that moves nothing changes nothing. -/
-theorem Term.rename_eq_self {Γ : Ctx} {τ : Ty} :
-    ∀ (t : Term Sg Γ τ) {ρ : VRen Γ Γ},
-      (∀ {σ : Ty} (v : Γ ∋ σ), ρ v = v) → t.rename ρ = t
-  | .var v, _, hρ => by simp [Term.rename, hρ v]
-  | .lam b, _, hρ => by simp only [Term.rename, b.rename_eq_self (VRen.lift_self hρ)]
-  | .ap f a, _, hρ => by
-      simp only [Term.rename, f.rename_eq_self hρ, a.rename_eq_self hρ]
-  | .lit _, _, _ => rfl
-  | .global _, _, _ => rfl
-  | .extern _, _, _ => rfl
-  | .lazyMk e, _, hρ => by simp only [Term.rename, e.rename_eq_self hρ]
-  | .lazyForce e, _, hρ => by simp only [Term.rename, e.rename_eq_self hρ]
-  | .letE e b, _, hρ => by
-      simp only [Term.rename, e.rename_eq_self hρ, b.rename_eq_self (VRen.lift_self hρ)]
-  | .ite c t e, _, hρ => by
-      simp only [Term.rename, c.rename_eq_self hρ, t.rename_eq_self hρ,
-        e.rename_eq_self hρ]
-  | .ctor _ _ _ args, _, hρ => by simp only [Term.rename, args.rename_eq_self hρ]
-  | .proj e _ _ _ _, _, hρ => by simp only [Term.rename, e.rename_eq_self hρ]
-  | .tagOf e _, _, hρ => by simp only [Term.rename, e.rename_eq_self hρ]
-  | .caseTag e alts _, _, hρ => by
-      simp only [Term.rename, e.rename_eq_self hρ, alts.rename_eq_self hρ]
-  | .block b, _, hρ => by
-      simp only [Term.rename, b.rename_eq_self (κ := LRen.id) hρ (fun _ => rfl)]
-
-/-- A renaming that moves nothing changes no spine. -/
-theorem Spine.rename_eq_self {Γ : Ctx} {σs : List Ty} :
-    ∀ (s : Spine Sg Γ σs) {ρ : VRen Γ Γ},
-      (∀ {σ : Ty} (v : Γ ∋ σ), ρ v = v) → s.rename ρ = s
-  | .nil, _, _ => rfl
-  | .cons t rest, _, hρ => by
-      simp only [Spine.rename, t.rename_eq_self hρ, rest.rename_eq_self hρ]
-
-/-- A renaming that moves nothing changes no branch. -/
-theorem Alts.rename_eq_self {Γ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool} :
-    ∀ (as : Alts Sg Γ τ tags full) {ρ : VRen Γ Γ},
-      (∀ {σ : Ty} (v : Γ ∋ σ), ρ v = v) → as.rename ρ = as
-  | .deflt t, _, hρ => by simp only [Alts.rename, t.rename_eq_self hρ]
-  | .nilFull, _, _ => rfl
-  | .cons _ t rest, _, hρ => by
-      simp only [Alts.rename, t.rename_eq_self hρ, rest.rename_eq_self hρ]
-
-/-- A renaming that moves nothing changes no tail. -/
-theorem Tail.rename_eq_self {Γ : Ctx} {Ω : LCtx} {τ : Ty} :
-    ∀ (b : Tail Sg Γ Ω τ) {ρ : VRen Γ Γ} {κ : LRen Ω Ω},
-      (∀ {σ : Ty} (v : Γ ∋ σ), ρ v = v) →
-      (∀ {ps : List Ty} (v : Ω ∋ₗ ps), κ v = v) →
-      b.rename ρ κ = b
-  | .ret t, _, _, hρ, _ => by simp only [Tail.rename, t.rename_eq_self hρ]
-  | .jmp l args, _, _, hρ, hκ => by
-      simp only [Tail.rename, hκ l, args.rename_eq_self hρ]
-  | .letT e b, _, _, hρ, hκ => by
-      simp only [Tail.rename, e.rename_eq_self hρ,
-        b.rename_eq_self (VRen.lift_self hρ) hκ]
-  | .iteT c t e, _, _, hρ, hκ => by
-      simp only [Tail.rename, c.rename_eq_self hρ, t.rename_eq_self hρ hκ,
-        e.rename_eq_self hρ hκ]
-  | .caseT e alts _, _, _, hρ, hκ => by
-      simp only [Tail.rename, e.rename_eq_self hρ, alts.rename_eq_self hρ hκ]
-  | .label self body rest, _, _, hρ, hκ => by
-      simp only [Tail.rename,
-        body.rename_eq_self (VRen.liftList_self hρ _) (LRen.ext_self hκ self _),
-        rest.rename_eq_self hρ (LRen.lift_self hκ)]
-
-/-- A renaming that moves nothing changes no branch of a block. -/
-theorem AltsT.rename_eq_self {Γ : Ctx} {Ω : LCtx} {τ : Ty} {tags : List Nat}
-    {full : Bool} :
-    ∀ (as : AltsT Sg Γ Ω τ tags full) {ρ : VRen Γ Γ} {κ : LRen Ω Ω},
-      (∀ {σ : Ty} (v : Γ ∋ σ), ρ v = v) →
-      (∀ {ps : List Ty} (v : Ω ∋ₗ ps), κ v = v) →
-      as.rename ρ κ = as
-  | .deflt b, _, _, hρ, hκ => by simp only [AltsT.rename, b.rename_eq_self hρ hκ]
-  | .nilFull, _, _, _, _ => rfl
-  | .cons _ b rest, _, _, hρ, hκ => by
-      simp only [AltsT.rename, b.rename_eq_self hρ hκ, rest.rename_eq_self hρ hκ]
-
-end
-
-/-! ## Composing two renamings -/
-
-/-- Composing two renamings under a binder. -/
-theorem VRen.lift_comp {Γ₁ Γ₂ Γ₃ : Ctx} {σ : Ty} {ρ : VRen Γ₁ Γ₂} {ρ' : VRen Γ₂ Γ₃}
-    {ρ'' : VRen Γ₁ Γ₃} (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), ρ'' v = ρ' (ρ v)) :
-    ∀ {τ : Ty} (v : (σ :: Γ₁) ∋ τ), VRen.lift ρ'' v = VRen.lift ρ' (VRen.lift ρ v)
-  | _, .head => rfl
-  | _, .tail v => by simp [VRen.lift, h v]
-
-/-- The same, under a binder that binds a whole list. -/
-theorem VRen.liftList_comp {Γ₁ Γ₂ Γ₃ : Ctx} {ρ : VRen Γ₁ Γ₂} {ρ' : VRen Γ₂ Γ₃}
-    {ρ'' : VRen Γ₁ Γ₃} (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), ρ'' v = ρ' (ρ v)) :
-    ∀ (σs : List Ty) {τ : Ty} (v : (σs ++ Γ₁) ∋ τ),
-      VRen.liftList σs ρ'' v = VRen.liftList σs ρ' (VRen.liftList σs ρ v)
-  | [], _, v => h v
-  | _ :: σs, _, v => VRen.lift_comp (VRen.liftList_comp h σs) v
-
-/-- The same, for renamings of labels. -/
-theorem LRen.lift_comp {Ω₁ Ω₂ Ω₃ : LCtx} {ps : List Ty} {κ : LRen Ω₁ Ω₂}
-    {κ' : LRen Ω₂ Ω₃} {κ'' : LRen Ω₁ Ω₃}
-    (h : ∀ {qs : List Ty} (v : Ω₁ ∋ₗ qs), κ'' v = κ' (κ v)) :
-    ∀ {qs : List Ty} (v : (ps :: Ω₁) ∋ₗ qs),
-      LRen.lift κ'' v = LRen.lift κ' (LRen.lift κ v)
-  | _, .head => rfl
-  | _, .tail v => by simp [LRen.lift, h v]
-
-/-- The same, into the body of a label. -/
-theorem LRen.ext_comp {Ω₁ Ω₂ Ω₃ : LCtx} {κ : LRen Ω₁ Ω₂} {κ' : LRen Ω₂ Ω₃}
-    {κ'' : LRen Ω₁ Ω₃} (h : ∀ {qs : List Ty} (v : Ω₁ ∋ₗ qs), κ'' v = κ' (κ v))
-    (self : Bool) (ps : List Ty) :
-    ∀ {qs : List Ty} (v : (LCtx.ext self ps Ω₁) ∋ₗ qs),
-      LRen.ext self ps κ'' v = LRen.ext self ps κ' (LRen.ext self ps κ v) := by
-  cases self
-  · intro _ v; exact h v
-  · intro _ v; exact LRen.lift_comp h v
-
-mutual
-
-/-- Renaming twice is renaming once, by the composite. -/
-theorem Term.rename_rename {Γ₁ Γ₂ Γ₃ : Ctx} {τ : Ty} :
-    ∀ (t : Term Sg Γ₁ τ) {ρ : VRen Γ₁ Γ₂} {ρ' : VRen Γ₂ Γ₃} {ρ'' : VRen Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ'' v = ρ' (ρ v)) →
-      (t.rename ρ).rename ρ' = t.rename ρ''
-  | .var v, _, _, _, hρ => by simp [Term.rename, hρ v]
-  | .lam b, _, _, _, hρ => by
-      simp only [Term.rename, b.rename_rename (VRen.lift_comp hρ)]
-  | .ap f a, _, _, _, hρ => by
-      simp only [Term.rename, f.rename_rename hρ, a.rename_rename hρ]
-  | .lit _, _, _, _, _ => rfl
-  | .global _, _, _, _, _ => rfl
-  | .extern _, _, _, _, _ => rfl
-  | .lazyMk e, _, _, _, hρ => by simp only [Term.rename, e.rename_rename hρ]
-  | .lazyForce e, _, _, _, hρ => by simp only [Term.rename, e.rename_rename hρ]
-  | .letE e b, _, _, _, hρ => by
-      simp only [Term.rename, e.rename_rename hρ, b.rename_rename (VRen.lift_comp hρ)]
-  | .ite c t e, _, _, _, hρ => by
-      simp only [Term.rename, c.rename_rename hρ, t.rename_rename hρ,
-        e.rename_rename hρ]
-  | .ctor _ _ _ args, _, _, _, hρ => by simp only [Term.rename, args.rename_rename hρ]
-  | .proj e _ _ _ _, _, _, _, hρ => by simp only [Term.rename, e.rename_rename hρ]
-  | .tagOf e _, _, _, _, hρ => by simp only [Term.rename, e.rename_rename hρ]
-  | .caseTag e alts _, _, _, _, hρ => by
-      simp only [Term.rename, e.rename_rename hρ, alts.rename_rename hρ]
-  | .block b, _, _, _, hρ => by
-      simp only [Term.rename, b.rename_rename (κ := LRen.id) (κ' := LRen.id)
-        (κ'' := LRen.id) hρ (fun _ => rfl)]
+/-- **Renaming a term evaluates it in the renamed environment.** -/
+theorem Term.eval_rename {Γ₁ Γ₂ : Ctx} {Ρ₁ Ρ₂ : RCtx} {τ : Ty} :
+    ∀ (t : Term Sg Γ₁ Ρ₁ τ) (ρv : VRen Γ₁ Γ₂) (ξ : RRen Ρ₁ Ρ₂) (δ : GEnv Sg.decls)
+      (γ₁ : Env Γ₁) (γ₂ : Env Γ₂) (ρ₁ : REnv Ρ₁) (ρ₂ : REnv Ρ₂),
+      Env.Agree ρv γ₁ γ₂ → REnv.Agree ξ ρ₁ ρ₂ →
+      (t.rename ρv ξ).eval δ γ₂ ρ₂ = t.eval δ γ₁ ρ₁
+  | .var v, _, _, _, _, _, _, _, hγ, _ => (hγ v).symm
+  | .lam b, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show (fun a => (b.rename ρv.lift ξ).eval δ (.cons a γ₂) ρ₂)
+          = fun a => b.eval δ (.cons a γ₁) ρ₁
+      funext a
+      exact Term.eval_rename b ρv.lift ξ δ _ _ ρ₁ ρ₂ (Env.Agree.lift hγ a) hρ
+  | .ap f a, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show (f.rename ρv ξ).eval δ γ₂ ρ₂ ((a.rename ρv ξ).eval δ γ₂ ρ₂) = _
+      rw [Term.eval_rename f ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ,
+        Term.eval_rename a ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+      rfl
+  | .lit _, _, _, _, _, _, _, _, _, _ => rfl
+  | .global _, _, _, _, _, _, _, _, _, _ => rfl
+  | .extern _, _, _, _, _, _, _, _, _, _ => rfl
+  | .lazyMk e, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show (fun _ => (e.rename ρv ξ).eval δ γ₂ ρ₂) = fun _ => e.eval δ γ₁ ρ₁
+      funext _
+      exact Term.eval_rename e ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ
+  | .lazyForce e, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show ((e.rename ρv ξ).eval δ γ₂ ρ₂) () = (e.eval δ γ₁ ρ₁) ()
+      rw [Term.eval_rename e ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+  | .letE e b, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show (b.rename ρv.lift ξ).eval δ (.cons ((e.rename ρv ξ).eval δ γ₂ ρ₂) γ₂) ρ₂ = _
+      rw [Term.eval_rename e ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+      exact Term.eval_rename b ρv.lift ξ δ _ _ ρ₁ ρ₂ (Env.Agree.lift hγ _) hρ
+  | .ite c t e, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show (if cond ((c.rename ρv ξ).eval δ γ₂ ρ₂) true false then
+              (t.rename ρv ξ).eval δ γ₂ ρ₂ else (e.rename ρv ξ).eval δ γ₂ ρ₂)
+          = if cond (c.eval δ γ₁ ρ₁) true false then t.eval δ γ₁ ρ₁ else e.eval δ γ₁ ρ₁
+      rw [Term.eval_rename c ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ,
+        Term.eval_rename t ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ,
+        Term.eval_rename e ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+  | .ctor (τ := σ) i fs h args, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show σ.buildVal i ((args.rename ρv ξ).eval δ γ₂ ρ₂).toData
+          = σ.buildVal i (args.eval δ γ₁ ρ₁).toData
+      rw [Spine.eval_rename args ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+  | .proj (σ := σ) (τ := τ') e i j hOne h, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show τ'.ofData ((σ.fieldsOfVal ((e.rename ρv ξ).eval δ γ₂ ρ₂)).getD j .opaque)
+          = τ'.ofData ((σ.fieldsOfVal (e.eval δ γ₁ ρ₁)).getD j .opaque)
+      rw [Term.eval_rename e ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+  | .tagOf (σ := σ) e h, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show σ.tagOfVal ((e.rename ρv ξ).eval δ γ₂ ρ₂) = σ.tagOfVal (e.eval δ γ₁ ρ₁)
+      rw [Term.eval_rename e ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+  | .structSize (σ := σ) e, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show Data.size (σ.toData ((e.rename ρv ξ).eval δ γ₂ ρ₂))
+          = Data.size (σ.toData (e.eval δ γ₁ ρ₁))
+      rw [Term.eval_rename e ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+  | .caseTag (σ := σ) (τ := τ') scrut alts h, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      have hs := Term.eval_rename scrut ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ
+      have ha := Alts.eval_rename alts ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ
+      show (match (alts.rename ρv ξ).eval (σ.tagOfVal ((scrut.rename ρv ξ).eval δ γ₂ ρ₂))
+              (σ.fieldsOfVal ((scrut.rename ρv ξ).eval δ γ₂ ρ₂)) δ γ₂ ρ₂ with
+            | some r => r | none => τ'.dflt)
+          = match alts.eval (σ.tagOfVal (scrut.eval δ γ₁ ρ₁))
+              (σ.fieldsOfVal (scrut.eval δ γ₁ ρ₁)) δ γ₁ ρ₁ with
+            | some r => r | none => τ'.dflt
+      rw [hs, ha]
+  | .block b, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show (b.rename ρv LRen.id ξ).eval δ γ₂ .nil ρ₂ = b.eval δ γ₁ .nil ρ₁
+      exact Tail.eval_rename b ρv LRen.id ξ δ γ₁ γ₂ .nil .nil ρ₁ ρ₂ hγ (fun {_} l => nomatch l)
+        hρ
+  | .fix (τ := τr) ps k measure body stuck, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show ((Term.fix ps k (measure.rename (VRen.liftList ps ρv) ξ)
+              (body.rename (VRen.liftList ps ρv) ξ.lift)
+              (stuck.rename (VRen.liftList ps ρv) ξ)).eval δ γ₂ ρ₂)
+          = (Term.fix ps k measure body stuck).eval δ γ₁ ρ₁
+      rw [Term.eval_fix, Term.eval_fix]
+      refine congrArg (Env.curry ps) ?_
+      show Term.fixFun _ _ _ δ γ₂ ρ₂ = Term.fixFun _ _ _ δ γ₁ ρ₁
+      refine Lex.guardedFix_congr (fun as => ?_) (fun as => ?_) (fun g as => ?_)
+      · show Env.toNatVec k _ = Env.toNatVec k _
+        rw [Spine.eval_rename measure (VRen.liftList ps ρv) ξ δ (Env.append as γ₁)
+          (Env.append as γ₂) ρ₁ ρ₂ (Env.Agree.liftList hγ as) hρ]
+      · exact Term.eval_rename stuck (VRen.liftList ps ρv) ξ δ _ _ ρ₁ ρ₂
+          (Env.Agree.liftList hγ as) hρ
+      · have hfun :
+            REnv.Agree (RRen.lift (r := ⟨ps, τr⟩) ξ) (.cons g ρ₁) (.cons g ρ₂) := by
+          intro s x
+          match x with
+          | .head => rfl
+          | .tail x => exact hρ x
+        exact Term.eval_rename body (VRen.liftList ps ρv) ξ.lift δ _ _ _ _
+          (Env.Agree.liftList hγ as) hfun
+  | .selfCall r args, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show ρ₂.get (ξ r) ((args.rename ρv ξ).eval δ γ₂ ρ₂) = ρ₁.get r (args.eval δ γ₁ ρ₁)
+      rw [Spine.eval_rename args ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ, hρ r]
 
 /-- The same, for a spine. -/
-theorem Spine.rename_rename {Γ₁ Γ₂ Γ₃ : Ctx} {σs : List Ty} :
-    ∀ (s : Spine Sg Γ₁ σs) {ρ : VRen Γ₁ Γ₂} {ρ' : VRen Γ₂ Γ₃} {ρ'' : VRen Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ'' v = ρ' (ρ v)) →
-      (s.rename ρ).rename ρ' = s.rename ρ''
-  | .nil, _, _, _, _ => rfl
-  | .cons t rest, _, _, _, hρ => by
-      simp only [Spine.rename, t.rename_rename hρ, rest.rename_rename hρ]
+theorem Spine.eval_rename {Γ₁ Γ₂ : Ctx} {Ρ₁ Ρ₂ : RCtx} {σs : List Ty} :
+    ∀ (s : Spine Sg Γ₁ Ρ₁ σs) (ρv : VRen Γ₁ Γ₂) (ξ : RRen Ρ₁ Ρ₂) (δ : GEnv Sg.decls)
+      (γ₁ : Env Γ₁) (γ₂ : Env Γ₂) (ρ₁ : REnv Ρ₁) (ρ₂ : REnv Ρ₂),
+      Env.Agree ρv γ₁ γ₂ → REnv.Agree ξ ρ₁ ρ₂ →
+      (s.rename ρv ξ).eval δ γ₂ ρ₂ = s.eval δ γ₁ ρ₁
+  | .nil, _, _, _, _, _, _, _, _, _ => rfl
+  | .cons a rest, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ => by
+      show Env.cons ((a.rename ρv ξ).eval δ γ₂ ρ₂) ((rest.rename ρv ξ).eval δ γ₂ ρ₂)
+          = Env.cons (a.eval δ γ₁ ρ₁) (rest.eval δ γ₁ ρ₁)
+      rw [Term.eval_rename a ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ,
+        Spine.eval_rename rest ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
 
 /-- The same, for the branches of a case. -/
-theorem Alts.rename_rename {Γ₁ Γ₂ Γ₃ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool} :
-    ∀ (as : Alts Sg Γ₁ τ tags full) {ρ : VRen Γ₁ Γ₂} {ρ' : VRen Γ₂ Γ₃}
-      {ρ'' : VRen Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ'' v = ρ' (ρ v)) →
-      (as.rename ρ).rename ρ' = as.rename ρ''
-  | .deflt t, _, _, _, hρ => by simp only [Alts.rename, t.rename_rename hρ]
-  | .nilFull, _, _, _, _ => rfl
-  | .cons _ t rest, _, _, _, hρ => by
-      simp only [Alts.rename, t.rename_rename hρ, rest.rename_rename hρ]
+theorem Alts.eval_rename {Γ₁ Γ₂ : Ctx} {Ρ₁ Ρ₂ : RCtx} {σ τ : Ty} {tags : List Nat}
+    {full : Bool} :
+    ∀ (alts : Alts Sg Γ₁ Ρ₁ σ τ tags full) (ρv : VRen Γ₁ Γ₂) (ξ : RRen Ρ₁ Ρ₂)
+      (δ : GEnv Sg.decls) (γ₁ : Env Γ₁) (γ₂ : Env Γ₂) (ρ₁ : REnv Ρ₁) (ρ₂ : REnv Ρ₂),
+      Env.Agree ρv γ₁ γ₂ → REnv.Agree ξ ρ₁ ρ₂ →
+      ∀ (tag : Nat) (fs : List Data),
+        (alts.rename ρv ξ).eval tag fs δ γ₂ ρ₂ = alts.eval tag fs δ γ₁ ρ₁
+  | .deflt t, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ, _, _ => by
+      show some ((t.rename ρv ξ).eval δ γ₂ ρ₂) = some (t.eval δ γ₁ ρ₁)
+      rw [Term.eval_rename t ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+  | .nilFull, _, _, _, _, _, _, _, _, _, _, _ => rfl
+  | .cons t fields h body rest, ρv, ξ, δ, γ₁, γ₂, ρ₁, ρ₂, hγ, hρ, tag, fs => by
+      show (if t = tag then
+              some ((body.rename (VRen.liftList fields ρv) ξ).eval δ
+                ((Env.ofData fields fs).append γ₂) ρ₂)
+            else (rest.rename ρv ξ).eval tag fs δ γ₂ ρ₂)
+          = if t = tag then
+              some (body.eval δ ((Env.ofData fields fs).append γ₁) ρ₁)
+            else rest.eval tag fs δ γ₁ ρ₁
+      by_cases hc : t = tag
+      · simp only [hc, if_pos]
+        exact congrArg some (Term.eval_rename body (VRen.liftList fields ρv) ξ δ _ _
+          ρ₁ ρ₂ (Env.Agree.liftList hγ (Env.ofData fields fs)) hρ)
+      · simp only [if_neg hc]
+        exact Alts.eval_rename rest ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ tag fs
 
-/-- The same, for a tail. -/
-theorem Tail.rename_rename {Γ₁ Γ₂ Γ₃ : Ctx} {Ω₁ Ω₂ Ω₃ : LCtx} {τ : Ty} :
-    ∀ (b : Tail Sg Γ₁ Ω₁ τ) {ρ : VRen Γ₁ Γ₂} {κ : LRen Ω₁ Ω₂} {ρ' : VRen Γ₂ Γ₃}
-      {κ' : LRen Ω₂ Ω₃} {ρ'' : VRen Γ₁ Γ₃} {κ'' : LRen Ω₁ Ω₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ'' v = ρ' (ρ v)) →
-      (∀ {ps : List Ty} (v : Ω₁ ∋ₗ ps), κ'' v = κ' (κ v)) →
-      (b.rename ρ κ).rename ρ' κ' = b.rename ρ'' κ''
-  | .ret t, _, _, _, _, _, _, hρ, _ => by
-      simp only [Tail.rename, t.rename_rename hρ]
-  | .jmp l args, _, _, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename, hκ l, args.rename_rename hρ]
-  | .letT e b, _, _, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename, e.rename_rename hρ,
-        b.rename_rename (VRen.lift_comp hρ) hκ]
-  | .iteT c t e, _, _, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename, c.rename_rename hρ, t.rename_rename hρ hκ,
-        e.rename_rename hρ hκ]
-  | .caseT e alts _, _, _, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename, e.rename_rename hρ, alts.rename_rename hρ hκ]
-  | .label self body rest, _, _, _, _, _, _, hρ, hκ => by
-      simp only [Tail.rename,
-        body.rename_rename (VRen.liftList_comp hρ _) (LRen.ext_comp hκ self _),
-        rest.rename_rename hρ (LRen.lift_comp hκ)]
+/-- The same, for a block. -/
+theorem Tail.eval_rename {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {Ρ₁ Ρ₂ : RCtx} {τ : Ty} :
+    ∀ (b : Tail Sg Γ₁ Ω₁ Ρ₁ τ) (ρv : VRen Γ₁ Γ₂) (κ : LRen Ω₁ Ω₂) (ξ : RRen Ρ₁ Ρ₂)
+      (δ : GEnv Sg.decls) (γ₁ : Env Γ₁) (γ₂ : Env Γ₂) (l₁ : LEnv τ Ω₁) (l₂ : LEnv τ Ω₂)
+      (ρ₁ : REnv Ρ₁) (ρ₂ : REnv Ρ₂),
+      Env.Agree ρv γ₁ γ₂ → LEnv.Agree κ l₁ l₂ → REnv.Agree ξ ρ₁ ρ₂ →
+      (b.rename ρv κ ξ).eval δ γ₂ l₂ ρ₂ = b.eval δ γ₁ l₁ ρ₁
+  | .ret t, ρv, _, ξ, δ, γ₁, γ₂, _, _, ρ₁, ρ₂, hγ, _, hρ =>
+      Term.eval_rename t ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ
+  | .jmp l args, ρv, κ, ξ, δ, γ₁, γ₂, l₁, l₂, ρ₁, ρ₂, hγ, hl, hρ => by
+      show l₂.get (κ l) ((args.rename ρv ξ).eval δ γ₂ ρ₂) = l₁.get l (args.eval δ γ₁ ρ₁)
+      rw [Spine.eval_rename args ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ, hl l]
+  | .letT e rest, ρv, κ, ξ, δ, γ₁, γ₂, l₁, l₂, ρ₁, ρ₂, hγ, hl, hρ => by
+      show (rest.rename ρv.lift κ ξ).eval δ (.cons ((e.rename ρv ξ).eval δ γ₂ ρ₂) γ₂)
+            l₂ ρ₂
+          = rest.eval δ (.cons (e.eval δ γ₁ ρ₁) γ₁) l₁ ρ₁
+      rw [Term.eval_rename e ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ]
+      exact Tail.eval_rename rest ρv.lift κ ξ δ _ _ l₁ l₂ ρ₁ ρ₂ (Env.Agree.lift hγ _) hl hρ
+  | .iteT c t e, ρv, κ, ξ, δ, γ₁, γ₂, l₁, l₂, ρ₁, ρ₂, hγ, hl, hρ => by
+      show (if cond ((c.rename ρv ξ).eval δ γ₂ ρ₂) true false then
+              (t.rename ρv κ ξ).eval δ γ₂ l₂ ρ₂ else (e.rename ρv κ ξ).eval δ γ₂ l₂ ρ₂)
+          = if cond (c.eval δ γ₁ ρ₁) true false then t.eval δ γ₁ l₁ ρ₁
+            else e.eval δ γ₁ l₁ ρ₁
+      rw [Term.eval_rename c ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ,
+        Tail.eval_rename t ρv κ ξ δ γ₁ γ₂ l₁ l₂ ρ₁ ρ₂ hγ hl hρ,
+        Tail.eval_rename e ρv κ ξ δ γ₁ γ₂ l₁ l₂ ρ₁ ρ₂ hγ hl hρ]
+  | .caseT (σ := σ) scrut alts h, ρv, κ, ξ, δ, γ₁, γ₂, l₁, l₂, ρ₁, ρ₂, hγ, hl, hρ => by
+      have hs := Term.eval_rename scrut ρv ξ δ γ₁ γ₂ ρ₁ ρ₂ hγ hρ
+      have ha := AltsT.eval_rename alts ρv κ ξ δ γ₁ γ₂ l₁ l₂ ρ₁ ρ₂ hγ hl hρ
+      show (match (alts.rename ρv κ ξ).eval
+              (σ.tagOfVal ((scrut.rename ρv ξ).eval δ γ₂ ρ₂))
+              (σ.fieldsOfVal ((scrut.rename ρv ξ).eval δ γ₂ ρ₂)) δ γ₂ l₂ ρ₂ with
+            | some r => r | none => _)
+          = match alts.eval (σ.tagOfVal (scrut.eval δ γ₁ ρ₁))
+              (σ.fieldsOfVal (scrut.eval δ γ₁ ρ₁)) δ γ₁ l₁ ρ₁ with
+            | some r => r | none => _
+      rw [hs, ha]
+  | .join ps body rest, ρv, κ, ξ, δ, γ₁, γ₂, l₁, l₂, ρ₁, ρ₂, hγ, hl, hρ => by
+      have hbody : (fun as => (body.rename (VRen.liftList ps ρv) κ ξ).eval δ
+            (Env.append as γ₂) l₂ ρ₂)
+          = fun as => body.eval δ (Env.append as γ₁) l₁ ρ₁ := by
+        funext as
+        exact Tail.eval_rename body (VRen.liftList ps ρv) κ ξ δ _ _ l₁ l₂ ρ₁ ρ₂
+          (Env.Agree.liftList hγ as) hl hρ
+      show (rest.rename ρv κ.lift ξ).eval δ γ₂
+            (.cons (fun as => (body.rename (VRen.liftList ps ρv) κ ξ).eval δ
+              (Env.append as γ₂) l₂ ρ₂) l₂) ρ₂
+          = rest.eval δ γ₁
+            (.cons (fun as => body.eval δ (Env.append as γ₁) l₁ ρ₁) l₁) ρ₁
+      rw [hbody]
+      exact Tail.eval_rename rest ρv κ.lift ξ δ γ₁ γ₂ _ _ ρ₁ ρ₂ hγ
+        (LEnv.Agree.lift hl (fun as => body.eval δ (Env.append as γ₁) l₁ ρ₁)) hρ
 
 /-- The same, for the branches of a dispatch inside a block. -/
-theorem AltsT.rename_rename {Γ₁ Γ₂ Γ₃ : Ctx} {Ω₁ Ω₂ Ω₃ : LCtx} {τ : Ty}
+theorem AltsT.eval_rename {Γ₁ Γ₂ : Ctx} {Ω₁ Ω₂ : LCtx} {Ρ₁ Ρ₂ : RCtx} {σ τ : Ty}
     {tags : List Nat} {full : Bool} :
-    ∀ (as : AltsT Sg Γ₁ Ω₁ τ tags full) {ρ : VRen Γ₁ Γ₂} {κ : LRen Ω₁ Ω₂}
-      {ρ' : VRen Γ₂ Γ₃} {κ' : LRen Ω₂ Ω₃} {ρ'' : VRen Γ₁ Γ₃} {κ'' : LRen Ω₁ Ω₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), ρ'' v = ρ' (ρ v)) →
-      (∀ {ps : List Ty} (v : Ω₁ ∋ₗ ps), κ'' v = κ' (κ v)) →
-      (as.rename ρ κ).rename ρ' κ' = as.rename ρ'' κ''
-  | .deflt b, _, _, _, _, _, _, hρ, hκ => by
-      simp only [AltsT.rename, b.rename_rename hρ hκ]
-  | .nilFull, _, _, _, _, _, _, _, _ => rfl
-  | .cons _ b rest, _, _, _, _, _, _, hρ, hκ => by
-      simp only [AltsT.rename, b.rename_rename hρ hκ, rest.rename_rename hρ hκ]
+    ∀ (alts : AltsT Sg Γ₁ Ω₁ Ρ₁ σ τ tags full) (ρv : VRen Γ₁ Γ₂) (κ : LRen Ω₁ Ω₂)
+      (ξ : RRen Ρ₁ Ρ₂) (δ : GEnv Sg.decls) (γ₁ : Env Γ₁) (γ₂ : Env Γ₂) (l₁ : LEnv τ Ω₁)
+      (l₂ : LEnv τ Ω₂) (ρ₁ : REnv Ρ₁) (ρ₂ : REnv Ρ₂),
+      Env.Agree ρv γ₁ γ₂ → LEnv.Agree κ l₁ l₂ → REnv.Agree ξ ρ₁ ρ₂ →
+      ∀ (tag : Nat) (fs : List Data),
+        (alts.rename ρv κ ξ).eval tag fs δ γ₂ l₂ ρ₂ = alts.eval tag fs δ γ₁ l₁ ρ₁
+  | .deflt b, ρv, κ, ξ, δ, γ₁, γ₂, l₁, l₂, ρ₁, ρ₂, hγ, hl, hρ, _, _ => by
+      show some ((b.rename ρv κ ξ).eval δ γ₂ l₂ ρ₂) = some (b.eval δ γ₁ l₁ ρ₁)
+      rw [Tail.eval_rename b ρv κ ξ δ γ₁ γ₂ l₁ l₂ ρ₁ ρ₂ hγ hl hρ]
+  | .nilFull, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ => rfl
+  | .cons t fields h body rest, ρv, κ, ξ, δ, γ₁, γ₂, l₁, l₂, ρ₁, ρ₂, hγ, hl, hρ,
+      tag, fs => by
+      show (if t = tag then
+              some ((body.rename (VRen.liftList fields ρv) κ ξ).eval δ
+                ((Env.ofData fields fs).append γ₂) l₂ ρ₂)
+            else (rest.rename ρv κ ξ).eval tag fs δ γ₂ l₂ ρ₂)
+          = if t = tag then
+              some (body.eval δ ((Env.ofData fields fs).append γ₁) l₁ ρ₁)
+            else rest.eval tag fs δ γ₁ l₁ ρ₁
+      by_cases hc : t = tag
+      · simp only [hc, if_pos]
+        exact congrArg some (Tail.eval_rename body (VRen.liftList fields ρv) κ ξ δ _ _
+          l₁ l₂ ρ₁ ρ₂ (Env.Agree.liftList hγ (Env.ofData fields fs)) hl hρ)
+      · simp only [if_neg hc]
+        exact AltsT.eval_rename rest ρv κ ξ δ γ₁ γ₂ l₁ l₂ ρ₁ ρ₂ hγ hl hρ tag fs
 
 end
 
-/-! ## The congruence of substitution -/
+/-- **Weakening does not change a value**: the variable a weakening adds is not read. -/
+theorem Term.eval_weaken {Γ : Ctx} {Ρ : RCtx} {σ τ : Ty} (t : Term Sg Γ Ρ τ)
+    (δ : GEnv Sg.decls) (a : σ.den) (γ : Env Γ) (ρ : REnv Ρ) :
+    (Term.weaken (σ := σ) t).eval δ (.cons a γ) ρ = t.eval δ γ ρ :=
+  Term.eval_rename t VRen.weaken RRen.id δ γ (.cons a γ) ρ ρ (fun _ => rfl) (fun _ => rfl)
 
-/-- Carrying two pointwise-equal substitutions under a binder gives pointwise-equal
-    substitutions. -/
-theorem VSub.lift_congr {Γ₁ Γ₂ : Ctx} {σ : Ty} {θ θ' : VSub Sg Γ₁ Γ₂}
-    (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), θ v = θ' v) :
-    ∀ {τ : Ty} (v : (σ :: Γ₁) ∋ τ), VSub.lift θ v = VSub.lift θ' v
-  | _, .head => rfl
-  | _, .tail v => by simp [VSub.lift, h v]
-
-/-- The same, under a binder that binds a whole list. -/
-theorem VSub.liftList_congr {Γ₁ Γ₂ : Ctx} {θ θ' : VSub Sg Γ₁ Γ₂}
-    (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), θ v = θ' v) :
-    ∀ (σs : List Ty) {τ : Ty} (v : (σs ++ Γ₁) ∋ τ),
-      VSub.liftList σs θ v = VSub.liftList σs θ' v
-  | [], _, v => h v
-  | _ :: σs, _, v => VSub.lift_congr (VSub.liftList_congr h σs) v
-
-mutual
-
-/-- Substituting in a term reads the substitution pointwise. -/
-theorem Term.subst_congr {Γ₁ Γ₂ : Ctx} {τ : Ty} :
-    ∀ (t : Term Sg Γ₁ τ) {θ θ' : VSub Sg Γ₁ Γ₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ v = θ' v) → t.subst θ = t.subst θ'
-  | .var v, _, _, hθ => by simp [Term.subst, hθ v]
-  | .lam b, _, _, hθ => by simp only [Term.subst, b.subst_congr (VSub.lift_congr hθ)]
-  | .ap f a, _, _, hθ => by
-      simp only [Term.subst, f.subst_congr hθ, a.subst_congr hθ]
-  | .lit _, _, _, _ => rfl
-  | .global _, _, _, _ => rfl
-  | .extern _, _, _, _ => rfl
-  | .lazyMk e, _, _, hθ => by simp only [Term.subst, e.subst_congr hθ]
-  | .lazyForce e, _, _, hθ => by simp only [Term.subst, e.subst_congr hθ]
-  | .letE e b, _, _, hθ => by
-      simp only [Term.subst, e.subst_congr hθ, b.subst_congr (VSub.lift_congr hθ)]
-  | .ite c t e, _, _, hθ => by
-      simp only [Term.subst, c.subst_congr hθ, t.subst_congr hθ, e.subst_congr hθ]
-  | .ctor _ _ _ args, _, _, hθ => by simp only [Term.subst, args.subst_congr hθ]
-  | .proj e _ _ _ _, _, _, hθ => by simp only [Term.subst, e.subst_congr hθ]
-  | .tagOf e _, _, _, hθ => by simp only [Term.subst, e.subst_congr hθ]
-  | .caseTag e alts _, _, _, hθ => by
-      simp only [Term.subst, e.subst_congr hθ, alts.subst_congr hθ]
-  | .block b, _, _, hθ => by simp only [Term.subst, b.subst_congr hθ]
-
-/-- The same, for a spine. -/
-theorem Spine.subst_congr {Γ₁ Γ₂ : Ctx} {σs : List Ty} :
-    ∀ (s : Spine Sg Γ₁ σs) {θ θ' : VSub Sg Γ₁ Γ₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ v = θ' v) → s.subst θ = s.subst θ'
-  | .nil, _, _, _ => rfl
-  | .cons t rest, _, _, hθ => by
-      simp only [Spine.subst, t.subst_congr hθ, rest.subst_congr hθ]
-
-/-- The same, for the branches of a case. -/
-theorem Alts.subst_congr {Γ₁ Γ₂ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool} :
-    ∀ (as : Alts Sg Γ₁ τ tags full) {θ θ' : VSub Sg Γ₁ Γ₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ v = θ' v) → as.subst θ = as.subst θ'
-  | .deflt t, _, _, hθ => by simp only [Alts.subst, t.subst_congr hθ]
-  | .nilFull, _, _, _ => rfl
-  | .cons _ t rest, _, _, hθ => by
-      simp only [Alts.subst, t.subst_congr hθ, rest.subst_congr hθ]
-
-/-- The same, for a tail. -/
-theorem Tail.subst_congr {Γ₁ Γ₂ : Ctx} {Ω : LCtx} {τ : Ty} :
-    ∀ (b : Tail Sg Γ₁ Ω τ) {θ θ' : VSub Sg Γ₁ Γ₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ v = θ' v) → b.subst θ = b.subst θ'
-  | .ret t, _, _, hθ => by simp only [Tail.subst, t.subst_congr hθ]
-  | .jmp _ args, _, _, hθ => by simp only [Tail.subst, args.subst_congr hθ]
-  | .letT e b, _, _, hθ => by
-      simp only [Tail.subst, e.subst_congr hθ, b.subst_congr (VSub.lift_congr hθ)]
-  | .iteT c t e, _, _, hθ => by
-      simp only [Tail.subst, c.subst_congr hθ, t.subst_congr hθ, e.subst_congr hθ]
-  | .caseT e alts _, _, _, hθ => by
-      simp only [Tail.subst, e.subst_congr hθ, alts.subst_congr hθ]
-  | .label _ body rest, _, _, hθ => by
-      simp only [Tail.subst, body.subst_congr (VSub.liftList_congr hθ _),
-        rest.subst_congr hθ]
-
-/-- The same, for the branches of a dispatch inside a block. -/
-theorem AltsT.subst_congr {Γ₁ Γ₂ : Ctx} {Ω : LCtx} {τ : Ty} {tags : List Nat}
-    {full : Bool} :
-    ∀ (as : AltsT Sg Γ₁ Ω τ tags full) {θ θ' : VSub Sg Γ₁ Γ₂},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ v = θ' v) → as.subst θ = as.subst θ'
-  | .deflt b, _, _, hθ => by simp only [AltsT.subst, b.subst_congr hθ]
-  | .nilFull, _, _, _ => rfl
-  | .cons _ b rest, _, _, hθ => by
-      simp only [AltsT.subst, b.subst_congr hθ, rest.subst_congr hθ]
-
-end
-
-/-! ## A substitution after a renaming -/
-
-/-- Carrying a substitution and a renaming under a binder commutes with composing
-    them. -/
-theorem VSub.lift_ren {Γ₁ Γ₂ Γ₃ : Ctx} {σ : Ty} {ρ : VRen Γ₁ Γ₂} {θ : VSub Sg Γ₂ Γ₃}
-    {θ'' : VSub Sg Γ₁ Γ₃} (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), θ'' v = θ (ρ v)) :
-    ∀ {τ : Ty} (v : (σ :: Γ₁) ∋ τ), VSub.lift θ'' v = VSub.lift θ (VRen.lift ρ v)
-  | _, .head => rfl
-  | _, .tail v => by simp [VSub.lift, VRen.lift, h v]
-
-/-- The same, under a binder that binds a whole list. -/
-theorem VSub.liftList_ren {Γ₁ Γ₂ Γ₃ : Ctx} {ρ : VRen Γ₁ Γ₂} {θ : VSub Sg Γ₂ Γ₃}
-    {θ'' : VSub Sg Γ₁ Γ₃} (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), θ'' v = θ (ρ v)) :
-    ∀ (σs : List Ty) {τ : Ty} (v : (σs ++ Γ₁) ∋ τ),
-      VSub.liftList σs θ'' v = VSub.liftList σs θ (VRen.liftList σs ρ v)
-  | [], _, v => h v
-  | _ :: σs, _, v => VSub.lift_ren (VSub.liftList_ren h σs) v
-
-mutual
-
-/-- Renaming and then substituting is one substitution.  The renaming `ρ₀` on the right
-    moves nothing; it is there because the same statement is proved for a `Tail`, where
-    the label renaming really does survive the substitution. -/
-theorem Term.subst_rename {Γ₁ Γ₂ Γ₃ : Ctx} {τ : Ty} :
-    ∀ (t : Term Sg Γ₁ τ) {ρ : VRen Γ₁ Γ₂} {θ : VSub Sg Γ₂ Γ₃} {θ'' : VSub Sg Γ₁ Γ₃}
-      {ρ₀ : VRen Γ₃ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = θ (ρ v)) →
-      (∀ {σ : Ty} (v : Γ₃ ∋ σ), ρ₀ v = v) →
-      (t.rename ρ).subst θ = (t.subst θ'').rename ρ₀
-  | .var v, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, hθ v]
-      exact (Term.rename_eq_self _ hρ₀).symm
-  | .lam b, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst,
-        b.subst_rename (VSub.lift_ren hθ) (VRen.lift_self hρ₀)]
-  | .ap f a, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, f.subst_rename hθ hρ₀, a.subst_rename hθ hρ₀]
-  | .lit _, _, _, _, _, _, _ => rfl
-  | .global _, _, _, _, _, _, _ => rfl
-  | .extern _, _, _, _, _, _, _ => rfl
-  | .lazyMk e, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, e.subst_rename hθ hρ₀]
-  | .lazyForce e, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, e.subst_rename hθ hρ₀]
-  | .letE e b, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, e.subst_rename hθ hρ₀,
-        b.subst_rename (VSub.lift_ren hθ) (VRen.lift_self hρ₀)]
-  | .ite c t e, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, c.subst_rename hθ hρ₀, t.subst_rename hθ hρ₀,
-        e.subst_rename hθ hρ₀]
-  | .ctor _ _ _ args, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, args.subst_rename hθ hρ₀]
-  | .proj e _ _ _ _, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, e.subst_rename hθ hρ₀]
-  | .tagOf e _, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, e.subst_rename hθ hρ₀]
-  | .caseTag e alts _, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst, e.subst_rename hθ hρ₀,
-        alts.subst_rename hθ hρ₀]
-  | .block b, _, _, _, _, hθ, hρ₀ => by
-      simp only [Term.rename, Term.subst,
-        b.subst_rename (κ := LRen.id) hθ hρ₀]
-
-/-- The same, for a spine. -/
-theorem Spine.subst_rename {Γ₁ Γ₂ Γ₃ : Ctx} {σs : List Ty} :
-    ∀ (s : Spine Sg Γ₁ σs) {ρ : VRen Γ₁ Γ₂} {θ : VSub Sg Γ₂ Γ₃} {θ'' : VSub Sg Γ₁ Γ₃}
-      {ρ₀ : VRen Γ₃ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = θ (ρ v)) →
-      (∀ {σ : Ty} (v : Γ₃ ∋ σ), ρ₀ v = v) →
-      (s.rename ρ).subst θ = (s.subst θ'').rename ρ₀
-  | .nil, _, _, _, _, _, _ => rfl
-  | .cons t rest, _, _, _, _, hθ, hρ₀ => by
-      simp only [Spine.rename, Spine.subst, t.subst_rename hθ hρ₀,
-        rest.subst_rename hθ hρ₀]
-
-/-- The same, for the branches of a case. -/
-theorem Alts.subst_rename {Γ₁ Γ₂ Γ₃ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool} :
-    ∀ (as : Alts Sg Γ₁ τ tags full) {ρ : VRen Γ₁ Γ₂} {θ : VSub Sg Γ₂ Γ₃}
-      {θ'' : VSub Sg Γ₁ Γ₃} {ρ₀ : VRen Γ₃ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = θ (ρ v)) →
-      (∀ {σ : Ty} (v : Γ₃ ∋ σ), ρ₀ v = v) →
-      (as.rename ρ).subst θ = (as.subst θ'').rename ρ₀
-  | .deflt t, _, _, _, _, hθ, hρ₀ => by
-      simp only [Alts.rename, Alts.subst, t.subst_rename hθ hρ₀]
-  | .nilFull, _, _, _, _, _, _ => rfl
-  | .cons _ t rest, _, _, _, _, hθ, hρ₀ => by
-      simp only [Alts.rename, Alts.subst, t.subst_rename hθ hρ₀,
-        rest.subst_rename hθ hρ₀]
-
-/-- The same, for a tail: the label renaming is carried out to the front. -/
-theorem Tail.subst_rename {Γ₁ Γ₂ Γ₃ : Ctx} {Ω₁ Ω₂ : LCtx} {τ : Ty} :
-    ∀ (b : Tail Sg Γ₁ Ω₁ τ) {ρ : VRen Γ₁ Γ₂} {κ : LRen Ω₁ Ω₂} {θ : VSub Sg Γ₂ Γ₃}
-      {θ'' : VSub Sg Γ₁ Γ₃} {ρ₀ : VRen Γ₃ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = θ (ρ v)) →
-      (∀ {σ : Ty} (v : Γ₃ ∋ σ), ρ₀ v = v) →
-      (b.rename ρ κ).subst θ = (b.subst θ'').rename ρ₀ κ
-  | .ret t, _, _, _, _, _, hθ, hρ₀ => by
-      simp only [Tail.rename, Tail.subst, t.subst_rename hθ hρ₀]
-  | .jmp _ args, _, _, _, _, _, hθ, hρ₀ => by
-      simp only [Tail.rename, Tail.subst, args.subst_rename hθ hρ₀]
-  | .letT e b, _, _, _, _, _, hθ, hρ₀ => by
-      simp only [Tail.rename, Tail.subst, e.subst_rename hθ hρ₀,
-        b.subst_rename (VSub.lift_ren hθ) (VRen.lift_self hρ₀)]
-  | .iteT c t e, _, _, _, _, _, hθ, hρ₀ => by
-      simp only [Tail.rename, Tail.subst, c.subst_rename hθ hρ₀, t.subst_rename hθ hρ₀,
-        e.subst_rename hθ hρ₀]
-  | .caseT e alts _, _, _, _, _, _, hθ, hρ₀ => by
-      simp only [Tail.rename, Tail.subst, e.subst_rename hθ hρ₀,
-        alts.subst_rename hθ hρ₀]
-  | .label _ body rest, _, _, _, _, _, hθ, hρ₀ => by
-      simp only [Tail.rename, Tail.subst,
-        body.subst_rename (VSub.liftList_ren hθ _) (VRen.liftList_self hρ₀ _),
-        rest.subst_rename hθ hρ₀]
-
-/-- The same, for the branches of a dispatch inside a block. -/
-theorem AltsT.subst_rename {Γ₁ Γ₂ Γ₃ : Ctx} {Ω₁ Ω₂ : LCtx} {τ : Ty} {tags : List Nat}
-    {full : Bool} :
-    ∀ (as : AltsT Sg Γ₁ Ω₁ τ tags full) {ρ : VRen Γ₁ Γ₂} {κ : LRen Ω₁ Ω₂}
-      {θ : VSub Sg Γ₂ Γ₃} {θ'' : VSub Sg Γ₁ Γ₃} {ρ₀ : VRen Γ₃ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = θ (ρ v)) →
-      (∀ {σ : Ty} (v : Γ₃ ∋ σ), ρ₀ v = v) →
-      (as.rename ρ κ).subst θ = (as.subst θ'').rename ρ₀ κ
-  | .deflt b, _, _, _, _, _, hθ, hρ₀ => by
-      simp only [AltsT.rename, AltsT.subst, b.subst_rename hθ hρ₀]
-  | .nilFull, _, _, _, _, _, _, _ => rfl
-  | .cons _ b rest, _, _, _, _, _, hθ, hρ₀ => by
-      simp only [AltsT.rename, AltsT.subst, b.subst_rename hθ hρ₀,
-        rest.subst_rename hθ hρ₀]
-
-end
-
-/-! ## A renaming after a substitution -/
-
-/-- Carrying a substitution and the renaming of its results under a binder. -/
-theorem VSub.lift_ren2 {Γ₁ Γ₂ Γ₃ : Ctx} {σ : Ty} {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₂ Γ₃}
-    {θ'' : VSub Sg Γ₁ Γ₃}
-    (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), θ'' v = (θ v).rename ρ) :
-    ∀ {τ : Ty} (v : (σ :: Γ₁) ∋ τ),
-      VSub.lift θ'' v = ((VSub.lift θ) v).rename (VRen.lift ρ)
-  | _, .head => by simp [VSub.lift, Term.rename, VRen.lift]
-  | _, .tail v => by
-      show (θ'' v).weaken = ((θ v).weaken).rename (VRen.lift ρ)
-      rw [h v, Term.weaken, Term.weaken,
-        Term.rename_rename (θ v) (ρ := ρ) (ρ' := VRen.weaken)
-          (ρ'' := fun w => Var.tail (ρ w)) (fun _ => rfl),
-        Term.rename_rename (θ v) (ρ := VRen.weaken) (ρ' := VRen.lift ρ)
-          (ρ'' := fun w => Var.tail (ρ w)) (fun _ => rfl)]
-
-/-- The same, under a binder that binds a whole list. -/
-theorem VSub.liftList_ren2 {Γ₁ Γ₂ Γ₃ : Ctx} {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₂ Γ₃}
-    {θ'' : VSub Sg Γ₁ Γ₃}
-    (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), θ'' v = (θ v).rename ρ) :
-    ∀ (σs : List Ty) {τ : Ty} (v : (σs ++ Γ₁) ∋ τ),
-      VSub.liftList σs θ'' v = ((VSub.liftList σs θ) v).rename (VRen.liftList σs ρ)
-  | [], _, v => h v
-  | _ :: σs, _, v => VSub.lift_ren2 (VSub.liftList_ren2 h σs) v
-
-mutual
-
-/-- Substituting and then renaming is one substitution. -/
-theorem Term.rename_subst {Γ₁ Γ₂ Γ₃ : Ctx} {τ : Ty} :
-    ∀ (t : Term Sg Γ₁ τ) {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₂ Γ₃} {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).rename ρ) →
-      (t.subst θ).rename ρ = t.subst θ''
-  | .var v, _, _, _, hθ => by simp [Term.subst, hθ v]
-  | .lam b, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, b.rename_subst (VSub.lift_ren2 hθ)]
-  | .ap f a, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, f.rename_subst hθ, a.rename_subst hθ]
-  | .lit _, _, _, _, _ => rfl
-  | .global _, _, _, _, _ => rfl
-  | .extern _, _, _, _, _ => rfl
-  | .lazyMk e, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, e.rename_subst hθ]
-  | .lazyForce e, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, e.rename_subst hθ]
-  | .letE e b, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, e.rename_subst hθ,
-        b.rename_subst (VSub.lift_ren2 hθ)]
-  | .ite c t e, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, c.rename_subst hθ, t.rename_subst hθ,
-        e.rename_subst hθ]
-  | .ctor _ _ _ args, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, args.rename_subst hθ]
-  | .proj e _ _ _ _, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, e.rename_subst hθ]
-  | .tagOf e _, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, e.rename_subst hθ]
-  | .caseTag e alts _, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, e.rename_subst hθ, alts.rename_subst hθ]
-  | .block b, _, _, _, hθ => by
-      simp only [Term.subst, Term.rename, b.rename_subst (κ := LRen.id) hθ (fun _ => rfl)]
-
-/-- The same, for a spine. -/
-theorem Spine.rename_subst {Γ₁ Γ₂ Γ₃ : Ctx} {σs : List Ty} :
-    ∀ (s : Spine Sg Γ₁ σs) {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₂ Γ₃} {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).rename ρ) →
-      (s.subst θ).rename ρ = s.subst θ''
-  | .nil, _, _, _, _ => rfl
-  | .cons t rest, _, _, _, hθ => by
-      simp only [Spine.subst, Spine.rename, t.rename_subst hθ, rest.rename_subst hθ]
-
-/-- The same, for the branches of a case. -/
-theorem Alts.rename_subst {Γ₁ Γ₂ Γ₃ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool} :
-    ∀ (as : Alts Sg Γ₁ τ tags full) {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₂ Γ₃}
-      {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).rename ρ) →
-      (as.subst θ).rename ρ = as.subst θ''
-  | .deflt t, _, _, _, hθ => by simp only [Alts.subst, Alts.rename, t.rename_subst hθ]
-  | .nilFull, _, _, _, _ => rfl
-  | .cons _ t rest, _, _, _, hθ => by
-      simp only [Alts.subst, Alts.rename, t.rename_subst hθ, rest.rename_subst hθ]
-
-/-- The same, for a tail, whose label renaming has to move nothing. -/
-theorem Tail.rename_subst {Γ₁ Γ₂ Γ₃ : Ctx} {Ω : LCtx} {τ : Ty} :
-    ∀ (b : Tail Sg Γ₁ Ω τ) {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₂ Γ₃} {κ : LRen Ω Ω}
-      {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).rename ρ) →
-      (∀ {ps : List Ty} (v : Ω ∋ₗ ps), κ v = v) →
-      (b.subst θ).rename ρ κ = b.subst θ''
-  | .ret t, _, _, _, _, hθ, _ => by
-      simp only [Tail.subst, Tail.rename, t.rename_subst hθ]
-  | .jmp l args, _, _, _, _, hθ, hκ => by
-      simp only [Tail.subst, Tail.rename, hκ l, args.rename_subst hθ]
-  | .letT e b, _, _, _, _, hθ, hκ => by
-      simp only [Tail.subst, Tail.rename, e.rename_subst hθ,
-        b.rename_subst (VSub.lift_ren2 hθ) hκ]
-  | .iteT c t e, _, _, _, _, hθ, hκ => by
-      simp only [Tail.subst, Tail.rename, c.rename_subst hθ, t.rename_subst hθ hκ,
-        e.rename_subst hθ hκ]
-  | .caseT e alts _, _, _, _, _, hθ, hκ => by
-      simp only [Tail.subst, Tail.rename, e.rename_subst hθ, alts.rename_subst hθ hκ]
-  | .label self body rest, _, _, _, _, hθ, hκ => by
-      simp only [Tail.subst, Tail.rename,
-        body.rename_subst (VSub.liftList_ren2 hθ _) (LRen.ext_self hκ self _),
-        rest.rename_subst hθ (LRen.lift_self hκ)]
-
-/-- The same, for the branches of a dispatch inside a block. -/
-theorem AltsT.rename_subst {Γ₁ Γ₂ Γ₃ : Ctx} {Ω : LCtx} {τ : Ty} {tags : List Nat}
-    {full : Bool} :
-    ∀ (as : AltsT Sg Γ₁ Ω τ tags full) {θ : VSub Sg Γ₁ Γ₂} {ρ : VRen Γ₂ Γ₃}
-      {κ : LRen Ω Ω} {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).rename ρ) →
-      (∀ {ps : List Ty} (v : Ω ∋ₗ ps), κ v = v) →
-      (as.subst θ).rename ρ κ = as.subst θ''
-  | .deflt b, _, _, _, _, hθ, hκ => by
-      simp only [AltsT.subst, AltsT.rename, b.rename_subst hθ hκ]
-  | .nilFull, _, _, _, _, _, _ => rfl
-  | .cons _ b rest, _, _, _, _, hθ, hκ => by
-      simp only [AltsT.subst, AltsT.rename, b.rename_subst hθ hκ,
-        rest.rename_subst hθ hκ]
-
-end
-
-/-! ## A substitution after a substitution -/
-
-/-- Carrying two substitutions under a binder commutes with composing them. -/
-theorem VSub.lift_comp {Γ₁ Γ₂ Γ₃ : Ctx} {σ : Ty} {θ : VSub Sg Γ₁ Γ₂} {θ' : VSub Sg Γ₂ Γ₃}
-    {θ'' : VSub Sg Γ₁ Γ₃} (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), θ'' v = (θ v).subst θ') :
-    ∀ {τ : Ty} (v : (σ :: Γ₁) ∋ τ),
-      VSub.lift θ'' v = ((VSub.lift θ) v).subst (VSub.lift θ')
-  | _, .head => by simp [VSub.lift, Term.subst]
-  | _, .tail v => by
-      show (θ'' v).weaken = ((θ v).weaken).subst (VSub.lift θ')
-      rw [h v, Term.weaken, Term.weaken,
-        Term.rename_subst (θ v) (θ := θ') (ρ := VRen.weaken)
-          (θ'' := fun w => (θ' w).rename VRen.weaken) (fun _ => rfl),
-        Term.subst_rename (θ v) (ρ := VRen.weaken) (θ := VSub.lift θ')
-          (θ'' := fun w => (θ' w).rename VRen.weaken) (ρ₀ := VRen.id)
-          (fun _ => rfl) (fun _ => rfl)]
-      exact (Term.rename_eq_self _ (fun _ => rfl)).symm
-
-/-- The same, under a binder that binds a whole list. -/
-theorem VSub.liftList_comp {Γ₁ Γ₂ Γ₃ : Ctx} {θ : VSub Sg Γ₁ Γ₂} {θ' : VSub Sg Γ₂ Γ₃}
-    {θ'' : VSub Sg Γ₁ Γ₃} (h : ∀ {τ : Ty} (v : Γ₁ ∋ τ), θ'' v = (θ v).subst θ') :
-    ∀ (σs : List Ty) {τ : Ty} (v : (σs ++ Γ₁) ∋ τ),
-      VSub.liftList σs θ'' v = ((VSub.liftList σs θ) v).subst (VSub.liftList σs θ')
-  | [], _, v => h v
-  | _ :: σs, _, v => VSub.lift_comp (VSub.liftList_comp h σs) v
-
-mutual
-
-/-- Substituting twice is substituting once, by the composite. -/
-theorem Term.subst_subst {Γ₁ Γ₂ Γ₃ : Ctx} {τ : Ty} :
-    ∀ (t : Term Sg Γ₁ τ) {θ : VSub Sg Γ₁ Γ₂} {θ' : VSub Sg Γ₂ Γ₃}
-      {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).subst θ') →
-      (t.subst θ).subst θ' = t.subst θ''
-  | .var v, _, _, _, hθ => by simp [Term.subst, hθ v]
-  | .lam b, _, _, _, hθ => by
-      simp only [Term.subst, b.subst_subst (VSub.lift_comp hθ)]
-  | .ap f a, _, _, _, hθ => by
-      simp only [Term.subst, f.subst_subst hθ, a.subst_subst hθ]
-  | .lit _, _, _, _, _ => rfl
-  | .global _, _, _, _, _ => rfl
-  | .extern _, _, _, _, _ => rfl
-  | .lazyMk e, _, _, _, hθ => by simp only [Term.subst, e.subst_subst hθ]
-  | .lazyForce e, _, _, _, hθ => by simp only [Term.subst, e.subst_subst hθ]
-  | .letE e b, _, _, _, hθ => by
-      simp only [Term.subst, e.subst_subst hθ, b.subst_subst (VSub.lift_comp hθ)]
-  | .ite c t e, _, _, _, hθ => by
-      simp only [Term.subst, c.subst_subst hθ, t.subst_subst hθ, e.subst_subst hθ]
-  | .ctor _ _ _ args, _, _, _, hθ => by simp only [Term.subst, args.subst_subst hθ]
-  | .proj e _ _ _ _, _, _, _, hθ => by simp only [Term.subst, e.subst_subst hθ]
-  | .tagOf e _, _, _, _, hθ => by simp only [Term.subst, e.subst_subst hθ]
-  | .caseTag e alts _, _, _, _, hθ => by
-      simp only [Term.subst, e.subst_subst hθ, alts.subst_subst hθ]
-  | .block b, _, _, _, hθ => by simp only [Term.subst, b.subst_subst hθ]
-
-/-- The same, for a spine. -/
-theorem Spine.subst_subst {Γ₁ Γ₂ Γ₃ : Ctx} {σs : List Ty} :
-    ∀ (s : Spine Sg Γ₁ σs) {θ : VSub Sg Γ₁ Γ₂} {θ' : VSub Sg Γ₂ Γ₃}
-      {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).subst θ') →
-      (s.subst θ).subst θ' = s.subst θ''
-  | .nil, _, _, _, _ => rfl
-  | .cons t rest, _, _, _, hθ => by
-      simp only [Spine.subst, t.subst_subst hθ, rest.subst_subst hθ]
-
-/-- The same, for the branches of a case. -/
-theorem Alts.subst_subst {Γ₁ Γ₂ Γ₃ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool} :
-    ∀ (as : Alts Sg Γ₁ τ tags full) {θ : VSub Sg Γ₁ Γ₂} {θ' : VSub Sg Γ₂ Γ₃}
-      {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).subst θ') →
-      (as.subst θ).subst θ' = as.subst θ''
-  | .deflt t, _, _, _, hθ => by simp only [Alts.subst, t.subst_subst hθ]
-  | .nilFull, _, _, _, _ => rfl
-  | .cons _ t rest, _, _, _, hθ => by
-      simp only [Alts.subst, t.subst_subst hθ, rest.subst_subst hθ]
-
-/-- The same, for a tail. -/
-theorem Tail.subst_subst {Γ₁ Γ₂ Γ₃ : Ctx} {Ω : LCtx} {τ : Ty} :
-    ∀ (b : Tail Sg Γ₁ Ω τ) {θ : VSub Sg Γ₁ Γ₂} {θ' : VSub Sg Γ₂ Γ₃}
-      {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).subst θ') →
-      (b.subst θ).subst θ' = b.subst θ''
-  | .ret t, _, _, _, hθ => by simp only [Tail.subst, t.subst_subst hθ]
-  | .jmp _ args, _, _, _, hθ => by simp only [Tail.subst, args.subst_subst hθ]
-  | .letT e b, _, _, _, hθ => by
-      simp only [Tail.subst, e.subst_subst hθ, b.subst_subst (VSub.lift_comp hθ)]
-  | .iteT c t e, _, _, _, hθ => by
-      simp only [Tail.subst, c.subst_subst hθ, t.subst_subst hθ, e.subst_subst hθ]
-  | .caseT e alts _, _, _, _, hθ => by
-      simp only [Tail.subst, e.subst_subst hθ, alts.subst_subst hθ]
-  | .label _ body rest, _, _, _, hθ => by
-      simp only [Tail.subst, body.subst_subst (VSub.liftList_comp hθ _),
-        rest.subst_subst hθ]
-
-/-- The same, for the branches of a dispatch inside a block. -/
-theorem AltsT.subst_subst {Γ₁ Γ₂ Γ₃ : Ctx} {Ω : LCtx} {τ : Ty} {tags : List Nat}
-    {full : Bool} :
-    ∀ (as : AltsT Sg Γ₁ Ω τ tags full) {θ : VSub Sg Γ₁ Γ₂} {θ' : VSub Sg Γ₂ Γ₃}
-      {θ'' : VSub Sg Γ₁ Γ₃},
-      (∀ {σ : Ty} (v : Γ₁ ∋ σ), θ'' v = (θ v).subst θ') →
-      (as.subst θ).subst θ' = as.subst θ''
-  | .deflt b, _, _, _, hθ => by simp only [AltsT.subst, b.subst_subst hθ]
-  | .nilFull, _, _, _, _ => rfl
-  | .cons _ b rest, _, _, _, hθ => by
-      simp only [AltsT.subst, b.subst_subst hθ, rest.subst_subst hθ]
-
-end
-
-/-! ## Substituting by the identity -/
-
-/-- A substitution that changes nothing still changes nothing under a binder. -/
-theorem VSub.lift_self {Γ : Ctx} {σ : Ty} {θ : VSub Sg Γ Γ}
-    (h : ∀ {τ : Ty} (v : Γ ∋ τ), θ v = .var v) :
-    ∀ {τ : Ty} (v : (σ :: Γ) ∋ τ), VSub.lift θ v = .var v
-  | _, .head => rfl
-  | _, .tail v => by simp [VSub.lift, h v, Term.weaken, Term.rename, VRen.weaken]
-
-/-- The same, under a binder that binds a whole list. -/
-theorem VSub.liftList_self {Γ : Ctx} {θ : VSub Sg Γ Γ}
-    (h : ∀ {τ : Ty} (v : Γ ∋ τ), θ v = .var v) :
-    ∀ (σs : List Ty) {τ : Ty} (v : (σs ++ Γ) ∋ τ), VSub.liftList σs θ v = .var v
-  | [], _, v => h v
-  | _ :: σs, _, v => VSub.lift_self (VSub.liftList_self h σs) v
-
-mutual
-
-/-- A substitution that gives every variable back itself changes nothing. -/
-theorem Term.subst_eq_self {Γ : Ctx} {τ : Ty} :
-    ∀ (t : Term Sg Γ τ) {θ : VSub Sg Γ Γ},
-      (∀ {σ : Ty} (v : Γ ∋ σ), θ v = .var v) → t.subst θ = t
-  | .var v, _, hθ => by simp only [Term.subst, hθ v]
-  | .lam b, _, hθ => by simp only [Term.subst, b.subst_eq_self (VSub.lift_self hθ)]
-  | .ap f a, _, hθ => by
-      simp only [Term.subst, f.subst_eq_self hθ, a.subst_eq_self hθ]
-  | .lit _, _, _ => rfl
-  | .global _, _, _ => rfl
-  | .extern _, _, _ => rfl
-  | .lazyMk e, _, hθ => by simp only [Term.subst, e.subst_eq_self hθ]
-  | .lazyForce e, _, hθ => by simp only [Term.subst, e.subst_eq_self hθ]
-  | .letE e b, _, hθ => by
-      simp only [Term.subst, e.subst_eq_self hθ, b.subst_eq_self (VSub.lift_self hθ)]
-  | .ite c t e, _, hθ => by
-      simp only [Term.subst, c.subst_eq_self hθ, t.subst_eq_self hθ, e.subst_eq_self hθ]
-  | .ctor _ _ _ args, _, hθ => by simp only [Term.subst, args.subst_eq_self hθ]
-  | .proj e _ _ _ _, _, hθ => by simp only [Term.subst, e.subst_eq_self hθ]
-  | .tagOf e _, _, hθ => by simp only [Term.subst, e.subst_eq_self hθ]
-  | .caseTag e alts _, _, hθ => by
-      simp only [Term.subst, e.subst_eq_self hθ, alts.subst_eq_self hθ]
-  | .block b, _, hθ => by simp only [Term.subst, b.subst_eq_self hθ]
-
-/-- The same, for a spine. -/
-theorem Spine.subst_eq_self {Γ : Ctx} {σs : List Ty} :
-    ∀ (s : Spine Sg Γ σs) {θ : VSub Sg Γ Γ},
-      (∀ {σ : Ty} (v : Γ ∋ σ), θ v = .var v) → s.subst θ = s
-  | .nil, _, _ => rfl
-  | .cons t rest, _, hθ => by
-      simp only [Spine.subst, t.subst_eq_self hθ, rest.subst_eq_self hθ]
-
-/-- The same, for the branches of a case. -/
-theorem Alts.subst_eq_self {Γ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool} :
-    ∀ (as : Alts Sg Γ τ tags full) {θ : VSub Sg Γ Γ},
-      (∀ {σ : Ty} (v : Γ ∋ σ), θ v = .var v) → as.subst θ = as
-  | .deflt t, _, hθ => by simp only [Alts.subst, t.subst_eq_self hθ]
-  | .nilFull, _, _ => rfl
-  | .cons _ t rest, _, hθ => by
-      simp only [Alts.subst, t.subst_eq_self hθ, rest.subst_eq_self hθ]
-
-/-- The same, for a tail. -/
-theorem Tail.subst_eq_self {Γ : Ctx} {Ω : LCtx} {τ : Ty} :
-    ∀ (b : Tail Sg Γ Ω τ) {θ : VSub Sg Γ Γ},
-      (∀ {σ : Ty} (v : Γ ∋ σ), θ v = .var v) → b.subst θ = b
-  | .ret t, _, hθ => by simp only [Tail.subst, t.subst_eq_self hθ]
-  | .jmp _ args, _, hθ => by simp only [Tail.subst, args.subst_eq_self hθ]
-  | .letT e b, _, hθ => by
-      simp only [Tail.subst, e.subst_eq_self hθ, b.subst_eq_self (VSub.lift_self hθ)]
-  | .iteT c t e, _, hθ => by
-      simp only [Tail.subst, c.subst_eq_self hθ, t.subst_eq_self hθ, e.subst_eq_self hθ]
-  | .caseT e alts _, _, hθ => by
-      simp only [Tail.subst, e.subst_eq_self hθ, alts.subst_eq_self hθ]
-  | .label _ body rest, _, hθ => by
-      simp only [Tail.subst, body.subst_eq_self (VSub.liftList_self hθ _),
-        rest.subst_eq_self hθ]
-
-/-- The same, for the branches of a dispatch inside a block. -/
-theorem AltsT.subst_eq_self {Γ : Ctx} {Ω : LCtx} {τ : Ty} {tags : List Nat}
-    {full : Bool} :
-    ∀ (as : AltsT Sg Γ Ω τ tags full) {θ : VSub Sg Γ Γ},
-      (∀ {σ : Ty} (v : Γ ∋ σ), θ v = .var v) → as.subst θ = as
-  | .deflt b, _, hθ => by simp only [AltsT.subst, b.subst_eq_self hθ]
-  | .nilFull, _, _ => rfl
-  | .cons _ b rest, _, hθ => by
-      simp only [AltsT.subst, b.subst_eq_self hθ, rest.subst_eq_self hθ]
-
-end
-
-/-! ## What the evaluator needs -/
-
-/-- The identity substitution changes nothing. -/
-theorem Term.subst_id {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ) : t.subst VSub.id = t :=
-  t.subst_eq_self (fun _ => rfl)
-
-/-- The identity substitution changes no tail. -/
-theorem Tail.subst_id {Γ : Ctx} {Ω : LCtx} {τ : Ty} (b : Tail Sg Γ Ω τ) :
-    b.subst VSub.id = b :=
-  b.subst_eq_self (fun _ => rfl)
-
-/-- **β is an extension of the environment**: substituting under a binder and then
-    substituting the variable it binds is one substitution, the environment extended by
-    the argument. -/
-theorem Term.subst0_subst_lift {Γ₁ Γ₂ : Ctx} {σ τ : Ty}
-    (b : Term Sg (σ :: Γ₁) τ) (θ : VSub Sg Γ₁ Γ₂) (a : Term Sg Γ₂ σ) :
-    (b.subst θ.lift).subst0 a = b.subst (VSub.cons a θ) := by
-  refine b.subst_subst (θ' := VSub.zero a) ?_
-  intro ν v
-  match v with
-  | .head => rfl
-  | .tail v =>
-      show θ v = ((θ v).weaken).subst (VSub.zero a)
-      rw [Term.weaken, Term.subst_rename (θ v) (ρ := VRen.weaken)
-        (θ := VSub.zero a) (θ'' := VSub.id) (ρ₀ := VRen.id) (fun _ => rfl)
-        (fun _ => rfl), Term.subst_id]
-      exact ((θ v).rename_eq_self (fun _ => rfl)).symm
-
-/-- The same, for the tail of a block. -/
-theorem Tail.subst0_subst_lift {Γ₁ Γ₂ : Ctx} {Ω : LCtx} {σ τ : Ty}
-    (b : Tail Sg (σ :: Γ₁) Ω τ) (θ : VSub Sg Γ₁ Γ₂) (a : Term Sg Γ₂ σ) :
-    (b.subst θ.lift).subst0 a = b.subst (VSub.cons a θ) := by
-  refine b.subst_subst (θ' := VSub.zero a) ?_
-  intro ν v
-  match v with
-  | .head => rfl
-  | .tail v =>
-      show θ v = ((θ v).weaken).subst (VSub.zero a)
-      rw [Term.weaken, Term.subst_rename (θ v) (ρ := VRen.weaken)
-        (θ := VSub.zero a) (θ'' := VSub.id) (ρ₀ := VRen.id) (fun _ => rfl)
-        (fun _ => rfl), Term.subst_id]
-      exact ((θ v).rename_eq_self (fun _ => rfl)).symm
+/-- **Weakening by a recursion does not change a value** either: the recursion a
+    weakening adds cannot be called by a term that was written without it. -/
+theorem Term.eval_rweaken {Γ : Ctx} {Ρ : RCtx} {r : RSig} {τ : Ty} (t : Term Sg Γ Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (f : Env r.ps → r.ret.den) (ρ : REnv Ρ) :
+    (Term.rweaken (r := r) t).eval δ γ (.cons f ρ) = t.eval δ γ ρ :=
+  Term.eval_rename t VRen.id RRen.weaken δ γ γ ρ (.cons f ρ) (fun _ => rfl)
+    (fun _ => rfl)
 
 end LakeJs.Expr
 

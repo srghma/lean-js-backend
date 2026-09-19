@@ -1,0 +1,232 @@
+════ 🎯 ExamplesProofFields.run
+def ExamplesProofFields.run n s : Nat :=
+  cases s : Nat
+  | ExamplesProofFields.Step.stop h.1 =>
+    let _x.2 := 0;
+    return _x.2
+  | ExamplesProofFields.Step.half h.3 =>
+    let _x.4 := 1;
+    let _x.5 := Nat.shiftRight n _x.4;
+    let _x.6 := ExamplesProofFields.Step.of _x.5;
+    let _x.7 := ExamplesProofFields.run _x.5 _x.6;
+    let _x.8 := Nat.add _x.4 _x.7;
+    return _x.8
+  | ExamplesProofFields.Step.boom h1.9 h2.10 =>
+    let _x.11 := 1;
+    let _x.12 := @ExamplesProofFields.Step.boom n ◾ ◾;
+    let _x.13 := ExamplesProofFields.run n _x.12;
+    let _x.14 := Nat.add _x.11 _x.13;
+    return _x.14
+
+════ 🎯 ExamplesProofFields.runErased
+def ExamplesProofFields.runErased fuel n tag : Option Nat :=
+  cases fuel : Option Nat
+  | Nat.zero =>
+    let _x.1 := @Option.none _;
+    return _x.1
+  | Nat.succ n.2 =>
+    let _x.3 := 0;
+    let _x.4 := instDecidableEqNat tag _x.3;
+    cases _x.4 : Option Nat
+    | Decidable.isFalse h_1 =>
+      let _x.5 := 1;
+      let _x.6 := instDecidableEqNat tag _x.5;
+      cases _x.6 : Option Nat
+      | Decidable.isFalse h_2 =>
+        let _x.7 := 2;
+        let _x.8 := ExamplesProofFields.runErased n.2 n _x.7;
+        cases _x.8 : Option Nat
+        | Option.none =>
+          return _x.8
+        | Option.some val.9 =>
+          let _x.10 := Nat.add _x.5 val.9;
+          let _x.11 := @Option.some _ _x.10;
+          return _x.11
+      | Decidable.isTrue h_2 =>
+        let _x.12 := Nat.shiftRight n _x.5;
+        jp _jp.13 _y.14 : Option Nat :=
+          let _x.15 := ExamplesProofFields.runErased n.2 _x.12 _y.14;
+          cases _x.15 : Option Nat
+          | Option.none =>
+            return _x.15
+          | Option.some val.16 =>
+            let _x.17 := Nat.add _x.5 val.16;
+            let _x.18 := @Option.some _ _x.17;
+            return _x.18;
+        let _x.19 := instDecidableEqNat _x.12 _x.3;
+        cases _x.19 : Option Nat
+        | Decidable.isFalse x.20 =>
+          goto _jp.13 _x.5
+        | Decidable.isTrue x.21 =>
+          goto _jp.13 _x.3
+    | Decidable.isTrue h_1 =>
+      let _x.22 := @Option.some _ _x.3;
+      return _x.22
+
+════ 🎯 ExamplesProofFields.runRanked
+def ExamplesProofFields.runRanked x.1 x.2 x.3 : Nat :=
+  cases x.1 : Nat
+  | Nat.zero =>
+    let _x.4 := 0;
+    return _x.4
+  | Nat.succ n.5 =>
+    let _x.6 := 0;
+    let _x.7 := instDecidableEqNat x.3 _x.6;
+    cases _x.7 : Nat
+    | Decidable.isFalse h_1 =>
+      let _x.8 := 1;
+      let _x.9 := instDecidableEqNat x.3 _x.8;
+      cases _x.9 : Nat
+      | Decidable.isFalse h_2 =>
+        let _x.10 := 2;
+        let _x.11 := ExamplesProofFields.runRanked n.5 x.2 _x.10;
+        let _x.12 := Nat.add _x.8 _x.11;
+        return _x.12
+      | Decidable.isTrue h_2 =>
+        let _x.13 := Nat.shiftRight x.2 _x.8;
+        jp _jp.14 _y.15 : Nat :=
+          let _x.16 := ExamplesProofFields.runRanked n.5 _x.13 _y.15;
+          let _x.17 := Nat.add _x.8 _x.16;
+          return _x.17;
+        let _x.18 := instDecidableEqNat _x.13 _x.6;
+        cases _x.18 : Nat
+        | Decidable.isFalse x.19 =>
+          goto _jp.14 _x.8
+        | Decidable.isTrue x.20 =>
+          goto _jp.14 _x.6
+    | Decidable.isTrue h_1 =>
+      return _x.6
+
+════ 🎯 ExamplesProofFields.tagOf
+def ExamplesProofFields.tagOf n : Nat :=
+  let _x.1 := 0;
+  let _x.2 := instDecidableEqNat n _x.1;
+  cases _x.2 : Nat
+  | Decidable.isFalse x.3 =>
+    let _x.4 := 1;
+    return _x.4
+  | Decidable.isTrue x.5 =>
+    return _x.1
+
+════ 🎯 ExamplesProofFields.Step.ctorElim
+def ExamplesProofFields.Step.ctorElim n motive ctorIdx t h k : motive lcAny :=
+  cases t : lcAny
+  | ExamplesProofFields.Step.boom h1 h2 =>
+    let _x.1 := k # 0;
+    let _x.2 := _x.1 ◾ ◾;
+    return _x.2
+  | _ =>
+    let _x.3 := k # 0;
+    let _x.4 := _x.3 ◾;
+    return _x.4
+
+════ 🎯 ExamplesProofFields.Step.ctorIdx
+def ExamplesProofFields.Step.ctorIdx n x : Nat :=
+  cases x : Nat
+  | ExamplesProofFields.Step.stop h =>
+    let _x.1 := 0;
+    return _x.1
+  | ExamplesProofFields.Step.half h =>
+    let _x.2 := 1;
+    return _x.2
+  | ExamplesProofFields.Step.boom h1 h2 =>
+    let _x.3 := 2;
+    return _x.3
+
+════ 🎯 ExamplesProofFields.Step.of
+def ExamplesProofFields.Step.of n : ExamplesProofFields.Step lcAny :=
+  let _x.1 := 0;
+  let _x.2 := instDecidableEqNat n _x.1;
+  cases _x.2 : ExamplesProofFields.Step lcAny
+  | Decidable.isFalse h =>
+    let _x.3 := @ExamplesProofFields.Step.half n ◾;
+    return _x.3
+  | Decidable.isTrue h =>
+    let _x.4 := @ExamplesProofFields.Step.stop n ◾;
+    return _x.4
+
+════ 🎯 ExamplesProofFields.Step.boom.elim
+def ExamplesProofFields.Step.boom.elim n motive t h boom : motive lcAny :=
+  let _x.1 := 2;
+  let _x.2 := @PULift.up _ boom;
+  let _x.3 := @ExamplesProofFields.Step.ctorElim n _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.Step.half.elim
+def ExamplesProofFields.Step.half.elim n motive t h half : motive lcAny :=
+  let _x.1 := 1;
+  let _x.2 := @PULift.up _ half;
+  let _x.3 := @ExamplesProofFields.Step.ctorElim n _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 ExamplesProofFields.Step.stop.elim
+def ExamplesProofFields.Step.stop.elim n motive t h stop : motive lcAny :=
+  let _x.1 := 0;
+  let _x.2 := @PULift.up _ stop;
+  let _x.3 := @ExamplesProofFields.Step.ctorElim n _ _x.1 t ◾ _x.2;
+  return _x.3
+
+════ 🎯 _private.ExamplesProofFields.Countdown.0.ExamplesProofFields.run.match_1.splitter
+def _private.ExamplesProofFields.Countdown.0.ExamplesProofFields.run.match_1.splitter n motive s.1 h_1 h_2 h_3 : motive
+  lcAny :=
+  cases s.1 : motive lcAny
+  | ExamplesProofFields.Step.stop h.2 =>
+    let _x.3 := h_1 ◾;
+    return _x.3
+  | ExamplesProofFields.Step.half h.4 =>
+    let _x.5 := h_2 ◾;
+    return _x.5
+  | ExamplesProofFields.Step.boom h1.6 h2.7 =>
+    let _x.8 := h_3 ◾ ◾;
+    return _x.8
+
+════ 🎯 _private.ExamplesProofFields.Countdown.0.ExamplesProofFields.runErased.match_1.splitter
+def _private.ExamplesProofFields.Countdown.0.ExamplesProofFields.runErased.match_1.splitter motive tag.1 h_1 h_2 h_3 : motive
+  lcAny :=
+  let _x.2 := 0;
+  let _x.3 := instDecidableEqNat tag.1 _x.2;
+  cases _x.3 : motive lcAny
+  | Decidable.isFalse h_1 =>
+    let _x.4 := 1;
+    let _x.5 := instDecidableEqNat tag.1 _x.4;
+    cases _x.5 : motive lcAny
+    | Decidable.isFalse h_2 =>
+      let _x.6 := h_3 tag.1 ◾ ◾;
+      return _x.6
+    | Decidable.isTrue h_2 =>
+      let _x.7 := PUnit.unit;
+      let _x.8 := h_2 _x.7;
+      return _x.8
+  | Decidable.isTrue h_1 =>
+    let _x.9 := PUnit.unit;
+    let _x.10 := h_1 _x.9;
+    return _x.10
+
+════ 🎯 _private.ExamplesProofFields.Countdown.0.ExamplesProofFields.runRanked.match_1.splitter
+def _private.ExamplesProofFields.Countdown.0.ExamplesProofFields.runRanked.match_1.splitter motive x.1 x.2 x.3 h_1 h_2 : motive
+  lcAny lcAny lcAny :=
+  cases x.1 : motive lcAny lcAny lcAny
+  | Nat.zero =>
+    let _x.4 := h_1 x.2 x.3;
+    return _x.4
+  | Nat.succ n.5 =>
+    let _x.6 := h_2 n.5 x.2 x.3;
+    return _x.6
+
+════ 📦 instDecidableEqNat
+def instDecidableEqNat @&n @&m : Decidable lcErased :=
+  let _x.1 := Nat.decEq n m;
+  return _x.1
+
+════ 📦 Nat.add
+def Nat.add @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+
+════ 📦 Nat.decEq
+def Nat.decEq @&n @&m : Decidable lcErased :=
+  extern
+
+════ 📦 Nat.shiftRight
+def Nat.shiftRight @&a._@._internal._hyg.1 @&a._@._internal._hyg.2 : Nat :=
+  extern
+

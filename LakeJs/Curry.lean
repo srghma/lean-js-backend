@@ -7,9 +7,9 @@ public import LakeJs.Subst
 /-!
 # Currying a block, and uncurrying a function
 
-One binder of this language binds a **list** of variables at once — `Tail.label`, the
-loops and the shared tails both — and it extends the context by `ps ++ Γ`, so inside it de
-Bruijn index `0` is the **first** argument of the label.  A curried `ƛ`-chain binds the same parameters one
+Two binders of this language bind a **list** of variables at once — `Tail.join`, the join
+point, and `Term.fix`, the recursion — and each extends the context by `ps ++ Γ`, so
+inside it de Bruijn index `0` is the **first** argument.  A curried `ƛ`-chain binds the same parameters one
 at a time, so inside `ƛ ƛ …` index `0` is the **last** one written.  The two orders are
 opposite, and a pass that converts between them — uncurrying a chain into a label,
 contifying a `let`-bound function into a label, eta-expanding a label back into a chain — has to reverse the list.
@@ -30,7 +30,8 @@ reverse a list by hand:
   a mistake would survive.
 
 A `Term` holds no labels at all, so nothing further has to be said about jumps: a body
-turned into a function is jump-free by construction.
+turned into a function is jump-free by construction.  The recursion context is carried
+through untouched — currying moves variables, and a self-reference is not one.
 -/
 
 namespace LakeJs.Expr
@@ -100,8 +101,8 @@ theorem VRen.insertParams_lift_weaken {Γ : Ctx} {σ a : Ty} (σs : List Ty) {τ
     VRen.insertParams (σ := σ) (a :: σs) (VRen.lift (VRen.weaken (σ := a)) x)
       = .tail (VRen.insertParams σs x) := by
   cases x with
-  | head => simp only [VRen.lift, VRen.insertParams, VRen.weakenList]
-  | tail y => simp only [VRen.lift, VRen.weaken, VRen.insertParams, VRen.liftList]
+  | head => rfl
+  | tail y => rfl
 
 /-- …and the round trip the other way round. -/
 theorem VRen.insertParams_extractParams {Γ : Ctx} {σ : Ty} :
@@ -109,14 +110,11 @@ theorem VRen.insertParams_extractParams {Γ : Ctx} {σ : Ty} :
       VRen.insertParams σs (VRen.extractParams σs v) = v
   | [], _, v => by
       cases v with
-      | head =>
-          simp only [VRen.extractParams, VRen.insertParams, VRen.weakenList, VRen.id]
-      | tail y =>
-          simp only [VRen.extractParams, VRen.insertParams, VRen.liftList, VRen.weaken]
+      | head => rfl
+      | tail y => rfl
   | a :: σs, _, v => by
       cases v with
-      | head =>
-          simp only [VRen.extractParams, VRen.insertParams, VRen.liftList, VRen.lift]
+      | head => rfl
       | tail w =>
           rw [VRen.extractParams, VRen.insertParams_lift_weaken,
             VRen.insertParams_extractParams σs w]
@@ -126,16 +124,17 @@ theorem VRen.insertParams_extractParams {Γ : Ctx} {σ : Ty} :
 /-- **A block, as a curried function.**  `curryParams σs b` is `fun x₁ … xₙ => b`, where
     `b` binds `σs ++ Γ` — its de Bruijn index `0` being the *first* parameter — and the
     chain binds them in the order they are written. -/
-def Term.curryParams {Sg : Sig} {Γ : Ctx} {τ : Ty} :
-    (σs : List Ty) → Term Sg (σs ++ Γ) τ → Term Sg Γ (Ty.arrows σs τ)
+def Term.curryParams {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {τ : Ty} :
+    (σs : List Ty) → Term Sg (σs ++ Γ) Ρ τ → Term Sg Γ Ρ (Ty.arrows σs τ)
   | [], b => b
-  | _ :: σs, b => .lam (Term.curryParams σs (b.rename (VRen.insertParams σs)))
+  | _ :: σs, b =>
+      .lam (Term.curryParams σs (b.rename (VRen.insertParams σs) RRen.id))
 
 /-- **A curried function, as a block**: `f x₁ … xₙ`, in the context the parameters extend,
     with index `0` the first parameter — the inverse reading of `Term.curryParams`. -/
-def Term.uncurryParams {Sg : Sig} {Γ : Ctx} {τ : Ty} (σs : List Ty)
-    (f : Term Sg Γ (Ty.arrows σs τ)) : Term Sg (σs ++ Γ) τ :=
-  Term.appSpine (f.rename (VRen.weakenList σs)) (Spine.vars σs)
+def Term.uncurryParams {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {τ : Ty} (σs : List Ty)
+    (f : Term Sg Γ Ρ (Ty.arrows σs τ)) : Term Sg (σs ++ Γ) Ρ τ :=
+  Term.appSpine (f.rename (VRen.weakenList σs) RRen.id) (Spine.vars σs)
 
 /-! ## What the direction actually is
 
@@ -151,33 +150,33 @@ private def sigNone : Sig := ⟨[], rfl⟩
 /-- The **first** parameter of a block is index `0` of the block, and the **outermost**
     binder of the chain — which is index `1` inside a chain of two. -/
 example :
-    Term.curryParams (Sg := sigNone) (Γ := []) (τ := Ty.nat) [Ty.nat, Ty.nat]
+    Term.curryParams (Sg := sigNone) (Γ := []) (Ρ := []) (τ := Ty.nat) [Ty.nat, Ty.nat]
         (♯0)
       = ƛ (ƛ (♯1)) := rfl
 
 /-- The **second** parameter is index `1` of the block and the innermost binder. -/
 example :
-    Term.curryParams (Sg := sigNone) (Γ := []) (τ := Ty.nat) [Ty.nat, Ty.nat]
+    Term.curryParams (Sg := sigNone) (Γ := []) (Ρ := []) (τ := Ty.nat) [Ty.nat, Ty.nat]
         (♯1)
       = ƛ (ƛ (♯0)) := rfl
 
 /-- Three parameters, all of the same type: `fun x y z => x` is the block that reads its
     first parameter. -/
 example :
-    Term.curryParams (Sg := sigNone) (Γ := []) (τ := Ty.nat)
+    Term.curryParams (Sg := sigNone) (Γ := []) (Ρ := []) (τ := Ty.nat)
         [Ty.nat, Ty.nat, Ty.nat] (♯0)
       = ƛ (ƛ (ƛ (♯2))) := rfl
 
 /-- A block that reads a variable of the **enclosing** context keeps reading it. -/
 example :
-    Term.curryParams (Sg := sigNone) (Γ := [Ty.bool]) (τ := Ty.bool)
+    Term.curryParams (Sg := sigNone) (Γ := [Ty.bool]) (Ρ := []) (τ := Ty.bool)
         [Ty.nat, Ty.nat] (♯2)
       = ƛ (ƛ (♯2)) := rfl
 
 /-- Uncurrying a chain reads its parameters in the block's order: the *first* parameter
     is index `0` of the block, and it is the argument the function takes first. -/
 example :
-    Term.uncurryParams (Sg := sigNone) (Γ := []) (τ := Ty.nat) [Ty.nat, Ty.nat]
+    Term.uncurryParams (Sg := sigNone) (Γ := []) (Ρ := []) (τ := Ty.nat) [Ty.nat, Ty.nat]
         (ƛ (ƛ (♯1)))
       = (ƛ (ƛ (♯1))) ⬝ (♯0) ⬝ (♯1) := rfl
 

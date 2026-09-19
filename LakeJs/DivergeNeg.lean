@@ -7,9 +7,10 @@ public import LakeJs.SN
 /-!
 # The negative recursive type, and why it is gone
 
-`LakeJs.Diverge` shows that a self-`Tail.label` — the loop — diverges.  This file used to
-show that the loop was **not** the only source of divergence: the type language admitted
-a recursive declaration whose `.self` occurs in the *domain* of a function type,
+`LakeJs.Diverge` records what became of the loop.  This file is about the *other* source
+of divergence the language once had, which no loop was needed for: the type language
+admitted a recursive declaration whose `.self` occurs in the *domain* of a function
+type,
 
 ```
 μX. { f : X → Nat, pad : Nat }
@@ -25,28 +26,36 @@ That is **step 1 of `TERMINATING_TERM_ASSESSMENT.md`, and it is now implemented*
 (`LakeJs.not_wf_negRecObject`, `LakeJs.not_wf_negRecTU`), while the positive shapes every
 Lean inductive type has are untouched (`LakeJs.wf_posRecTU`, `LakeJs.wf_recTU_tree`).
 
-What survives here is the general fact the old proof rested on — a term that steps onto a
-cycle is not strongly normalising — which the loop half of the story still uses.  The
-`Ω` development itself is kept below, commented out: it no longer elaborates, because the
-type it is written at no longer exists.  That is exactly the outcome that was wanted.
+What survives here is the check that the shape really is refused, and that the positive
+shapes are not.  The general fact the old proof rested on — a term that steps onto a cycle
+is not strongly normalising — has nothing left to be applied to: there is no step relation
+any more, because `Term.eval` is a Lean function.  The `Ω` development itself is kept
+below, commented out: it no longer elaborates, because the type it is written at no longer
+exists.  That is exactly the outcome that was wanted.
 -/
 
 namespace LakeJs.Expr
 
 open LakeJs
 
-/-- A term that steps onto a cycle does not run out of steps. -/
-theorem not_sn_of_cycle {Sg : Sig} {Γ : Ctx} {τ : Ty} {t u : Term Sg Γ τ}
-    (h1 : Step t u) (h2 : Steps u t) : ¬ t.SN := by
-  have key : ∀ {t : Term Sg Γ τ}, t.SN → ¬ ∃ u, Step t u ∧ Steps u t := by
-    intro t hsn
-    induction hsn with
-    | intro t _ ih =>
-        rintro ⟨u, hst, hback⟩
-        rcases Steps.cases_head hback with rfl | ⟨w, hs1, hrest⟩
-        · exact ih u hst ⟨u, hst, .refl⟩
-        · exact ih u hst ⟨w, hs1, hrest.trans (Steps.single hst)⟩
-  exact fun hsn => key hsn ⟨u, h1, h2⟩
+/-- **The negative recursive record is not a type.**  `μX. { f : X → Nat, pad : Nat }` —
+    the shape Curry's `Ω` was written at — fails the well-formedness check that every
+    recursive `Ty` carries (`LakeJs.not_wf_negRecObject`), so the auto-parameter of
+    `Ty.recObject` cannot be discharged for it and the type cannot be written down. -/
+theorem wf_negRecObject_false :
+    RTy.wf (.recObject ⟨.fn (.self 0) (.prim .nat), .prim .nat, []⟩) = false :=
+  not_wf_negRecObject
+
+/-- The same for a negative recursive **sum**. -/
+theorem wf_negRecTU_false :
+    RTy.wf (.recTaggedUnion (.skip (.here ⟨.fn (.self 0) (.prim .nat), []⟩ []))) = false :=
+  not_wf_negRecTU
+
+/-- **A positive recursive type is untouched**: the shape every Lean inductive type has
+    is well formed, so nothing that should be a type has been lost. -/
+theorem wf_recTU_tree_true :
+    RTy.wf (.recTaggedUnion (.skip (.here ⟨.self 0, [.self 0]⟩ []))) = true :=
+  wf_recTU_tree
 
 /-
 **Historic, and no longer elaborable.**  Every declaration below is written at `negRec`,

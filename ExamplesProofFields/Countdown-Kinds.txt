@@ -1,0 +1,24 @@
+ExamplesProofFields.run: well-founded recursion
+  clique     : [ExamplesProofFields.run]
+  packed     : ExamplesProofFields.run._unary
+  measure, via WellFounded.Nat.fix:
+    fun x => PSigma.casesOn x fun n s => n
+  safety     : safe
+  compiled   : true
+
+ExamplesProofFields.runErased: structural recursion
+  clique     : [ExamplesProofFields.runErased]
+  recArgPos  : 0
+  recursed-on argument type : Nat
+  erased (a proof)          : false
+  safety     : safe
+  compiled   : true
+
+ExamplesProofFields.runRanked: structural recursion
+  clique     : [ExamplesProofFields.runRanked]
+  recArgPos  : 0
+  recursed-on argument type : Nat
+  erased (a proof)          : false
+  safety     : safe
+  compiled   : true
+

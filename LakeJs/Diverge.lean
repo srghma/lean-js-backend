@@ -4,34 +4,42 @@ public import LakeJs.Progress
 
 @[expose] public section
 
+set_option autoImplicit false
+
 /-!
-# A closed term that never answers: why the *whole* language has no total evaluator
+# The term that used to diverge, and what it is now
 
-`LakeJs.Reduce` runs a `Term`, and `LakeJs.Progress` says it never gets stuck: a closed
-term is an answer or it takes a step.  The remaining question is whether the steps ever
-*stop* — whether the evaluator is **total**, so that running a closed term needs no fuel
-and always ends in a value.
-
-For the language as a whole the answer is **no**, and this file proves it with the
-smallest possible witness.  A `Tail.label` with `self = true` is the one construct that
-repeats work, and a block whose only label is a loop that jumps straight back to itself
+This file used to hold the smallest witness that the language had **no** total evaluator.
+The grammar of the time had a loop — a `Tail.label` with `self = true` — and the block
+whose one label is a loop that jumps straight back to itself,
 
 ```
 l: while (true) { continue l }
 ```
 
-is a closed term of *any* type that steps only to itself:
+was a closed term of *any* type that stepped only to itself, so no evaluator of the whole
+language could be a function: it had to take a fuel or answer `Option`.
 
-* `loopForever_step_self` — it takes a step, to itself;
-* `loopForever_not_value` — it is not an answer;
-* `loopForever_steps_eq` — *every* term it reaches is itself, so there is no answer
-  anywhere in its reduction, however long one runs it.
+**That term cannot be written any more.**  The one label of the grammar is
+`Tail.join`, a join point whose body is typed in the *outer* label context, so a jump
+back to the label being bound has no index to use:
 
-That is the honest scope statement for totality: an evaluator of the full language must
-either take a fuel or fail to be a function.  `LakeJs.TermTotal` proves the positive
-result for the fragment that leaves `Term.block` out — which is the fragment the front
-end produces for a non-recursive declaration with no shared tail, and which is where a
-*total* evaluator lives.
+```lean
+-- does not elaborate: in the body of the join, `.head` is a label bound further out,
+-- and here there is none
+-- def loopForever {Sg : Sig} {τ : Ty} : Term Sg [] [] τ :=
+--   .block (.join [] (.jmp .head .nil) (.jmp .head .nil))
+```
+
+Repeating work is `Term.fix`, and a `Term.fix` carries its measure.  The nearest
+counterpart of the old `loopForever` — a recursion whose body does nothing but call itself
+on the *same* arguments — is therefore a perfectly ordinary term, and it **answers** at
+once: the call does not descend, so the guard refuses it and the `stuck` branch is taken.
+That is the content of this file now.
+
+Where the old scope statement said "totality holds only on a certified fragment", the new
+one says: totality holds for every term, and `LakeJs.Reduce` is the proof, being a Lean
+function.
 -/
 
 namespace LakeJs.Expr
@@ -39,45 +47,41 @@ namespace LakeJs.Expr
 open LakeJs
 open LakeJs.Ty
 
-/-- `l: while (true) { continue l }`: the block whose one label takes no arguments, is a
-    loop, and does nothing but jump to itself.  It is closed — no variable and no free
-    label — and it is a term of every type. -/
-def loopForever {Sg : Sig} {τ : Ty} : Term Sg [] τ :=
-  .block (.label (ps := []) true (.jmp .head .nil) (.jmp .head .nil))
+/-- **What `loopForever` became.**  A recursion of one `Nat` argument whose body does
+    nothing but call itself at the same argument: the shape that used to diverge.  Its
+    measure is that argument, so the call does not descend and the `stuck` branch answers
+    `7` — at once, and at every input. -/
+def spinTerm {Sg : Sig} : Term Sg [] [] (.nat ⇒ .nat) :=
+  .fix [Ty.nat] 1 (.cons (♯0) .nil) (.selfCall .head (.cons (♯0) .nil)) (Term.natL 7)
 
-/-- **It steps to itself.**  Substituting the loop for its own label turns the jump that
-    entered it back into the same loop, so the reduction sequence is infinite. -/
-theorem loopForever_step_self {Sg : Sig} {τ : Ty} :
-    Step (loopForever (Sg := Sg) (τ := τ)) loopForever :=
-  Step.blockStep StepT.labelLoop
+/-- **It answers.**  There is no fuel here and no `Option`: this is the value of a closed
+    term of the language, computed by `Term.eval` and checked by the kernel. -/
+example : Term.runNat1 spinTerm 0 = 7 := rfl
 
-/-- It is not an answer: no `Value` is a loop. -/
-theorem loopForever_not_value {Sg : Sig} {τ : Ty} :
-    ¬ Value (loopForever (Sg := Sg) (τ := τ)) := by
-  intro hv
-  cases hv with
-  | neutral hn => cases hn with | block htn => cases htn
+/-- The same at any other argument: the guard refuses the call whatever the measure's
+    value is, because it does not descend. -/
+example : Term.runNat1 spinTerm 100 = 7 := rfl
 
-/-- **The only term it steps to is itself.** -/
-theorem loopForever_step_eq {Sg : Sig} {τ : Ty} {t : Term Sg [] τ}
-    (h : Step (loopForever (Sg := Sg) (τ := τ)) t) : t = loopForever := by
-  cases h with
-  | blockStep hst => cases hst with | labelLoop => rfl
+/-- **Every closed term of the language has a value**, `spinTerm` included.  The old file
+    proved the opposite for the grammar of the time; this is what replaced it. -/
+theorem exists_value {Sg : Sig} {τ : Ty} (t : Term Sg [] [] τ) (δ : GEnv Sg.decls) :
+    ∃ v : τ.den, t.evalClosed δ = v :=
+  ⟨t.evalClosed δ, rfl⟩
 
-/-- …and so the only term it *reaches* is itself. -/
-theorem loopForever_steps_eq {Sg : Sig} {τ : Ty} {t : Term Sg [] τ}
-    (h : Steps (loopForever (Sg := Sg) (τ := τ)) t) : t = loopForever := by
-  induction h with
-  | refl => rfl
-  | tail _ hstep ih => subst ih; exact loopForever_step_eq hstep
-
-/-- **A closed term of the full language need never answer.**  There is no value the
-    loop reaches, so no evaluator of the whole language is a total function of a closed
-    term: a self-label has to be left out, and `LakeJs.TermTotal` leaves it out. -/
-theorem loopForever_no_answer {Sg : Sig} {τ : Ty} :
-    ¬ ∃ v : Term Sg [] τ, Steps loopForever v ∧ Value v := by
-  rintro ⟨v, hsteps, hv⟩
-  exact loopForever_not_value (loopForever_steps_eq hsteps ▸ hv)
+/-- **A self call at the same measure answers `stuck`.**  This is why a body that only
+    calls itself cannot spin, stated for an arbitrary recursion: a call whose measure does
+    not descend never reaches the body. -/
+theorem fix_same_measure_answers_stuck {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {ps : List Ty}
+    {τ : Ty} {k : Nat} (measure : Spine Sg (ps ++ Γ) Ρ (Ty.nats k))
+    (body : Term Sg (ps ++ Γ) (⟨ps, τ⟩ :: Ρ) τ) (stuck : Term Sg (ps ++ Γ) Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ) (args bs : Env ps)
+    (h : Term.measureVal measure δ γ ρ bs = Term.measureVal measure δ γ ρ args) :
+    (if (Term.measureVal measure δ γ ρ bs).lt (Term.measureVal measure δ γ ρ args)
+     then Term.fixFun measure body stuck δ γ ρ bs
+     else stuck.eval δ (bs.append γ) ρ) = stuck.eval δ (bs.append γ) ρ := by
+  refine Term.fixFun_stuck_of_not_lt measure body stuck δ γ ρ args bs ?_
+  rw [h]
+  exact Lex.NatVec.lt_irrefl _
 
 end LakeJs.Expr
 

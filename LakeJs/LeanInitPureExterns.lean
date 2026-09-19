@@ -587,15 +587,20 @@ inductive LeanInitPureExtern2OnlyPrim : LeanPrimTy → LeanPrimTy → LeanPrimTy
 inductive LeanInitPureExtern3OnlyPrim : LeanPrimTy → LeanPrimTy → LeanPrimTy → LeanPrimTy → Type where
   | lean_substring_extract         : LeanInitPureExtern3OnlyPrim substring stringPos stringPos substring
   | lean_string_pushn              : LeanInitPureExtern3OnlyPrim string char nat string
-  | lean_string_utf8_extract       : LeanInitPureExtern3OnlyPrim string stringPos stringPos string
-  | lean_string_utf8_extract_fast  : LeanInitPureExtern3OnlyPrim string stringPos stringPos string
-  | lean_string_utf8_extract_basic : LeanInitPureExtern3OnlyPrim string stringPos stringPos string
-  | lean_string_pos_raw_set        : LeanInitPureExtern3OnlyPrim string stringPos char string
-  | lean_string_pos_set            : LeanInitPureExtern3OnlyPrim string stringPos char string
-  | lean_string_set                : LeanInitPureExtern3OnlyPrim string stringPos char string
+  -- a byte position is held as the byte index it is, the same way
+  -- `lean_string_decode_char` takes one
+  | lean_string_utf8_extract       : LeanInitPureExtern3OnlyPrim string nat nat string
+  | lean_string_utf8_extract_fast  : LeanInitPureExtern3OnlyPrim string nat nat string
+  | lean_string_utf8_extract_basic : LeanInitPureExtern3OnlyPrim string nat nat string
+  -- the position these three write at is a byte index too
+  | lean_string_pos_raw_set        : LeanInitPureExtern3OnlyPrim string nat char string
+  | lean_string_pos_set            : LeanInitPureExtern3OnlyPrim string nat char string
+  | lean_string_set                : LeanInitPureExtern3OnlyPrim string nat char string
 
 inductive LeanInitPureExtern5 : LeanPrimTy → LeanPrimTy → LeanPrimTy → LeanPrimTy → LeanPrimTy → LeanPrimTy → Type where
-  | lean_string_memcmp : LeanInitPureExtern5 string string stringPos stringPos stringPos bool
+  -- a byte position is held as the byte index it is, the same way
+  -- `lean_string_decode_char` takes one
+  | lean_string_memcmp : LeanInitPureExtern5 string string nat nat nat bool
 
 ---- Now only complex
 

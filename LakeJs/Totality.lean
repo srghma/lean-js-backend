@@ -63,6 +63,13 @@ def specializationOrigin (n : Name) : Name :=
   | some i => (cs.take i).foldl (· ++ ·) Name.anonymous
   | none => n
 
+/-- Where the recursion of `n` is recorded.  A compiler-generated specialization of a
+    library loop — `Std.Legacy.Range.forIn'.loop._at_.test1.spec_0` — has no
+    `ConstantInfo` and no equation info of its own: what says how it recurses is the
+    record Lean kept for the declaration it was specialized from. -/
+def recInfoSource (env : Environment) (n : Name) : Name :=
+  if (env.find? n).isSome then n else specializationOrigin n
+
 /-- The head constant of a type, after all its parameters. -/
 private def resultHead (type : Expr) : Option Name :=
   match type with
@@ -100,6 +107,9 @@ def classify (env : Environment) (local? : Bool) (n : Name) : Option String :=
       | some (.defnInfo ov) =>
         if ov.safety == .partial then
           some s!"it is a specialization of the `partial def` `{origin}`"
+        else if ov.safety == .unsafe then
+          some s!"it is a specialization of the `unsafe def` `{origin}`, which Lean did \
+                  not prove terminating; the backend cannot turn it into a loop"
         else none
       | _ => none
   | some ci =>
@@ -113,19 +123,13 @@ def classify (env : Environment) (local? : Bool) (n : Name) : Option String :=
           some "it is a `partial def`, so Lean did not prove it terminating; \
                 the backend cannot turn it into a loop"
         | .unsafe =>
-          if local? then
-            some "it is an `unsafe def`, so Lean did not prove it terminating; \
-                  the backend cannot turn it into a loop"
-          else
-            -- Lean's own total functions are sometimes implemented by an `unsafe`
-            -- loop; the declaration the user wrote does have a termination proof.
-            let origin := specializationOrigin n
-            match env.find? origin with
-            | some (.defnInfo ov) =>
-              if ov.safety == .partial then
-                some s!"it is a specialization of the `partial def` `{origin}`"
-              else none
-            | _ => none
+          -- An `unsafe def` is one of the four kinds of definition `Term` cannot
+          -- represent, wherever it was written: Lean did not prove it terminating, so
+          -- there is no number of iterations a loop could be given.  Lean's own total
+          -- functions that are *implemented* by an `unsafe` loop are reached through
+          -- `coreModelOf?`, which compiles the definition the source gives them instead.
+          some "it is an `unsafe def`, so Lean did not prove it terminating; \
+                the backend cannot turn it into a loop"
         | .safe => none
       | .opaqueInfo _ =>
         -- A `partial def` is stored as an `opaque` constant with an `unsafe`
@@ -143,6 +147,76 @@ def classify (env : Environment) (local? : Bool) (n : Name) : Option String :=
       | .axiomInfo _ =>
         some "it is an axiom, so there is no body to compile"
       | _ => none
+
+/-! ## Which kind of recursion Lean used
+
+Lean's reference manual lists six kinds of recursive definition.  `Term` can represent the
+first two and only those, so the front end classifies a declaration **positively**: it
+looks for the evidence that Lean elaborated it structurally or by well-founded recursion,
+and refuses anything else rather than assuming it is fine.
+
+* structural recursion leaves a `Lean.Elab.Structural.EqnInfo`, which also records
+  `recArgPos`, the argument the recursion is on — the one `Term.structRank` measures;
+* well-founded recursion leaves a `Lean.Elab.WF.EqnInfo`, whose `termination_by` measure
+  the front end transcribes as the measure;
+* a partial fixpoint leaves a `Lean.Elab.PartialFixpoint.EqnInfo`, and is refused;
+* `partial` and `unsafe` are refused by `classify` above;
+* an inductive or coinductive fixpoint is a `Prop`-valued declaration with no compilable
+  body, so it never reaches a `Term` at all.
+-/
+
+/-- How Lean elaborated a declaration's recursion, when the backend can represent it. -/
+inductive RecKind where
+  /-- Not recursive: no fixpoint of any sort. -/
+  | nonRecursive
+  /-- Structurally recursive on argument `recArgPos`, in the mutual clique `clique`. -/
+  | structural (recArgPos : Nat) (clique : Array Name)
+  /-- Recursive over a well-founded relation, in the mutual clique `clique`. -/
+  | wellFounded (clique : Array Name)
+  deriving Repr, Inhabited
+
+/-- The kind of recursion Lean used for `n`, or the reason the backend refuses it.  This
+    is a **whitelist**: a strategy that is not one of the two admitted ones has no branch
+    that accepts it. -/
+def recKind? (env : Environment) (n : Name) : Except String RecKind :=
+  if let some info := Lean.Elab.Structural.eqnInfoExt.find? env n then
+    .ok (.structural info.recArgPos info.declNames)
+  else if let some info := Lean.Elab.WF.eqnInfoExt.find? env n then
+    .ok (.wellFounded info.declNames)
+  else if (Lean.Elab.PartialFixpoint.eqnInfoExt.find? env n).isSome then
+    .error "it is defined as a partial fixpoint (`partial_fixpoint`); the backend \
+            represents structural and well-founded recursion only"
+  else
+    .ok .nonRecursive
+
+/-! ## The core functions whose Lean body is read from a model
+
+A few of Lean's own total functions carry `@[extern]`, so the compiled module stores no
+LCNF body for them. `LakeJs.CoreModels` writes those bodies out as ordinary Lean
+definitions, with the termination proof Lean's own source gives them, and this table says
+which model stands in for which name. A function reached through it is compiled exactly
+like a function of the module being compiled — the `@[extern]` implementation is the only
+thing that is ignored. -/
+
+/-- The Lean-source model of a core function that is implemented by `@[extern]`. -/
+def coreModelOf? (n : Name) : Option Name :=
+  if n == ``Nat.gcd then some `LakeJs.CoreModels.natGcd
+  else if n == ``Array.append then some `LakeJs.CoreModels.arrayAppend
+  else if n == ``String.Pos.Raw.atEnd then some `LakeJs.CoreModels.posAtEnd
+  else if n == ``String.Pos.Raw.next then some `LakeJs.CoreModels.posNext
+  else if n == ``instDecidableEqChar then some `LakeJs.CoreModels.charEq
+  else if n == ``String.ofList then some `LakeJs.CoreModels.stringOfList
+  else if n == ``Array.toList then some `LakeJs.CoreModels.arrayToList
+  else none
+
+/-- The declaration whose body stands for `n`: `n` itself, unless a model stands in. -/
+def resolveModel (n : Name) : Name := (coreModelOf? n).getD n
+
+/-- The rejection `recKind?` produces, if any. -/
+def classifyRecursion (env : Environment) (n : Name) : Option String :=
+  match recKind? env n with
+  | .ok _ => none
+  | .error reason => some reason
 
 /-- The declarations a piece of LCNF code calls. -/
 partial def usedDecls (code : Code) (s : NameSet := {}) : NameSet :=
@@ -175,10 +249,10 @@ def check (moduleIdxs : Array Nat) (roots : Array Name) : CoreM (Array Rejection
     if seen.contains n then continue
     seen := seen.insert n
     let local? := isLocalTo env moduleIdxs n
-    if let some reason := classify env local? n then
+    if let some reason := classify env local? n <|> classifyRecursion env (resolveModel n) then
       rejections := rejections.push { name := n, via := via, reason := reason }
       continue
-    match ← getBaseDecl? n with
+    match ← getBaseDecl? (resolveModel n) with
     | none =>
       if (env.find? n).isNone then
         rejections := rejections.push

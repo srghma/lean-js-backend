@@ -4,28 +4,39 @@ public import LakeJs.Terminating
 
 @[expose] public section
 
+set_option autoImplicit false
+
 /-!
-# The fundamental theorem of the logical relation
+# The fundamental theorem: a guarded recursion is the function it was translated from
 
-`LakeJs.Reducibility` says what it is for a closed term to be *reducible* and shows that
-every construct preserves reducibility.  What is left is the induction that puts those
-together: **a certified term is reducible under any reducible substitution**
-(`LakeJs.Terminating` defines what a certified term is).  A block is covered by its
-certificate: the certificate is precisely the statement that the block runs out of steps
-under every reducible closing substitution, which is what this induction is carrying, and
-a certified block answers at a value type, where running out of steps is all reducibility
-asks.
+This file used to carry the induction of a Tait-style logical relation: *a certified term
+is reducible under any reducible substitution*, from which one read off that a certified
+closed term runs out of steps.  Termination is no longer the open question — every term
+of the one grammar has a value (`LakeJs.Terminating`) — so the induction has nothing left
+to prove.
 
-A substitution is reducible (`RedSub`) when it gives every variable a reducible answer.
-The empty context has no variables, so the empty substitution is reducible for nothing at
-all — and a closed term substituted by it is itself.  That is how `LakeJs.TermTotal` gets
-from here to *a closed certified term runs out of steps*.
+What has taken its place is the theorem the front end actually needs.  `Term.fix` answers
+with its `stuck` branch at a self call whose measure does not descend, so a translated
+recursion is faithful to the Lean function it came from exactly when **every call it makes
+descends**.  That is `Term.fix_implements`:
 
-The one place the substitution changes is under a binder: the body of a `Term.lam` and of
-a `Term.letE` is substituted by the environment carried under the binder, and then the
-bound variable is replaced by the argument.  `Term.subst0_subst_lift` says those two are
-one substitution, the environment extended by the argument — which is reducible as soon
-as the argument is.
+> if every recursive call is at a lexicographically **smaller measure** — the hypothesis
+> `decreasing_by` discharges on the Lean side — then applying the recursion to any
+> arguments gives the Lean function's value at those arguments.
+
+Note what is *not* a hypothesis any more.  The rank-based design also required the term's
+rank to *outlast* the recursion at every argument list, an iteration bound that no one
+verified and that the front end had to invent; here the measure is compared afresh at each
+call, so the only obligation is the one Lean has already proved.
+
+The hypothesis is about the *reachable* calls only, which is what makes the erased proof
+arguments of `Tco04`-style definitions harmless — with one honest caveat, recorded in
+`LakeJs.Examples.WellFounded`: a branch that erasure made reachable and that does **not**
+descend now answers `stuck`, visibly, instead of answering a wrong number quietly.
+
+`Term.fix_implements_closed` is the same statement for a closed term, phrased with
+`Term.Implements`, and is the lemma every faithfulness proof in `LakeJs.Examples` ends
+with.
 -/
 
 namespace LakeJs.Expr
@@ -33,114 +44,36 @@ namespace LakeJs.Expr
 open LakeJs
 open LakeJs.Ty
 
-variable {Sg : Sig}
+variable {Sg : Sig} {Γ : Ctx} {Ρ : RCtx} {ps : List Ty} {τ : Ty} {k : Nat}
 
-/-! ## Two small facts -/
+/-- **The fundamental theorem of the guarded recursion.**  A `Term.fix` whose body is
+    faithful given a self-reference faithful at smaller measure computes the function it
+    was translated from. -/
+theorem Term.fix_implements (measure : Spine Sg (ps ++ Γ) Ρ (Ty.nats k))
+    (body : Term Sg (ps ++ Γ) (⟨ps, τ⟩ :: Ρ) τ) (stuck : Term Sg (ps ++ Γ) Ρ τ)
+    (δ : GEnv Sg.decls) (γ : Env Γ) (ρ : REnv Ρ)
+    (f : Env ps → τ.den) (m : Env ps → Lex.NatVec k)
+    (hm : ∀ as : Env ps, Term.measureVal measure δ γ ρ as = m as)
+    (hstep : ∀ (g : Env ps → τ.den) (as : Env ps),
+      (∀ bs : Env ps, Lex.NatVec.Lt (m bs) (m as) → g bs = f bs) →
+      body.eval δ (as.append γ) (.cons g ρ) = f as)
+    (args : Env ps) :
+    Env.apply ((Term.fix ps k measure body stuck).eval δ γ ρ) args = f args := by
+  rw [Term.apply_eval_fix]
+  exact Term.fixFun_eq_of_descends measure body stuck δ γ ρ f m hm hstep args
 
-/-- A function of the runtime standing on its own, as a computed test.  Stating the
-    next lemma through it is what lets it be proved by a case analysis on the δ-redex
-    judgement, whose term index is then a variable. -/
-def Term.isBareExtern {Γ : Ctx} {τ : Ty} : Term Sg Γ τ → Bool
-  | .extern _ => true
-  | _ => false
-
-/-- A δ-redex is not a bare function of the runtime: the only rule that would make one is
-    `DeltaRedex.const`, and `LeanInitPureExternLazy` has no entry. -/
-theorem DeltaRedex.not_bareExtern {Γ : Ctx} {τ : Ty} {t : Term Sg Γ τ}
-    (h : DeltaRedex t) : t.isBareExtern = false := by
-  cases h with
-  | const e => exact nomatch e
-  | prim1 _ _ => rfl
-  | prim2 _ _ _ => rfl
-  | prim3 _ _ _ _ => rfl
-  | prim5 _ _ _ _ _ _ => rfl
-  | quick => rfl
-
-/-- **A function of the runtime on its own is not a δ-redex**, so it is an answer. -/
-theorem not_deltaRedex_extern {Γ : Ctx} {σs : List Ty} {τ : Ty} (e : Externs σs τ) :
-    ¬ DeltaRedex (Term.extern (Sg := Sg) (Γ := Γ) e) := fun hd => by
-  simpa [Term.isBareExtern] using hd.not_bareExtern
-
-/-! ## The fundamental theorem -/
-
-mutual
-
-/-- **A certified term is reducible under any reducible substitution.** -/
-theorem Term.fundamental {Γ : Ctx} {τ : Ty} (t : Term Sg Γ τ) (γ : VSub Sg Γ [])
-    (hγ : RedSub γ) (hs : t.Terminating) : Red τ (t.subst γ) :=
-  match t, hs with
-  | .var v, _ => (hγ v).2
-  | .lam b, hs => by
-      simp only [Term.Terminating] at hs
-      simp only [Term.subst]
-      refine Red.lam fun a hva ha => ?_
-      rw [Term.subst0_subst_lift]
-      exact Term.fundamental b _ (RedSub.cons hva ha hγ) hs
-  | .ap f a, hs => by
-      simp only [Term.Terminating] at hs
-      exact Red.app (Term.fundamental f γ hγ hs.1) (Term.fundamental a γ hγ hs.2)
-  | .lit l, _ => Red.of_ground rfl (Value.lit l).sn
-  | .global r, _ => Red.neutral (.global r)
-  | .extern e, _ => Red.neutral (.extern e (not_deltaRedex_extern e))
-  | .lazyMk e, hs => by
-      simp only [Term.Terminating] at hs
-      exact Red.lazyMk (Term.fundamental e γ hγ hs)
-  | .lazyForce e, hs => by
-      simp only [Term.Terminating] at hs
-      exact Red.lazyForce (Term.fundamental e γ hγ hs)
-  | .letE e b, hs => by
-      simp only [Term.Terminating] at hs
-      simp only [Term.subst]
-      refine Red.letE (Term.fundamental e γ hγ hs.1) fun a hva ha => ?_
-      rw [Term.subst0_subst_lift]
-      exact Term.fundamental b _ (RedSub.cons hva ha hγ) hs.2
-  | .ite c t e, hs => by
-      simp only [Term.Terminating] at hs
-      exact Red.ite (Term.fundamental c γ hγ hs.1) (Term.fundamental t γ hγ hs.2.1)
-        (Term.fundamental e γ hγ hs.2.2)
-  | .ctor _ _ _ args, hs => by
-      simp only [Term.Terminating] at hs
-      exact Red.ctor (Spine.fundamental args γ hγ hs)
-  | .proj e _ _ _ _, hs => by
-      simp only [Term.Terminating] at hs
-      exact Red.proj hs.1 (Term.fundamental e γ hγ hs.2)
-  | .tagOf e _, hs => by
-      simp only [Term.Terminating] at hs
-      exact Red.tagOf (Term.fundamental e γ hγ hs)
-  | .caseTag e alts _, hs => by
-      simp only [Term.Terminating] at hs
-      exact Red.caseTag (Term.fundamental e γ hγ hs.1) (Alts.fundamental alts γ hγ hs.2)
-  | .block b, hs => by
-      simp only [Term.Terminating] at hs
-      exact Red.of_ground hs.1 (hs.2 γ hγ)
-  termination_by sizeOf t
-
-/-- **A certified spine is reducible under any reducible substitution.** -/
-theorem Spine.fundamental {Γ : Ctx} {σs : List Ty} (s : Spine Sg Γ σs)
-    (γ : VSub Sg Γ []) (hγ : RedSub γ) (hs : s.Terminating) : SpineRed (s.subst γ) :=
-  match s, hs with
-  | .nil, _ => trivial
-  | .cons t rest, hs => by
-      simp only [Spine.Terminating] at hs
-      exact ⟨Term.fundamental t γ hγ hs.1, Spine.fundamental rest γ hγ hs.2⟩
-  termination_by sizeOf s
-
-/-- **Every branch of a certified dispatch is reducible under any reducible
-    substitution.** -/
-theorem Alts.fundamental {Γ : Ctx} {τ : Ty} {tags : List Nat} {full : Bool}
-    (alts : Alts Sg Γ τ tags full) (γ : VSub Sg Γ []) (hγ : RedSub γ)
-    (hs : alts.Terminating) : RedAlts (alts.subst γ) :=
-  match alts, hs with
-  | .deflt t, hs => by
-      simp only [Alts.Terminating] at hs
-      exact Term.fundamental t γ hγ hs
-  | .nilFull, _ => trivial
-  | .cons _ t rest, hs => by
-      simp only [Alts.Terminating] at hs
-      exact ⟨Term.fundamental t γ hγ hs.1, Alts.fundamental rest γ hγ hs.2⟩
-  termination_by sizeOf alts
-
-end
+/-- The closed case, packaged as `Term.Implements`: this is what a faithfulness proof of
+    a translated top-level function states. -/
+theorem Term.fix_implements_closed (measure : Spine Sg (ps ++ []) [] (Ty.nats k))
+    (body : Term Sg (ps ++ []) [⟨ps, τ⟩] τ) (stuck : Term Sg (ps ++ []) [] τ)
+    (δ : GEnv Sg.decls) (f : Env ps → τ.den) (m : Env ps → Lex.NatVec k)
+    (hm : ∀ as : Env ps, Term.measureVal measure δ .nil .nil as = m as)
+    (hstep : ∀ (g : Env ps → τ.den) (as : Env ps),
+      (∀ bs : Env ps, Lex.NatVec.Lt (m bs) (m as) → g bs = f bs) →
+      body.eval δ (as.append .nil) (.cons g .nil) = f as) :
+    (Term.fix (Γ := []) ps k measure body stuck).Implements δ f := by
+  intro args
+  exact Term.fix_implements measure body stuck δ .nil .nil f m hm hstep args
 
 end LakeJs.Expr
 

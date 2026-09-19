@@ -1,0 +1,24 @@
+ExamplesProofFields.accDown: well-founded recursion
+  clique     : [ExamplesProofFields.accDown]
+  packed     : ExamplesProofFields.accDown._unary
+  measure, via WellFounded.Nat.fix:
+    fun x => PSigma.casesOn x fun n h => n
+  safety     : safe
+  compiled   : true
+
+ExamplesProofFields.accDownRec: no recursion info recorded
+  safety     : safe
+  compiled   : true
+
+ExamplesProofFields.accDownRanked: well-founded recursion
+  clique     : [ExamplesProofFields.accDownRanked]
+  packed     : ExamplesProofFields.accDownRanked
+  measure, via WellFounded.Nat.fix:
+    fun x => x
+  safety     : safe
+  compiled   : true
+
+ExamplesProofFields.alwaysSeven: no recursion info recorded
+  safety     : safe
+  compiled   : true
+

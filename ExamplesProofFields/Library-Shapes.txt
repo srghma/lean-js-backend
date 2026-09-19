@@ -1,0 +1,68 @@
+Acc: proof (the whole type is a `Prop`: erased, no Ty)
+
+Array: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [Array]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+Decidable: bool
+  surviving fields per constructor : [0, 0]
+  members of the block             : [Decidable]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+Except: taggedUnion
+  surviving fields per constructor : [1, 1]
+  members of the block             : [Except]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+Fin: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [Fin]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+List: recTaggedUnion
+  surviving fields per constructor : [0, 2]
+  members of the block             : [List]
+  recursive (through a surviving field) : true, in a mutual cycle : false
+
+Nonempty: proof (the whole type is a `Prop`: erased, no Ty)
+
+Option: taggedUnion
+  surviving fields per constructor : [0, 1]
+  members of the block             : [Option]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+Ordering: enum
+  surviving fields per constructor : [0, 0, 0]
+  members of the block             : [Ordering]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+PSigma: record
+  surviving fields per constructor : [2]
+  members of the block             : [PSigma]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+Prod: record
+  surviving fields per constructor : [2]
+  members of the block             : [Prod]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+Sigma: record
+  surviving fields per constructor : [2]
+  members of the block             : [Sigma]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+String: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [String]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+Subtype: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [Subtype]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+Vector: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [Vector]
+  recursive (through a surviving field) : false, in a mutual cycle : false

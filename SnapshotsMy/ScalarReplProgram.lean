@@ -1,0 +1,319 @@
+-- SnapshotsMy.ScalarRepl: the module as a Program of the one grammar of `LakeJs.Expr`.
+-- 🎯 a public entry point of the module; 📦 a declaration the translation pulled in.
+-- Every term below is a `Term`, so it is terminating by construction: the one way it
+-- repeats work is `Term.fix`, whose measure it descends on at every self call.
+--
+-- ════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0 : (fn (record nat nat nat) (fn nat (fn nat nat)))
+--      measure: well-founded recursion, `termination_by` transcribed verbatim; 1 component: [ ((extern⟨nat nat ⇒ nat⟩ ⬝ proj0.1(♯0)) ⬝ ♯2) ]
+-- fix ((record nat nat nat) nat nat) measure [ ((extern⟨nat nat ⇒ nat⟩ ⬝ proj0.1(♯0)) ⬝ ♯2) ] body {
+--   let ♯ := proj0.1(♯0);
+--   let ♯ := ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯3) ⬝ ♯0);
+--   if ♯0 then let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯3) ⬝ ♯4);
+--   let ♯ := proj0.2(♯3);
+--   let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯6) ⬝ ♯0);
+--   let ♯ := self0⟨↓⟩(♯5, ♯2, ♯0);
+--   ♯0 else ♯3
+-- } stuck { 0# }
+--
+-- ════ 📦 _private.SnapshotsMy.ScalarRepl.0.dist : (fn (record nat nat) nat)
+-- ƛ let ♯ := proj0.0(♯0);
+-- let ♯ := proj0.1(♯1);
+-- let ♯ := ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ ♯0);
+-- if ♯0 then let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ ♯2);
+-- ♯0 else let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯2) ⬝ ♯1);
+-- ♯0
+--
+-- ════ 📦 _private.SnapshotsMy.ScalarRepl.0.bigger : (fn (record nat nat) (record nat nat))
+-- ƛ let ♯ := proj0.0(♯0);
+-- let ♯ := proj0.1(♯1);
+-- let ♯ := ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ ♯0);
+-- if ♯0 then ♯3 else let ♯ := ctor0(nat nat)(♯1, ♯2);
+-- ♯0
+--
+-- ════ 📦 _private.SnapshotsMy.ScalarRepl.0.sumOpt : (fn (taggedUnion ()|((record nat nat))) nat)
+-- ƛ case ♯0 of
+--   | 0() => let ♯ := 0#;
+--     ♯0
+--   | 1((record nat nat)) => case ♯0 of
+--       | 0(nat nat) => let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ ♯1);
+--         ♯0
+--
+--
+--
+-- ════ 📦 _private.SnapshotsMy.ScalarRepl.0.clampSum : (fn (record nat nat) (fn nat (fn nat nat)))
+--      measure: structural recursion, on the argument Lean recorded (position 1); 1 component: [ ♯1 ]
+-- fix ((record nat nat) nat nat) measure [ ♯1 ] body {
+--   if ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯1) ⬝ 0#) then ♯2 else let ♯ := proj0.0(♯0);
+--   let ♯ := ((extern⟨nat nat ⇒ bool⟩ ⬝ ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯2) ⬝ 1#)) ⬝ ♯0);
+--   if ♯0 then let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯4) ⬝ ♯1);
+--   let ♯ := self0⟨↓⟩(♯3, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯4) ⬝ 1#), ♯0);
+--   ♯0 else let ♯ := proj0.1(♯2);
+--   let ♯ := ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯0) ⬝ ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯4) ⬝ 1#));
+--   if ♯0 then let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯6) ⬝ ♯1);
+--   let ♯ := self0⟨↓⟩(♯5, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯6) ⬝ 1#), ♯0);
+--   ♯0 else let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯6) ⬝ ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯5) ⬝ 1#));
+--   let ♯ := self0⟨↓⟩(♯5, ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯6) ⬝ 1#), ♯0);
+--   ♯0
+-- } stuck { 0# }
+--
+-- ════ 🎯 test1 : (fn nat nat)
+-- ƛ let ♯ := 0#;
+-- let ♯ := 1#;
+-- let ♯ := ctor0(nat nat nat)(♯1, ♯2, ♯0);
+-- let ♯ := (((@_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0 ⬝ ♯0) ⬝ ♯2) ⬝ ♯2);
+-- ♯0
+--
+-- ════ 🎯 test3 : (fn nat (fn nat nat))
+-- ƛ ƛ let ♯ := ctor0(nat nat)(♯1, ♯0);
+-- let ♯ := (@_private.SnapshotsMy.ScalarRepl.0.dist ⬝ ♯0);
+-- let ♯ := 1#;
+-- let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯4) ⬝ ♯0);
+-- let ♯ := ctor0(nat nat)(♯4, ♯0);
+-- let ♯ := (@_private.SnapshotsMy.ScalarRepl.0.dist ⬝ ♯0);
+-- let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯4) ⬝ ♯0);
+-- ♯0
+--
+-- ════ 🎯 test4 : (fn nat (fn nat (record nat nat)))
+-- ƛ ƛ let ♯ := ctor0(nat nat)(♯1, ♯0);
+-- let ♯ := (@_private.SnapshotsMy.ScalarRepl.0.bigger ⬝ ♯0);
+-- ♯0
+--
+-- ════ 🎯 test5 : (fn nat (fn nat nat))
+-- ƛ ƛ let ♯ := ctor0(nat nat)(♯1, ♯0);
+-- let ♯ := ctor1((record nat nat))(♯0);
+-- let ♯ := (@_private.SnapshotsMy.ScalarRepl.0.sumOpt ⬝ ♯0);
+-- let ♯ := ctor0()();
+-- let ♯ := (@_private.SnapshotsMy.ScalarRepl.0.sumOpt ⬝ ♯0);
+-- let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯2) ⬝ ♯0);
+-- ♯0
+--
+-- ════ 🎯 test6 : (fn nat nat)
+-- ƛ let ♯ := 3#;
+-- let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯1) ⬝ ♯0);
+-- let ♯ := 7#;
+-- let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯3) ⬝ ♯0);
+-- let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯0) ⬝ ♯3);
+-- let ♯ := ctor0(nat nat)(♯3, ♯0);
+-- let ♯ := 0#;
+-- let ♯ := (((@_private.SnapshotsMy.ScalarRepl.0.clampSum ⬝ ♯1) ⬝ ♯7) ⬝ ♯0);
+-- ♯0
+--
+-- ════ 📦 _private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0 : (fn nat (fn nat (fn (record nat nat nat) (fn nat (fn nat nat)))))
+--      measure: well-founded recursion, `termination_by` transcribed verbatim; 1 component: [ ((extern⟨nat nat ⇒ nat⟩ ⬝ proj0.1(♯2)) ⬝ ♯4) ]
+-- fix (nat nat (record nat nat nat) nat nat) measure [ ((extern⟨nat nat ⇒ nat⟩ ⬝ proj0.1(♯2)) ⬝ ♯4) ] body {
+--   let ♯ := proj0.1(♯2);
+--   let ♯ := ((extern⟨nat nat ⇒ bool⟩ ⬝ ♯5) ⬝ ♯0);
+--   if ♯0 then let ♯ := ctor0(nat nat nat)(♯2, ♯6, ♯3);
+--   let ♯ := (((@_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0 ⬝ ♯0) ⬝ ♯6) ⬝ ♯3);
+--   let ♯ := proj0.2(♯6);
+--   let ♯ := ((extern⟨nat nat ⇒ nat⟩ ⬝ ♯9) ⬝ ♯0);
+--   let ♯ := self0⟨↓⟩(♯6, ♯7, ♯8, ♯2, ♯0);
+--   ♯0 else ♯5
+-- } stuck { 0# }
+--
+-- ════ 🎯 test2 : (fn nat nat)
+-- ƛ let ♯ := 0#;
+-- let ♯ := 1#;
+-- let ♯ := ctor0(nat nat nat)(♯1, ♯2, ♯0);
+-- let ♯ := (((((@_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0 ⬝ ♯2) ⬝ ♯1) ⬝ ♯0) ⬝ ♯2) ⬝ ♯2);
+-- ♯0
+--
+--
+-- ── the same program as Lean source ────────────────────────────────────
+-- The trees above are this program printed in the notation of `LakeJs.ExprPretty`;
+-- copy one into a `[LEAN|...]` elaboration if you want to read it there.
+
+import LakeJs
+
+open LakeJs LakeJs.Ty LakeJs.Expr LakeJs.Expr.Ops
+
+namespace ProgramSnapshotsMyScalarRepl
+
+/-- `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0`, as a declaration of the module. -/
+def d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 : GlobalDecl := ⟨"_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0", (Ty.fn (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩) (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat)))⟩
+
+/-- The signature `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0` is written against. -/
+def sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 : Sig := ⟨[], by decide⟩
+
+/-- The body of the recursion of `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0`. -/
+def bd__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 : Term sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 ([(Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩), Ty.nat, Ty.nat] ++ []) [⟨[(Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩), Ty.nat, Ty.nat], Ty.nat⟩] Ty.nat :=
+  (Term.letE (Term.proj (♯0) 0 1 (by rfl) (by rfl)) (Term.letE (natLt (♯3) (♯0)) (Term.ite (♯0) (Term.letE (natAdd (♯3) (♯4)) (Term.letE (Term.proj (♯3) 0 2 (by rfl) (by rfl)) (Term.letE (natAdd (♯6) (♯0)) (Term.letE (Term.selfCall .head (.cons (♯5) (.cons (♯2) (.cons (♯0) .nil)))) (♯0))))) (♯3))))
+
+/-- The body of `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0`. -/
+def tm__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 : Term sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 [] [] (Ty.fn (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩) (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat))) :=
+  Term.fix [(Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩), Ty.nat, Ty.nat] 1 (.cons (natSub (Term.proj (♯0) 0 1 (by rfl) (by rfl)) (♯2)) .nil) bd__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 (Term.natL 0)
+
+/-- The module up to and including `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test1.spec_0`. -/
+def prog__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 : Program (d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 :: sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0.decls) :=
+  .cons d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0.h_names_unique tm__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0 Program.nil
+
+/-- `_private.SnapshotsMy.ScalarRepl.0.dist`, as a declaration of the module. -/
+def d__private_SnapshotsMy_ScalarRepl_0_dist : GlobalDecl := ⟨"_private.SnapshotsMy.ScalarRepl.0.dist", (Ty.fn (Ty.prod Ty.nat Ty.nat) Ty.nat)⟩
+
+/-- The signature `_private.SnapshotsMy.ScalarRepl.0.dist` is written against. -/
+def sig__private_SnapshotsMy_ScalarRepl_0_dist : Sig := ⟨[d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of `_private.SnapshotsMy.ScalarRepl.0.dist`. -/
+def tm__private_SnapshotsMy_ScalarRepl_0_dist : Term sig__private_SnapshotsMy_ScalarRepl_0_dist [] [] (Ty.fn (Ty.prod Ty.nat Ty.nat) Ty.nat) :=
+  (Term.lam (Term.letE (Term.proj (♯0) 0 0 (by rfl) (by rfl)) (Term.letE (Term.proj (♯1) 0 1 (by rfl) (by rfl)) (Term.letE (natLt (♯1) (♯0)) (Term.ite (♯0) (Term.letE (natSub (♯1) (♯2)) (♯0)) (Term.letE (natSub (♯2) (♯1)) (♯0)))))))
+
+/-- The module up to and including `_private.SnapshotsMy.ScalarRepl.0.dist`. -/
+def prog__private_SnapshotsMy_ScalarRepl_0_dist : Program (d__private_SnapshotsMy_ScalarRepl_0_dist :: sig__private_SnapshotsMy_ScalarRepl_0_dist.decls) :=
+  .cons d__private_SnapshotsMy_ScalarRepl_0_dist sig__private_SnapshotsMy_ScalarRepl_0_dist.h_names_unique tm__private_SnapshotsMy_ScalarRepl_0_dist prog__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0
+
+/-- `_private.SnapshotsMy.ScalarRepl.0.bigger`, as a declaration of the module. -/
+def d__private_SnapshotsMy_ScalarRepl_0_bigger : GlobalDecl := ⟨"_private.SnapshotsMy.ScalarRepl.0.bigger", (Ty.fn (Ty.prod Ty.nat Ty.nat) (Ty.prod Ty.nat Ty.nat))⟩
+
+/-- The signature `_private.SnapshotsMy.ScalarRepl.0.bigger` is written against. -/
+def sig__private_SnapshotsMy_ScalarRepl_0_bigger : Sig := ⟨[d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of `_private.SnapshotsMy.ScalarRepl.0.bigger`. -/
+def tm__private_SnapshotsMy_ScalarRepl_0_bigger : Term sig__private_SnapshotsMy_ScalarRepl_0_bigger [] [] (Ty.fn (Ty.prod Ty.nat Ty.nat) (Ty.prod Ty.nat Ty.nat)) :=
+  (Term.lam (Term.letE (Term.proj (♯0) 0 0 (by rfl) (by rfl)) (Term.letE (Term.proj (♯1) 0 1 (by rfl) (by rfl)) (Term.letE (natLt (♯1) (♯0)) (Term.ite (♯0) (♯3) (Term.letE (Term.ctor (τ := (Ty.prod Ty.nat Ty.nat)) 0 [Ty.nat, Ty.nat] (by rfl) (.cons (♯1) (.cons (♯2) .nil))) (♯0)))))))
+
+/-- The module up to and including `_private.SnapshotsMy.ScalarRepl.0.bigger`. -/
+def prog__private_SnapshotsMy_ScalarRepl_0_bigger : Program (d__private_SnapshotsMy_ScalarRepl_0_bigger :: sig__private_SnapshotsMy_ScalarRepl_0_bigger.decls) :=
+  .cons d__private_SnapshotsMy_ScalarRepl_0_bigger sig__private_SnapshotsMy_ScalarRepl_0_bigger.h_names_unique tm__private_SnapshotsMy_ScalarRepl_0_bigger prog__private_SnapshotsMy_ScalarRepl_0_dist
+
+/-- `_private.SnapshotsMy.ScalarRepl.0.sumOpt`, as a declaration of the module. -/
+def d__private_SnapshotsMy_ScalarRepl_0_sumOpt : GlobalDecl := ⟨"_private.SnapshotsMy.ScalarRepl.0.sumOpt", (Ty.fn (Ty.option (Ty.prod Ty.nat Ty.nat)) Ty.nat)⟩
+
+/-- The signature `_private.SnapshotsMy.ScalarRepl.0.sumOpt` is written against. -/
+def sig__private_SnapshotsMy_ScalarRepl_0_sumOpt : Sig := ⟨[d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of `_private.SnapshotsMy.ScalarRepl.0.sumOpt`. -/
+def tm__private_SnapshotsMy_ScalarRepl_0_sumOpt : Term sig__private_SnapshotsMy_ScalarRepl_0_sumOpt [] [] (Ty.fn (Ty.option (Ty.prod Ty.nat Ty.nat)) Ty.nat) :=
+  (Term.lam (Term.caseTag (♯0) (Alts.cons 0 [] (by rfl) (Term.letE (Term.natL 0) (♯0)) (Alts.cons 1 [(Ty.prod Ty.nat Ty.nat)] (by rfl) (Term.caseTag (♯0) (Alts.cons 0 [Ty.nat, Ty.nat] (by rfl) (Term.letE (natAdd (♯0) (♯1)) (♯0)) Alts.nilFull) (by rfl)) Alts.nilFull)) (by rfl)))
+
+/-- The module up to and including `_private.SnapshotsMy.ScalarRepl.0.sumOpt`. -/
+def prog__private_SnapshotsMy_ScalarRepl_0_sumOpt : Program (d__private_SnapshotsMy_ScalarRepl_0_sumOpt :: sig__private_SnapshotsMy_ScalarRepl_0_sumOpt.decls) :=
+  .cons d__private_SnapshotsMy_ScalarRepl_0_sumOpt sig__private_SnapshotsMy_ScalarRepl_0_sumOpt.h_names_unique tm__private_SnapshotsMy_ScalarRepl_0_sumOpt prog__private_SnapshotsMy_ScalarRepl_0_bigger
+
+/-- `_private.SnapshotsMy.ScalarRepl.0.clampSum`, as a declaration of the module. -/
+def d__private_SnapshotsMy_ScalarRepl_0_clampSum : GlobalDecl := ⟨"_private.SnapshotsMy.ScalarRepl.0.clampSum", (Ty.fn (Ty.record ⟨Ty.nat, Ty.nat, []⟩) (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat)))⟩
+
+/-- The signature `_private.SnapshotsMy.ScalarRepl.0.clampSum` is written against. -/
+def sig__private_SnapshotsMy_ScalarRepl_0_clampSum : Sig := ⟨[d__private_SnapshotsMy_ScalarRepl_0_sumOpt, d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of the recursion of `_private.SnapshotsMy.ScalarRepl.0.clampSum`. -/
+def bd__private_SnapshotsMy_ScalarRepl_0_clampSum : Term sig__private_SnapshotsMy_ScalarRepl_0_clampSum ([(Ty.record ⟨Ty.nat, Ty.nat, []⟩), Ty.nat, Ty.nat] ++ []) [⟨[(Ty.record ⟨Ty.nat, Ty.nat, []⟩), Ty.nat, Ty.nat], Ty.nat⟩] Ty.nat :=
+  (Term.ite (natEq (♯1) (Term.natL 0)) (♯2) (Term.letE (Term.proj (♯0) 0 0 (by rfl) (by rfl)) (Term.letE (natLt (natSub (♯2) (Term.natL 1)) (♯0)) (Term.ite (♯0) (Term.letE (natAdd (♯4) (♯1)) (Term.letE (Term.selfCall .head (.cons (♯3) (.cons (natSub (♯4) (Term.natL 1)) (.cons (♯0) .nil)))) (♯0))) (Term.letE (Term.proj (♯2) 0 1 (by rfl) (by rfl)) (Term.letE (natLt (♯0) (natSub (♯4) (Term.natL 1))) (Term.ite (♯0) (Term.letE (natAdd (♯6) (♯1)) (Term.letE (Term.selfCall .head (.cons (♯5) (.cons (natSub (♯6) (Term.natL 1)) (.cons (♯0) .nil)))) (♯0))) (Term.letE (natAdd (♯6) (natSub (♯5) (Term.natL 1))) (Term.letE (Term.selfCall .head (.cons (♯5) (.cons (natSub (♯6) (Term.natL 1)) (.cons (♯0) .nil)))) (♯0))))))))))
+
+/-- The body of `_private.SnapshotsMy.ScalarRepl.0.clampSum`. -/
+def tm__private_SnapshotsMy_ScalarRepl_0_clampSum : Term sig__private_SnapshotsMy_ScalarRepl_0_clampSum [] [] (Ty.fn (Ty.record ⟨Ty.nat, Ty.nat, []⟩) (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat))) :=
+  Term.fix [(Ty.record ⟨Ty.nat, Ty.nat, []⟩), Ty.nat, Ty.nat] 1 (.cons (♯1) .nil) bd__private_SnapshotsMy_ScalarRepl_0_clampSum (Term.natL 0)
+
+/-- The module up to and including `_private.SnapshotsMy.ScalarRepl.0.clampSum`. -/
+def prog__private_SnapshotsMy_ScalarRepl_0_clampSum : Program (d__private_SnapshotsMy_ScalarRepl_0_clampSum :: sig__private_SnapshotsMy_ScalarRepl_0_clampSum.decls) :=
+  .cons d__private_SnapshotsMy_ScalarRepl_0_clampSum sig__private_SnapshotsMy_ScalarRepl_0_clampSum.h_names_unique tm__private_SnapshotsMy_ScalarRepl_0_clampSum prog__private_SnapshotsMy_ScalarRepl_0_sumOpt
+
+/-- `test1`, as a declaration of the module. -/
+def d_test1 : GlobalDecl := ⟨"test1", (Ty.fn Ty.nat Ty.nat)⟩
+
+/-- The signature `test1` is written against. -/
+def sig_test1 : Sig := ⟨[d__private_SnapshotsMy_ScalarRepl_0_clampSum, d__private_SnapshotsMy_ScalarRepl_0_sumOpt, d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of `test1`. -/
+def tm_test1 : Term sig_test1 [] [] (Ty.fn Ty.nat Ty.nat) :=
+  (Term.lam (Term.letE (Term.natL 0) (Term.letE (Term.natL 1) (Term.letE (Term.ctor (τ := (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩)) 0 [Ty.nat, Ty.nat, Ty.nat] (by rfl) (.cons (♯1) (.cons (♯2) (.cons (♯0) .nil)))) (Term.letE (Term.ap (Term.ap (Term.ap (Term.global (.there (.there (.there (.there .here))))) (♯0)) (♯2)) (♯2)) (♯0))))))
+
+/-- The module up to and including `test1`. -/
+def prog_test1 : Program (d_test1 :: sig_test1.decls) :=
+  .cons d_test1 sig_test1.h_names_unique tm_test1 prog__private_SnapshotsMy_ScalarRepl_0_clampSum
+
+/-- `test3`, as a declaration of the module. -/
+def d_test3 : GlobalDecl := ⟨"test3", (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat))⟩
+
+/-- The signature `test3` is written against. -/
+def sig_test3 : Sig := ⟨[d_test1, d__private_SnapshotsMy_ScalarRepl_0_clampSum, d__private_SnapshotsMy_ScalarRepl_0_sumOpt, d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of `test3`. -/
+def tm_test3 : Term sig_test3 [] [] (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat)) :=
+  (Term.lam (Term.lam (Term.letE (Term.ctor (τ := (Ty.prod Ty.nat Ty.nat)) 0 [Ty.nat, Ty.nat] (by rfl) (.cons (♯1) (.cons (♯0) .nil))) (Term.letE (Term.ap (Term.global (.there (.there (.there (.there .here))))) (♯0)) (Term.letE (Term.natL 1) (Term.letE (natAdd (♯4) (♯0)) (Term.letE (Term.ctor (τ := (Ty.prod Ty.nat Ty.nat)) 0 [Ty.nat, Ty.nat] (by rfl) (.cons (♯4) (.cons (♯0) .nil))) (Term.letE (Term.ap (Term.global (.there (.there (.there (.there .here))))) (♯0)) (Term.letE (natAdd (♯4) (♯0)) (♯0))))))))))
+
+/-- The module up to and including `test3`. -/
+def prog_test3 : Program (d_test3 :: sig_test3.decls) :=
+  .cons d_test3 sig_test3.h_names_unique tm_test3 prog_test1
+
+/-- `test4`, as a declaration of the module. -/
+def d_test4 : GlobalDecl := ⟨"test4", (Ty.fn Ty.nat (Ty.fn Ty.nat (Ty.prod Ty.nat Ty.nat)))⟩
+
+/-- The signature `test4` is written against. -/
+def sig_test4 : Sig := ⟨[d_test3, d_test1, d__private_SnapshotsMy_ScalarRepl_0_clampSum, d__private_SnapshotsMy_ScalarRepl_0_sumOpt, d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of `test4`. -/
+def tm_test4 : Term sig_test4 [] [] (Ty.fn Ty.nat (Ty.fn Ty.nat (Ty.prod Ty.nat Ty.nat))) :=
+  (Term.lam (Term.lam (Term.letE (Term.ctor (τ := (Ty.prod Ty.nat Ty.nat)) 0 [Ty.nat, Ty.nat] (by rfl) (.cons (♯1) (.cons (♯0) .nil))) (Term.letE (Term.ap (Term.global (.there (.there (.there (.there .here))))) (♯0)) (♯0)))))
+
+/-- The module up to and including `test4`. -/
+def prog_test4 : Program (d_test4 :: sig_test4.decls) :=
+  .cons d_test4 sig_test4.h_names_unique tm_test4 prog_test3
+
+/-- `test5`, as a declaration of the module. -/
+def d_test5 : GlobalDecl := ⟨"test5", (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat))⟩
+
+/-- The signature `test5` is written against. -/
+def sig_test5 : Sig := ⟨[d_test4, d_test3, d_test1, d__private_SnapshotsMy_ScalarRepl_0_clampSum, d__private_SnapshotsMy_ScalarRepl_0_sumOpt, d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of `test5`. -/
+def tm_test5 : Term sig_test5 [] [] (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat)) :=
+  (Term.lam (Term.lam (Term.letE (Term.ctor (τ := (Ty.prod Ty.nat Ty.nat)) 0 [Ty.nat, Ty.nat] (by rfl) (.cons (♯1) (.cons (♯0) .nil))) (Term.letE (Term.ctor (τ := (Ty.option (Ty.prod Ty.nat Ty.nat))) 1 [(Ty.prod Ty.nat Ty.nat)] (by rfl) (.cons (♯0) .nil)) (Term.letE (Term.ap (Term.global (.there (.there (.there (.there .here))))) (♯0)) (Term.letE (Term.ctor (τ := (Ty.option (Ty.prod Ty.nat Ty.nat))) 0 [] (by rfl) .nil) (Term.letE (Term.ap (Term.global (.there (.there (.there (.there .here))))) (♯0)) (Term.letE (natAdd (♯2) (♯0)) (♯0)))))))))
+
+/-- The module up to and including `test5`. -/
+def prog_test5 : Program (d_test5 :: sig_test5.decls) :=
+  .cons d_test5 sig_test5.h_names_unique tm_test5 prog_test4
+
+/-- `test6`, as a declaration of the module. -/
+def d_test6 : GlobalDecl := ⟨"test6", (Ty.fn Ty.nat Ty.nat)⟩
+
+/-- The signature `test6` is written against. -/
+def sig_test6 : Sig := ⟨[d_test5, d_test4, d_test3, d_test1, d__private_SnapshotsMy_ScalarRepl_0_clampSum, d__private_SnapshotsMy_ScalarRepl_0_sumOpt, d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of `test6`. -/
+def tm_test6 : Term sig_test6 [] [] (Ty.fn Ty.nat Ty.nat) :=
+  (Term.lam (Term.letE (Term.natL 3) (Term.letE (natMod (♯1) (♯0)) (Term.letE (Term.natL 7) (Term.letE (natMod (♯3) (♯0)) (Term.letE (natAdd (♯0) (♯3)) (Term.letE (Term.ctor (τ := (Ty.record ⟨Ty.nat, Ty.nat, []⟩)) 0 [Ty.nat, Ty.nat] (by rfl) (.cons (♯3) (.cons (♯0) .nil))) (Term.letE (Term.natL 0) (Term.letE (Term.ap (Term.ap (Term.ap (Term.global (.there (.there (.there (.there .here))))) (♯1)) (♯7)) (♯0)) (♯0))))))))))
+
+/-- The module up to and including `test6`. -/
+def prog_test6 : Program (d_test6 :: sig_test6.decls) :=
+  .cons d_test6 sig_test6.h_names_unique tm_test6 prog_test5
+
+/-- `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0`, as a declaration of the module. -/
+def d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 : GlobalDecl := ⟨"_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0", (Ty.fn Ty.nat (Ty.fn Ty.nat (Ty.fn (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩) (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat)))))⟩
+
+/-- The signature `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0` is written against. -/
+def sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 : Sig := ⟨[d_test6, d_test5, d_test4, d_test3, d_test1, d__private_SnapshotsMy_ScalarRepl_0_clampSum, d__private_SnapshotsMy_ScalarRepl_0_sumOpt, d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of the recursion of `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0`. -/
+def bd__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 : Term sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 ([Ty.nat, Ty.nat, (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩), Ty.nat, Ty.nat] ++ []) [⟨[Ty.nat, Ty.nat, (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩), Ty.nat, Ty.nat], Ty.nat⟩] Ty.nat :=
+  (Term.letE (Term.proj (♯2) 0 1 (by rfl) (by rfl)) (Term.letE (natLt (♯5) (♯0)) (Term.ite (♯0) (Term.letE (Term.ctor (τ := (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩)) 0 [Ty.nat, Ty.nat, Ty.nat] (by rfl) (.cons (♯2) (.cons (♯6) (.cons (♯3) .nil)))) (Term.letE (Term.ap (Term.ap (Term.ap (Term.global (.there (.there (.there (.there (.there (.there (.there (.there (.there .here)))))))))) (♯0)) (♯6)) (♯3)) (Term.letE (Term.proj (♯6) 0 2 (by rfl) (by rfl)) (Term.letE (natAdd (♯9) (♯0)) (Term.letE (Term.selfCall .head (.cons (♯6) (.cons (♯7) (.cons (♯8) (.cons (♯2) (.cons (♯0) .nil)))))) (♯0)))))) (♯5))))
+
+/-- The body of `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0`. -/
+def tm__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 : Term sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 [] [] (Ty.fn Ty.nat (Ty.fn Ty.nat (Ty.fn (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩) (Ty.fn Ty.nat (Ty.fn Ty.nat Ty.nat))))) :=
+  Term.fix [Ty.nat, Ty.nat, (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩), Ty.nat, Ty.nat] 1 (.cons (natSub (Term.proj (♯2) 0 1 (by rfl) (by rfl)) (♯4)) .nil) bd__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 (Term.natL 0)
+
+/-- The module up to and including `_private.Init.Data.Range.Basic.0.Std.Legacy.Range.forIn'.loop._at_.test2.spec_0`. -/
+def prog__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 : Program (d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 :: sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0.decls) :=
+  .cons d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 sig__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0.h_names_unique tm__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0 prog_test6
+
+/-- `test2`, as a declaration of the module. -/
+def d_test2 : GlobalDecl := ⟨"test2", (Ty.fn Ty.nat Ty.nat)⟩
+
+/-- The signature `test2` is written against. -/
+def sig_test2 : Sig := ⟨[d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0, d_test6, d_test5, d_test4, d_test3, d_test1, d__private_SnapshotsMy_ScalarRepl_0_clampSum, d__private_SnapshotsMy_ScalarRepl_0_sumOpt, d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The body of `test2`. -/
+def tm_test2 : Term sig_test2 [] [] (Ty.fn Ty.nat Ty.nat) :=
+  (Term.lam (Term.letE (Term.natL 0) (Term.letE (Term.natL 1) (Term.letE (Term.ctor (τ := (Ty.record ⟨Ty.nat, Ty.nat, [Ty.nat]⟩)) 0 [Ty.nat, Ty.nat, Ty.nat] (by rfl) (.cons (♯1) (.cons (♯2) (.cons (♯0) .nil)))) (Term.letE (Term.ap (Term.ap (Term.ap (Term.ap (Term.ap (Term.global .here) (♯2)) (♯1)) (♯0)) (♯2)) (♯2)) (♯0))))))
+
+/-- The module up to and including `test2`. -/
+def prog_test2 : Program (d_test2 :: sig_test2.decls) :=
+  .cons d_test2 sig_test2.h_names_unique tm_test2 prog__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0
+
+/-- The signature of the whole module. -/
+def moduleSig : Sig := ⟨[d_test2, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test2_spec_0, d_test6, d_test5, d_test4, d_test3, d_test1, d__private_SnapshotsMy_ScalarRepl_0_clampSum, d__private_SnapshotsMy_ScalarRepl_0_sumOpt, d__private_SnapshotsMy_ScalarRepl_0_bigger, d__private_SnapshotsMy_ScalarRepl_0_dist, d__private_Init_Data_Range_Basic_0_Std_Legacy_Range_forIn__loop__at__test1_spec_0], by decide⟩
+
+/-- The module as a telescope: every body is written against the declarations before it, so the call graph is acyclic by construction.  It is built one declaration at a time, above, so that no single elaboration sees the whole telescope at once. -/
+def program : Program moduleSig.decls :=
+  prog_test2
+
+end ProgramSnapshotsMyScalarRepl

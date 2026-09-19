@@ -1,0 +1,33 @@
+ExamplesProofFields.Classes.Base: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Classes.Base]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Classes.Child: record
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Classes.Child]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Classes.ChildOfProof: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Classes.ChildOfProof]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Classes.Lawful: proof (the whole type is a `Prop`: erased, no Ty)
+
+ExamplesProofFields.Classes.OnlyProof: proof (the whole type is a `Prop`: erased, no Ty)
+
+ExamplesProofFields.Classes.Range: record
+  surviving fields per constructor : [3]
+  members of the block             : [ExamplesProofFields.Classes.Range]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Classes.Semi: newtype (erased wrapper)
+  surviving fields per constructor : [1]
+  members of the block             : [ExamplesProofFields.Classes.Semi]
+  recursive (through a surviving field) : false, in a mutual cycle : false
+
+ExamplesProofFields.Classes.SemiUnit: record
+  surviving fields per constructor : [2]
+  members of the block             : [ExamplesProofFields.Classes.SemiUnit]
+  recursive (through a surviving field) : false, in a mutual cycle : false
